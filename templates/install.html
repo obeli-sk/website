@@ -85,15 +85,15 @@ sudo mv obelisk /usr/local/bin/</code></pre>
     <section class="install-section">
         <h2>Build from Source</h2>
         <p>Requirements:
-            <ul>
-                <li>Rust</li>
-                <li>Protocol Buffers</li>
-                <li>See project's
-                    <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">
-                        README</a>
-                    for details
-                </li>
-            </ul>
+        <ul>
+            <li>Rust</li>
+            <li>Protocol Buffers</li>
+            <li>See project's
+                <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">
+                    README</a>
+                for details
+            </li>
+        </ul>
         </p>
         <div class="code-container">
             <pre><code class="language-bash">cargo install obelisk</code></pre>
@@ -103,18 +103,21 @@ sudo mv obelisk /usr/local/bin/</code></pre>
 
 
     <section class="install-section">
-            <h2>Nix Flake</h2>
-            <p>Built artifacts are stored in
-                <a href="https://garnix.io/docs/caching" target="_blank">Garnix Cache</a>.
-            </p>
-            <div class="code-container">
-                <pre><code class="language-bash"># Run the server
+        <h2>Nix Flake</h2>
+        <p>Built artifacts are stored in
+            <a href="https://garnix.io/docs/caching" target="_blank">Garnix Cache</a>.<br />
+            Make sure experimental features
+            <code>flakes</code>
+            and
+            <code>nix-command</code> are enabled.
+        </p>
+        <div class="code-container">
+            <pre><code class="language-bash"># Run the server
 nix run github:obeli-sk/obelisk/latest
 # Install into user's profile
-nix profile install github:obeli-sk/obelisk/latest
-                </code></pre>
-            </div>
-        </section>
+nix profile install github:obeli-sk/obelisk/latest</code></pre>
+        </div>
+    </section>
 
 
 </div>

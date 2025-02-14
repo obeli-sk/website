@@ -1,6 +1,5 @@
 base_url = "https://obeli.sk"
-title = "Obelisk - Simple, Single-Process Workflow Engine"
-description = "No distributed anything. Just a single process that runs your code with the power of WebAssembly."
+title = "Obelisk Workflow Engine"
 compile_sass = true
 build_search_index = false
 
