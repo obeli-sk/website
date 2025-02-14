@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ config.title }}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}">
+</head>
+<body>
+    <nav>
+        <div class="container nav-content">
+            <div class="logo">
+                <a href="{{ config.base_url }}">Obelisk</a>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#install">Install</a>
+                <a href="https://github.com/obeli-sk/obelisk" target="_blank">GitHub</a>
+                <a href="#docs">Docs</a>
+            </div>
+        </div>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1>Deterministic Workflow Engine</h1>
+        <p>
+            No distributed anything. Just a single process that runs your code with the power of WebAssembly.
+        </p>
+        <a href="#install" class="cta-button">Get Started</a>
+    </div>
+</section>
+
+<section class="features" id="features">
+    <div class="container">
+        <h2 class="section-title">Why Obelisk?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Simple Architecture</h3>
+                <p>Single process runtime and a sqlite database. No complex infrastructure required.</p>
+            </div>
+            <div class="feature-card">
+                <h3>WASM-Powered</h3>
+                <p>Built on WebAssembly for deterministic workflow execution, isolation and safety.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Programmatic Workflows</h3>
+                <p>
+                    Write workflows in real code instead of YAML. Full support for loops, conditionals, error handling, and proper testing.
+                    <br>Crash resilient as every execution parameter, every step and the result is stored in the execution log.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h3>Safe Activities</h3>
+                <p>
+                    Controlled HTTP client with built-in limitations. No unrestricted disk I/O for predictable and secure execution.
+                    <br>Every execution parameter and result is stored in the execution log and retried on a timeout or a failure.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h3>Webhooks, gRPC API</h3>
+                <p>Trigger workflows and activities from WASM-based Webhook Endpoint or using CLI and gRPC.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="code-section" id="install">
+    <div class="container">
+        <h2 class="section-title">Quick Start</h2>
+        <div class="code-container">
+            <pre><code class="language-bash">
+# Download Obelisk
+curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
+
+# Create and run your first workflow
+./obelisk generate config stargazers
+
+# Start the server
+./obelisk server run
+            </code></pre>
+        </div>
+    </div>
+</section>
+
+<section class="signup-form">
+    <div class="container">
+        <h2 class="section-title">Join the Waitlist</h2>
+        <p>Get our monthly newsletter and early access to our private beta.</p>
+        <form>
+            <input type="email" placeholder="Enter your email" required>
+            <button type="submit">Sign up for Waitlist</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
