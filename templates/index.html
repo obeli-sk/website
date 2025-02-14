@@ -48,18 +48,7 @@
 <section class="code-section" id="install">
     <div class="container">
         <h2 class="section-title">Quick Start</h2>
-        <div class="code-container">
-            <pre><code class="language-bash">
-# Download Obelisk
-curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
-
-# Create and run your first workflow
-./obelisk generate config stargazers
-
-# Start the server
-./obelisk server run
-            </code></pre>
-        </div>
+        {% include "quickstart.html" %}
     </div>
 </section>
 
