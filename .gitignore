@@ -1,2 +1,4 @@
 _local/
 public/style.css
+.envrc
+.direnv/
