@@ -40,6 +40,15 @@ nav {
     align-items: center;
 }
 
+
+a {
+    color: var(--primary);
+
+    &:hover {
+        color: var(--primary-dark);
+    }
+}
+
 .logo a {
     font-size: 1.5rem;
     font-weight: bold;
