@@ -2,7 +2,7 @@
   description = "A devShell with Zola for multiple systems";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -13,8 +13,10 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = [
-            pkgs.zola
+          packages = with pkgs; [
+            zola
+            nixpkgs-fmt
+            wrangler
           ];
 
         };

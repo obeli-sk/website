@@ -1,0 +1,34 @@
+name: check
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash -xe {0}
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nixbuild/nix-quick-install-action@v29
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Populate the nix store
+        run: nix develop --command echo
+
+      - name: zola build
+        run: nix develop --command zola build
+
+      - name: wrangler deploy
+        run: nix develop --command wrangler pages deploy ./public/ --project-name=website
+        env:
+            CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
