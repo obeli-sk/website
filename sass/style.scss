@@ -40,7 +40,6 @@ nav {
     align-items: center;
 }
 
-
 a {
     color: var(--primary);
 
@@ -97,6 +96,7 @@ a {
     transition: background-color 0.3s;
 
     &:hover {
+        color: var(--bg-dark);
         background-color: var(--primary-dark);
     }
 }
@@ -237,5 +237,54 @@ a {
     h4 {
         color: var(--primary);
         margin-bottom: 0.5rem;
+    }
+}
+
+.breadcrumb {
+    a {
+        text-decoration: none;
+        color: var(--primary);
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.docs-toc {
+    ul {
+
+        li {
+            margin-left: 20px;
+
+            a {
+                text-decoration: none;
+                color: var(--primary);
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+}
+
+.docs-page {
+    h1 {
+        margin-bottom: 1rem;
+    }
+}
+
+.docs-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bg-lighter);
+
+    .prev-page,
+    .next-page {
+        color: var(--primary);
+        text-decoration: none;
     }
 }

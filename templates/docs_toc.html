@@ -1,0 +1,18 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block title %}
+Documentation - {{ section.title }}
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+
+
+    {{ macros::doc_breadcrumb(ancestors=section.ancestors, title = section.title) }}
+
+    <h1>{{ section.title }}</h1>
+    {{ macros::render_toc(section=section) }}
+</div>
+
+{% endblock content %}

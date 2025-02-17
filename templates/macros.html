@@ -1,0 +1,39 @@
+{# templates/macros.html #}
+
+{% macro render_toc(section) %}
+<div class="docs-toc">
+    {% if section.pages or section.subsections %}
+    <ul>
+        {% for page in section.pages %}
+        <li><a href="{{ page.permalink }}">{{ page.title }}</a></li>
+        {% endfor %}
+
+        {% for subsection_path in section.subsections %}
+        {% set subsection = get_section(path=subsection_path) %}
+        <li>
+            <a href="{{ subsection.permalink }}">{{ subsection.title }}</a>
+            {% if subsection.pages or subsection.subsections %}
+            {{ self::render_toc(section=subsection) }} {# Recursive call #}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No pages or subsections found in this section.</p>
+    {% endif %}
+</div>
+{% endmacro render_toc %}
+
+
+{% macro doc_breadcrumb(ancestors, title) %}
+<div class="breadcrumb">
+    {% for ancestor in ancestors %}
+    {% set subsection = get_section(path=ancestor) %}
+    {% if subsection.path is starting_with('/docs/') %}
+    <a href="{{ subsection.path }}">{{ subsection.title }}</a>
+    {% endif %}
+    {% endfor %}
+    <strong>{{ title }}</strong>
+</div>
+
+{% endmacro doc_breadcrumb %}

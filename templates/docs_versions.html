@@ -1,0 +1,26 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block title %}
+Documentation - {{ section.title }}
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ section.title }}</h1>
+
+
+    <h2>Select Version</h2>
+    <ul>
+        {% for subsection in section.subsections %}
+        {% set subsection_data = get_section(path=subsection) %}
+        {% if not "/latest/" in subsection_data.path %}
+        <li>
+            <a href="{{ subsection_data.permalink }}">{{ subsection_data.title }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+
+</div>
+{% endblock content %}
