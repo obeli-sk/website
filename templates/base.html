@@ -1,43 +1,91 @@
 <!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block title %}{{ config.title }}{% endblock %}</title>
+        <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}" />
+    </head>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}{{ config.title }}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}" />
-</head>
+    <body>
+        <nav>
+            <div class="container nav-content">
+                <div class="logo">
+                    <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 100 50"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <!-- Subtle Background Obelisk -->
+                        <path
+                            d="M50 0 L55 5 L55 70 L45 70 L45 5 Z"
+                            fill="#F0AD4E"
+                            opacity="0.4"
+                        />
+                        <!-- Grandchild Execution 1 -->
+                        <rect
+                            x="45"
+                            y="18"
+                            width="15"
+                            height="5"
+                            fill="#D9664F"
+                        />
+                        <!-- Red -->
+                        <!-- Grandchild Execution 2 -->
+                        <rect
+                            x="45"
+                            y="31"
+                            width="15"
+                            height="5"
+                            fill="#D9334F"
+                        />
+                        <!-- Purple -->
+                        <!-- Child Execution 2 -->
+                        <rect
+                            x="30"
+                            y="44"
+                            width="40"
+                            height="5"
+                            fill="#428BCA"
+                        />
+                        <!-- Blue -->
+                        <!-- Child Execution 1-->
+                        <rect
+                            x="15"
+                            y="57"
+                            width="60"
+                            height="5"
+                            fill="#5CB85C"
+                        />
+                        <!-- Green -->
+                        <!-- Parent Execution -->
+                        <rect
+                            x="10"
+                            y="70"
+                            width="80"
+                            height="5"
+                            fill="#F0AD4E"
+                        />
+                        <!-- Orange/Yellow -->
+                    </svg>
 
-<body>
-    <nav>
-        <div class="container nav-content">
-            <div class="logo">
-
-                <svg width="40" height="40" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Subtle Background Obelisk -->
-                    <path d="M50 0 L55 5 L55 70 L45 70 L45 5 Z" fill="#F0AD4E" opacity="0.4" />
-                    <!-- Grandchild Execution 1 -->
-                    <rect x="45" y="18" width="15" height="5" fill="#D9664F" /> <!-- Red -->
-                    <!-- Grandchild Execution 2 -->
-                    <rect x="45" y="31" width="15" height="5" fill="#D9334F" /> <!-- Purple -->
-                    <!-- Child Execution 2 -->
-                    <rect x="30" y="44" width="40" height="5" fill="#428BCA" /> <!-- Blue -->
-                    <!-- Child Execution 1-->
-                    <rect x="15" y="57" width="60" height="5" fill="#5CB85C" /> <!-- Green -->
-                    <!-- Parent Execution -->
-                    <rect x="10" y="70" width="80" height="5" fill="#F0AD4E" /> <!-- Orange/Yellow -->
-                </svg>
-
-                <a href="{{ config.base_url }}">Obelisk</a>
+                    <a href="{{ config.base_url }}">Obelisk</a>
+                </div>
+                <div class="nav-links">
+                    <a href="{{ config.base_url }}#features">Features</a>
+                    <a href="{{ get_url(path='@/install/_index.md') }}"
+                        >Install</a
+                    >
+                    <a
+                        href="https://github.com/obeli-sk/obelisk"
+                        target="_blank"
+                        >GitHub</a
+                    >
+                </div>
             </div>
-            <div class="nav-links">
-                <a href="{{ config.base_url }}#features">Features</a>
-                <a href="{{ get_url(path='@/install/_index.md') }}">Install</a>
-                <a href="https://github.com/obeli-sk/obelisk" target="_blank">GitHub</a>
-            </div>
-        </div>
-    </nav>
-    {% block content %}{% endblock %}
-</body>
-
+        </nav>
+        {% block content %}{% endblock %}
+    </body>
 </html>
