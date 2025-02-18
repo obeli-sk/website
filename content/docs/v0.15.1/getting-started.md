@@ -1,7 +1,7 @@
 +++
 title = "Getting Started"
 template = "docs.html"
-weight = 10  #  Lower weights appear first
+weight = 0
 +++
 
 This guide will walk you through...
