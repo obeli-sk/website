@@ -83,7 +83,18 @@ retry_on_trap = false                 # Retry on traps (panics)
 convert_core_module = true            # Auto-convert Core WASM modules to WASM Components
 ```
 
+The blocking strategy controlls whether an execution should wait for blocking child executions
+or be unloaded and then replayed. Note that the `await` strategy will only wait until `lock_expiry`
+duration expires.
+
 ## HTTP and Webhook Configuration
+
+A Webhook Endpoint must be associated with a HTTP Server and must define one or
+more routes to listen on.
+Routes are divided into two categories: with HTTP methods (high priority)
+and without HTTP methods (low priority).
+When a request matches multiple routes of the same priority,
+the first webhook will receive it.
 
 ### HTTP Servers
 ```toml
@@ -117,7 +128,7 @@ Routes: Define URL paths (only the path is matched):
 
 ##### Wildcards
 - `"/path/*"` - Path prefix match
-- `"{ methods = ["GET"], route = "/path" }"` - Method-specific match
+- `"{ methods = ["GET"], route = "/path" }"` - Method-specific (priority) match
 
 ##### Parameterized
 - `"/status/:param1/:param2"` - Path parameters (exposed as env vars)
