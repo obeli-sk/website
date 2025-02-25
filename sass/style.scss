@@ -20,6 +20,16 @@ body {
     line-height: 1.6;
 }
 
+ul {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 20px;
+
+    li {
+        margin-left: 20px;
+    }
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -253,10 +263,7 @@ a {
 
 .docs-toc {
     ul {
-
         li {
-            margin-left: 20px;
-
             a {
                 text-decoration: none;
                 color: var(--primary);
