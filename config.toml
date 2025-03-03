@@ -7,5 +7,5 @@ build_search_index = false
 highlight_code = true
 
 [extra]
-versions = ["v0.16.2", "latest"]
+versions = ["v0.17.0", "latest"]
 default_version = "latest"
