@@ -20,7 +20,8 @@ body {
     line-height: 1.6;
 }
 
-ul {
+ul,
+ol {
     margin-top: 10px;
     margin-bottom: 10px;
     margin-left: 20px;
@@ -28,6 +29,12 @@ ul {
     li {
         margin-left: 20px;
     }
+}
+
+pre {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
 }
 
 .container {
