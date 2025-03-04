@@ -37,7 +37,7 @@ Note that the version appears at the end of IFQN although it is part of the pack
 
 To import an interface in a WIT file, use the IFQN:
 
-```
+```wit
 package stargazers:workflow-impl;
 
 world any {
@@ -68,7 +68,10 @@ interface account {
 }
 ```
 
-the FFQN for the `account-info` function is `stargazers:github/account.account-info` .
+the FFQN for the `account-info` function is
+```
+stargazers:github/account.account-info
+```
 
 To run the function using CLI, use
 ```

@@ -24,9 +24,18 @@ Completion Order: Operations in a join set are completed in an arbitrary order (
 
 Persistence: The state of join sets is persisted in the execution log, ensuring that workflows can resume correctly after failures.
 
-Closing: Join sets are automatically "closed" when the execution finishes. This allows workflows to wait for all child executions to finish.
-In the future, it will be possible to set a flag on join sets that will cancel all child
-executions that were not awaited for.
+## Join Set Close
+
+Join sets are automatically closed when a workflow execution finishes. During teardown, all child executions that the parent execution
+submitted but did not await for will be automatically processed. The parent workflow will be marked as finished only when all
+unattended child executions are finished.
+
+Currently, only `closing-strategy::complete` closing strategy is supported. This means that all child executions that were submitted
+but not awaited will be awaited for during workflow teardown. Errors will be propagated unless
+`forward_unhandled_child_errors_in_completing_join_set_close` setting is turned off.
+
+In the future, `closing-strateg::cancel` will attempt to cancel each unattended child execution.
+
 
 ## Join Set Kinds
 There are three kinds of join sets:
