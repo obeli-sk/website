@@ -47,6 +47,29 @@ There are three kinds of join sets:
 ## API
 The API for join sets is as defined in [workflow-support.wit](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow/workflow-support.wit).
 
+```wit
+package obelisk:workflow@1.0.0;
+
+interface workflow-support {
+
+    /// The closing strategy of a join set. Join sets are closed when execution finishes or
+    /// on drop.
+    enum closing-strategy {
+        /// All submitted executions that were not polled are awaited.
+        complete,
+        /// All submitted executions that were not polled are cancelled.
+        // TODO: Implement
+        cancel,
+    }
+
+    /// Create a new completing join set.
+    new-join-set-named: func(name: string, closing-strategy: closing-strategy) -> join-set-id;
+
+    /// Create a new completing join set with a generated name.
+    new-join-set-generated: func(closing-strategy: closing-strategy) -> join-set-id;
+}
+```
+
 ## Examples
 
 ### One-off
