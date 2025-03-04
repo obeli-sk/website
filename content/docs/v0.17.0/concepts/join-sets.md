@@ -64,7 +64,7 @@ fn star_added(login: String, repo: String) -> Result<(), String> {
 Each of the calls marked as 1-5 will trigger insertion of the following events into the execution log:
 
 1. `JoinSetCreate` - A new join set is created with kind `one-off`, and a generated identifier.
-2. `JoinSetRequest.ChildExecutionRequest` - an event containing the FFQN of the child execution and the join set identifier.
+2. `JoinSetRequest.ChildExecutionRequest` - an event containing the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the child execution and the join set identifier.
 3. `JoinNext` - an event that blocks the workflow until the child execution completes.
 
 ### Named
@@ -99,7 +99,7 @@ In this case all the child executions could share the same join set. One benefit
 which can be useful for debugging and monitoring.
 
 The line marked with 1(`new_join_set_named`) will trigger insertion of the following event into the execution log: `JoinSetCreate` with kind `named` and the passed identifier.
-The line maked with 2(`_submit`) will trigger insertion of the following event into the execution log: `JoinSetRequest.ChildExecutionRequest` with the FFQN of the child execution and the join set identifier.
+The line maked with 2(`_submit`) will trigger insertion of the following event into the execution log: `JoinSetRequest.ChildExecutionRequest` with the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the child execution and the join set identifier.
 
 Note that there is no corresponding `await-next` call in this example. When this execution completes, all join sets will be awaited.
 
@@ -135,5 +135,5 @@ fn star_added_parallel(login: String, repo: String) -> Result<(), String> {
 ```
 
 The line marked with 1 will trigger insertion of the following event into the execution log: `JoinSetCreate` with kind `generated` and a auto-incremented identifier.
-The line marked with 2 will trigger insertion of the following events into the execution log: `JoinSetRequest.ChildExecutionRequest` with the FFQN of the child execution and the join set identifier.
+The line marked with 2 will trigger insertion of the following events into the execution log: `JoinSetRequest.ChildExecutionRequest` with the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the child execution and the join set identifier.
 The lines marked with 3 will trigger insertion of the following events into the execution log: `JoinNext` that blocks the workflow until the child execution completes.
