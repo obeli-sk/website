@@ -1,31 +1,11 @@
-{% import "macros.html" as macros %}
-{% extends "base.html" %}
-
-{% block title %}
-{{ page.title }} - Documentation
-{% endblock title %}
-
-{% block content %}
+{% import "macros.html" as macros %} {% extends "base.html" %} {% block title %}
+{{ page.title }} - Documentation {% endblock title %} {% block content %}
 <div class="container">
-
     {{ macros::doc_breadcrumb(ancestors=page.ancestors, title = page.title) }}
 
     <article class="docs-page">
         <h1>{{ page.title }}</h1>
         {{ page.content | safe }}
     </article>
-
-    <!-- Previous/Next Navigation -->
-    {% if page.lower or page.higher %}
-    <div class="docs-nav">
-        {% if page.lower %}
-        <a href="{{ page.lower.permalink }}" class="prev-page">Previous: {{ page.lower.title }}</a>
-        {% endif %}
-        {% if page.higher %}
-        <a href="{{ page.higher.permalink }}" class="next-page">Next: {{ page.higher.title }}</a>
-        {% endif %}
-    </div>
-    {% endif %}
-
 </div>
 {% endblock content %}

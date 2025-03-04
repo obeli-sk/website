@@ -281,17 +281,3 @@ a {
         margin-bottom: 1rem;
     }
 }
-
-.docs-nav {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--bg-lighter);
-
-    .prev-page,
-    .next-page {
-        color: var(--primary);
-        text-decoration: none;
-    }
-}
