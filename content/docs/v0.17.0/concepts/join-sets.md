@@ -8,7 +8,7 @@ Join sets are a core mechanism for handling concurrency and asynchronous operati
 
 - Create a Join Set: A workflow can create a new join set, which is initially empty.
 
-* Add Operations to a Join Set: When a workflow starts an activity or spawns a child workflow, these are automatically or manually associaded with a join set.
+* Add Operations to a Join Set: When a workflow starts an activity or spawns a child workflow, these are automatically or manually associated with a join set.
 
     * Blocking call
 
@@ -25,7 +25,7 @@ Completion Order: Operations in a join set are completed in an arbitrary order (
 Persistence: The state of join sets is persisted in the execution log, ensuring that workflows can resume correctly after failures.
 
 Closing: Join sets are automatically "closed" when the execution finishes. This allows workflows to wait for all child executions to finish.
-In the future it will be possible to set a flag on join sets that will cancel all child
+In the future, it will be possible to set a flag on join sets that will cancel all child
 executions that were not awaited for.
 
 ## Join Set Kinds
@@ -42,7 +42,8 @@ The API for join sets is as defined in [workflow-support.wit](https://github.com
 
 ### One-off
 
-The following examples uses join sets implicitly by calling the child executions directly. Each call marked as 1-5 will create a one-off join set and await for the result.
+The following example uses join sets implicitly by calling the child executions directly.
+Each call marked as 1-5 will create a one-off join set and await the result.
 
 ```rust
 fn star_added(login: String, repo: String) -> Result<(), String> {
