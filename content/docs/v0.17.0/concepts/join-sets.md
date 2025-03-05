@@ -32,7 +32,7 @@ unattended child executions are finished.
 
 Currently, only `closing-strategy::complete` closing strategy is supported. This means that all child executions that were submitted
 but not awaited will be awaited for during workflow teardown. Errors will be propagated unless
-`forward_unhandled_child_errors_in_completing_join_set_close` setting is turned off.
+`forward_unhandled_child_errors_in_completing_join_set_close` {{ doc_link(title="configuration", path="configuration.md") }} setting is turned off.
 
 In the future, `closing-strateg::cancel` will attempt to cancel each unattended child execution.
 

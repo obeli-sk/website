@@ -81,6 +81,8 @@ join_next_blocking_strategy = "await" # Child execution handling strategy ("awai
 non_blocking_event_batching = 100     # Non-blocking event batch size
 retry_on_trap = false                 # Retry on traps (panics)
 convert_core_module = true            # Auto-convert Core WASM modules to WASM Components
+# Forward unhandled child errors to the parent workflow when closing completing join sets.
+forward_unhandled_child_errors_in_completing_join_set_close = true
 ```
 
 The blocking strategy controlls whether an execution should wait for blocking child executions
