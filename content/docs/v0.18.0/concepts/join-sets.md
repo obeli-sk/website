@@ -4,37 +4,21 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Join sets are a core mechanism for handling concurrency and asynchronous operations in Obelisk workflows. A join set represents a collection of pending operations (like activity calls or spawned child workflows). A parent workflow can interact with a join set in the following ways:
+Join sets are a core mechanism for handling concurrency and asynchronous operations in Obelisk workflows. A join set represents a collection of pending operations (like activity calls or spawned child workflows). A workflow can interact with a join set in the following ways:
 
 - Create a Join Set: A workflow can create a new join set, which is initially empty.
 
-* Add Operations to a Join Set: When a workflow starts an activity or spawns a child workflow, these are automatically or manually associated with a join set.
+- Add Operations to a Join Set: When a workflow spawns a child execution (workflow, activity), the execution is associated with a join set.
 
-    * Blocking call
-
-    * non-blocking call (`-submit`)
-
-- Await Results: The workflow can use `await-next` on a join set to wait for the next operation in that set to complete. This call blocks until a result is available.
+- Await Results: The workflow can use a direct call or an {{ doc_link(title="extension", path="concepts/extension-functions.md") }} to wait for the next operation in that set to complete.
 
 Currently join sets are limited to a single type of child executions, meaning it is not possible to submit child executions that belong to more than one activity or a workflow function signature.
 
-## Key Properties of Join Sets
+## Key Properties
 
-Completion Order: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish). The await-next call returns results in the order they become available.
+* **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish). The `await-next` call returns results in the order they become available.
 
-Persistence: The state of join sets is persisted in the execution log, ensuring that workflows can resume correctly after failures.
-
-## Join Set Close
-
-Join sets are automatically closed when a workflow execution finishes. During teardown, all child executions that the parent execution
-submitted but did not await for will be automatically processed. The parent workflow will be marked as finished only when all
-unattended child executions are finished.
-
-Currently, only `closing-strategy::complete` closing strategy is supported. This means that all child executions that were submitted
-but not awaited will be awaited for during workflow teardown. Errors will be propagated unless
-`forward_unhandled_child_errors_in_completing_join_set_close` {{ doc_link(title="configuration", path="configuration.md") }} setting is turned off.
-
-In the future, `closing-strateg::cancel` will attempt to cancel each unattended child execution.
+* **Persistence**: The state of join sets is persisted in the execution log, ensuring that workflows can resume correctly after failures.
 
 
 ## Join Set Kinds
@@ -47,32 +31,15 @@ There are three kinds of join sets:
 ## API
 The API for join sets is as defined in [workflow-support.wit](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow/workflow-support.wit).
 
-```wit
-package obelisk:workflow@1.0.0;
-
-interface workflow-support {
-
-    /// The closing strategy of a join set. Join sets are closed when execution finishes or
-    /// on drop.
-    enum closing-strategy {
-        /// All submitted executions that were not polled are awaited.
-        complete,
-        /// All submitted executions that were not polled are cancelled.
-        // TODO: Implement
-        cancel,
-    }
-
-    /// Create a new completing join set.
-    new-join-set-named: func(name: string, closing-strategy: closing-strategy) -> join-set-id;
-
-    /// Create a new completing join set with a generated name.
-    new-join-set-generated: func(closing-strategy: closing-strategy) -> join-set-id;
-}
+To create a join set in Rust, use
+```rust
+let named = new_join_set_generated("some-name", ClosingStrategy::Complete);
+let generated = new_join_set_generated(ClosingStrategy::Complete)
 ```
 
 ## Examples
 
-### One-off
+### One-off (Direct Call)
 
 The following example uses join sets implicitly by calling the child executions directly.
 Each call marked as 1-5 will create a one-off join set and await the result.
@@ -94,13 +61,64 @@ fn star_added(login: String, repo: String) -> Result<(), String> {
     Ok(())
 }
 ```
-Each of the calls marked as 1-5 will trigger insertion of the following events into the execution log:
-
-1. `JoinSetCreate` - A new join set is created with kind `one-off`, and a generated identifier.
-2. `JoinSetRequest.ChildExecutionRequest` - an event containing the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the child execution and the join set identifier.
-3. `JoinNext` - an event that blocks the workflow until the child execution completes.
 
 ### Named
+The following example creates two join sets with named identifiers and uses them to parallelize `account-info` and `get-settings-json` activities.
+```rust
+fn star_added_parallel(login: String, repo: String) -> Result<(), String> {
+    // Persist the user giving a star to the project - a direct call that creates and awaits a one-off join set.
+    let description = db::user::add_star_get_description(&login, &repo)?;
+    if description.is_none() {
+        // 1. Create two join sets for the two child workflows.
+        let join_set_info =
+            new_join_set_named(&format!("{login}-info"), ClosingStrategy::Complete);
+        let join_set_settings =
+            new_join_set_named("settings", ClosingStrategy::Complete);
+        // 2. Submit the two child workflows asynchronously.
+        account_info_submit(&join_set_info, &login);
+        get_settings_json_submit(&join_set_settings);
+        // 3. Await the results.
+        let info = account_info_await_next(&join_set_info)
+            .map_err(err_to_string)?
+            .1?;
+        let settings_json = get_settings_json_await_next(&join_set_settings)
+            .map_err(err_to_string)?
+            .1?;
+        // Generate the user's description - a blocking call.
+        let description = llm::respond(&info, &settings_json)?;
+        // Persist the generated description - a blocking call.
+        db::user::update_user_description(&login, &description)?;
+    }
+    Ok(())
+}
+```
+
+### Generated
+The only difference between a named and generated join set is the way how it is created.
+The example above could be slightly simplified by switching to the join sets with generated names:
+```rust
+let join_set_info = new_join_set_generated(ClosingStrategy::Complete);
+```
+
+One benefit of naming join sets is that they can be used to group child executions that are logically related, which can be useful for debugging and monitoring.
+
+
+## Advanced Topics
+
+### Join Set Finalization (Close)
+
+Join sets are automatically closed when a workflow execution finishes. During teardown, all child executions that the parent execution
+submitted but did not await for will be automatically processed. The parent workflow will be marked as finished only when all
+unattended child executions are finished.
+
+Currently, only `closing-strategy::complete` closing strategy is supported. This means that all child executions that were submitted
+but not awaited will be awaited for during workflow teardown. Errors will be propagated unless
+`forward_unhandled_child_errors_in_completing_join_set_close` {{ doc_link(title="configuration", path="configuration.md") }} setting is turned off.
+
+In the future, `closing-strateg::cancel` will attempt to cancel each unattended child execution.
+
+
+#### Example - Join set without awaiting child execution results
 The following example creates a named join set for each login and uses it to parallelize the execution of the `star_added` function.
 ```rust
 fn backfill_parallel(repo: String) -> Result<(), String> {
@@ -128,45 +146,5 @@ fn backfill_parallel(repo: String) -> Result<(), String> {
     Ok(())
 }
 ```
-In this case all the child executions could share the same join set. One benefit of naming join sets is that they can be used to group child executions that are logically related,
-which can be useful for debugging and monitoring.
-
-The line marked with 1(`new_join_set_named`) will trigger insertion of the following event into the execution log: `JoinSetCreate` with kind `named` and the passed identifier.
-The line maked with 2(`_submit`) will trigger insertion of the following event into the execution log: `JoinSetRequest.ChildExecutionRequest` with the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the child execution and the join set identifier.
 
 Note that there is no corresponding `await-next` call in this example. When this execution completes, all join sets will be awaited.
-
-### Generated
-The following example creates two join sets with generated identifiers and uses them to parallelize `account-info` and `get-settings-json` activities.
-```rust
-fn star_added_parallel(login: String, repo: String) -> Result<(), String> {
-    // Persist the user giving a star to the project - a blocking call that creates and awaits a one-off join set.
-    let description = db::user::add_star_get_description(&login, &repo)?;
-    if description.is_none() {
-        // 1. Create two join sets for the two child workflows.
-        let join_set_info =
-            new_join_set_generated(ClosingStrategy::Complete);
-        let join_set_settings =
-            new_join_set_generated(ClosingStrategy::Complete);
-        // 2. Submit the two child workflows asynchronously.
-        account_info_submit(&join_set_info, &login);
-        get_settings_json_submit(&join_set_settings);
-        // 3. Await the results.
-        let info = account_info_await_next(&join_set_info)
-            .map_err(err_to_string)?
-            .1?;
-        let settings_json = get_settings_json_await_next(&join_set_settings)
-            .map_err(err_to_string)?
-            .1?;
-        // Generate the user's description - a blocking call.
-        let description = llm::respond(&info, &settings_json)?;
-        // Persist the generated description - a blocking call.
-        db::user::update_user_description(&login, &description)?;
-    }
-    Ok(())
-}
-```
-
-The line marked with 1 will trigger insertion of the following event into the execution log: `JoinSetCreate` with kind `generated` and a auto-incremented identifier.
-The line marked with 2 will trigger insertion of the following events into the execution log: `JoinSetRequest.ChildExecutionRequest` with the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the child execution and the join set identifier.
-The lines marked with 3 will trigger insertion of the following events into the execution log: `JoinNext` that blocks the workflow until the child execution completes.
