@@ -56,7 +56,7 @@ exec.max_inflight_instances = "unlimited"  # Concurrent instance limit
 
 ## Activities Configuration
 
-Configure WASM activity components using the `activity_wasm` section:
+Configure each WASM activity component using the `activity_wasm` section:
 
 ```toml
 [[activity_wasm]]
@@ -71,7 +71,14 @@ env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inher
 
 ## Workflows Configuration
 
-Configure workflow components using the `workflow` section:
+### Global workflow configuration
+```toml
+workflows.backtrace.persist = true        # Persist backtraces on side effect calls for all workflows.
+```
+
+### Workflow component configuration
+
+Configure each workflow component using the `workflow` section:
 
 ```toml
 [[workflow]]
@@ -83,6 +90,9 @@ retry_on_trap = false                 # Retry on traps (panics)
 convert_core_module = true            # Auto-convert Core WASM modules to WASM Components
 # Forward unhandled child errors to the parent workflow when closing completing join sets.
 forward_unhandled_child_errors_in_completing_join_set_close = true
+# Map from frame symbol file names to corresponding file paths on local filesystem.
+# Both sides can use path prefixes.
+backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 ```
 
 The blocking strategy controlls whether an execution should wait for blocking child executions
@@ -182,9 +192,10 @@ prefix = "obelisk_server_daily" # File name prefix
 
 The following path prefixes are supported throughout the configuration:
 
-| Prefix | Default Path | Details |
-|--------|--------------|----------|
-| `~` | `~` | Home directory |
-| `${DATA_DIR}` | `~/.local/share/obelisk` | System data directory |
-| `${CACHE_DIR}` | `~/.cache/obelisk` | System cache directory |
-| `${CONFIG_DIR}` | `~/.config/obelisk` | System config directory |
+| Prefix                 | Default Path               | Details                                          |
+|------------------------|----------------------------|--------------------------------------------------|
+| `~`                    | `~`                        | Home directory                                   |
+| `${DATA_DIR}`          | `~/.local/share/obelisk`   | System data directory                            |
+| `${CACHE_DIR}`         | `~/.cache/obelisk`         | System cache directory                           |
+| `${CONFIG_DIR}`        | `~/.config/obelisk`        | System config directory                          |
+| `${OBELISK_TOML_DIR}`  | N/A                        | Directory where the obelisk.toml file is located |

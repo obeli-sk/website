@@ -12,11 +12,13 @@ Documentation - {{ section.title }}
 
     <h2>Select Version</h2>
     <ul>
-        {% for subsection in section.subsections %}
-        {% set subsection_data = get_section(path=subsection) %}
-        {% if not "/latest/" in subsection_data.path %}
+        {% for version in config.extra.versions %}
+        {% set section_path = "docs/" ~ version ~ "/_index.md" %}
+        {% set subsection_data = get_section(path=section_path) %}
+        {% if version != "latest" %}
+
         <li>
-            <a href="{{ subsection_data.permalink }}">{{ subsection_data.title }}</a>
+            <a href="{{ subsection_data.permalink }}">{{ version }}</a>
         </li>
         {% endif %}
         {% endfor %}

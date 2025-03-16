@@ -1,17 +1,22 @@
 {% import "macros.html" as macros %}
 {% extends "base.html" %}
 
+
 {% block title %}
-Documentation - {{ section.title }}
+{# We do not store the version in the .md metadata as we want to link multiple patch versions into the same target. #}
+{% set version = section.path | split(pat="/") | nth(n=2) %}
+{% if version == "latest" %}
+{% set version = config.extra.latest %}
+{% endif %}
+Documentation - {{ version }}
 {% endblock title %}
 
 {% block content %}
 <div class="container">
 
+    {{ macros::doc_breadcrumb(ancestors=section.ancestors, title = version) }}
 
-    {{ macros::doc_breadcrumb(ancestors=section.ancestors, title = section.title) }}
-
-    <h1>{{ section.title }}</h1>
+    <h1>{{ version }}</h1>
     {{ macros::render_toc(section=section) }}
 </div>
 

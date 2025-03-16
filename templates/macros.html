@@ -30,7 +30,17 @@
     {% for ancestor in ancestors %}
     {% set subsection = get_section(path=ancestor) %}
     {% if subsection.path is starting_with('/docs/') %}
-    <a href="{{ subsection.path }}">{{ subsection.title }}</a>
+    {% if subsection.extra is defined and subsection.extra.versionroot is defined %}
+    {# versionroot is only defined when rendering `docs_toc.html`, we do not store the `title` in this case. Use URL
+    path to figure out the version. #}
+    {% set title = subsection.path | split(pat="/") | nth(n=2) %}
+    {% else %}
+    {% set title = subsection.title %}
+    {% endif %}
+    {% if title == "latest" %}
+    {% set title = config.extra.latest %}
+    {% endif %}
+    <a href="{{ subsection.path }}">{{ title }}</a>
     {% endif %}
     {% endfor %}
     <strong>{{ title }}</strong>
