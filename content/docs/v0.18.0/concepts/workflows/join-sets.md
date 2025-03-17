@@ -10,7 +10,7 @@ Join sets are a core mechanism for handling concurrency and asynchronous operati
 
 - Add Operations to a Join Set: When a workflow spawns a child execution (workflow, activity), the execution is associated with a join set.
 
-- Await Results: The workflow can use a direct call or an {{ doc_link(title="extension", path="concepts/extension-functions.md") }} to wait for the next operation in that set to complete.
+- Await Results: The workflow can use a direct call or an {{ doc_link(title="extension", path="concepts/workflows/extension-functions.md") }} to wait for the next operation in that set to complete.
 
 Currently join sets are limited to a single type of child executions, meaning it is not possible to submit child executions that belong to more than one activity or a workflow function signature.
 

@@ -3,20 +3,21 @@ title = "Workflows"
 template = "docs.html"
 +++
 
-Workflows are the core of Obelisk's functionality, allowing you to define, execute and replay functions in a deterministic fashion.
+Workflows are the core of Obelisk's functionality, allowing you to define and execute functions that orchestrate your {{ doc_link(title="activities", path="concepts/activities.md") }}.
+Workflows are run in WASM sandbox, which ensures deterministic execution, a key requirement for replayability.
 
 ## What is a Workflow?
 
-A workflow is a function that spawns a sequence of child executions &mdash; {{ doc_link(title="activities", path="concepts/activities.md") }} or other workflows.
+A workflow is a function that spawns a sequence of child executions – {{ doc_link(title="activities", path="concepts/activities.md") }} or other workflows.
 Obelisk manages the execution order of these child executions, handles retries, timeouts, and ensures that the entire process runs reliably to completion, even in the face of server restarts.
 
 ## How Workflows Work in Obelisk
 
-1.  **Definition:** You define a workflow as code (using a language that compiles to WASM Component Model, such as Rust or Go). This code describes the activities or sub workflows to be executed and the order in which they should run. Workflow function must be exported by the WASM Component using [WIT format](https://component-model.bytecodealliance.org/design/wit.html).
+1.  **Definition:** You define a workflow as code. Any language that is supported by [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen/blob/main/README.md#supported-guest-languages) including Rust and Go can be used. This code describes the activities or sub workflows to be executed and the order in which they should run. Workflow function must be exported by the [WASM Component](https://component-model.bytecodealliance.org) using [WIT format](https://component-model.bytecodealliance.org/design/wit.html).
 
 2.  **Compilation to WASM:** Your workflow code is compiled into a WebAssembly Component.
 
-3.  **Deployment:** Create a new Workflow Component with the WASM file location in the {{ doc_link(title="Obelisk configuration", path="configuration.md") }}  file.
+3.  **Deployment:** Create a new `[[workflow]]` table with the compiled WASM file location in the {{ doc_link(title="Obelisk configuration", path="configuration.md") }} file.
 
 4.  **Triggering:** A workflow instance is started, typically by an external event (e.g., an API call, a message on a queue, or a timer). You can trigger the execution using CLI, Web UI, [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto) or using a {{ doc_link(title="Webhook Endpoint", path="concepts/webhook-endpoints.md") }}.
 
@@ -33,7 +34,7 @@ Obelisk manages the execution order of these child executions, handles retries, 
 ## Example
 
 The following example is a simple workflow that takes two arguments and calls an activity.
-First we need to define an interface with the function signature in [WIT format](https://component-model.bytecodealliance.org/design/wit.html). We also need to import the
+First we need to define an interface with the function signature in WIT format. We also need to import the
 activity interface.
 
 ```wit
@@ -65,7 +66,7 @@ impl Guest for Component {
 }
 ```
 
-In order to simplify creating the `Cargo` project, you can use [cargo-generate](https://crates.io/crates/cargo-generate):
+In order to simplify creating the `Cargo` project, you can use [cargo-generate](https://crates.io/crates/cargo-generate) and the following [template](https://github.com/obeli-sk/obelisk-templates/tree/main/fibo/workflow):
 ```sh
 cargo generate obeli-sk/obelisk-templates fibo/workflow --name myworkflow
 cd myworkflow
