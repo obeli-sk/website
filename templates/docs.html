@@ -1,11 +1,21 @@
-{% import "macros.html" as macros %} {% extends "base.html" %} {% block title %}
-{{ page.title }} - Documentation {% endblock title %} {% block content %}
+{% import "macros.html" as macros %} {% extends "base.html" %}
+
+{% block title %}
+{% if page is defined %}
+{% set pageorsection = page %}
+{% else %}
+{% set pageorsection = section %}
+{% endif %}
+{{ pageorsection.title }}
+- Documentation
+{% endblock title %}
+{% block content %}
 <div class="container">
-    {{ macros::doc_breadcrumb(ancestors=page.ancestors, title = page.title) }}
+    {{ macros::doc_breadcrumb(ancestors=pageorsection.ancestors, title = pageorsection.title) }}
 
     <article class="docs-page">
-        <h1>{{ page.title }}</h1>
-        {{ page.content | safe }}
+        <h1>{{ pageorsection.title }}</h1>
+        {{ pageorsection.content | safe }}
     </article>
 </div>
 {% endblock content %}
