@@ -122,6 +122,13 @@ curl localhost:9000/fibo/5/1  # Direct call
 curl localhost:9000/fibo/12/1 # Scheduled execution
 ```
 
+## Example - Stargazers demo
+The webhook endoint in [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/webhook) shows the integration with GitHub, specifically:
+* Setting a shared secret and passing it as an environment variable
+* Verifying the request signature using HMAC
+* Creating a tunnel to expose the local HTTP server
+* Testing
+
 ## Key Differences from Workflows
 
 | Feature            | Workflows                                     | Webhook Endpoints                             |

@@ -31,7 +31,7 @@ Obelisk manages the execution order of these child executions, handles retries, 
 
 6.  **Completion/Failure:** The workflow continues until it either completes successfully or encounters an unrecoverable error. The final state of the workflow is recorded.
 
-## Example
+## Example - calling the Fibonacci activity
 
 The following example is a simple workflow that takes two arguments and calls an activity.
 First we need to define an interface with the function signature in WIT format. We also need to import the
@@ -74,3 +74,7 @@ cargo build --release
 obelisk server run
 ```
 Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to execute the workflow.
+
+## Example - concurrently calling multiple activities
+The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow) contains code examples demonstrating both direct (blocking) and concurrent submission of activities and sub-workflows within a workflow.
+
