@@ -12,8 +12,6 @@ Join sets are a core mechanism for handling concurrency and asynchronous operati
 
 - Await Results: The workflow can use a direct call or an {{ doc_link(title="extension", path="concepts/workflows/extension-functions.md") }} to wait for the next operation in that set to complete.
 
-Currently join sets are limited to a single type of child executions, meaning it is not possible to submit child executions that belong to more than one activity or a workflow function signature.
-
 ## Key Properties
 
 * **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish). The `await-next` call returns results in the order they become available.
@@ -36,6 +34,9 @@ To create a join set in Rust, use
 let named = new_join_set_generated("some-name", ClosingStrategy::Complete);
 let generated = new_join_set_generated(ClosingStrategy::Complete)
 ```
+
+## Limitations
+Currently join sets are limited to a single type of child executions, meaning it is not possible to submit child executions that belong to more than one activity or a workflow function signature.
 
 ## Examples
 

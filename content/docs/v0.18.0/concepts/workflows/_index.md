@@ -19,7 +19,7 @@ Obelisk manages the execution order of these child executions, handles retries, 
 
 3.  **Deployment:** Create a new `[[workflow]]` table with the compiled WASM file location in the {{ doc_link(title="Obelisk configuration", path="configuration.md") }} file.
 
-4.  **Triggering:** A workflow instance is started, typically by an external event (e.g., an API call, a message on a queue, or a timer). You can trigger the execution using CLI, Web UI, [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto) or using a {{ doc_link(title="Webhook Endpoint", path="concepts/webhook-endpoints.md") }}.
+4.  **Triggering:** A workflow instance is started, typically by an external event (e.g., an API call, a message on a queue, or a timer). You can trigger the execution using CLI, Web UI, [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto/) or using a {{ doc_link(title="Webhook Endpoint", path="concepts/webhook-endpoints.md") }}.
 
 5.  **Execution:**
     *   The Obelisk runtime loads the WASM component.
@@ -66,11 +66,11 @@ impl Guest for Component {
 }
 ```
 
-In order to simplify creating the `Cargo` project, you can use [cargo-generate](https://crates.io/crates/cargo-generate) and the following [template](https://github.com/obeli-sk/obelisk-templates/tree/main/fibo/workflow):
+In order to simplify creating the `Cargo` project, you can use [cargo-generate](https://crates.io/crates/cargo-generate) and the following template:
 ```sh
 cargo generate obeli-sk/obelisk-templates fibo/workflow --name myworkflow
 cd myworkflow
 cargo build --release
 obelisk server run
 ```
-Follow the project's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to execute the workflow.
+Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to execute the workflow.

@@ -64,7 +64,7 @@ cd myactivity
 cargo build --release
 obelisk server run
 ```
-Follow the project's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/activity/README.md) to execute the activity.
+Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/activity/README.md) to execute the activity.
 
 ## HTTP Client
 Activities can make HTTP requests using the [WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This allows them to interact with external services and APIs. Importantly, this HTTP client is controlled, with built-in tracing to enhance security and predictability. Disk I/O is not permitted.
