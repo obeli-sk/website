@@ -38,15 +38,19 @@ interface llm {
 
 Let's break down each generated function:
 
-*   **`-submit`**: This function is used to *submit* a request for the original function to be executed.  It takes the `join-set-id` and the original parameters as input.  It returns an `execution-id`, which uniquely identifies this particular execution request.  The `join-set-id` associates this execution with a specific {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, allowing you to manage multiple concurrent executions.  This function does *not* wait for the execution to complete; it simply submits the request.
+## Submitting child executions with `-submit`
+This function is used to *submit* a request for the original function to be executed.  It takes the `join-set-id` and the original parameters as input.  It returns an `execution-id`, which uniquely identifies this particular execution request.  The `join-set-id` associates this execution with a specific {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, allowing you to manage multiple concurrent executions.  This function does *not* wait for the execution to complete; it simply submits the request.
 
-*   **`-await-next`**: This function is used to *wait* for the next result from a given `join-set-id`.  It takes the `join-set-id` as input and returns a `result`.  The result contains a tuple with two possible outcomes which must be handled:
-    1.  The workflow function has finished successfully. In this case, the tuple will hold the `execution-id` that identifies the finished execution and the original return value.
-    2.  There was an error during the child execution. In this case, the tuple will contain the `execution-id` and `execution-error` as defined in [obelisk:types](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types/types.wit)
+## Awaiting next result with `-await-next`
+This function is used to *wait* for the next result from a given `join-set-id`.  It takes the `join-set-id` as input and returns a `result`.  The result contains a tuple with two possible outcomes which must be handled:
 
-    By repeatedly calling `respond-await-next` after submitting multiple executions on a join set, you can retrieve results as they become available, in the order they complete.
+1.  The workflow function has finished successfully. In this case, the tuple will hold the `execution-id` that identifies the finished execution and the original return value.
+2.  There was an error during the child execution. In this case, the tuple will contain the `execution-id` and `execution-error` as defined in [obelisk:types](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types/types.wit)
 
-*   **`-schedule`**: This function allows you to *schedule* the execution of the original function at a specific time in the future. It takes a `schedule-at` (defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types/types.wit)) and the original parameters as input.  Like `respond-submit`, it returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time. It's important to note that scheduled executions do not use join sets. This is because scheduling inherently breaks the parent-child relationship that join sets rely on for structured concurrency. Consequently, a scheduled function's result cannot be directly awaited by the caller. Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow. If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/workflows/runtime-support.md") }} function instead.
+By repeatedly calling `respond-await-next` after submitting multiple executions on a join set, you can retrieve results as they become available, in the order they complete.
+
+## Scheduling a new execution with `-schedule`
+This function allows you to *schedule* the execution of the original function at a specific time in the future. It takes a `schedule-at` (defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types/types.wit)) and the original parameters as input.  Like `respond-submit`, it returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time. It's important to note that scheduled executions do not use join sets. This is because scheduling inherently breaks the parent-child relationship that join sets rely on for structured concurrency. Consequently, a scheduled function's result cannot be directly awaited by the caller. Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow. If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/workflows/runtime-support.md") }} function instead.
 
 ## Key Concepts and Benefits
 
