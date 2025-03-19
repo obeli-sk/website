@@ -105,3 +105,5 @@ If you need to use GraphQL, check out the [cynic](https://crates.io/crates/cynic
 ```sh
 cargo generate obeli-sk/obelisk-templates graphql-github/activity
 ```
+
+Note: If you need an `async` HTTP client, use [wstd](https://crates.io/crates/wstd) crate instead of `waki`.
