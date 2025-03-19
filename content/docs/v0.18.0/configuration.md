@@ -50,7 +50,7 @@ content_digest = "sha256:..."        # Optional: WASM file hash verification
 ```toml
 exec.batch_size = 5                  # Executions per event loop tick
 exec.lock_expiry.seconds = 1         # Execution lock duration
-exec.tick_sleep.milliseconds = 200   # Sleep duration between ticks
+exec.tick_sleep.milliseconds = 200   # Executor sleeps the specified duration when polling for pending executions
 exec.max_inflight_instances = "unlimited"  # Concurrent instance limit
 ```
 
