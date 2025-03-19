@@ -33,6 +33,27 @@ This demo provides a practical example of how Obelisk handles real-world events 
 git clone https://github.com/obeli-sk/demo-stargazers.git
 cd demo-stargazers
 ```
+Let's explore some of the folders:
+```
+demo-stargazers
+├── activity
+│   ├── db                      # Database activity
+│   │   ├── interface           # WIT describing the API
+│   │   ├── interface-ext       # Generated extension functions
+│   │   └── turso               # Cargo project with the activity implementation
+│   ├── github                  # GitHub activity
+│   │   ├── impl                # Cargo project with the activity implementation
+│   │   ├── interface
+│   │   └── interface-ext
+│   └── llm                     # LLM activity
+│       ├── chatgpt             # Cargo package with the activity implementation
+│       ├── interface
+│       └── interface-ext
+├── webhook                     # Cargo package with the webhook endpoint
+├── wit                         # Obelisk WIT types and support functions
+└── workflow                    # Cargo package with the workflow implementation
+    └── wit
+```
 
 3. **Set up API tokens**
 
@@ -49,7 +70,7 @@ Configure your environment variables according to the activities' readmes.
 obelisk server run --config obelisk-oci.toml
 ```
 
-5.  **Configure GitHub Webhook (Optional):** To fully experience the demo, you'll need to configure a GitHub webhook to send "star added" events to your running Obelisk instance.  This will involve exposing your local Obelisk server to the internet temporarily. *Detailed instructions for setting up the webhook are provided in the [webhook's README](https://github.com/obeli-sk/demo-stargazers/blob/main/webhook/README.md).*  If you skip this step, you can still interact with the workflow using the Obelisk CLI or Web UI, but it won't be triggered automatically by GitHub events.
+5.  **Configure GitHub Webhook (Optional):** To fully experience the demo, you'll need to configure a GitHub webhook to send "star added" events to your running Obelisk instance.  This will involve exposing the webhook's HTTP server to the internet temporarily. *Detailed instructions for setting up the webhook are provided in the [webhook's README](https://github.com/obeli-sk/demo-stargazers/blob/main/webhook/README.md).*  If you skip this step, you can still interact with the workflow using the Obelisk CLI or Web UI, but it won't be triggered automatically by GitHub events.
 
 6.  **Interact with the Demo:** Once the server is running and (optionally) the webhook is configured, you can:
     *   Star the repository (if the webhook is set up).
