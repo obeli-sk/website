@@ -10,16 +10,34 @@ Welcome to Obelisk! This guide will help you get started with building and runni
 
 2.  **Build Your Own Workflow/Activity:** Dive into the core concepts and start building your own custom workflows and activities. This path involves understanding the Obelisk architecture and writing code.
 
-## Running the Stargazers Demo
+## Stargazers Demo
+The quickest way to get a feel for Obelisk is to run the [Stargazers demo](https://github.com/obeli-sk/demo-stargazers). Consider this workflow:
+```rust
+fn star_added(login: String, repo: String) -> Result<(), String> {
+    // 1. Persist the user giving a star to the project.
+    let description = db::user::add_star_get_description(&login, &repo)?;
+    if description.is_none() {
+        // 2. Fetch the account info from GitHub.
+        let info = github::account::account_info(&login)?;
+        // 3. Fetch the prompt from the database.
+        let settings_json = db::llm::get_settings_json()?;
+        // 4. Generate the user's description.
+        let description = llm::respond(&info, &settings_json)?;
+        // 5. Persist the generated description.
+        db::user::update_user_description(&login, &description)?;
+    }
+    Ok(())
+}
+```
 
-The quickest way to get a feel for Obelisk is to run the [Stargazers demo](https://github.com/obeli-sk/demo-stargazers).  This demo showcases a complete workflow triggered by a GitHub webhook (specifically, the "star added" event). It involves:
+The demo repository contains:
 
-*   A **webhook endpoint** that receives the event from GitHub.
-*   A **workflow** that orchestrates the process.
+*   A [**webhook endpoint**](https://github.com/obeli-sk/demo-stargazers/blob/main/webhook) that receives the  "star added" event from GitHub.
+*   A [**workflow**](https://github.com/obeli-sk/demo-stargazers/blob/main/workflow) that orchestrates the process.
 *   Three **activities:**
-    *   Fetching account information from GitHub.
-    *   Using an LLM (Large Language Model) to generate text based on the account information.
-    *   Persisting the result in a database.
+    *   Fetching account information from [GitHub](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/github/impl).
+    *   Using an [LLM](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/llm/chatgpt) to generate text based on the account information.
+    *   Persisting the result in a [Turso database](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/db/turso).
 
 This demo provides a practical example of how Obelisk handles real-world events and integrates different components.
 
@@ -76,7 +94,7 @@ obelisk server run --config obelisk-oci.toml
     *   Star the repository (if the webhook is set up).
     *   Use the Obelisk CLI or Web UI to manually trigger workflow executions.
 
-The repository's README provides detailed instructions for each of these steps, including setting up the GitHub webhook and interacting with the running system.
+The [repository's README](https://github.com/obeli-sk/demo-stargazers/blob/main/README.md) provides detailed instructions for each of these steps, including setting up the GitHub webhook and interacting with the running system.
 
 ## Building Your Own Workflow/Activity
 
