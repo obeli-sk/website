@@ -107,3 +107,25 @@ cargo generate obeli-sk/obelisk-templates graphql-github/activity
 ```
 
 Note: If you need an `async` HTTP client, use [wstd](https://crates.io/crates/wstd) crate instead of `waki`.
+
+## Logging, debugging, testing
+To understand the internal state of an activity, you can use the following:
+
+* `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[activity]]` section of the {{ doc_link(title="configuratin", path="configuration.md") }}. Output will appear in the server log.
+* `obelisk:log` API - see {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}
+
+Unit testing is possible with Cargo's test harness.
+
+Run the testing WASM artifact as usual:
+```sh
+cargo test
+```
+Make sure to add the following in your `.cargo/config.toml`, so that the test binary is run with [wasmtime](https://wasmtime.dev) or other `WASI 0.2` compatible runtime:
+```toml
+[build]
+target = "wasm32-wasip2"
+
+[target.wasm32-wasip2]
+runner = "wasmtime run -Scli -Shttp  --env TEST_URL"
+```
+The [stargazers demo](https://github.com/obeli-sk/demo-stargazers/tree/main/activity) repository contains unit and integration tests for activities.

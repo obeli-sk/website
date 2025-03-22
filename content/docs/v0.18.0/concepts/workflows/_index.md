@@ -80,20 +80,33 @@ Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blo
 ## Example - concurrently calling multiple activities
 The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow) contains code examples demonstrating both direct (blocking) and concurrent submission of activities and sub-workflows within a workflow.
 
+## Logging and debugging
+To understand the internal state of a workflow, you can use the following:
+* Read the execution log. It contains workflow parameters, each child execution and the final result. Execution log is available in the web UI.
+* `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[workflow]]` section of the {{ doc_link(title="configuratin", path="configuration.md") }}. Output will appear in the server log.
+* `obelisk:log` API - see {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}
+
+Adding print statements or logs is ignored by the execution log, so you can add it to an in-progress or a finished execution and trigger the replay.
+
 ## Configuration
 A simple workflow configuration can look like this:
 ```toml
 [[workflow]]
 name = "myworkflow"
 location.path = "target/wasm32-unknown-unknown/release/workflow.wasm"
-backtrace.sources = {"${OBELISK_TOML_DIR}/workflow/src/lib.rs" = "${OBELISK_TOML_DIR}/workflow/src/lib.rs"}
 ```
 
 Only two attributes are required - `name` and `location`.
 
 ### Backtrace capture
 If we specify the `backtrace.sources`, the frontend (currently just CLI) can
-display source file and line for every captured backtrace. Example output:
+display source file and line for every captured backtrace.
+```toml
+[[workflow]]
+backtrace.sources = {"${OBELISK_TOML_DIR}/workflow/src/lib.rs" = "${OBELISK_TOML_DIR}/workflow/src/lib.rs"}
+```
+
+Example CLI output:
 
 ```
 obelisk client execution submit --follow testing:fibo-workflow/workflow.fiboa '[1,1]'
