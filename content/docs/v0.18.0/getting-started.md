@@ -85,6 +85,11 @@ Configure your environment variables according to the activities' readmes.
 4.  **Run the Obelisk Server:**
 
 ```bash
+export GITHUB_TOKEN="..."
+export GITHUB_WEBHOOK_SECRET="..."
+export OPENAI_API_KEY="..."
+export TURSO_TOKEN="..."
+export TURSO_LOCATION="[databaseName]-[organizationSlug].turso.io"
 obelisk server run --config obelisk-oci.toml
 ```
 
