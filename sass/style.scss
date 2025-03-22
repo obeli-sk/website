@@ -66,11 +66,20 @@ a {
     }
 }
 
-.logo a {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--primary);
-    text-decoration: none;
+div.logo {
+    a {
+        display: flex;
+        align-items: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--primary);
+        text-decoration: none;
+
+        img {
+            width: 7%;
+            height: 7%;
+        }
+    }
 }
 
 .nav-links a {
