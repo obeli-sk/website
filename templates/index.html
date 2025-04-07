@@ -25,31 +25,33 @@
             </div>
             <div class="feature-card">
                 <h3>WASM-Powered</h3>
-                <p>Built on WebAssembly for deterministic workflow execution, isolation and safety.</p>
+                <p>Built on WebAssembly <a href="https://component-model.bytecodealliance.org/"
+                        target="_blank">Component Model</a> for interoperability, deterministic workflow execution,
+                    isolation and safety.</p>
             </div>
             <div class="feature-card">
-                <h3>Programmatic <a
+                <h3>Deterministic <a
                         href="{{ get_url(path='@/docs/latest/concepts/workflows/_index.md') }}">Workflows</a></h3>
                 <p>
-                    Write workflows in real code instead of YAML. Full support for loops, conditionals, error handling,
-                    and proper testing.
-                    <br>Crash resilient as every execution parameter, every step and the result is stored in the
-                    execution log.
+                    Write workflows in real code instead of YAML. Supported
+                    <a href="{{ get_url(path='@/docs/latest/concepts/structured-concurrency.md') }}">structured
+                        concurrency</a>
+                    simplifies error handling and cleanup.
+                    <br>Crash resilient and replayable as every execution parameter, every step and the result is stored
+                    in the execution log.
                 </p>
             </div>
             <div class="feature-card">
-                <h3>Safe <a href="{{ get_url(path='@/docs/latest/concepts/activities.md') }}">Activities</a></h3>
+                <h3>Safe <a href="{{ get_url(path='@/docs/latest/concepts/activities.md') }}">WASI Activities</a></h3>
                 <p>
-                    Controlled HTTP client with built-in limitations. No unrestricted disk I/O for predictable and
-                    secure execution.
+                    Controlled HTTP client with built-in limitations and tracing.
                     <br>Every execution parameter and result is stored in the execution log and retried on a timeout or
                     a failure.
                 </p>
             </div>
             <div class="feature-card">
-                <h3><a href="{{ get_url(path='@/docs/latest/concepts/webhook-endpoints.md') }}">Webhooks</a>, gRPC
-                    API</h3>
-                <p>Trigger workflows and activities from WASM-based Webhook Endpoint or using CLI and gRPC.</p>
+                <h3><a href="{{ get_url(path='@/docs/latest/concepts/webhook-endpoints.md') }}">WASI Webhooks</a></h3>
+                <p>Trigger workflows and activities from Webhook Endpoint or using CLI, gRPC or a Web UI.</p>
             </div>
             <div class="feature-card">
                 <h3>Open Source</h3>

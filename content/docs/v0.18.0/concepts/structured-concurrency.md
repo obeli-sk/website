@@ -42,7 +42,7 @@ Obelisk also provides the `-schedule` extension function. It's important to unde
 
 ### Benefits of Structured Concurrency
 
-*   **Reliability:** Ensures tasks don't get lost or run indefinitely.
+*   **Reliability:** Ensures executions don't get lost or run indefinitely.
 *   **Resource Management:** Prevents orphaned executions that might consume resources.
 *   **Predictability:** Makes it easier to reason about the state and lifecycle of concurrent operations.
 *   **Simplified Error Handling:** Provides clear paths for error propagation and handling.
