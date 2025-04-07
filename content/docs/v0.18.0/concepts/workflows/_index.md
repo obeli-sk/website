@@ -31,12 +31,22 @@ Obelisk manages the execution order of these child executions, handles retries, 
 
 6.  **Completion/Failure:** The workflow continues until it either completes successfully or encounters an unrecoverable error. The final state of the workflow is recorded.
 
-## Example - calling the Fibonacci activity
+## Directly calling an activity
 
 The following example is a simple workflow that takes two arguments and calls an activity.
 First we need to define an interface with the function signature in WIT format. We also need to import the
 activity interface.
 
+### Activity WIT
+```wit
+package template-fibo:activity;
+
+interface fibo-activity-ifc {
+    fibo-activity: func(n: u8) -> u64;
+}
+```
+
+### Workflow WIT
 ```wit
 package template-fibo:workflow;
 
@@ -44,10 +54,10 @@ interface fibo-workflow-ifc {
     fiboa: func(n: u8, iterations: u32) -> u64;
 }
 world any {
-    // Export the interface
-    export fibo-workflow-ifc;
     // Activity import, the WIT file must be placed in `wit/deps/`.
     import template-fibo:activity/fibo-activity-ifc;
+    // Export the interface
+    export fibo-workflow-ifc;
 }
 ```
 
@@ -77,8 +87,68 @@ obelisk server run
 ```
 Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to execute the workflow.
 
-## Example - concurrently calling multiple activities
+## Concurrently submitting multiple child executions
+Using the same activity WIT, let's now submit all executions concurrently and then await their results:
+
+### Extended Activity WIT
+Obelisk can generate several helper functions for every exported activity or workflow function. See {{ doc_link(title="Extension Functions", path="concepts/workflows/extension-functions.md") }} for details.
+```wit
+// Generated
+package template-fibo:activity-obelisk-ext;
+
+interface fibo-activity-ifc {
+    use obelisk:types/execution@1.0.0.{execution-id, join-set-id};
+    use obelisk:types/time@1.0.0.{schedule-at};
+    use obelisk:types/execution@1.0.0.{execution-error};
+
+    fibo-submit: func(join-set-id: borrow<join-set-id>, n: u8) -> execution-id;
+
+    fibo-await-next: func(join-set-id: borrow<join-set-id>) ->
+        result<tuple<execution-id, u64>, tuple<execution-id, execution-error>>;
+
+    fibo-schedule: func(schedule-at: schedule-at, n: u8) -> execution-id;
+}
+```
+
+### Workflow WIT
+Let's add a new function signature to the exported interface:
+```wit
+interface fibo-workflow-ifc {
+    fiboa-concurrent: func(n: u8, iterations: u32) -> u64;
+}
+```
+### Workflow implementation
+```rust
+fn fiboa_concurrent(n: u8, iterations: u32) -> u64 {
+    let join_set_id = new_join_set_generated(ClosingStrategy::Complete);
+    for _ in 0..iterations {
+        fibo_submit(&join_set_id, n);
+    }
+    let mut last = 0;
+    for _ in 0..iterations {
+        last = fibo_await_next(&join_set_id).unwrap().1;
+    }
+    last
+}
+```
+
+First, we must explicitly instantiate a {{ doc_link(title="Join Set", path="concepts/workflows/join-sets.md") }}. While direct calls also involve a join set, Obelisk creates it automatically in that scenario; here, manual creation is required.
+
+Next, we call the `-submit` extension function. This action persists the execution request to the database, queuing it for processing. An assigned executor will then pick up this task and run the child execution to completion. Importantly, the parent workflow is not blocked and can continue submitting other child executions while this happens.
+
+To retrieve results, call the `-await-next` extension function. This function will block if no child executions have finished. As the name implies, -await-next returns results based on completion order, not submission order – whichever child execution finishes first provides the next result.
+
 The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow) contains code examples demonstrating both direct (blocking) and concurrent submission of activities and sub-workflows within a workflow.
+
+## Scheduling child executions
+The `-schedule` extension function is suitable when the workflow either doesn't require the result of the submitted execution or needs to defer its execution to a future time. Importantly, join sets are not used for scheduled executions, as this method bypasses the {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} principles.
+
+```rust
+fn schedule_child(n: u8)  {
+    let duration=...
+    fibo_schedule(ScheduleAt::In(duration), n);
+}
+```
 
 ## Logging and debugging
 To understand the internal state of a workflow, you can use the following:

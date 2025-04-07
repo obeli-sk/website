@@ -4,7 +4,7 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Join sets are a core mechanism for handling concurrency and asynchronous operations in Obelisk workflows. A join set represents a collection of pending operations (like activity calls or spawned child workflows). A workflow can interact with a join set in the following ways:
+Join sets are a core mechanism for handling {{doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} and asynchronous operations in Obelisk workflows. A join set represents a collection of pending operations (like activity calls or spawned child workflows). A workflow can interact with a join set in the following ways:
 
 - Create a Join Set: A workflow can create a new join set, which is initially empty.
 
