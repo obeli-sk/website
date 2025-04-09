@@ -169,38 +169,17 @@ location.path = "target/wasm32-unknown-unknown/release/workflow.wasm"
 Only two attributes are required - `name` and `location`.
 
 ### Backtrace capture
-If we specify the `backtrace.sources`, the frontend (currently just CLI) can
+
+<img src="{{ get_url(path="backtrace.png") }}" alt="A backtrace viewer" style="max-width: 100%; height: auto; display: block;" />
+
+
+
+If we specify the `backtrace.sources`, the frontend can
 display source file and line for every captured backtrace.
 ```toml
 [[workflow]]
 backtrace.sources = {"${OBELISK_TOML_DIR}/workflow/src/lib.rs" = "${OBELISK_TOML_DIR}/workflow/src/lib.rs"}
 ```
-
-Example CLI output:
-
-```
-obelisk client execution submit --follow testing:fibo-workflow/workflow.fiboa '[1,1]'
-E_01JPQNT9R4GKECKANSDBCP75EX
-Locked
-
-Backtrace (version 2):
-0: test_programs_fibo_workflow.wasm, function: testing:fibo-workflow/workflow#fiboa
-    at /home/runner/work/obelisk/obelisk/crates/testing/test-programs/fibo/workflow/src/lib.rs:9:1 - test_programs_fibo_workflow::testing::fibo::fibo::fibo::hf4ebe115bd0d47a0
-       7  use wit_bindgen::generate;
-       8
-       9  generate!({ generate_all });
-      10  struct Component;
-      11  export!(Component);
-    at /home/runner/work/obelisk/obelisk/crates/testing/test-programs/fibo/workflow/src/lib.rs:33:20 - <test_programs_fibo_workflow::Component as test_programs_fibo_workflow::exports::testing::fibo_workflow::workflow::Guest>::fiboa::h43507fff8eedf582
-      31          let mut last = 0;
-      32          for _ in 0..iterations {
-      33              last = fibo_activity(n);
-      34          }
-      35          last
-    at /home/runner/work/obelisk/obelisk/crates/testing/test-programs/fibo/workflow/src/lib.rs:9:1 - test_programs_fibo_workflow::exports::testing::fibo_workflow::workflow::_export_fiboa_cabi::h5d8af8e19903f43c
-    at /home/runner/work/obelisk/obelisk/crates/testing/test-programs/fibo/workflow/src/lib.rs:9:1
-```
-
 Backtraces are captured automatically and stored in the database every time
 a child execution is submitted or awaited.
 
