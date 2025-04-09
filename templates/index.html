@@ -1,79 +1,93 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="hero">
-    <div class="container">
-        <h1>Obelisk Deterministic Workflow Engine</h1>
-        <p>
-            Add resiliency to your workflows.
-        </p>
-        <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
-        <a href="{{ get_url(path='@/docs/latest/getting-started.md') }}" class="cta-button">Get Started</a>
-    </div>
-</section>
+<div class="container">
+    <section class="hero">
+        <div class="container">
+            <h1>Obelisk Deterministic Workflow Engine</h1>
+            <p>
+                Add resiliency to your workflows.
+            </p>
+            <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
+            <a href="{{ get_url(path='@/docs/latest/getting-started.md') }}" class="cta-button">Get Started</a>
+        </div>
+    </section>
 
-<section class="screencast">
-    <video controls="true" src="{{ get_url(path='screencast.webm') }}"></video>
-</section>
+    <section class="screencast">
+        <video controls="true" src="{{ get_url(path='screencast.webm') }}"></video>
+    </section>
 
-<section class="features" id="features">
-    <div class="container">
-        <h2 class="section-title">Why Obelisk?</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h3>Simple Architecture</h3>
-                <p>Single process runtime and a sqlite database. No complex infrastructure required.</p>
-            </div>
-            <div class="feature-card">
-                <h3>WASM-Powered</h3>
-                <p>Built on WebAssembly <a href="https://component-model.bytecodealliance.org/"
-                        target="_blank">Component Model</a> for interoperability, deterministic workflow execution,
-                    isolation and safety.</p>
-            </div>
-            <div class="feature-card">
-                <h3>Deterministic <a
-                        href="{{ get_url(path='@/docs/latest/concepts/workflows/_index.md') }}">Workflows</a></h3>
-                <p>
-                    Write workflows in real code instead of YAML. Supported
-                    <a href="{{ get_url(path='@/docs/latest/concepts/structured-concurrency.md') }}">structured
-                        concurrency</a>
-                    simplifies error handling and cleanup.
-                    <br>Crash resilient and replayable as every execution parameter, every step and the result is stored
-                    in the execution log.
-                </p>
-            </div>
-            <div class="feature-card">
-                <h3>Safe <a href="{{ get_url(path='@/docs/latest/concepts/activities.md') }}">WASI Activities</a></h3>
-                <p>
-                    Controlled HTTP client with built-in limitations and tracing.
-                    <br>Every execution parameter and result is stored in the execution log and retried on a timeout or
-                    a failure.
-                </p>
-            </div>
-            <div class="feature-card">
-                <h3><a href="{{ get_url(path='@/docs/latest/concepts/webhook-endpoints.md') }}">WASI Webhooks</a></h3>
-                <p>Trigger workflows and activities from Webhook Endpoint or using CLI, gRPC or a Web UI.</p>
-            </div>
-            <div class="feature-card">
-                <h3>Open Source</h3>
-                <p>Built with Rust under AGPL. Source is avalable at <a href="https://github.com/obeli-sk/obelisk"
-                        target="_blank">GitHub</a>.</p>
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Why Obelisk?</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Simple Architecture</h3>
+                    <p>Single process runtime and a sqlite database. No complex infrastructure required.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>WASM-Powered</h3>
+                    <p>Built on WebAssembly <a href="https://component-model.bytecodealliance.org/"
+                            target="_blank">Component Model</a> for interoperability, deterministic workflow execution,
+                        isolation and safety.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Deterministic <a
+                            href="{{ get_url(path='@/docs/latest/concepts/workflows/_index.md') }}">Workflows</a></h3>
+                    <p>
+                        Write workflows in real code instead of YAML. Supported
+                        <a href="{{ get_url(path='@/docs/latest/concepts/structured-concurrency.md') }}">structured
+                            concurrency</a>
+                        simplifies error handling and cleanup.
+                        <br>Crash resilient and replayable as every execution parameter, every step and the result is
+                        stored
+                        in the execution log.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3>Safe <a href="{{ get_url(path='@/docs/latest/concepts/activities.md') }}">WASI Activities</a>
+                    </h3>
+                    <p>
+                        Controlled HTTP client with built-in limitations and tracing.
+                        <br>Every execution parameter and result is stored in the execution log and retried on a timeout
+                        or
+                        a failure.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/webhook-endpoints.md') }}">WASI Webhooks</a>
+                    </h3>
+                    <p>Trigger workflows and activities from Webhook Endpoint or using CLI, gRPC or a Web UI.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Open Source</h3>
+                    <p>Built with Rust under AGPL. Source is avalable at <a href="https://github.com/obeli-sk/obelisk"
+                            target="_blank">GitHub</a>.</p>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+    <section class="signup-form">
+        <div id="message" style="display: none;">Thanks for subscribing!</div>
+        <div class="container" id="signup-form">
+            <h2 class="section-title">Follow the Progress</h2>
+            <p> Join our mailing list to receive notifications for the big milestones:</p>
+            <iframe name="hidden-frame" style="display:none;"></iframe>
+            <form id="subscribe-form" action="https://obelisk-stargazers.fly.dev/mlist" method="POST"
+                target="hidden-frame">
+                <input name="email" type="email" placeholder="Enter your email" required>
+                <textarea name="feedback" placeholder="Feedback (optional)"></textarea>
+                <button type="submit">Join mailing list</button>
+            </form>
+        </div>
+    </section>
+</div>
 
-<!--
-<section class="signup-form">
-    <div class="container">
-        <h2 class="section-title">Join the Waitlist</h2>
-        <p>Get our monthly newsletter and early access to our private beta.</p>
-        <form>
-            <input type="email" placeholder="Enter your email" required>
-            <button type="submit">Sign up for Waitlist</button>
-        </form>
-    </div>
-</section>
--->
+<script>
+    document.getElementById('subscribe-form').addEventListener('submit', () => {
+        document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('message').style.display = 'block';
+    });
+</script>
 
 {% endblock %}
