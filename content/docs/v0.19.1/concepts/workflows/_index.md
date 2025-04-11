@@ -3,13 +3,11 @@ title = "Workflows"
 template = "docs.html"
 +++
 
-Workflows are the core of Obelisk's functionality, allowing you to define and execute functions that orchestrate your {{ doc_link(title="activities", path="concepts/activities.md") }}.
-Workflows are run in WASM sandbox, which ensures deterministic execution, a key requirement for replayability.
+Workflows are the core of Obelisk's functionality, allowing you to define functions that orchestrate your application's processes by spawning sequences of child executions – such as {{ doc_link(title="activities", path="concepts/activities.md") }} or even other workflows. Obelisk takes responsibility for managing the reliable execution of these sequences, handling factors like retries, and timeouts to ensure the entire process completes correctly, even in the face of interruptions like server restarts.
 
-## What is a Workflow?
+## Determinism and Replayability
 
-A workflow is a function that spawns a sequence of child executions – {{ doc_link(title="activities", path="concepts/activities.md") }} or other workflows.
-Obelisk manages the execution order of these child executions, handles retries, timeouts, and ensures that the entire process runs reliably to completion, even in the face of server restarts.
+This reliability is fundamentally enabled by ensuring **deterministic execution** and **replayability**. Workflows run within a WASM sandbox, guaranteeing that given the same inputs and event history, the workflow logic will always produce the exact same outputs and sequence of operations. To support this, Obelisk persistently records every child execution submission and its eventual result, forming a **durable execution log**. This log allows a workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can reliably continue from where it left off without duplicating or skipping steps.
 
 ## How Workflows Work in Obelisk
 
@@ -22,12 +20,11 @@ Obelisk manages the execution order of these child executions, handles retries, 
 4.  **Triggering:** A workflow instance is started, typically by an external event (e.g., an API call, a message on a queue, or a timer). You can trigger the execution using CLI, Web UI, [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto/) or using a {{ doc_link(title="Webhook Endpoint", path="concepts/webhook-endpoints.md") }}.
 
 5.  **Execution:**
-    *   The Obelisk runtime loads the WASM component.
-    *   The workflow logic begins executing within the secure WASM sandbox.
-    *   When the workflow needs to execute an activity, it makes a request to store the child execution submission.
-    *   The Obelisk runtime schedules the activity for execution.
-    *   The activity runs, performs its work, and returns a result to the workflow. Obelisk handles retries on errors and timeouts.
-    *   The workflow continues processing. This may involve replaying the state form its execution log (see next sections).
+    *   The Obelisk runtime instantiates the WASM component and calls the function.
+    *   When the workflow needs to start a child execution, it makes a request to store its {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and parameters.
+    *   The Obelisk runtime schedules the activity for execution in the background.
+    *   The child execution runs, performs its work, and returns a result to the workflow. Obelisk handles retries on errors and timeouts.
+    *   The workflow continues processing. This may involve replaying the state form its execution log.
 
 6.  **Completion/Failure:** The workflow continues until it either completes successfully or encounters an unrecoverable error. The final state of the workflow is recorded.
 
