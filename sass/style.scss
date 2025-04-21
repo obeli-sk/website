@@ -134,8 +134,7 @@ div.logo {
     text-decoration: none;
     font-weight: bold;
     transition: background-color 0.3s;
-    margin-left: 5px;
-    margin-right: 5px;
+    margin: 5px 5px 5px 5px;
 
     &:hover {
         color: var(--bg-dark);
@@ -205,6 +204,7 @@ div.logo {
         background-color: var(--bg-dark);
         color: var(--text);
     }
+
     textarea {
         display: block;
         width: 300px;
