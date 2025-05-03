@@ -65,6 +65,6 @@ If this approach to building reliable, maintainable backend systems resonates wi
 
 *   Check out the **GitHub repository**: [github.com/obeli-sk/obelisk](https://github.com/obeli-sk/obelisk)
 *   Read the <a href="{{ get_url(path='@/docs/latest/_index.md') }}">documentation</a> (still evolving!) to dive deeper.
-*   Subscribe to the **mailing list** on the front page of [obeli.sk](https://obeli.sk/) website for future updates.
+*   Subscribe to the **mailing list** on the front page of <a href="{{ get_url(path='#signup') }}">obeli.sk</a> website for future updates.
 
 I'm excited about the potential of Obelisk and look forward to continuing its development in the open. Thanks for reading!
