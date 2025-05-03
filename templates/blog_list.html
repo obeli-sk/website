@@ -1,0 +1,50 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block title %}
+{% if page is defined %}
+{% set pageorsection = page %}
+{% else %}
+{% set pageorsection = section %}
+{% endif %}
+{{ pageorsection.title }}
+{% endblock title %}
+{% block content %}
+
+<div class="container">
+    <h1>{{ section.title }}</h1>
+
+    {{ section.content | safe }} {# Render the markdown content from _index.md #}
+
+    {% for page in paginator.pages %}
+    <article>
+        <h2><a href="{{ page.permalink | safe }}">{{ page.title }}</a></h2>
+        {# Format the date - Zola's Tera templates use `date()` filter #}
+        <span class="date">{{ page.date | date(format="%Y-%m-%d") }}</span>
+
+        {# Show summary if available, otherwise maybe description or nothing #}
+        {% if page.summary %}
+        <p>{{ page.summary | safe }}</p>
+        {% elif page.description %}
+        <p>{{ page.description }}</p>
+        {% endif %}
+
+        <p><a href="{{ page.permalink | safe }}">Read more »</a></p>
+    </article>
+    {% endfor %}
+
+    {# Add pagination links if paginate_by is set in _index.md #}
+    {% if section.pages and section.paginate_by %}
+    <div class="pagination">
+        {% if paginator.previous %}
+        <a href="{{ paginator.previous.permalink | safe }}">Previous</a>
+        {% endif %}
+        <span>Page {{ paginator.current.index }} of {{ paginator.number_pages }}</span>
+        {% if paginator.next %}
+        <a href="{{ paginator.next.permalink | safe }}">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock content %}

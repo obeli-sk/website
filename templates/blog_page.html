@@ -1,0 +1,32 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block title %}
+{% if page is defined %}
+{% set pageorsection = page %}
+{% else %}
+{% set pageorsection = section %}
+{% endif %}
+{{ pageorsection.title }}
+- Blog
+{% endblock title %}
+{% block content %}
+
+<div class="container">
+
+    <article>
+        <h1>{{ page.title }}</h1>
+        <span class="date">{{ page.date | date(format="%Y-%m-%d") }}</span>
+        {{ page.content | safe }} {# Render the full markdown content of the page #}
+    </article>
+
+    {# Optional: Add a link back to the blog list #}
+    {# We need to find the 'blog' section's permalink #}
+    {% set blog_section = get_section(path="blog/_index.md") %}
+    {% if blog_section %}
+        <p><a href="{{ blog_section.permalink | safe }}">« Back to Blog List</a></p>
+    {% endif %}
+
+</div>
+
+{% endblock content %}

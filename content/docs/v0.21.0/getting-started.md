@@ -98,6 +98,7 @@ obelisk server run --config obelisk-oci.toml
 6.  **Interact with the Demo:** Once the server is running and (optionally) the webhook is configured, you can:
     *   Star the repository (if the webhook is set up).
     *   Use the Obelisk CLI or Web UI to manually trigger workflow executions.
+    *   Don't forget you can **kill the server** or **simulate network issues** during workflow execution! When the server is back up (and retries have not been exhausted), the workflow will continue.
 
 The [repository's README](https://github.com/obeli-sk/demo-stargazers/blob/main/README.md) provides detailed instructions for each of these steps, including setting up the GitHub webhook and interacting with the running system.
 
