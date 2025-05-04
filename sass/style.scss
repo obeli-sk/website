@@ -14,7 +14,7 @@
 }
 
 body {
-    font-family: "Arial", sans-serif;
+    font-family: Avenir, Montserrat, Corbel, "URW Gothic", "Helvetica Neue", sans-serif;
     background-color: var(--bg-dark);
     color: var(--text);
     line-height: 1.6;
@@ -126,7 +126,7 @@ div.logo {
 
 .cta-button {
     display: inline-block;
-    width: 160px;
+    width: 180px;
     background-color: var(--primary);
     color: var(--bg-dark);
     padding: 0.8rem 2rem;
@@ -205,6 +205,12 @@ div.logo {
         color: var(--text);
     }
 
+    @media (max-width: 480px) {
+        input {
+            width: 100%;
+        }
+    }
+
     textarea {
         display: block;
         width: 300px;
@@ -214,9 +220,15 @@ div.logo {
         color: var(--text);
     }
 
+    @media (max-width: 480px) {
+        textarea {
+            width: 100%;
+        }
+    }
+
     button {
         display: block;
-        // width: 100%;
+        width: 180px;
         padding: 0.8rem;
         border: none;
         border-radius: 4px;
@@ -324,21 +336,28 @@ div.logo {
     }
 }
 
-article.docs-page {
-    max-width: 750px;
+article {
+    max-width: 100ch;
+    padding: 3em 1em;
+    margin: auto;
+    line-height: 1.75;
+    font-size: 1.2em;
 
-    h1 {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
+    article h1,
+    article h2,
+    article h3,
+    article h4 {
+        margin-top: 2.5em;
+        margin-bottom: 1em;
     }
+}
 
-    h2 {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    h3 {
-        margin-top: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
+article pre {
+    background-color: #74747422;
+    padding: 1.5em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: ui-monospace, Menlo, monospace;
+    line-height: 1.4;
+    margin: 2em 0;
 }
