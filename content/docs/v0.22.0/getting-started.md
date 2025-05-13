@@ -36,7 +36,7 @@ The demo repository contains:
 *   A [**workflow**](https://github.com/obeli-sk/demo-stargazers/blob/main/workflow) that orchestrates the process.
 *   Three **activities:**
     *   Fetching account information from [GitHub](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/github/impl).
-    *   Using an [LLM](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/llm/openai to generate text based on the account information.
+    *   Using an [LLM](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/llm/openai) to generate text based on the account information.
     *   Persisting the result in a [Turso database](https://github.com/obeli-sk/demo-stargazers/tree/main/activity/db/turso).
 
 This demo provides a practical example of how Obelisk handles real-world events and integrates different components.
