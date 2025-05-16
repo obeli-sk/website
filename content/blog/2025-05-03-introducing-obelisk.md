@@ -31,9 +31,9 @@ I knew there had to be a more structured, reliable approach. I'd previously work
 
 My ideal workflow engine would:
 
-*   Allow developers to write orchestration logic in "normal" programming languages (like Rust or Go).
+*   Allow developers to write orchestration logic in regular programming languages like Rust, JavaScript, Python or Go.
 *   Enforce a strict separation between the pure, deterministic orchestration logic and the side-effectful operations that interact with the real world.
-*   Bake determinism guarantees *into the compilation process*, preventing common mistakes (like accidental use of non-deterministic functions, threads, or direct system time calls within workflow code) that could break replayability. <a href="https://temporal.io" target="_blank">Temporal</a> solves this with runtime checks and developer discipline, but I felt a compile-time guarantee would be stronger.
+*   Bake determinism guarantees *into the compilation process*, preventing common mistakes (like accidental use of non-deterministic functions, threads, or direct system time calls within workflow code) that could break replayability. <a href="https://temporal.io" target="_blank">Temporal</a> solves this with runtime checks and developer discipline, but compile-time checks and a runtime sandbox are better.
 
 ## The Obelisk Approach: Server-Side WASM
 
@@ -55,7 +55,7 @@ By combining these specific WASM targets and the Component Model, Obelisk aims t
 
 *   **Guaranteed Determinism:** Workflow logic is inherently deterministic, enforced at compile time.
 *   **Clear Separation of Concerns:** Side effects are isolated within Activities.
-*   **Familiar Languages:** Write complex logic in powerful languages like Rust (with potential for Go, etc., in the future).
+*   **Familiar Languages:** Write complex logic in powerful languages like Rust, JavaScript and Go, with potential for more in the future.
 *   **Sandboxing:** Enhanced security and resource control for all user-provided code.
 *   **Reliability:** Built-in state persistence, retries and replay enable resilient execution in adverse environment.
 

@@ -103,7 +103,7 @@ forward_unhandled_child_errors_in_completing_join_set_close = true
 # Both sides can use path prefixes.
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 
-# Stub WASI CLI world. Only needed for workflows authored in TinyGo.
+# Stub WASI CLI world imports. Only needed for workflows authored in TinyGo.
 stub_wasi = false                     # Default is false.
 ```
 
