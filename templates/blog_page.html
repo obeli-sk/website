@@ -20,28 +20,7 @@
         {{ page.content | safe }} {# Render the full markdown content of the page #}
     </article>
 
-    <section class="signup-form" id="signup">
-        <script>
-            window.addEventListener('DOMContentLoaded', function () {
-                document.getElementById('subscribe-form').addEventListener('submit', () => {
-                    document.getElementById('signup-form').style.display = 'none';
-                    document.getElementById('message').style.display = 'block';
-                });
-            });
-        </script>
-        <div id="message" style="display: none;">Thanks for subscribing!</div>
-        <div class="container" id="signup-form">
-            <h2 class="section-title">Follow the Progress</h2>
-            <p> Join our mailing list to receive notifications for the big milestones:</p>
-            <iframe name="hidden-frame" style="display:none;"></iframe>
-            <form id="subscribe-form" action="https://obelisk-stargazers.fly.dev/mlist" method="POST"
-                target="hidden-frame">
-                <input name="email" type="email" placeholder="Enter your email" required>
-                <textarea name="feedback" placeholder="Feedback (optional)"></textarea>
-                <button type="submit">Join mailing list</button>
-            </form>
-        </div>
-    </section>
+    {% include "signup_form.html" %}
 
     {% set blog_section = get_section(path="blog/_index.md") %}
     <p><a href="{{ blog_section.permalink | safe }}">« Back to Blog List</a></p>
