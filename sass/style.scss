@@ -18,7 +18,25 @@ body {
     background-color: var(--bg-dark);
     color: var(--text);
     line-height: 1.6;
+    padding: 0 0 2rem 0;
+    line-height: 1.8;
+    font-size: 1.1rem;
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+p {
+    margin-bottom: 1.5rem;
+}
+
 
 ul,
 ol {
@@ -28,6 +46,7 @@ ol {
 
     li {
         margin-left: 20px;
+        margin-bottom: 0.75rem;
     }
 }
 
@@ -41,7 +60,7 @@ pre {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 2rem;
 }
 
 nav {
@@ -338,7 +357,6 @@ section#signup-section {
 
 article {
     max-width: 100ch;
-    padding: 3em 1em;
     margin: auto;
     line-height: 1.75;
     font-size: 1.2em;
