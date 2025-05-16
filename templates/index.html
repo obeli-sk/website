@@ -69,9 +69,11 @@
     </section>
     <section class="signup-form" id="signup">
         <script>
-            document.getElementById('subscribe-form').addEventListener('submit', () => {
-                document.getElementById('signup-form').style.display = 'none';
-                document.getElementById('message').style.display = 'block';
+            window.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('subscribe-form').addEventListener('submit', () => {
+                    document.getElementById('signup-form').style.display = 'none';
+                    document.getElementById('message').style.display = 'block';
+                });
             });
         </script>
         <div id="message" style="display: none;">Thanks for subscribing!</div>
