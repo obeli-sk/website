@@ -1,5 +1,5 @@
 +++
-title = "Introducing Obelisk: A New Workflow Engine is born"
+title = "Introducing Obelisk deterministic workflow engine"
 date = 2025-05-03
 +++
 
