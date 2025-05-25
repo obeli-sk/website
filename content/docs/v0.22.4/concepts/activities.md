@@ -15,16 +15,15 @@ Activities are the fundamental building blocks of work within an Obelisk {{ doc_
 
 ## Developing an Activity in Rust
 
-In this contrived example we will create an activity that does not communicate with an external system. Its purpose is to show all the basic steps needed to execute an activity.
+In this contrived example we will create an activity that does not communicate with an external system. Its purpose is to show all the basic steps needed to execute an activity. Install [Rust](https://rustup.rs/), [cargo-generate](https://crates.io/crates/cargo-generate) and run:
 
-### Creating an activity from a template
 ```sh
 cargo generate obeli-sk/obelisk-templates fibo/activity --name myactivity
 cd myactivity
 ```
 
 This will generate a directory with the following structure:
-```
+```sh
 .
 ├── Cargo.toml
 ├── obelisk.toml
@@ -75,7 +74,7 @@ impl Guest for Component {
     }
 }
 ```
-The `obelisk.toml` already includes the activity:
+The configuration file `obelisk.toml` already includes the activity:
 ```toml
 [[activity_wasm]]
 name = "myactivity"
@@ -83,7 +82,7 @@ location.path = "target/wasm32-wasip2/release/myactivity.wasm"
 ```
 Let's build the WASM Component and run Obelisk.
 ```sh
-cargo build --release # Builds myactivity.wasm
+cargo build --release
 obelisk server run --config ./obelisk.toml
 ```
 

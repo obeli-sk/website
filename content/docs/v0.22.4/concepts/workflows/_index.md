@@ -3,39 +3,65 @@ title = "Workflows"
 template = "docs.html"
 +++
 
-Workflows are the core of Obelisk's functionality, allowing you to define functions that orchestrate your application's processes by spawning sequences of child executions – such as {{ doc_link(title="activities", path="concepts/activities.md") }} or even other workflows. Obelisk takes responsibility for managing the reliable execution of these sequences, handling factors like retries, and timeouts to ensure the entire process completes correctly, even in the face of interruptions like server restarts.
+Workflows are the core of Obelisk's functionality, allowing you to define functions that orchestrate your application's processes by spawning sequences of child executions – such as {{ doc_link(title="activities", path="concepts/activities.md") }} or other workflows. Obelisk takes responsibility for managing the reliable execution of these sequences, handling factors like retries, and timeouts to ensure the entire process completes correctly, even in the face of interruptions like server restarts.
 
 ## Determinism and Replayability
 
-This reliability is fundamentally enabled by ensuring **deterministic execution** and **replayability**. Workflows run within a WASM sandbox, guaranteeing that given the same inputs and event history, the workflow logic will always produce the exact same outputs and sequence of operations. To support this, Obelisk persistently records every child execution submission and its eventual result, forming a **durable execution log**. This log allows a workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can reliably continue from where it left off without duplicating or skipping steps.
+This reliability is fundamentally enabled by ensuring **deterministic execution** and thus **replayability**. Workflows run within a WASM sandbox, guaranteeing that given the same inputs and event history, the workflow logic will always produce the exact same outputs and sequence of operations. To support this, Obelisk persistently records every child execution submission and its eventual result, forming a **durable execution log**. This log allows a workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can reliably continue from where it left off without duplicating or skipping steps.
 
-## How Workflows Work in Obelisk
+## How Workflows Are Executed in Obelisk
 
-1.  **Definition:** You define a workflow as code. Any language that is supported by [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen/blob/main/README.md#supported-guest-languages) including Rust and Go can be used. This code describes the activities or sub workflows to be executed and the order in which they should run. Workflow function must be exported by the [WASM Component](https://component-model.bytecodealliance.org) using [WIT format](https://component-model.bytecodealliance.org/design/wit.html).
+1. The Obelisk runtime instantiates the WASM component and calls the requested workflow function.
+1. When the workflow needs to start a child execution, it makes a request to store its {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and parameters.
+1. The Obelisk runtime schedules the activity or a child workflow for execution in the background.
+1. The child execution runs, performs its work, and returns a result to the workflow. Obelisk handles retries on errors and timeouts for activities.
+1. The workflow continues processing. This may involve replaying the state form its execution log.
+1. **Completion/Failure:** The workflow continues until it either completes successfully or encounters an unrecoverable error. The final state of the workflow is recorded.
 
-2.  **Compilation to WASM:** Your workflow code is compiled into a WebAssembly Component.
 
-3.  **Deployment:** Create a new `[[workflow]]` table with the compiled WASM file location in the {{ doc_link(title="Obelisk configuration", path="configuration.md") }} file.
+## Developing a Workflow in Rust
 
-4.  **Triggering:** A workflow instance is started, typically by an external event (e.g., an API call, a message on a queue, or a timer). You can trigger the execution using CLI, Web UI, [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto/) or using a {{ doc_link(title="Webhook Endpoint", path="concepts/webhook-endpoints.md") }}.
+### Creating a workflow from a template
 
-5.  **Execution:**
-    *   The Obelisk runtime instantiates the WASM component and calls the function.
-    *   When the workflow needs to start a child execution, it makes a request to store its {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and parameters.
-    *   The Obelisk runtime schedules the activity for execution in the background.
-    *   The child execution runs, performs its work, and returns a result to the workflow. Obelisk handles retries on errors and timeouts.
-    *   The workflow continues processing. This may involve replaying the state form its execution log.
+Continuing the fibonacci example from {{ doc_link(title="activities", path="concepts/activities.md") }} page, let's generate the workflow from [this template](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow) using [cargo-generate](https://crates.io/crates/cargo-generate):
+```sh
+cargo generate obeli-sk/obelisk-templates \
+    fibo/workflow --name myworkflow
+cd myworkflow
+```
 
-6.  **Completion/Failure:** The workflow continues until it either completes successfully or encounters an unrecoverable error. The final state of the workflow is recorded.
+This will generate a directory with the following structure:
 
-## Directly calling an activity
+```sh
+.
+├── Cargo.toml
+├── obelisk.toml
+├── README.md
+├── rust-toolchain.toml
+├── src
+│   └── lib.rs
+└── wit
+    ├── deps
+    │   ├── obelisk_types@1.1.0
+    │   │   └── types@1.1.0.wit
+    │   ├── obelisk_workflow@1.1.0
+    │   │   └── workflow-support@1.1.0.wit
+    │   ├── template-fibo_activity                  # imported activity
+    │   │   └── fibo-activity.wit
+    │   ├── template-fibo_activity-obelisk-ext      # generated
+    │   │   └── fibo-activity-obelisk-ext.wit
+    │   └── template-fibo_workflow                  # exported interface
+    │       └── fibo-workflow.wit
+    └── impl.wit
+```
 
-The following example is a simple workflow that takes two arguments and calls an activity.
-First we need to define an interface with the function signature in WIT format. We also need to import the
+### Synchronously Calling an Activity
+
+First we need to define and export the workflow interface with the function signature in WIT format. We also need to import the
 activity interface.
 
-### Activity WIT
-```wit
+`fibo-activity.wit`:
+```fibo-activity.wit
 package template-fibo:activity;
 
 interface fibo-activity-ifc {
@@ -43,18 +69,21 @@ interface fibo-activity-ifc {
 }
 ```
 
-### Workflow WIT
+`fibo-workflow.wit` (simplified):
 ```wit
 package template-fibo:workflow;
 
 interface fibo-workflow-ifc {
     fiboa: func(n: u8, iterations: u32) -> u64;
 }
+```
+`impl.wit` (simplified):
+```wit
+package any:any;
+
 world any {
-    // Activity import, the WIT file must be placed in `wit/deps/`.
+    export template-fibo:workflow/fibo-workflow-ifc;
     import template-fibo:activity/fibo-activity-ifc;
-    // Export the interface
-    export fibo-workflow-ifc;
 }
 ```
 
@@ -75,14 +104,48 @@ impl Guest for Component {
 }
 ```
 
-In order to simplify creating the `Cargo` project, you can use [cargo-generate](https://crates.io/crates/cargo-generate) and the following template:
-```sh
-cargo generate obeli-sk/obelisk-templates fibo/workflow --name myworkflow
-cd myworkflow
-cargo build --release
-obelisk server run
+The configuration file `obelisk.toml` already includes the fibo activity and the workflow:
+```toml
+[[activity_wasm]]
+name = "activity_myfibo"
+# ...
+
+[[workflow]]
+name = "myworkflow"
+location.path = "target/wasm32-unknown-unknown/release/myworkflow.wasm"
 ```
-Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to execute the workflow.
+Let's build the WASM Component and run Obelisk.
+```sh
+cargo build --release
+obelisk server run --config ./obelisk.toml
+```
+In another terminal, let's list all the exported functions:
+```sh
+obelisk client component list
+```
+Expected output:
+```
+activity_myfibo activity_wasm:activity_myfibo
+Exports:
+        template-fibo:activity/fibo-activity-ifc.fibo : func(n: u8) -> u64
+
+myworkflow      workflow:myworkflow
+Exports:
+        template-fibo:workflow/fibo-workflow-ifc.fiboa : func(n: u8, iterations: u32) -> u64
+        template-fibo:workflow/fibo-workflow-ifc.fiboa-concurrent : func(n: u8, iterations: u32) -> u64
+```
+
+We can run the `fiboa` workflow using CLI:
+```sh
+obelisk client execution submit --follow \
+    template-fibo:workflow/fibo-workflow-ifc.fiboa [40,10]
+```
+or using the WebUI:
+<img src="{{ get_url(path="fiboa-submit.png") }}" alt="Submit the execution" style="max-width: 100%; height: auto; display: block;border: 2px dotted #efeded;" />
+The result shows that `fibo` activities were indeed executed sequentially:
+<img src="{{ get_url(path="fiboa-trace.png") }}" alt="View the result" style="max-width: 100%; height: auto; display: block;border: 2px dotted #efeded;" />
+
+Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to learn how to publish the WASM Component into an OCI registry and more.
 
 ## Concurrently submitting multiple child executions
 Using the same activity WIT, let's now submit all executions concurrently and then await their results:
@@ -110,8 +173,11 @@ interface fibo-activity-ifc {
 ### Workflow WIT
 Let's add a new function signature to the exported interface:
 ```wit
+package template-fibo:workflow;
+
 interface fibo-workflow-ifc {
-    fiboa-concurrent: func(n: u8, iterations: u32) -> u64;
+    fiboa: func(n: u8, iterations: u32) -> u64;
+    fiboa-concurrent: func(n: u8, iterations: u32) -> u64; // Added
 }
 ```
 ### Workflow implementation
@@ -129,13 +195,17 @@ fn fiboa_concurrent(n: u8, iterations: u32) -> u64 {
 }
 ```
 
-First, we must explicitly instantiate a {{ doc_link(title="Join Set", path="concepts/workflows/join-sets.md") }}. While direct calls also involve a join set, Obelisk creates it automatically in that scenario; here, manual creation is required.
+First, we must explicitly instantiate a {{ doc_link(title="Join Set", path="concepts/workflows/join-sets.md") }}. While synchronous calls also involve a join set, Obelisk creates it automatically in that scenario; here, manual creation is required.
 
 Next, we call the `-submit` extension function. This action persists the execution request to the database, queuing it for processing. An assigned executor will then pick up this task and run the child execution to completion. Importantly, the parent workflow is not blocked and can continue submitting other child executions while this happens.
 
 To retrieve results, call the `-await-next` extension function. This function will block if no child executions have finished. As the name implies, -await-next returns results based on completion order, not submission order – whichever child execution finishes first provides the next result.
 
-The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow) contains code examples demonstrating both direct (blocking) and concurrent submission of activities and sub-workflows within a workflow.
+Running the `fiboa-concurrent` produces the expected trace:
+
+<img src="{{ get_url(path="fiboa-concurrent-trace.png") }}" alt="View the result" style="max-width: 100%; height: auto; display: block;border: 2px dotted #efeded;" />
+
+The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow) contains code examples demonstrating both synchronous (blocking) and concurrent submission of activities and sub-workflows within a workflow.
 
 ## Scheduling child executions
 The `-schedule` extension function is suitable when the workflow either doesn't require the result of the submitted execution or needs to defer its execution to a future time. Importantly, join sets are not used for scheduled executions, as this method bypasses the {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} principles.
@@ -155,21 +225,11 @@ To understand the internal state of a workflow, you can use the following:
 
 Adding print statements or logs is ignored by the execution log, so you can add it to an in-progress or a finished execution and trigger the replay.
 
-## Configuration
-A simple workflow configuration can look like this:
-```toml
-[[workflow]]
-name = "myworkflow"
-location.path = "target/wasm32-unknown-unknown/release/workflow.wasm"
-```
-
-Only two attributes are required - `name` and `location`.
+## Advanced Topics
 
 ### Backtrace capture
 
-<img src="{{ get_url(path="backtrace.png") }}" alt="A backtrace viewer" style="max-width: 100%; height: auto; display: block;" />
-
-
+<img src="{{ get_url(path="backtrace.png") }}" alt="A backtrace viewer" style="max-width: 100%; height: auto; display: block;border: 2px dotted #efeded;" />
 
 If we specify the `backtrace.sources`, the frontend can
 display source file and line for every captured backtrace.
