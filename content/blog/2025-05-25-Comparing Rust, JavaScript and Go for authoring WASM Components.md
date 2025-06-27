@@ -8,7 +8,7 @@ Although WASM format is source-language agnostic, both JavaScript and Go needed 
 In this post we'll explore rewriting an activity,
 workflow and a webhook from Rust. All code examples are available in the [Stargazers repository](https://github.com/obeli-sk/demo-stargazers/).
 
-<!-- more --> 
+<!-- more -->
 The first to tackle is JavaScript.
 
 ## JavaScript Tooling
@@ -259,7 +259,7 @@ func respond(userPrompt string, settingsJSON string) (result cm.Result[string, s
 ```
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/activity/llm/openai-go/main.go).
 
-Writing the Go component and interfacing with the [cm](https://github.com/bytecodealliance/go-modules/tree/main/cm) package 
+Writing the Go component and interfacing with the [cm](https://github.com/bytecodealliance/go-modules/tree/main/cm) package
 proved to be more difficult and less idiomatic than writing the same component in JavaScript.
 
 The JavaScript version is the shortest: only 75 lines versus around 100 for Rust and 150 for Go. However, the final WASM file sizes differ vastly:
@@ -299,7 +299,7 @@ fn star_added(login: String, repo: String) -> Result<(), String> {
         let info = github::account::account_info(&login)?;
         // 3. Fetch the prompt from the database.
         let settings_json = db::llm::get_settings_json()?;
-        // 4. Generate the user's description.
+        // 4. Generate the user's description. This is the activity mentioned above!
         let description = llm::respond(&info, &settings_json)?;
         // 5. Persist the generated description.
         db::user::update_user_description(&login, &description)?;
@@ -376,7 +376,8 @@ One additional hurdle with the TinyGo component is that it always includes the `
 which imports nearly 30 interfaces like `wall-clock`, `network`, and `random`, using which adds nondeterminism on replay.
 
 As mentioned earlier JavaScript tooling allows stubbing these interfaces, but Go does not.
-To work around this, I added an experimental stub_wasi switch that handles it directly in Obelisk.
+To work around this, I added an experimental `stub_wasi` <a href="{{ get_url(path='@/docs/latest/configuration.md') }}">configuration switch</a>
+that handles it directly in Obelisk.
 
 ## Webhook Endpoint
 
@@ -511,7 +512,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		actualRepoArg = cm.None[string]()
 	}
 
-	dbOrdering := dbbindings.OrderingDescending 
+	dbOrdering := dbbindings.OrderingDescending
 	if query.Get("ordering") == "asc" {
 		dbOrdering = dbbindings.OrderingAscending
 	}
@@ -520,7 +521,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	result := dbbindings.ListStargazers(limit, actualRepoArg, dbOrdering)
 
 	if result.IsErr() {
-		errMsg := result.Err() 
+		errMsg := result.Err()
 		fmt.Printf("Error from list-stargazers: %s\n", errMsg)
 		http.Error(w, "Failed to retrieve stargazer list", http.StatusInternalServerError)
 		return
@@ -550,12 +551,12 @@ What’s less nice is that we have to rewrite structs for JSON serialization, as
 
 ## Conclusion
 
-Which language should you use to write WASM components? 
+Which language should you use to write WASM components?
 
 Since most of the Component Model tooling is built in Rust, the choice is obvious for Rustaceans.
 
 However, if you're choosing between JavaScript and Go, in 2025 I’d go with JavaScript.
 Despite larger WASM file sizes, you’ll benefit from an active community and well-integrated tooling.
 
-Go’s main advantage is compile-time checking of generated bindings, preventing incorrect parameter and return types. 
+Go’s main advantage is compile-time checking of generated bindings, preventing incorrect parameter and return types.
 This comes at the cost of higher verbosity and sometimes less idiomatic code.
