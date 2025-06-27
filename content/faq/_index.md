@@ -7,11 +7,11 @@ template = "faq.html"
 
 **A:** Determinism means that a system always produces the same result given the same initial parameters and inputs. The outcome is fully determined by cause and effect, with no randomness or uncertainty.
 
-Many popular workflow engines like GitHub Actions use a purely declarative model (YAML) where all workflow state is embedded right in the definition.
+Many popular workflow engines like GitHub Actions use a purely declarative model (YAML), where workflow state is managed explicitly. These engines move state between dependent jobs or workflows by explicitly passing input/output data, typically through artifacts or environment variables. However, embedding logic such as conditionals, abstracting common steps, and performing refactorings can be cumbersome in this model.
 
-If you write your workflow in a general‑purpose language instead, the engine must capture and then recreate every bit of state deterministically so it can replay the execution reliably (for example, after a crash or restart).
+In contrast, when a workflow is written as a function composed of many steps in a general-purpose language, the engine must capture all non-deterministic calls with side effects, so that the workflow can be interrupted, restarted, and replayed at any time. This enables reliable crash recovery, transparent retries, and the ability to unload long-running workflows from memory while waiting for results or timeouts.
 
-Deterministic execution therefore requires that all workflow state, including child executions' parameters and their results, be persisted in an execution log.
+Deterministic execution therefore requires that all workflow state - including child executions' parameters and their results - be persisted in an execution log.
 
 **Q:** What is the difference between a **workflow** and an **activity**?
 
