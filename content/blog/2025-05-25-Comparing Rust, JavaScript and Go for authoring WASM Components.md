@@ -4,7 +4,7 @@ date = 2025-05-25
 +++
 
 This month has already seen five Obelisk releases, each focused on adding JavaScript and Go support to the runtime.
-Although WASM format is source-language agnostic, both JavaScript and Go needed tweaks, workarounds and sometimes upstream tooling fixes to get fully working.
+Although WASM format is source-language agnostic, both JavaScript and Go needed tweaks, workarounds and sometimes upstream tooling fixes to get fully working with the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM Component Model</a>.
 In this post we'll explore rewriting an activity,
 workflow and a webhook from Rust. All code examples are available in the [Stargazers repository](https://github.com/obeli-sk/demo-stargazers/).
 
