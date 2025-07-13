@@ -372,7 +372,7 @@ func (c *Component) StarAdded(login string, repo string) cm.Result[string, struc
 ```
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/workflow-go/main.go)
 
-One additional hurdle with the TinyGo component is that it always includes the `wasi:cli/command@0.2.0` world,
+One additional [issue](https://github.com/tinygo-org/tinygo/issues/4843) with the TinyGo component is that it always includes the `wasi:cli/command@0.2.0` world,
 which imports nearly 30 interfaces like `wall-clock`, `network`, and `random`, using which adds nondeterminism on replay.
 
 As mentioned earlier JavaScript tooling allows stubbing these interfaces, but Go does not.
