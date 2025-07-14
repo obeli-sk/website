@@ -15,7 +15,7 @@ Deterministic execution therefore requires that all workflow state - including c
 
 **Q:** What is the difference between a **workflow** and an **activity**?
 
-**A:** A <a href="{{ get_url(path='@/docs/latest/concepts/workflows/_index.md') }}">workflow</a> is your deterministic, side‑effect‑free orchestration logic. An <a href="{{ get_url(path='@/docs/latest/concepts/activities.md') }}">activity</a> is a unit of work that does produce side effects like executing one or more HTTP requests. Activities must be idempotent(retriable) so the runtime can safely retry them on failure. The workflow invokes activities, waits for their results, and then continues its logic based on those results.
+**A:** A <a href="{{ get_url(path='@/docs/latest/concepts/workflows/_index.md') }}">workflow</a> is your deterministic, side‑effect‑free orchestration logic. An <a href="{{ get_url(path='@/docs/latest/concepts/activities.md') }}">activity</a> is a unit of work that does produce side effects like executing one or more HTTP requests. Activities must be idempotent(retriable) so the runtime can safely and transparently retry them on failure. The workflow invokes activities, waits for their results, and then continues its logic based on those results.
 
 **Q:** What happens when the system crashes during operation?
 
