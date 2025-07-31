@@ -103,24 +103,30 @@ env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inher
 
 ### Preopended directory suppport
 Disk IO must be explicitly enabled.
-When enabled, `.` will be available to the activity with all permissions. On host the directory is mapped to `activities.directories.parent_directory`/ExecutionID.
+When enabled, a directory will be created on host and mapped to `.` on the guest activity with all permissions.
+On host the directory is created as `activities.directories.parent_directory`/ExecutionID and is truncated after the activity finishes.
+
 ```toml
 directories  = { enabled = true, reuse_on_retry = false}
 ```
+
 `reuse_on_retry` disabled by default: every execution attempt will start with an empty preopened directory.
 
 If `reuse_on_retry` is enabled, a retried activity can reuse the same directory that was used by previous attempt. This
 can be helpful if an activity e.g. downloads a file and then processes it. Activity must in this case do all of its operations
 idempotently (e.g. `mkdir -p`) and verify the integrity of all files left by previous attempts.
 
+Read more about {{ doc_link(title="Preopened directories", path="concepts/activities/preopened-dirs.md") }}.
 
 ### Process Spawn API
 In order to enable the `obelisk:activity/process@1.0.0` API, preopened directory must be enabled and
-`process_provider` must be set to  `"native"`. This provider executes spawned processes in a process group.
-Server attempts to kill the whole process group when the activity is terminated.
+`process_provider` must be set to  `"native"`.
+
 ```toml
 directories  = { enabled = true, reuse_on_retry = false, process_provider = "native"}
 ```
+
+Read more about {{ doc_link(title="Process API", path="concepts/activities/process.md") }}.
 
 ## Workflows
 

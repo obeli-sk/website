@@ -10,9 +10,13 @@ Obelisk provides built-in runtime support functions that can be accessed by {{ d
 
 The runtime support functions are defined using [WIT (WebAssembly Interface Type)](https://component-model.bytecodealliance.org/design/wit.html) files.  Here's a breakdown of the available functions, grouped by their WIT interface:
 
-### [`obelisk:log@1.0.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_log%401.0.0/log%401.0.0.wit) (Logging)
+### [`obelisk:log/log@1.0.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_log%401.0.0/log%401.0.0.wit) (Logging)
+Available to:
+* activities
+* workflows
+* webhooks
 
-This interface provides standard logging functions, available to workflows, activities, and webhook endpoints. All messages are strings.
+This interface provides standard logging functions. All messages are strings.
 
 Example (Rust):
 ```rust
@@ -22,9 +26,12 @@ log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
 
-### [`obelisk:workflow@1.1.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow%401.1.0/workflow-support%401.1.0.wit) (Workflow-Specific Support)
-This interface provides functions that are only available to workflows.
+### [`obelisk:workflow/workflow-support@1.1.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow%401.1.0/workflow-support%401.1.0.wit) (Workflow-Specific Support)
+Available to:
+* workflows
 
+Some of these functions act like host-based activities - they avoid the need to spawn a WASM activity to obtain e.g. a random number.
+Other functions are related to persistent sleep and {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }} construction.
 
 * `random-u64(min: u64, max-exclusive: u64) -> u64`: Generates a pseudo-random unsigned 64-bit integer within the specified range [min, max-exclusive). The max-exclusive value is not included in the possible results.
 
@@ -58,3 +65,11 @@ let random_num = random_u64_inclusive(1, 10);
 // Create a named join set
 let join_set_id = new_join_set_named("my_join_set", ClosingStrategy::Complete);
 ```
+
+### [`obelisk:activity/process@1.0.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_activity%401.0.0/process.wit) (Process API)
+Available to:
+* activities
+
+The `process` WIT interface allows activities to spawn, wait for, kill etc. a local process.
+
+See {{ doc_link(title="Process API", path="concepts/activities/process.md") }} for details.
