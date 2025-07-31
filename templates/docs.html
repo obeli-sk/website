@@ -18,5 +18,11 @@
         <h1>{{ pageorsection.title }}</h1>
         {{ pageorsection.content | safe }}
     </article>
+    {% if section is defined %}
+    <h2>Subsections</h2>
+    {{ macros::render_toc(section=section) }}
+    {% endif %}
 </div>
+
+
 {% endblock content %}
