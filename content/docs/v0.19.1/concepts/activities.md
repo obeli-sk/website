@@ -6,7 +6,7 @@ weight = 20  #  Lower weights appear first
 
 Activities are the fundamental building blocks of work within an Obelisk {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. They represent individual, idempotent operations that perform a specific task, typically a network activity. Think of them as the "verbs" of your workflow – the actions that get things done. Activities are designed to be resilient, with built-in mechanisms for handling errors and ensuring reliable execution.
 
-## Key Characteristics of Activities
+## Defining Features of Activities
 * **Idempotency**: This is the most crucial aspect of an activity. An activity must be idempotent, meaning it can be executed multiple times with the same input and produce the same result without unintended side effects. This is essential for retries and ensuring the integrity of your workflow, even in the face of failures. The responsibility for fulfilling this contract lies with the activity's implementation.
 
 * **WASM Sandboxing**: Activities are executed within a WebAssembly (WASM) sandbox. This provides a secure, isolated environment, preventing activities from having unrestricted access to the system.

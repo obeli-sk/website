@@ -109,7 +109,7 @@ If you're ready to start building your own custom workflows and activities, here
 1.  **Understand the Core Concepts:**  Familiarize yourself with the fundamental building blocks of Obelisk:
 
     *  {{ doc_link(title="**Workflows**", path="concepts/workflows/_index.md") }}:  Learn how workflows orchestrate the execution of activities and other workflows.  Understand their deterministic nature and how Obelisk manages the execution log.
-    *  {{ doc_link(title="**Activities**", path="concepts/activities.md") }}:  Understand the role of activities as the fundamental units of work.  Learn about idempotency, the WASM sandbox, and the built-in resilience features.
+    *  {{ doc_link(title="**Activities**", path="concepts/activities/_index.md") }}:  Understand the role of activities as the fundamental units of work.  Learn about idempotency, the WASM sandbox, and the built-in resilience features.
     *  {{ doc_link(title="**Webhook Endpoints**", path="concepts/webhook-endpoints.md") }}:  Learn how to trigger executions via incoming HTTP requests.
     *  {{ doc_link(title="**Join Sets**", path="concepts/workflows/join-sets.md") }}: Understand how to manage concurrent executions.
     *  {{ doc_link(title="**Extension Functions**", path="concepts/workflows/extension-functions.md") }}: Learn how Obelisk auto-generates functions for submitting, awaiting and scheduling.

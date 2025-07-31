@@ -3,7 +3,7 @@ title = "Workflows"
 template = "docs.html"
 +++
 
-Workflows are the core of Obelisk's functionality, allowing you to define functions that orchestrate your application's processes by spawning sequences of child executions – such as {{ doc_link(title="activities", path="concepts/activities.md") }} or other workflows. Obelisk takes responsibility for managing the reliable execution of these sequences, handling factors like retries, and timeouts to ensure the entire process completes correctly, even in the face of interruptions like server restarts.
+Workflows are the core of Obelisk's functionality, allowing you to define functions that orchestrate your application's processes by spawning sequences of child executions – such as {{ doc_link(title="activities", path="concepts/activities/_index.md") }} or other workflows. Obelisk takes responsibility for managing the reliable execution of these sequences, handling factors like retries, and timeouts to ensure the entire process completes correctly, even in the face of interruptions like server restarts.
 
 ## Determinism and Replayability
 
@@ -23,10 +23,9 @@ This reliability is fundamentally enabled by ensuring **deterministic execution*
 
 ### Creating a workflow from a template
 
-Continuing the fibonacci example from {{ doc_link(title="activities", path="concepts/activities.md") }} page, let's generate the workflow from [this template](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow) using [cargo-generate](https://crates.io/crates/cargo-generate):
+Continuing the fibonacci example from {{ doc_link(title="activities", path="concepts/activities/_index.md") }} page, let's generate the workflow from [this template](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow) using [cargo-generate](https://crates.io/crates/cargo-generate):
 ```sh
-cargo generate obeli-sk/obelisk-templates \
-    fibo/workflow --name myworkflow
+cargo generate obeli-sk/obelisk-templates fibo/workflow --name myworkflow
 cd myworkflow
 ```
 

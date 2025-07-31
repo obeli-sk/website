@@ -6,7 +6,7 @@ weight = 20  #  Lower weights appear first
 
 Webhook endpoints in Obelisk provide a way to trigger executions via incoming HTTP requests. They act as entry points into your Obelisk system, allowing external services and applications to interact with your workflows and activities.
 
-## Key Concepts
+## Core Concepts
 
 *   **HTTP-Triggered Execution:** Webhook endpoints are fundamentally different from workflows in how they are initiated.  Workflows are started explicitly (CLI, UI, gRPC, or scheduled), while webhook endpoints are triggered by *incoming* HTTP requests.
 
@@ -133,7 +133,7 @@ The webhook endoint in [stargazers demo repository](https://github.com/obeli-sk/
 * Creating a tunnel to expose the local HTTP server
 * Testing
 
-## Key Differences from Workflows
+## Main Differences from Workflows
 
 | Feature            | Workflows                                     | Webhook Endpoints                             |
 | ----------------   | --------------------------------------------- | --------------------------------------------- |

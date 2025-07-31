@@ -4,7 +4,7 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Obelisk provides built-in runtime support functions that can be accessed by {{ doc_link(title="workflows", path="concepts/workflows/_index.md") }}. These functions offer essential capabilities like logging, random number generation, creating {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, and, crucially, the ability to pause workflow execution (`sleep`). {{ doc_link(title="Activities", path="concepts/activities.md") }} and {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }} have access to logging support functions, but *not* to the other workflow-specific functions.
+Obelisk provides built-in runtime support functions that can be accessed by {{ doc_link(title="workflows", path="concepts/workflows/_index.md") }}. These functions offer essential capabilities like logging, random number generation, creating {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, and, crucially, the ability to pause workflow execution (`sleep`). {{ doc_link(title="Activities", path="concepts/activities/_index.md") }} and {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }} have access to logging support functions, but *not* to the other workflow-specific functions.
 
 ## Available Support Functions
 

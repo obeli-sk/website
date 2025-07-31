@@ -7,7 +7,7 @@ Obelisk automatically generates *extension functions* for each workflow and acti
 
 ## Understanding Extension Functions
 
-Consider an {{ doc_link(title="activity", path="concepts/activities.md") }} function defined in WIT like this:
+Consider an {{ doc_link(title="activity", path="concepts/activities/_index.md") }} function defined in WIT like this:
 
 ```wit
 package stargazers:llm;
@@ -52,7 +52,7 @@ By repeatedly calling `respond-await-next` after submitting multiple executions 
 ## Scheduling a new execution with `-schedule`
 This function allows you to *schedule* the execution of the original function at a specific time in the future. It takes a `schedule-at` (defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types/types.wit)) and the original parameters as input.  Like `respond-submit`, it returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time. It's important to note that scheduled executions do not use join sets. This is because scheduling inherently breaks the parent-child relationship that join sets rely on for structured concurrency. Consequently, a scheduled function's result cannot be directly awaited by the caller. Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow. If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/runtime-support.md") }} function instead.
 
-## Key Concepts and Benefits
+## Core Concepts and Benefits
 
 *   **Asynchronous Execution:** `submit` and `await-next` enable asynchronous execution. You can submit multiple requests without blocking, and then process results as they become available.
 

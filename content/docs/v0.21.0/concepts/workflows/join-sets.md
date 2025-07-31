@@ -12,7 +12,7 @@ Join sets are a core mechanism for handling {{doc_link(title="structured concurr
 
 - Await Results: The workflow can use a direct call or an {{ doc_link(title="extension", path="concepts/workflows/extension-functions.md") }} to wait for the next operation in that set to complete.
 
-## Key Properties
+## Defining Features
 
 * **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish). The `await-next` call returns results in the order they become available.
 

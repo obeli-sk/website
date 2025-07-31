@@ -11,7 +11,7 @@ At its core, structured concurrency in Obelisk revolves around managing a tree s
 ### The Execution Tree
 
 1.  **Root Execution:** Every process starts with a single top-level execution, which is typically the initial {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }} instance triggered by an external event.
-2.  **Parent-Child Relationship:** Workflows can spawn child executions. These children can be other workflows or {{ doc_link(title="activities", path="concepts/activities.md") }}. Only activities are permitted to perform side effects, such as making external HTTP calls. Workflows orchestrate these activities and other workflows in a deterministic and thus replayable fashion.
+2.  **Parent-Child Relationship:** Workflows can spawn child executions. These children can be other workflows or {{ doc_link(title="activities", path="concepts/activities/_index.md") }}. Only activities are permitted to perform side effects, such as making external HTTP calls. Workflows orchestrate these activities and other workflows in a deterministic and thus replayable fashion.
 3.  **Controlled Lifetimes:** A fundamental guarantee of structured concurrency is that child executions **cannot outlive their parent**. When a parent workflow finishes (either successfully or due to an error), Obelisk ensures that all its direct children are also properly concluded before the grand-parent is notified.
 
 ### Error Propagation
