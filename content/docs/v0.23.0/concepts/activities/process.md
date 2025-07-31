@@ -33,7 +33,7 @@ let exit_status = process.wait()?;
 ensure!(exit_status == Some(0));
 ```
 
-Idempotency of file IO is needed only when `reuse_on_retry` is enabled in the {{ doc_link(title="TOML configuration", path="configuration.md") }}.
+Idempotency of each file IO operation is needed only when `reuse_on_retry` is enabled in the {{ doc_link(title="TOML configuration", path="configuration.md") }}.
 
 More examples can be found in the
 [process example activity](https://github.com/obeli-sk/obelisk/blob/main/crates/testing/test-programs/process/activity/src/lib.rs).
