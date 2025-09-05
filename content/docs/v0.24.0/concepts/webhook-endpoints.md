@@ -103,7 +103,7 @@ listening_addr = "0.0.0.0:9000"
 
 [[webhook_endpoint]]
 name = "fibo"
-location.path = "target/wasm32-wasip2/release/fibo_webhook_endpoint.wasm"  # Or use location.oci
+location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/fibo_webhook_endpoint.wasm"  # Or use location.oci
 http_server = "external"
 routes = [{ methods = ["GET"], route = "/fibo/:N/:ITERATIONS" }] # Path parameters are captured
 ```

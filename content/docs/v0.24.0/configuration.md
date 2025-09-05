@@ -20,10 +20,11 @@ webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 > **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is not yet implemented.
 
 ### Sqlite
-Set SQLite database directory. See [Path Prefixes](#path-prefixes) for details.
+Set SQLite database directory.
 ```toml
 sqlite.directory = "${DATA_DIR}/obelisk-sqlite"
 ```
+See [Path Prefixes](#path-prefixes) for how `${DATA_DIR}` is translated.
 
 Customize PRAGMA statements. Switch to "FULL" sync to perform fsync on each commit.
 Defaults are in [crates/db-sqlite/src/sqlite_dao.rs](https://github.com/obeli-sk/obelisk/blob/v0.24.0/crates/db-sqlite/src/sqlite_dao.rs).
@@ -51,8 +52,10 @@ global_webhook_instance_limiter = "unlimited" # If set to an integer, limits the
 fuel = "unlimited" # If set to an integer, WASM instances consume fuel, details: https://docs.wasmtime.dev/api/wasmtime/struct.Store.html#method.set_fuel
 ```
 
+See [Path Prefixes](#path-prefixes) for how `${CACHE_DIR}` is translated.
+
 ### WASM Cache Directory
-Path to directory where downloaded or transformed WASM files are stored. Supports path prefixes.
+Path to directory where downloaded or transformed WASM files are stored. Supports [path prefixes](#path-prefixes).
 By default `"${CACHE_DIR}/wasm"` or `"./cache/wasm"` if no valid home directory path could be retrieved from the operating system.
 
 ### Allocator Config
@@ -90,6 +93,7 @@ location.path = "path/to/wasm"       # File path location (mutually exclusive wi
 location.oci = "docker.io/repo/image:tag"  # OCI registry location
 content_digest = "sha256:..."        # Optional: WASM file hash verification
 ```
+Value of `location.path` supports [path prefixes](#path-prefixes).
 
 ### Common Executor Settings
 
@@ -273,7 +277,7 @@ prefix = "obelisk_server_daily" # File name prefix
 
 The following path prefixes are supported throughout the configuration:
 
-| Prefix                 | Default Path               | Details                                           |
+| Prefix                 | Default Path on Linux      | Details                                           |
 |------------------------|----------------------------|---------------------------------------------------|
 | `~`                    | `~`                        | Home directory                                    |
 | `${DATA_DIR}`          | `~/.local/share/obelisk`   | System data directory                             |
@@ -281,3 +285,9 @@ The following path prefixes are supported throughout the configuration:
 | `${CONFIG_DIR}`        | `~/.config/obelisk`        | System config directory                           |
 | `${OBELISK_TOML_DIR}`  | N/A                        | Directory where the obelisk.toml file is located  |
 | `${TEMP_DIR}`          | /tmp                       | See [temp_dir](https://doc.rust-lang.org/std/env/fn.temp_dir.html)|
+
+Note: the resolved path on Mac OS and Windows will be differet, e.g. for `${CONFIG_DIR}`:
+    * `/Users/youruser/Library/Application Support/com.obelisk.obelisk-App/` on Mac
+    * `C:\Users\youruser\AppData\Roaming\obelisk\obelisk\config\` on Windows
+
+See the [directories crate documentation](https://docs.rs/directories/6.0.0/directories/struct.ProjectDirs.html) for details.

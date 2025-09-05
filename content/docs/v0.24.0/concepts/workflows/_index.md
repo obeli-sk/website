@@ -115,7 +115,7 @@ name = "activity_myfibo"
 
 [[workflow]]
 name = "myworkflow"
-location.path = "target/wasm32-unknown-unknown/release/myworkflow.wasm"
+location.path = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/myworkflow.wasm"
 ```
 Let's build the WASM Component and run Obelisk.
 ```sh
@@ -256,7 +256,7 @@ For example, having the following configuration:
 ```toml
 [[workflow]]
 name = "myworkflow"
-location.path = "target/wasm32-unknown-unknown/release/workflow.wasm"
+location.path = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/workflow.wasm"
 exec.lock_expiry.seconds = 1
 join_next_blocking_strategy = "await"
 ```

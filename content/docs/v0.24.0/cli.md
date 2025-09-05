@@ -21,10 +21,7 @@ Following optional options can be provided:
 
 If the `-c` switch is not provided, Obelisk attempts to find the TOML configuration automatically in the following paths:
 1. `obelisk.toml` in the current directory
-2. `$CONFIG_DIR/obelisk/obelisk.toml` - the `$CONFIG_DIR` translates to:
-    * `/home/youruser/.config/obelisk/` on Linux
-    * `/Users/youruser/Library/Application Support/com.obelisk.obelisk-App/` on Mac
-    * `C:\Users\youruser\AppData\Roaming\obelisk\obelisk\config\` on Windows
+2. `$CONFIG_DIR/obelisk/obelisk.toml` - See {{ doc_link(title="Path Prefixes", path="configuration.md#path-prefixes") }}
 3. `/etc/obelisk/obelisk.toml`
 
 ### Verifying the Server Configuration
@@ -43,7 +40,7 @@ Following optional options can be provided:
 * `--clean-cache` - Clean the codegen and OCI cache directories
 * `--clean-codegen-cache` - Clean the codegen cache
 * `-c, --config <CONFIG>` - Path to the TOML configuration
-` `-i, --ignore-missing-env-vars` -Do not verify existence of environment variables
+* `-i, --ignore-missing-env-vars` -Do not verify existence of environment variables
 
 ## Obelisk Client
 
