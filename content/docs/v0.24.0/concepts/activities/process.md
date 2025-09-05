@@ -1,0 +1,40 @@
++++
+title = "Process API"
+template = "docs.html"
+weight = 20  #  Lower weights appear first
++++
+
+The WIT interface [`obelisk:activity/process@1.0.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_activity%401.0.0/process.wit)
+allows activities to spawn, wait for, kill etc. a local process.
+
+Disk IO must be explicitly enabled in the {{ doc_link(title="TOML configuration", path="configuration.md") }} using `directories.enabled = true`
+setting, and process API itself must be enabled using `directories.process_provider = "native"` setting.
+
+The `native` process provider executes spawned processes in a process group.
+Server attempts to kill the whole process group when the activity is terminated.
+
+Example of running `touch somefile`:
+
+```rust
+// Idempotently create a file.
+let process = process_support::spawn(
+    "touch",
+    &process_support::SpawnOptions {
+        args: vec!["somefile".to_string()],
+        environment: vec![],
+        current_working_directory: None,
+        stdin: process_support::Stdio::Discard,
+        stdout: process_support::Stdio::Discard,
+        stderr: process_support::Stdio::Discard,
+    },
+)?;
+println!("Waiting for {}", process.id());
+let exit_status = process.wait()?;
+ensure!(exit_status == Some(0));
+```
+
+Idempotency of each file IO operation is needed only when `reuse_on_retry` is enabled in the {{ doc_link(title="TOML configuration", path="configuration.md") }}.
+
+More examples can be found in the
+[process example activity](https://github.com/obeli-sk/obelisk/blob/main/crates/testing/test-programs/process/activity/src/lib.rs).
+
