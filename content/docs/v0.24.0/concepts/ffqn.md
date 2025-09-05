@@ -50,7 +50,7 @@ world any {
 }
 ```
 
-# Function Fully Qualified Name (FFQN)
+# FFQN
 
 A function fully qualified name (FFQN) is a unique identifier for a function that includes the interface path and the function name.
 The FFQN is used to reference functions in Obelisk workflows and the execution log. The FFQN is a string that has the following format:
