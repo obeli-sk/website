@@ -10,6 +10,8 @@ Workflows can call child executions directly using a regular function call or th
 
 Obelisk automatically generates extension functions of this interface for each exported workflow and activity function.
 
+The `-obelisk-ext` interface can only be imported by workflows.
+
 This interface simplifies submitting, awaiting, and scheduling child executions from a parent workflow. They streamline common tasks associated with workflow execution and are a key part of Obelisk's {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} model.
 
 The types used in the extension functions (`execution-id`, `join-set-id`, `schedule-at`, `execution-error`) are defined in the ][obelisk:types](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit) WIT files.
@@ -109,12 +111,15 @@ interface llm {
 }
 ```
 
-This function allows you to schedule the execution of the original function at a specific time in the future. It takes a `schedule-at` (defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)) and the original parameters as input.  It returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time. It's important to note that scheduled executions do not use join sets. This is because scheduling inherently breaks the parent-child relationship that join sets rely on for {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}. Consequently, a scheduled function's result cannot be directly awaited by the caller. Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow. If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/runtime-support.md") }} function instead.
+The `-obelisk-schedule` interface can be imported by both workflows and webhooks.
 
+The `-schedule` allows to schedule the execution of the original function at a specific time in the future. It takes a `schedule-at` (defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)) and the original parameters as input.  It returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time. It's important to note that scheduled executions do not use join sets. This is because scheduling inherently breaks the parent-child relationship that join sets rely on for {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}. Consequently, a scheduled function's result cannot be directly awaited by the caller. Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow. If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/runtime-support.md") }} function instead.
 
 # Supplying responses of stubbed activities using the `-obelisk-stub` interface
 
 Obelisk automatically generates stub response functions for each exported activity function in this interface, provided the activity is configured as a `activity_stub`.
+
+The `-obelisk-stub` interface can only be imported by workflows.
 
 Stub activity functions are not executed by the Obelisk runtime. Instead, the following steps are executed:
 
@@ -153,7 +158,7 @@ interface activity {
 
 The `-stub` function is used by a workflow that supplies the return value. The return value can also be injected using Web UI or CLI using
 ```
-obelisk client execution stub <EXECUTION_ID> [RETVAL]
+obelisk client execution stub  <--return-value <RETURN_VALUE>|--empty|--error> <EXECUTION_ID>
 ```
 
 The stubbed response call is idempotent, meaning it can be executed multiple times as long as the response remains the same. Otherwise an `stub-error` is returned:

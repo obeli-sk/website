@@ -112,7 +112,7 @@ If you're ready to start building your own custom workflows and activities, here
     *  {{ doc_link(title="**Activities**", path="concepts/activities/_index.md") }}:  Understand the role of activities as the fundamental units of work.  Learn about idempotency, the WASM sandbox, and the built-in resilience features.
     *  {{ doc_link(title="**Webhook Endpoints**", path="concepts/webhook-endpoints.md") }}:  Learn how to trigger executions via incoming HTTP requests.
     *  {{ doc_link(title="**Join Sets**", path="concepts/workflows/join-sets.md") }}: Understand how to manage concurrent executions.
-    *  {{ doc_link(title="**Extension Functions**", path="concepts/workflows/extension-functions.md") }}: Learn how Obelisk auto-generates functions for submitting, awaiting and scheduling.
+    *  {{ doc_link(title="**Extension Functions**", path="concepts/extension-functions.md") }}: Learn how Obelisk auto-generates functions for submitting, awaiting and scheduling.
     *  {{ doc_link(title="**Runtime Support**", path="concepts/runtime-support.md") }}: See functions available in the runtime.
 
 2.  **Explore the Configuration:** Learn how to configure Obelisk using the `obelisk.toml` file:

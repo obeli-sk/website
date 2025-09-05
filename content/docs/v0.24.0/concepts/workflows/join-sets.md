@@ -10,7 +10,7 @@ Join sets are a core mechanism for handling {{doc_link(title="structured concurr
 
 - Add Operations to a Join Set: When a workflow spawns a child execution (workflow, activity), the execution is associated with a join set.
 
-- Await Results: The workflow can use the `-await-next` {{ doc_link(title="extension", path="concepts/workflows/extension-functions.md") }} or
+- Await Results: The workflow can use the `-await-next` {{ doc_link(title="extension", path="concepts/extension-functions.md") }} or
 `join-next` {{ doc_link(title="support function", path="concepts/runtime-support.md") }} to wait for the next operation in that set to complete.
 
 ## Defining Features

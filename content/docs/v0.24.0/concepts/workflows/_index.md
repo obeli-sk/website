@@ -154,7 +154,7 @@ Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blo
 Using the same activity WIT, let's now submit all executions concurrently and then await their results:
 
 ### Extended Activity WIT
-Obelisk can generate several helper functions for every exported activity or workflow function. See {{ doc_link(title="Extension Functions", path="concepts/workflows/extension-functions.md") }} for details.
+Obelisk can generate several helper functions for every exported activity or workflow function. See {{ doc_link(title="Extension Functions", path="concepts/extension-functions.md") }} for details.
 ```wit
 // Generated
 package template-fibo:activity-obelisk-ext;
@@ -209,7 +209,7 @@ Running the `fiboa-concurrent` produces the expected trace:
 The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow) contains code examples demonstrating both synchronous (blocking) and concurrent submission of activities and sub-workflows within a workflow.
 
 ## Scheduling child executions
-The `-schedule` {{ doc_link(title="extension function", path="concepts/workflows/extension-functions.md") }} is suitable when the workflow either doesn't require the result of the submitted execution or needs to defer its execution to a future time. Importantly, join sets are not used for scheduled executions, as this method bypasses the {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} principles.
+The `-schedule` {{ doc_link(title="extension function", path="concepts/extension-functions.md") }} is suitable when the workflow either doesn't require the result of the submitted execution or needs to defer its execution to a future time. Importantly, join sets are not used for scheduled executions, as this method bypasses the {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} principles.
 
 ```rust
 fn schedule_child(n: u8)  {
