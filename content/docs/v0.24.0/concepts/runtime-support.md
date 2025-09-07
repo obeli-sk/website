@@ -10,7 +10,7 @@ Obelisk provides built-in runtime support functions that can be accessed by {{ d
 
 The runtime support functions are defined using [WIT (WebAssembly Interface Type)](https://component-model.bytecodealliance.org/design/wit.html) files.  Here's a breakdown of the available functions, grouped by their WIT interface:
 
-### [`obelisk:log/log@1.0.0`](https://github.com/obeli-sk/obelisk/blob/v0.24.0/wit/obelisk_log%401.0.0/log%401.0.0.wit) (Logging)
+### {{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/log%401.0.0.wit") }}
 Available to:
 * activities
 * workflows
@@ -25,8 +25,7 @@ use obelisk::log::log;
 log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
-
-### [`obelisk:workflow/workflow-support@2.0.0`](https://github.com/obeli-sk/obelisk/blob/v0.24.0/wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit) (Workflow-Specific Support)
+### {{ github(title="`obelisk:workflow/workflow-support@2.0.0`", path="wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit") }}
 Available to:
 * workflows
 
@@ -73,7 +72,8 @@ let random_num = random_u64_inclusive(1, 10);
 let join_set_id = new_join_set_named("my_join_set", ClosingStrategy::Complete).unwrap();
 ```
 
-### [`obelisk:activity/process@1.0.0`](https://github.com/obeli-sk/obelisk/blob/v0.24.0/wit/obelisk_activity%401.0.0/process.wit) (Process API)
+### {{ github(title="`obelisk:activity/process@1.0.0`", path="wit/obelisk_activity%401.0.0/process.wit") }}
+
 Available to:
 * activities
 
