@@ -22,7 +22,7 @@ package stargazers:github@1.2.0;
 ```
 
 # Interface Fully Qualified Name (IFQN)
-An interface fully qualified name (IFQN) is a unique identifier for an interface that includes the package and the interface name separated by a slash.
+An interface fully qualified name is a unique identifier for an interface that includes the package and the interface name separated by a slash.
 For example, if the interface name is `account`, the IFQN is:
 
 ```
@@ -50,9 +50,9 @@ world any {
 }
 ```
 
-# FFQN
+# Function Fully Qualified Name (FFQN)
 
-A function fully qualified name (FFQN) is a unique identifier for a function that includes the interface path and the function name.
+A function fully qualified name is a unique identifier for a function that includes the interface path and the function name.
 The FFQN is used to reference functions in Obelisk workflows and the execution log. The FFQN is a string that has the following format:
 
 ```

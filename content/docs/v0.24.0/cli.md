@@ -50,7 +50,7 @@ obelisk client execution submit [OPTIONS] <FUNCTION> <PARAMS>
 ```
 
 Arguments:
-*  `<FUNCTION>` - Function in the {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#ffqn") }}
+*  `<FUNCTION>` - Function in the {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }}
 *  `<PARAMS>` - Parameters encoded as an JSON Array
 
 Options:
