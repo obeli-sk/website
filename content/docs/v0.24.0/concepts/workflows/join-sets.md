@@ -30,7 +30,7 @@ There are three kinds of join sets:
 ### Allowed Named Join Set Charset
 The name of a join set is limited to the following charset: Alphanumeric characters (both upper and lower case), and these special characters: `_-/`
 
-See {{ doc_link(title="Join Set Id", path="concepts/identifiers.md#join-set-id") }} for details.
+See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id") }} for details.
 
 ## API
 The API for join sets is as defined in [workflow-support.wit](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit).
@@ -119,32 +119,32 @@ let join_set_info = new_join_set_generated(ClosingStrategy::Complete);
 ```
 One benefit of naming join sets is that they can be used to group child executions that are logically related, which can be useful for debugging and monitoring.
 
-## Homogenous Join Set
+## Homogenous Join Sets
 When a join set contains only child executions of the same function, it is called homogenous. It is safe to call `-await-next` until all submitted executions are awaited. Calling `-await-next` more times will result in `await-next-extension-error::all-processed` error.
 
 ```rust
-let join_set_foo = new_join_set_generated(ClosingStrategy::Complete);
+let join_set = new_join_set_generated(ClosingStrategy::Complete);
 // Submit the same execution with different parameters.
 for _ in 0..9 {
-    let _execution_id = account_info_submit(&join_set_info, foo());
+    let _execution_id = account_info_submit(&join_set, foo());
 }
 // Await the responses as they arrive.
 for _ in 0..9 {
-    let (_execution_id, res) = account_info_await_next(&join_set_info).unwrap();
+    let (_execution_id, res) = account_info_await_next(&join_set).unwrap();
 }
 ```
 
-## Heterogenous Join Set
+## Heterogenous Join Sets
 When a join set contains child executions of multiple functions, or delay requests, it is called heterogenous. It is generally not safe to call `-await-next` extension as the resolved response might not belong to the awaited function. Therefore one must use `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }} together with `-get` extension function based on the returned `response-id`.
 
 ```rust
-let join_set_foo = new_join_set_generated(ClosingStrategy::Complete);
+let join_set = new_join_set_generated(ClosingStrategy::Complete);
 // Submit the two child executions and a delay request.
-let execution_id_account = account_info_submit(&join_set_foo, &login);
-let execution_id_settings = get_settings_json_submit(&join_set_foo);
-submit_delay(&join_set_foo, ScheduleAt::In(Duration::Days(1)));
+let execution_id_account = account_info_submit(&join_set, &login);
+let execution_id_settings = get_settings_json_submit(&join_set);
+let _delay_id = submit_delay(&join_set, ScheduleAt::In(Duration::Seconds(10)));
 // Use `join-next` to get the first response.
-match join_next(&join_set_foo) {
+match join_next(&join_set) {
     Ok(ResponseId::DelayId(_)) => println!("delay won"),
     Ok(ResponseId::ExecutionId(execution_id)) => {
         if execution_id.id == execution_id_account.id {
@@ -184,30 +184,35 @@ The following example creates a named join set for each user fetched from the da
 fn backfill_parallel(repo: String) -> Result<(), String> {
     let page_size = 5;
     let mut cursor = None;
-    // Fetch the list of stargazers from GitHub. A blocking call that creates and awaits a one-off join set.
-    while let Some(resp) =
+    while let Some(resp) = // fetch a batch of users using an one-off join set
         github::account::list_stargazers(&repo, page_size, cursor.as_deref())?
     {
+        let mut join_set_batch = Vec::new();
         for login in &resp.logins {
-            // 1. Create a named join set for each login.
-            let named_join_set = new_join_set_named(login, ClosingStrategy::Complete).unwrap();
-            // 2. Submit the child execution to the named join set.
-            imported_workflow_ext::star_added_parallel_submit(
-                &named_join_set,
+            let join_set = new_join_set_named(login, ClosingStrategy::Complete)
+                    .expect("github login does not contain illegal characters");
+            // `-submit`-ting child executions without `-await`-ing results
+            star_added_parallel_submit(
+                &join_set,
                 login,
                 &repo,
             );
-            // no `-await-next` or `join-next` here, but the execution is blocked because the
-            // join set goes out of scope.
-            // Using `std::mem::forget(named_join_set)` would move join set close to the execution finish.
+            join_set_batch.push(join_set); // closing join set here would kill parallelism
         }
         if resp.logins.len() < usize::from(page_size) {
+            // last batch of join sets closed here.
             break;
         }
         cursor = Some(resp.cursor);
+        // join set batch closed here.
     }
     Ok(())
 }
 ```
 
-Note that there is no corresponding `await-next` call in this example. When this execution completes, all child executions are guaranteed to be finished.
+Note that there is no corresponding `await-next` call in this example.
+The scoped Join Set Close adds back-pressure - the first batch of five child executions are submitted,
+then implicitly awaited before the while loop begins again:
+
+<img src="{{ get_url(path="stargazers-backfill-parallel.png") }}" />
+Lines `o1_1` and `o2_1` are one-off join sets containing the `list-stargazers` activity.

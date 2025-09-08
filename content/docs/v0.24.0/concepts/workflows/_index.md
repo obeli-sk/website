@@ -266,5 +266,4 @@ If the workflow instance calls an action right at the start, it will be kept hot
 On the other hand, if the activity result is delayed, the execution will be unloaded from memory. Once the activity finishes, it will mark the parent workflow as pending. The workflow
 executor will lock it again, fetch its execution log and replay all the steps that the execution went through.
 
-If the `interrupt` strategy is selected, each call to an activity or {{ doc_link(title="persistent sleep", path="concepts/runtime-support.md") }} will trigger locking
-the execution and replaying the execution log.
+If the `interrupt` strategy is selected, each call to an activity or {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }} will trigger locking the execution and replaying the execution log.

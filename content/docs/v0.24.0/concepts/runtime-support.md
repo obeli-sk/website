@@ -30,7 +30,7 @@ Available to:
 * workflows
 
 Some of these functions act like host-based activities - they avoid the need to spawn a WASM activity to obtain e.g. a random number.
-Other functions are related to persistent sleep and {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }} construction.
+Other functions are related to {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }} and {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }} construction.
 
 * `random-u64(min: u64, max-exclusive: u64) -> u64`: Generates a pseudo-random unsigned 64-bit integer within the specified range [min, max-exclusive). The max-exclusive value is not included in the possible results.
 
@@ -38,7 +38,7 @@ Other functions are related to persistent sleep and {{ doc_link(title="join set"
 
 * `random-string(min-length: u16, max-length-exclusive: u16) -> string`: Generates a pseudo-random alphanumeric string (containing uppercase and lowercase letters, and digits) with a length between min-length (inclusive) and max-length-exclusive (exclusive).
 
-* `sleep(duration: duration)`: Pauses the workflow's execution for the specified duration. This is a persistent sleep, meaning the workflow's state is saved, and execution will resume after the duration has elapsed, even if the Obelisk server restarts. This is a crucial function for implementing long-running workflows and delays. The sleep duration can be specified in milliseconds, seconds, minutes, hours, or days.
+* `sleep(duration: duration)`: {{ doc_link(title="Persistently", path="concepts/workflows/persistent-sleep.md") }} pauses the workflow's execution for the specified duration. The sleep duration can be specified in milliseconds, seconds, minutes, hours, or days.
 
 * `submit-delay: func(join-set-id: borrow<join-set-id>, timeout: schedule-at) -> delay-id`:
 Submit a delay request to the join set. The delay can be later polled using `join-next`.
