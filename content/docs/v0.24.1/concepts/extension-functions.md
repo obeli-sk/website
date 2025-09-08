@@ -87,7 +87,7 @@ This function is used to block the workflow, waiting for the next result from a 
 1.  The workflow function has finished successfully. In this case, the tuple will hold the `execution-id` that identifies the finished execution and the original return value.
 2.  There was an error during the child execution of type `await-next-extension-error` as defined in [obelisk:types](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)
 
-By repeatedly calling `yourfunction-await-next` after submitting multiple executions on a homogenous {{ doc_link(title="join set", path="concepts/workflows/join-sets.md#homogenous-join-set") }}, you can retrieve results as they become available, in the order they complete.
+By repeatedly calling `yourfunction-await-next` after submitting multiple executions on a homogenous {{ doc_link(title="join set", path="concepts/workflows/join-sets.md#homogenous-join-sets") }}, you can retrieve results as they become available, in the order they complete.
 
 The `await-next-extension-error` is defined as:
 ```wit
@@ -105,7 +105,8 @@ variant await-next-extension-error {
 
 ## Getting an already processed response using `-get`
 
-Once a response has been processed, its response can be obtained using the `-get` extension. This only makes sense when dealing with {{ doc_link(title="Heterogenous Join Sets", path="concepts/workflows/join-sets.md#heterogenous-join-set") }} and the `join-next` host support function, because `-await-next` already returns the response.
+Once a response has been processed, its response can be obtained using the `-get` extension. This only makes sense when dealing with
+and the `join-next` host support function, because `-await-next` already returns the response.
 The `-get` returns a result with the following error variant:
 
 ```wit
@@ -140,7 +141,15 @@ interface llm {
 
 The `-obelisk-schedule` interface can be imported by both workflows and webhooks.
 
-The `-schedule` allows to schedule the execution of the original function at a specific time in the future. It takes a `schedule-at` (defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)) and the original parameters as input.  It returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time. It's important to note that scheduled executions do not use join sets. This is because scheduling inherently breaks the parent-child relationship that join sets rely on for {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}. Consequently, a scheduled function's result cannot be directly awaited by the caller. Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow. If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/runtime-support.md") }} function instead.
+The `-schedule` allows to schedule the execution of the original function at a specific time in the future. It takes a `schedule-at`
+(defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)) and the original parameters as input.
+It returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time.
+It's important to note that scheduled executions do not use join sets.
+This is because scheduling inherently breaks the parent-child relationship that join sets rely on for
+{{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}.
+Consequently, a scheduled function's result cannot be directly awaited by the caller.
+Scheduled functions are "fire-and-forget" from the perspective of the scheduling workflow.
+If you need to retrieve the result, you would typically use the {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }} instead.
 
 # Supplying responses of stub activities using the `-obelisk-stub` interface
 Given the same export function `respond`, Obelisk can generate the following `-stub` function when requested.

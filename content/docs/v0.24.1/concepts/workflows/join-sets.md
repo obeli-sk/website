@@ -119,7 +119,7 @@ let join_set_info = new_join_set_generated(ClosingStrategy::Complete);
 ```
 One benefit of naming join sets is that they can be used to group child executions that are logically related, which can be useful for debugging and monitoring.
 
-## Homogenous Join Set
+## Homogenous Join Sets
 When a join set contains only child executions of the same function, it is called homogenous. It is safe to call `-await-next` until all submitted executions are awaited. Calling `-await-next` more times will result in `await-next-extension-error::all-processed` error.
 
 ```rust
@@ -134,7 +134,7 @@ for _ in 0..9 {
 }
 ```
 
-## Heterogenous Join Set
+## Heterogenous Join Sets
 When a join set contains child executions of multiple functions, or delay requests, it is called heterogenous. It is generally not safe to call `-await-next` extension as the resolved response might not belong to the awaited function. Therefore one must use `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }} together with `-get` extension function based on the returned `response-id`.
 
 ```rust

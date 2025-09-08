@@ -9,7 +9,7 @@ We use the GitHub account activity from [stargazers](https://github.com/obeli-sk
 
 # Package Name
 As per the [WIT Specification](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md#package-names)
-each WIT package consits of a namespace field and a package field separated by a colon.Optionally a WIT package can contain a version.
+each WIT package consits of a namespace field and a package field separated by a colon. Optionally a WIT package can contain a version.
 
 Package names are specified at the top of a WIT file via a package declaration:
 
