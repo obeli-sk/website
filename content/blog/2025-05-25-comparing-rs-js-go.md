@@ -1,6 +1,7 @@
 +++
 title = "Comparing Rust, JavaScript and Go for authoring WASM Components"
 date = 2025-05-25
+slug = "comparing-rust-javascript-and-go-for-authoring-wasm-components"
 +++
 
 This month has already seen five Obelisk releases, each focused on adding JavaScript and Go support to the runtime.
