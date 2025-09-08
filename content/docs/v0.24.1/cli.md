@@ -127,6 +127,6 @@ obelisk generate extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> [OUTPUT_DEPS_
 ```
 
 Arguments:
-* `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`, `webhook_endpoint`.
+* `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`. No extensions are generated for {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }}.
 * `<INPUT_WIT_DIRECTORY>` - Path to the `wit` folder, containing the target world and possibly `deps` subfolder.
 * `[OUTPUT_DEPS_DIRECTORY]`  - Optional. If not set, WIT files will be written to the input directory.

@@ -30,7 +30,7 @@ There are three kinds of join sets:
 ### Allowed Named Join Set Charset
 The name of a join set is limited to the following charset: Alphanumeric characters (both upper and lower case), and these special characters: `_-/`
 
-See {{ doc_link(title="Join Set Id", path="concepts/identifiers.md#join-set-id") }} for details.
+See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id") }} for details.
 
 ## API
 The API for join sets is as defined in [workflow-support.wit](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit).

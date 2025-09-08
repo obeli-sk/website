@@ -93,7 +93,7 @@ export TURSO_LOCATION="[databaseName]-[organizationSlug].turso.io"
 obelisk server run --config obelisk-oci.toml
 ```
 
-5.  **Configure GitHub Webhook (Optional):** To fully experience the demo, you'll need to configure a GitHub webhook to send "star added" events to your running Obelisk instance.  This will involve exposing the webhook's HTTP server to the internet temporarily. *Detailed instructions for setting up the webhook are provided in the [webhook's README](https://github.com/obeli-sk/demo-stargazers/blob/main/webhook/README.md).*  If you skip this step, you can still interact with the workflow using the Obelisk CLI or Web UI, but it won't be triggered automatically by GitHub events.
+5.  **Configure GitHub Webhook (Optional):** For the demo to work fully, you'll need to configure a GitHub webhook to send "star added" events to your running Obelisk instance.  This will involve exposing the webhook's HTTP server to the internet temporarily. *Detailed instructions for setting up the webhook are provided in the [webhook's README](https://github.com/obeli-sk/demo-stargazers/blob/main/webhook/README.md).*  If you skip this step, you can still interact with the workflow using the Obelisk CLI, Web UI or any HTTP client triggering the webhook endpoint, but it won't be triggered automatically by GitHub events.
 
 6.  **Interact with the Demo:** Once the server is running and (optionally) the webhook is configured, you can:
     *   Star the repository (if the webhook is set up).
@@ -135,7 +135,7 @@ The available templates provide a basic structure, including the necessary WIT f
 
 5.  **Interact and Iterate:**
 
-    *   Use the Obelisk CLI, Web UI, or gRPC API to interact with your deployed workflows and activities.
+    *   Use the {{ doc_link(title="Obelisk CLI", path="cli.md") }}, Web UI, or gRPC API to interact with your deployed workflows and activities.
     *   Iteratively refine your code, configuration, and deployment process.
 
 The provided documentation links and project templates will guide you through each step of the process.
