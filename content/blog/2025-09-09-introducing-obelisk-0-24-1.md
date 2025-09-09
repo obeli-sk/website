@@ -3,7 +3,7 @@ title = "Introducing Obelisk 0.24.1"
 date = 2025-09-09
 +++
 
-Obelisk is a deterministic workflow engine that runs, stores, and replays WASM-based workflows using SQLite.
+Obelisk is an open-source deterministic workflow engine that runs, stores, and replays WASM-based workflows using SQLite.
 
 There have been many changes since the [initial public release 0.19.1](@/blog/2025-05-03-introducing-obelisk.md),
 mostly focused on structured concurrency ergonomics, adding more abilities to activities and exploring using
