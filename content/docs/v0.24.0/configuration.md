@@ -122,7 +122,7 @@ forward_stderr = "stderr"            # stderr forwarding ("stdout"|"stderr"|"non
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
 ```
 
-### Preopended directory suppport
+### Preopended directory support
 Disk IO must be explicitly enabled.
 When enabled, a directory will be created on host and mapped to `.` on the guest activity with all permissions.
 On host the directory is created as `activities.directories.parent_directory`/ExecutionID and is truncated after the activity finishes.

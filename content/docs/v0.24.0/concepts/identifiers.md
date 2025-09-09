@@ -6,7 +6,7 @@ weight = 20
 
 ## Join Set ID
 As discussed in {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}, there are three kinds of Join Sets:
-* **One-off** - Join set is created implicitly when calling `sleep` {{ doc_link(title="support function", path="concepts/runtime-support.md") }} or calling the child import directly, without an {{ doc_link(title="extension function", path="concepts/extension-functions.md") }}. Example: `o:1`
+* **One-off** - Join set is created implicitly when calling `sleep` {{ doc_link(title="support function", path="concepts/runtime-support.md") }} or calling the child import directly, without an {{ doc_link(title="extension function", path="concepts/extensions.md") }}. Example: `o:1`
 * **Generated** - Created using `new_join_set_generated` {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Example: `g:1`
 * **Named** - Created using `new_join_set_named` {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Example: `n:foo`
 

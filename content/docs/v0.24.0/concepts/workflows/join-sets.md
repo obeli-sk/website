@@ -10,7 +10,7 @@ Join sets are a core mechanism for handling {{doc_link(title="structured concurr
 
 - Add Operations to a Join Set: When a workflow spawns a child execution (workflow, activity), the execution is associated with a join set.
 
-- Await Results: The workflow can use the `-await-next` {{ doc_link(title="extension", path="concepts/extension-functions.md") }} or
+- Await Results: The workflow can use the `-await-next` {{ doc_link(title="extension", path="concepts/extensions.md") }} or
 `join-next` {{ doc_link(title="support function", path="concepts/runtime-support.md") }} to wait for the next operation in that set to complete.
 
 ## Defining Features
@@ -165,9 +165,7 @@ match join_next(&join_set) {
 }
 ```
 
-## Advanced Topics
-
-### Join Set Close
+## Join Set Close
 
 Join sets are automatically closed when a they go out of scope or when workflow execution finishes. During this process, all child executions that the parent execution submitted but did not await for will be automatically processed. The parent workflow will be marked as finished only when all
 unattended child executions are finished.
@@ -178,7 +176,7 @@ but not awaited will be awaited for during workflow teardown.
 In the future, `closing-strateg::cancel` will attempt to cancel each unattended child execution.
 
 
-#### Example - Join set without awaiting child execution results
+### Example - Join set without awaiting child execution results
 The following example creates a named join set for each user fetched from the database and uses it to parallelize the execution of the `star_added` function.
 ```rust
 fn backfill_parallel(repo: String) -> Result<(), String> {

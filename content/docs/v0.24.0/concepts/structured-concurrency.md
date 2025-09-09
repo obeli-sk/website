@@ -30,8 +30,8 @@ This ensures that failures are not lost and that the system maintains a consiste
 
 {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }} are the primary mechanism Obelisk uses to implement and enforce structured concurrency.
 
-*   **Tracking Children:** When a workflow spawns child executions using mechanisms like direct calls or the `-submit` {{ doc_link(title="extension function", path="concepts/extension-functions.md") }}, these children are associated with a join set (either an implicit one-off set for direct calls or an explicit one created by the workflow).
-*   **Awaiting Completion:** Join sets allow the parent workflow to asynchronously await the results of its children as they complete using `-await-next` {{ doc_link(title="extension function", path="concepts/extension-functions.md") }} or `join-next` {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Results arrive based on completion order, not submission order.
+*   **Tracking Children:** When a workflow spawns child executions using mechanisms like direct calls or the `-submit` {{ doc_link(title="extension function", path="concepts/extensions.md") }}, these children are associated with a join set (either an implicit one-off set for direct calls or an explicit one created by the workflow).
+*   **Awaiting Completion:** Join sets allow the parent workflow to asynchronously await the results of its children as they complete using `-await-next` {{ doc_link(title="extension function", path="concepts/extensions.md") }} or `join-next` {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Results arrive based on completion order, not submission order.
 *   **Enforcing Lifetimes:** Crucially, join sets ensure the parent-child lifetime constraint. When a Join Set gets out of scope, the execution will block and resume only when all child executions are finished. See {{ doc_link(title="Join Set Close", path="concepts/workflows/join-sets.md#join-set-close") }} for details.
 
 ### Contrast with Unstructured Concurrency (`-schedule`)

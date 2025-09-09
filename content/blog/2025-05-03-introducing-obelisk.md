@@ -7,7 +7,7 @@ I'm excited to introduce **Obelisk**, a new workflow engine I've been passionate
 
 Recently, I shared Obelisk on Hacker News (<a href="https://news.ycombinator.com/item?id=43636568" target="_blank">link to story</a>), and the response was very encouraging! It received over 100 upvotes, and the GitHub repository leaped from 14 stars to over 120 in just one day. Seeing this interest encouraged me to share more about the journey and the core ideas behind Obelisk.
 
-<!-- more --> 
+<!-- more -->
 
 ## Why Build Another Workflow Engine?
 

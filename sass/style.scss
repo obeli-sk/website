@@ -361,21 +361,18 @@ article {
     line-height: 1.75;
     font-size: 1.2em;
 
-    article h1,
-    article h2,
-    article h3,
-    article h4 {
-        margin-top: 2.5em;
-        margin-bottom: 1em;
+    img {
+        max-width: 100%;
     }
-}
 
-article pre {
-    background-color: #74747422;
-    padding: 1.5em;
-    border-radius: 6px;
-    overflow-x: auto;
-    font-family: ui-monospace, Menlo, monospace;
-    line-height: 1.4;
-    margin: 2em 0;
+    pre {
+        background-color: #74747422;
+        padding: 1.5em;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-family: ui-monospace, Menlo, monospace;
+        line-height: 1.4;
+        margin: 2em 0;
+    }
+
 }

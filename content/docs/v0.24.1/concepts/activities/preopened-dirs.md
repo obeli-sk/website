@@ -23,6 +23,6 @@ fn ls() -> Vec<String> {
 }
 ```
 
-The {{ doc_link(title="TOML configuration", path="configuration.md") }} contains more information on how to configure the host path and cleanup.
+The {{ doc_link(title="TOML configuration", path="configuration.md#preopended-directory-support") }} contains more information on how to configure the host path and cleanup.
 
 More examples are in [directory test activity](https://github.com/obeli-sk/obelisk/blob/main/crates/testing/test-programs/dir/activity/src/lib.rs).

@@ -43,7 +43,7 @@ Webhook endpoints in Obelisk provide a way to trigger executions via incoming HT
 
 ## Example - triggering the Fibonacci workflow
 
-This example demonstrates a webhook endpoint that triggers the example Fibonacci {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. It showcases both direct calls and {{ doc_link(title="scheduled", path="concepts/extension-functions.md") }} execution of a workflow function.
+This example demonstrates a webhook endpoint that triggers the example Fibonacci {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. It showcases both direct calls and {{ doc_link(title="scheduled", path="concepts/extensions.md") }} execution of a workflow function.
 
 **WIT File (`wit/template_fibo.wit`):**
 

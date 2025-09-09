@@ -26,7 +26,7 @@ interface activity {
 }
 ```
 
-Obelisk automatically generates `-obelisk-stub` {{ doc_link(title="extension interface", path="concepts/extension-functions.md") }} for each WIT export. The `-stub` function takes the Execution ID and the return value an execution error.
+Obelisk automatically generates `-obelisk-stub` {{ doc_link(title="extension interface", path="concepts/extensions.md") }} for each WIT export. The `-stub` function takes the Execution ID and the return value an execution error.
 The `-obelisk-stub` interface can only be imported by workflows.
 
 ```wit

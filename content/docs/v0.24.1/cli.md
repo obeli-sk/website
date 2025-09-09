@@ -121,7 +121,7 @@ Arguments:
 ## Obelisk Generate
 
 ### Generating extension functions
-The {{ doc_link(title="extension", path="concepts/extension-functions.md") }} WIT files of a given WASM component can be generated using:
+The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given WASM component can be generated using:
 ```sh
 obelisk generate extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> [OUTPUT_DEPS_DIRECTORY]
 ```
