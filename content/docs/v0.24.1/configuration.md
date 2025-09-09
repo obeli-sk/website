@@ -60,11 +60,11 @@ See [Path Prefixes](#path-prefixes) for how `${CACHE_DIR}` is translated.
 Path to directory where downloaded or transformed WASM files are stored. Supports [path prefixes](#path-prefixes).
 By default `"${CACHE_DIR}/wasm"` or `"./cache/wasm"` if no valid home directory path could be retrieved from the operating system.
 
-### Allocator Config
+### Allocator Configuration
 See [Allocation strategy](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html) for instance creation. Can be either [pooling](https://docs.wasmtime.dev/api/wasmtime/struct.PoolingAllocationConfig.html) or [on demand](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html#variant.OnDemand). Default value `auto` will attempt
 to use the `pooling` strategy with a fallback on error to `on_demand`.
 
-### Global Preopened Directories Config
+### Global Preopened Directories Configuration
 Preopended directory support for activities is disabled by default. It must be enabled both globally and for specifically for activity that uses disk IO.
 ```toml
 [activities.directories]

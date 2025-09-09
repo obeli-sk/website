@@ -53,4 +53,5 @@ variant stub-error {
 }
 ```
 
-An [example stub workflow](https://github.com/obeli-sk/obelisk/tree/main/crates/testing/test-programs/stub/workflow) is available in the repository.
+An
+{{ github(title="example stub workflow", path="crates/testing/test-programs/stub/workflow") }} is available in the repository.

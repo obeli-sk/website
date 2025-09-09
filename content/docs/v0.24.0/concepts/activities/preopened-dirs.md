@@ -4,7 +4,7 @@ template = "docs.html"
 weight = 30  #  Lower weights appear first
 +++
 
-Disk IO must be explicitly enabled in the {{ doc_link(title="TOML configuration", path="configuration.md") }} using `directories.enabled = true` setting.
+Disk IO must be explicitly enabled globally in the {{ doc_link(title="configuration", path="configuration.md#global-preopened-directories-configuration") }} using `directories.enabled = true` setting.
 
 When enabled, the activity will be able to read and write to `.` (guest current directory).
 
@@ -23,6 +23,7 @@ fn ls() -> Vec<String> {
 }
 ```
 
-The {{ doc_link(title="TOML configuration", path="configuration.md#preopended-directory-support") }} contains more information on how to configure the host path and cleanup.
+The {{ doc_link(title="configuration", path="configuration.md#preopended-directory-support") }} contains more information on how to configure the host path and cleanup.
 
-More examples are in [directory test activity](https://github.com/obeli-sk/obelisk/blob/main/crates/testing/test-programs/dir/activity/src/lib.rs).
+More examples are in
+{{ github(title="directory test activity", path="crates/testing/test-programs/dir/activity/src/lib.rs") }} .

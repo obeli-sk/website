@@ -51,7 +51,8 @@ The `-obelisk-ext` interface can only be imported by workflows.
 
 This interface simplifies submitting and awaiting child executions from a parent workflow. They streamline common tasks associated with workflow execution and are a key part of Obelisk's {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} model.
 
-The types used in the extension functions (`execution-id`, `join-set-id`, `schedule-at`, `execution-error`) are defined in the ][obelisk:types](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit) WIT files.
+The types used in the extension functions (`execution-id`, `join-set-id`, `schedule-at`, `execution-error`) are defined in the
+{{ github(title="`obelisk:types`", path="wit/obelisk_types%402.0.0/types%402.0.0.wit") }} WIT files.
 
 Functions `submit` and `await-next` enable asynchronous execution. You can submit multiple requests without blocking, and then process results as they become available.
 
@@ -85,7 +86,8 @@ This function is used to *submit* a request for the original function to be exec
 This function is used to block the workflow, waiting for the next result from a given `join-set-id`.  It takes the `join-set-id` as input and returns a `result`.  The result contains a tuple with two possible outcomes which must be handled:
 
 1.  The workflow function has finished successfully. In this case, the tuple will hold the `execution-id` that identifies the finished execution and the original return value.
-2.  There was an error during the child execution of type `await-next-extension-error` as defined in [obelisk:types](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)
+2.  There was an error during the child execution of type `await-next-extension-error` as defined in
+{{ github(title="`obelisk:types`", path="wit/obelisk_types%402.0.0/types%402.0.0.wit") }}.
 
 By repeatedly calling `yourfunction-await-next` after submitting multiple executions on a homogenous {{ doc_link(title="join set", path="concepts/workflows/join-sets.md#homogenous-join-sets") }}, you can retrieve results as they become available, in the order they complete.
 
@@ -142,7 +144,8 @@ interface llm {
 The `-obelisk-schedule` interface can be imported by both workflows and webhooks.
 
 The `-schedule` allows to schedule the execution of the original function at a specific time in the future. It takes a `schedule-at`
-(defined in [obelisk:types/time](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types%402.0.0/types%402.0.0.wit)) and the original parameters as input.
+(defined in
+{{ github(title="`obelisk:types/time`", path="wit/obelisk_types%402.0.0/types%402.0.0.wit") }}) and the original parameters as input.
 It returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time.
 It's important to note that scheduled executions do not use join sets.
 This is because scheduling inherently breaks the parent-child relationship that join sets rely on for

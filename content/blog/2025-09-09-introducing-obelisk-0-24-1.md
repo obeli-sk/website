@@ -60,7 +60,7 @@ Since cooperative cancellation is not implemented yet, this essentially means th
 
 This behavior has been changed slightly: join sets are now closed when they are dropped or get out of scope. This change follows the principle of least surprise, and also binds the structured concurrency to the lifetime of a join set. The old behavior of closing join sets during finalization can be enfoced by declaring join sets at the top level scope of the workflow function or by using `std::mem::forget`.
 
-The following trace shows how scoped Join Set Close can group child executions into a batch and add backpressure.
+The following trace shows how scoped Join Set Close can group child executions into a batch and add backpressure. Check out the {{ doc_link(title="full example", path="concepts/workflows/join-sets.md#join-set-close") }} in the documentation.
 
 <img src="{{ get_url(path="stargazers-backfill-parallel.png") }}" />
 

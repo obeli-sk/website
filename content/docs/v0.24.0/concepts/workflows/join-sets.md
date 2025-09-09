@@ -33,7 +33,8 @@ The name of a join set is limited to the following charset: Alphanumeric charact
 See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id") }} for details.
 
 ## API
-The API for join sets is as defined in [workflow-support.wit](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit).
+The API for join sets is as defined in
+{{ github(title="`workflow-support.wit`", path="wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit") }}.
 
 To create a join set in Rust, use
 ```rust
