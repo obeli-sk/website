@@ -3,6 +3,8 @@ title = "Introducing Obelisk 0.24.1"
 date = 2025-09-09
 +++
 
+Obelisk is a deterministic workflow engine that runs, stores, and replays WASM-based workflows using SQLite.
+
 There have been many changes since the [initial public release 0.19.1](@/blog/2025-05-03-introducing-obelisk.md),
 mostly focused on structured concurrency ergonomics, adding more abilities to activities and exploring using
 other languages than Rust for authoring WASM Components.
@@ -85,3 +87,8 @@ fills this gap by (re-)generating the WIT files, making it easier to stay in syn
 
 Emphasis on **experimental**, elaborated in
 [Comparing Rust, JavaScript and Go for authoring WASM Components](@/blog/2025-05-25-comparing-rs-js-go.md) blog post.
+
+## Bonus: fly.io activity
+
+New repository [activity-flyio](https://github.com/obeli-sk/activity-flyio) provides functions for creating Fly.io apps and managing VMs.
+It can become a building block for larger workflows, such as building a SaaS :) .
