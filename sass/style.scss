@@ -376,3 +376,13 @@ article {
     }
 
 }
+
+:not(pre) > code {
+  display: inline-block;
+  padding: 0.15em 0.4em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  font-size: 0.95em;
+  line-height: 1;
+}
