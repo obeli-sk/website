@@ -88,7 +88,7 @@ fills this gap by (re-)generating the WIT files, making it easier to stay in syn
 Emphasis on **experimental**, elaborated in
 [Comparing Rust, JavaScript and Go for authoring WASM Components](@/blog/2025-05-25-comparing-rs-js-go.md) blog post.
 
-## Bonus: fly.io activity
+## Bonus: fly.io WASM Components
 
-New repository [activity-flyio](https://github.com/obeli-sk/activity-flyio) provides functions for creating Fly.io apps and managing VMs.
+New repository [components-flyio](https://github.com/obeli-sk/components-flyio) provides functions for creating Fly.io apps and managing VMs.
 It can become a building block for larger workflows, such as building a SaaS :) .
