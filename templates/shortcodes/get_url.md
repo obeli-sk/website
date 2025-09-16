@@ -1,2 +1,1 @@
-{% set url = get_url(path=path) %}
-{{ url }}
+{% set url = get_url(path=path) %}{{ url }}
