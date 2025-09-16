@@ -4,7 +4,7 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-The WIT interface
+The **experimental** WIT interface
 {{ github(title="`obelisk:activity/process@1.0.0`", path="wit/obelisk_activity%401.0.0/process.wit") }} allows activities to spawn, wait for, kill etc. a local process.
 
 Disk IO must be explicitly enabled globally in the {{ doc_link(title="configuration", path="configuration.md#global-preopened-directories-configuration") }} using `directories.enabled = true` setting.

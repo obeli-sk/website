@@ -11,13 +11,15 @@ other languages than Rust for authoring WASM Components.
 
 <!-- more -->
 
-## {{ doc_link(title="Process spawning", path="concepts/activities/process.md") }}
-... and {{ doc_link(title="disk IO", path="concepts/activities/preopened-dirs.md") }} in activities.
+## Experimental support for {{ doc_link(title="Process spawning", path="concepts/activities/process.md") }} and {{ doc_link(title="disk IO", path="concepts/activities/preopened-dirs.md") }}
 
-The Process API allows for spawning processes on the same VM that runs the activity. Moreover, with preopened directory support,
-WASM activities can use Rust and its standard library to access a temporary directory on the host. Both of these features are useful for when no WASM-native
-library is available. One can use the disk IO to set up a configuration file, download a remote file and then use the Process API to drive the execution,
-interacting with the process if needed.
+Process API allows for spawning processes on the same machine that runs the  {{ doc_link(title="activity", path="concepts/activities/_index.md") }}.
+Moreover, with preopened directory support, activities can use Rust and its standard library to access a temporary directory on the host.
+Both of these features are useful for cases when no WASM-native library is available.
+One can use the disk IO to set up a configuration file, download a remote file and then use the
+Process API to drive the execution, interacting with the process if needed.
+
+Process API will be used as the basis for future microVM support.
 
 ## {{ doc_link(title="Heterogenous join sets", path="concepts/workflows/join-sets.md#heterogenous-join-sets") }}
 

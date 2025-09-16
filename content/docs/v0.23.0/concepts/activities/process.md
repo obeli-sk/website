@@ -4,7 +4,8 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-The WIT interface [`obelisk:activity/process@1.0.0`](https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_activity%401.0.0/process.wit)
+The **experimental** WIT interface
+{{ github(title="`obelisk:activity/process@1.0.0`", path="wit/obelisk_activity%401.0.0/process.wit") }}
 allows activities to spawn, wait for, kill etc. a local process.
 
 Disk IO must be explicitly enabled in the {{ doc_link(title="TOML configuration", path="configuration.md") }} using `directories.enabled = true`
