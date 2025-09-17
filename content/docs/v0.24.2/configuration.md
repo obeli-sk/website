@@ -34,7 +34,7 @@ Defaults are in
 sqlite.pragma = { "cache_size" = "10000", "synchronous" = "NORMAL" }
 ```
 
-## Timers Watcher Configuration
+### Timers Watcher Configuration
 
 ```toml
 [timers_watcher]
@@ -42,27 +42,36 @@ leeway.milliseconds = 500
 tick_sleep.milliseconds = 100
 ```
 
-## Global WASM Configuration
+### Global WASM Configuration
 
 ```toml
 [wasm]
-cache_directory = "${CACHE_DIR}/wasm"       # WASM file cache location
-backtrace.persist = true        # Persist backtraces on effect calls for all workflows and webhook endpoints.
-allocator_config = "auto"       # One of "auto"|"on_demand"|"pooling"
+cache_directory = "${CACHE_DIR}/wasm"          # WASM file cache location
+backtrace.persist = true                       # Persist backtraces on effect calls for all workflows and webhook endpoints.
+allocator_config = "auto"                      # One of "auto"|"on_demand"|"pooling"
 global_executor_instance_limiter = "unlimited" # If set to an integer, limits the number of concurrent workflow and activity executions.
-global_webhook_instance_limiter = "unlimited" # If set to an integer, limits the number of concurrent webhook requests.
-fuel = "unlimited" # If set to an integer, WASM instances consume fuel, details: https://docs.wasmtime.dev/api/wasmtime/struct.Store.html#method.set_fuel
+global_webhook_instance_limiter = "unlimited"  # If set to an integer, limits the number of concurrent webhook requests.
+fuel = "unlimited"                             # If set to an integer, WASM instances consume fuel, details: https://docs.wasmtime.dev/api/wasmtime/struct.Store.html#method.set_fuel
+parallel_compilation = true                    # Enable (default) or disable parallel AOT compilation of each WASM component.
 ```
 
 See [Path Prefixes](#path-prefixes) for how `${CACHE_DIR}` is translated.
 
-### WASM Cache Directory
+#### WASM Cache Directory
 Path to directory where downloaded or transformed WASM files are stored. Supports [path prefixes](#path-prefixes).
 By default `"${CACHE_DIR}/wasm"` or `"./cache/wasm"` if no valid home directory path could be retrieved from the operating system.
 
-### Allocator Configuration
+#### Allocator Configuration
 See [Allocation strategy](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html) for instance creation. Can be either [pooling](https://docs.wasmtime.dev/api/wasmtime/struct.PoolingAllocationConfig.html) or [on demand](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html#variant.OnDemand). Default value `auto` will attempt
 to use the `pooling` strategy with a fallback on error to `on_demand`.
+
+### Code Generation Cache
+The compiled binaries can be stored to speed up startup time.
+```toml
+[wasm.codegen_cache]
+enabled = true
+directory = "${CACHE_DIR}/codegen"   # Path to directory where AOT generated code is cached. Supports path prefixes.
+```
 
 ### Global Preopened Directories Configuration
 Preopended directory support for activities is disabled by default. It must be enabled both globally and for specifically for activity that uses disk IO.
@@ -73,14 +82,6 @@ parent_directory = "${TEMP_DIR}/obelisk"  # Make sure the folder is not on a RAM
 cleanup.enabled = true                    # Periodic cleanup job can be disabled, it is enabled by default.
 cleanup.run_every.minutes = 1             # Run the cleanup every minute by default.
 cleanup.older_than.minutes = 5            # Delete folders belonging to executions that finished 5 minutes earlier by default.
-```
-
-### Code Generation Cache
-The compiled binaries can be stored to speed up startup time.
-```toml
-[codegen_cache]
-enabled = true
-directory = "${CACHE_DIR}/codegen"   # Generated code cache location
 ```
 
 ## Component Configuration
