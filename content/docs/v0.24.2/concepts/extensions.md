@@ -67,13 +67,15 @@ Using the `llm` example from above, Obelisk runtime will auto-generate the follo
 package stargazers:llm-obelisk-ext;
 
 interface llm {
-  use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error};
-
+  use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error, execution-failed};
+  
   respond-submit: func(join-set-id: borrow<join-set-id>, user-prompt: string, settings-json: string) -> execution-id;
 
   respond-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<string, string>>, await-next-extension-error>;
 
   respond-get: func(execution-id: execution-id) -> result<result<string, string>, get-extension-error>;
+
+  respond-invoke: func(user-prompt: string, settings-json: string) -> result<result<string, string>, execution-failed>;  
 }
 ```
 
@@ -125,6 +127,20 @@ variant get-extension-error {
     not-found-in-processed-responses,
 }
 ```
+
+## Submitting and awaiting in one step using `-invoke`
+
+Workflow may need to catch `execution-failed` errors of a child workflow, which is not possible when calling the
+child function directly (in our example, that would be `respond`).
+This error occurs when the child execution
+has run out of retries and the last execution run ended either with an execution error (WASM trap) or a timeout.
+
+This is typically handled by workflows invoking activities, not child workflows. When an activity fails, its state is
+considered unknown, because the timeout might have occured while waiting for a slow server response and a trap
+signals a programming error. Handling `execution-failed` typically involves calling cleanup or other compensating logic.
+
+Instead of creating a join set, calling `-submit` and `-await-next` separately, it is possible to use `-invoke` to merge the
+three steps and avoid handling broader `await-next-extension-error`.
 
 # `-obelisk-schedule` interface
 
