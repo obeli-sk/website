@@ -168,8 +168,6 @@ blocking_strategy = "await"           # One of ("await"|"interrupt"|{"kind"=...}
 # blocking_strategy = { kind = "await", non_blocking_event_batching = 100 }
 
 convert_core_module = true            # Auto-convert Core WASM modules to WASM Components
-# Forward unhandled child errors to the parent workflow when closing completing join sets.
-forward_unhandled_child_errors_in_completing_join_set_close = true
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}

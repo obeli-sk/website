@@ -10,7 +10,7 @@ Workflows can call child executions directly using a regular function call or th
 The WIT extension exports can be generated using `obelisk generate` {{ doc_link(title="CLI command", path="cli.md#obelisk-generate") }}:
 
 ```sh
-obelisk generate extensions (activity_wasm|workflow|activity_stub) wit/
+obelisk generate extensions (activity_wasm|workflow|activity_stub) wit/ wit/gen/
 ```
 
 Throughout this document we will use an example {{ doc_link(title="activity", path="concepts/activities/_index.md") }} function defined in WIT like this:
@@ -51,8 +51,8 @@ The `-obelisk-ext` interface can only be imported by workflows.
 
 This interface simplifies submitting and awaiting child executions from a parent workflow. They streamline common tasks associated with workflow execution and are a key part of Obelisk's {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} model.
 
-The types used in the extension functions (`execution-id`, `join-set-id`, `schedule-at`, `execution-error`) are defined in the
-{{ github(title="`obelisk:types`", path="wit/obelisk_types%402.0.0/types%402.0.0.wit") }} WIT files.
+The types used in the extension functions (`execution-id`, `join-set`, `schedule-at`, `execution-error`) are defined in the
+{{ doc_link(title="`obelisk:types`", path="concepts/runtime-support.md#available-support-types") }} WIT package.
 
 Functions `submit` and `await-next` enable asynchronous execution. You can submit multiple requests without blocking, and then process results as they become available.
 
@@ -67,38 +67,37 @@ Using the `llm` example from above, Obelisk runtime will auto-generate the follo
 package stargazers:llm-obelisk-ext;
 
 interface llm {
-  use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error, execution-failed};
+  use obelisk:types/execution@3.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
 
-  respond-submit: func(join-set-id: borrow<join-set-id>, user-prompt: string, settings-json: string) -> execution-id;
+  respond-submit: func(join-set: borrow<join-set>, user-prompt: string, settings-json: string) -> execution-id;
 
-  respond-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<string, string>>, await-next-extension-error>;
+  respond-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<string, string>>, await-next-extension-error>;
 
   respond-get: func(execution-id: execution-id) -> result<result<string, string>, get-extension-error>;
 
-  respond-invoke: func(label: string, user-prompt: string, settings-json: string) -> result<result<string, string>, execution-failed>;
+  respond-invoke: func(label: string, user-prompt: string, settings-json: string) -> result<result<string, string>, invoke-extension-error>;
 }
 ```
 
 Let's break down each generated function:
 
 ## Submitting child executions with `-submit`
-This function is used to *submit* a request for the original function to be executed.  It takes the `join-set-id` and the original parameters as input.  It returns an `execution-id`, which uniquely identifies this particular execution request.  The `join-set-id` associates this execution with a specific {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, allowing you to manage multiple concurrent executions.  This function does *not* wait for the execution to complete; it simply submits the request.
+This function is used to *submit* a request for the original function to be executed.  It takes the `join-set` and the original parameters as input.  It returns an `execution-id`, which uniquely identifies this particular execution request.  The `join-set` associates this execution with a specific {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, allowing you to manage multiple concurrent executions.  This function does *not* wait for the execution to complete; it simply submits the request.
 
 ## Awaiting next result with `-await-next`
-This function is used to block the workflow, waiting for the next result from a given `join-set-id`.  It takes the `join-set-id` as input and returns a `result`.  The result contains a tuple with two possible outcomes which must be handled:
+This function is used to block the workflow, waiting for the next result from a given `join-set`.  It takes the `join-set` as input and returns a `result`.  The result contains a tuple with two possible outcomes which must be handled:
 
 1.  The workflow function has finished successfully. In this case, the tuple will hold the `execution-id` that identifies the finished execution and the original return value.
 2.  There was an error during the child execution of type `await-next-extension-error` as defined in
-{{ github(title="`obelisk:types`", path="wit/obelisk_types%402.0.0/types%402.0.0.wit") }}.
+{{ doc_link(title="`obelisk:types`", path="concepts/runtime-support.md#available-support-types") }}.
 
-By repeatedly calling `yourfunction-await-next` after submitting multiple executions on a homogenous {{ doc_link(title="join set", path="concepts/workflows/join-sets.md#homogenous-join-sets") }}, you can retrieve results as they become available, in the order they complete.
+By repeatedly calling `yourfunction-await-next` after submitting multiple executions on a {{ doc_link(title="homogenous join set", path="concepts/workflows/join-sets.md#homogenous-join-sets") }}, you can retrieve results as they become available, in the order they complete.
 
 The `await-next-extension-error` is defined as:
 ```wit
 /// Error that is thrown by `-await-next` extension functions.
+@since(version = 3.0.0)
 variant await-next-extension-error {
-    /// Execution response was awaited and marked as processed, but it finished with an error.
-    execution-failed(execution-failed),
     /// All submitted requests and their responses of specified function and join set were already processed.
     all-processed,
     /// Execution response was awaited and marked as processed, but it belongs to a different function.
@@ -114,10 +113,9 @@ and the `join-next` host support function, because `-await-next` already returns
 The `-get` returns a result with the following error variant:
 
 ```wit
-/// Error that is thrown by `-get` extension functions.
+/// Error variants that may occur when calling `-get` extension functions.
+@since(version = 3.0.0)
 variant get-extension-error {
-    /// Execution is found in processed responses, but it finished with an error.
-    execution-failed(execution-failed),
     /// Execution is found in processed responses, but it belongs to a different function.
     /// This can happen when join set contains responses of multiple functions.
     function-mismatch(function-mismatch),
@@ -130,17 +128,18 @@ variant get-extension-error {
 
 ## Submitting and awaiting in one step using `-invoke`
 
-Workflow may need to catch `execution-failed` errors of a child workflow, which is not possible when calling the
-child function directly (in our example, that would be `respond`).
-This error occurs when the child execution
-has run out of retries and the last execution run ended either with an execution error (WASM trap) or a timeout.
-
-This is typically handled by workflows invoking activities, not child workflows. When an activity fails, its state is
-considered unknown, because the timeout might have occured while waiting for a slow server response and a trap
-signals a programming error. Handling `execution-failed` typically involves calling cleanup or other compensating logic.
-
-Instead of creating a join set, calling `-submit` and `-await-next` separately, it is possible to use `-invoke` to merge the
+Instead of creating a {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, calling `-submit` and `-await-next` separately, it is possible to use `-invoke` to merge the
 three steps and avoid handling broader `await-next-extension-error`.
+The first parameter of `-invoke` is a string label. The underlying one-off join set will use this label as a part of its name. Since there are restrictions on naming join sets, the `-invoke`
+function can fail with:
+
+```wit
+/// Error variants that may occur when calling `-invoke` extension functions.
+@since(version = 3.0.0)
+variant invoke-extension-error {
+    invalid-name(string),
+}
+```
 
 # `-obelisk-schedule` interface
 
@@ -150,8 +149,8 @@ Given the same export interface `llm` with a single function `respond`, Obelisk 
 package stargazers:llm-obelisk-schedule;
 
 interface llm {
-  use obelisk:types/execution@2.0.0.{execution-id};
-  use obelisk:types/time@2.0.0.{schedule-at};
+  use obelisk:types/execution@3.0.0.{execution-id};
+  use obelisk:types/time@3.0.0.{schedule-at};
 
   respond-schedule: func(schedule-at: schedule-at, user-prompt: string, settings-json: string) -> execution-id;
 }
@@ -161,7 +160,7 @@ The `-obelisk-schedule` interface can be imported by both workflows and webhooks
 
 The `-schedule` allows to schedule the execution of the original function at a specific time in the future. It takes a `schedule-at`
 (defined in
-{{ github(title="`obelisk:types/time`", path="wit/obelisk_types%402.0.0/types%402.0.0.wit") }}) and the original parameters as input.
+{{ doc_link(title="`obelisk:types/time`", path="concepts/runtime-support.md#available-support-types") }} interface and the original parameters as input.
 It returns an `execution-id`. The Obelisk runtime will ensure the function is executed at (or as close as possible to) the specified time.
 It's important to note that scheduled executions do not use join sets.
 This is because scheduling inherently breaks the parent-child relationship that join sets rely on for
@@ -183,8 +182,8 @@ Given the same WIT file from above, Obelisk will generate the following:
 package stargazers:llm-obelisk-stub;
 
 interface llm {
-  use obelisk:types/execution@2.0.0.{execution-id, stub-error};
+  use obelisk:types/execution@3.0.0.{execution-id, stub-error};
 
-  respond-stub: func(execution-id: execution-id, execution-result: result<result<string, string>>) -> result<_, stub-error>;
+  respond-stub: func(execution-id: execution-id, execution-result: result<string, string>) -> result<_, stub-error>;
 }
 ```

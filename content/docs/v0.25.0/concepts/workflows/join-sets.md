@@ -4,7 +4,10 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Join sets are a core mechanism for handling {{doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} and asynchronous operations in Obelisk workflows. A join set represents a collection of pending operations (like activity calls or spawned child workflows). A workflow can interact with a join set in the following ways:
+Join sets are a core mechanism for handling {{doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}
+and asynchronous operations in Obelisk workflows.
+A join set represents a collection of pending operations (like activity calls or spawned child workflows).
+A workflow can interact with a join set in the following ways:
 
 - Create a Join Set: A workflow can create zero to many join sets, each is initially empty.
 
@@ -15,7 +18,8 @@ Join sets are a core mechanism for handling {{doc_link(title="structured concurr
 
 ## Defining Features
 
-* **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish). The `await-next` call returns results in the order they become available. This does not break the determinism, as responses maintain their own ordering.
+* **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish).
+The `await-next` call returns results in the order they become available. This does not break the determinism, as responses maintain their own ordering.
 
 * **Persistence**: The state of join sets is persisted in the execution log, ensuring that workflows can resume correctly after failures.
 
@@ -72,9 +76,8 @@ will mark the whole execution as failed. This is the reason why `-await-next` re
 
 ```wit
 /// Error that is thrown by `-await-next` extension functions.
+@since(version = 3.0.0)
 variant await-next-extension-error {
-    /// Execution response was awaited and marked as processed, but it finished with an error.
-    execution-failed(execution-failed),
     /// All submitted requests and their responses of specified function and join set were already processed.
     all-processed,
     /// Execution response was awaited and marked as processed, but it belongs to a different function.
@@ -121,7 +124,8 @@ let join_set_info = new_join_set_generated(ClosingStrategy::Complete);
 One benefit of naming join sets is that they can be used to group child executions that are logically related, which can be useful for debugging and monitoring.
 
 ## Homogenous Join Sets
-When a join set contains only child executions of the same function, it is called homogenous. It is safe to call `-await-next` until all submitted executions are awaited. Calling `-await-next` more times will result in `await-next-extension-error::all-processed` error.
+When a join set contains only child executions of the same function, it is called homogenous. It is safe to call `-await-next`
+until all submitted executions are awaited. Calling `-await-next` more times will result in `await-next-extension-error::all-processed` error.
 
 ```rust
 let join_set = new_join_set_generated(ClosingStrategy::Complete);
@@ -136,7 +140,10 @@ for _ in 0..9 {
 ```
 
 ## Heterogenous Join Sets
-When a join set contains child executions of multiple functions, or delay requests, it is called heterogenous. It is generally not safe to call `-await-next` extension as the resolved response might not belong to the awaited function. Therefore one must use `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }} together with `-get` extension function based on the returned `response-id`.
+When a join set contains child executions of multiple functions, or delay requests, it is called heterogenous.
+It is generally not safe to call `-await-next` extension as the resolved response might not belong to the awaited function.
+Therefore one must use `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }}
+together with `-get` extension function based on the returned `response-id`.
 
 ```rust
 let join_set = new_join_set_generated(ClosingStrategy::Complete);
@@ -172,7 +179,8 @@ Join sets are automatically closed when a they go out of scope or when workflow 
 During this process, all child executions that the parent execution submitted but did not await for will be automatically processed.
 The parent workflow will be marked as finished only when all unattended child executions are finished.
 
-It is also possible to close the join set explicitly using the close function defined in {{ doc_link(title="`workflow-support`", path="concepts/runtime-support.md") }} interface:
+It is also possible to close the join set explicitly using the close function defined in
+{{ doc_link(title="`workflow-support`", path="concepts/runtime-support.md") }} interface:
 ```
 close: func(join-set: join-set-id);
 ```

@@ -123,10 +123,21 @@ Arguments:
 ### Generating extension functions
 The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given WASM component can be generated using:
 ```sh
-obelisk generate extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> [OUTPUT_DEPS_DIRECTORY]
+obelisk generate extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> <OUTPUT_DIRECTORY>
 ```
 
 Arguments:
 * `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`. No extensions are generated for {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }}.
 * `<INPUT_WIT_DIRECTORY>` - Path to the `wit` folder, containing the target world and possibly `deps` subfolder.
-* `[OUTPUT_DEPS_DIRECTORY]`  - Optional. If not set, WIT files will be written to the input directory.
+* `<OUTPUT_DIRECTORY>`  - Path to directory where extensions will be written.
+
+### Generating WIT support functions
+As described in {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}, Obelisk provides types and host functions described as WIT interfaces.
+
+```sh
+obelisk generate wit-support <COMPONENT_TYPE> <OUTPUT_DIRECTORY>
+```
+
+Arguments:
+* `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`, `webhook_endpont`.
+* `<OUTPUT_DIRECTORY>`  - Path to directory where extensions will be written.
