@@ -50,10 +50,13 @@ obelisk client execution submit [OPTIONS] <FUNCTION> [PARAMETERS]
 ```
 
 Arguments:
-*  `<FUNCTION>` - Function in the {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }}
+*  `<FUNCTION>` - Function name
 *  `[PARAMETERS]`
 
 Accepted Parameter Formats:
+
+- Function name can either be in the {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }} or,
+if there are no collisions, in a shortened format: `.../interface-name.fn-name`, omitting the package and version.
 
 - JSON array string, e.g. `'["first", "second", null, 1]'`
 
