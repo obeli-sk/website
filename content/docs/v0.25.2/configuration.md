@@ -26,12 +26,12 @@ sqlite.directory = "${DATA_DIR}/obelisk-sqlite"
 ```
 See [Path Prefixes](#path-prefixes) for how `${DATA_DIR}` is translated.
 
-Customize PRAGMA statements. Switch to "FULL" sync to perform fsync on each commit.
+Customize PRAGMA statements.
 Defaults are in
 {{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs") }}
 
 ```toml
-sqlite.pragma = { "cache_size" = "10000", "synchronous" = "NORMAL" }
+sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }
 ```
 
 ### Timers Watcher Configuration
