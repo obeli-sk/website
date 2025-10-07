@@ -16,10 +16,10 @@ This ensures traps and errors are handled explicitly instead of silently breakin
 Each function invoked by Obelisk, whether a workflow or an activity, must be fallible.
 More precisely, it means that the return type must be one of following:
 * `result` or `result<T>` where `T` is any success type, e.g. `string` or `list<u32>` or even a none type (`_`)
-In Rust, the execution failure willbe represented as `Err(())`
+  In Rust, the execution failure will be represented as `Err(())`
 * `result<T, string>` - the execution failure will be represented as `Err("execution-failed")`
 * `result<T, E>` where `E` is a `variant` type (similar to Rust's `enum`)
-that includes an `execution-failed` variant. The execution failure will be represented as `Err(MyError::ExecutionFailed)`
+  that includes an `execution-failed` variant. The execution failure will be represented as `Err(MyError::ExecutionFailed)`
 
 Previously, functions were free to return any WIT-supported value.
 However, this flexibility caused issues:
@@ -29,7 +29,7 @@ However, this flexibility caused issues:
 
 This was previously mitigated with the `execution-failed` error. The parent execution had to choose between:
 
-* Calling an extension function such as `-invoke` or `-await-next`, then handling the error, or
+* Calling an {{ doc_link(title="extension funcion", path="concepts/extensions.md") }} such as `-invoke` or `-await-next`, then handling the error, or
 * Calling the child function directly, in which case the error was unhandled.
 
 In the latter case, the parent execution itself would abort with an "Unhandled child execution error".
@@ -42,7 +42,9 @@ Mistakingly calling a child function directly could mean resources were never fr
 making workflows brittle.
 
 The runtime faced similar complexity, especially around join set closing.
-It was unclear whether an `execution-failed` during a join set close should be treated as fatal
+It was unclear whether an `execution-failed` during a
+{{ doc_link(title="Join Set Close", path="concepts/workflows/join-sets.md#join-set-close") }}
+should be treated as fatal
 for the parent workflow or simply ignored as other unawaited execution results.
 
 With the new design, the runtime maps `execution-failed` to one of the supported error types.
@@ -73,14 +75,16 @@ Other changes are mostly focused on CLI:
 
 * `obelisk generate wit-support` was added to export the Obelisk WIT files.
 These files are required for working with extensions and include workflow support functions.
+See {{ doc_link(title="CLI command", path="cli.md#obelisk-generate") }} for details.
 * `-invoke` extension now accepts a join set label. With execution-error removed,
 this function was repurposed to attach a label to its one-off join set.
 This is especially useful when calling the same function with different parameters,
 as custom join set names make it easier to understand a workflow’s pending state
 without inspecting the execution log.
-* A new support function, `close(join-set)`, was added. In garbage-collected languages,
+* A new {{ doc_link(title="runtime support", path="concepts/runtime-support.md") }} function, `close(join-set)`, was added. In garbage-collected languages,
 join set resources aren’t automatically dropped, so this explicit function in workflow-support
 ensures proper cleanup.
 * The `obelisk client execution submit` command now supports the shorthand
-`.../interface-name.fn-name` for specifying functions.
+`.../interface-name.fn-name` for specifying functions in addition to the
+{{ doc_link(title="FFQN", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }} format.
 * Minor usability improvements have been made to the WebUI.
