@@ -96,9 +96,9 @@ obelisk server run --config obelisk-oci.toml
 5.  **Configure GitHub Webhook (Optional):** For the demo to work fully, you'll need to configure a GitHub webhook to send "star added" events to your running Obelisk instance.  This will involve exposing the webhook's HTTP server to the internet temporarily. *Detailed instructions for setting up the webhook are provided in the [webhook's README](https://github.com/obeli-sk/demo-stargazers/blob/main/webhook/README.md).*  If you skip this step, you can still interact with the workflow using the Obelisk CLI, Web UI or any HTTP client triggering the webhook endpoint, but it won't be triggered automatically by GitHub events.
 
 6.  **Interact with the Demo:** Once the server is running and (optionally) the webhook is configured, you can:
-    *   Star the repository (if the webhook is set up).
-    *   Use the Obelisk CLI or Web UI to manually trigger workflow executions.
-    *   Don't forget you can **kill the server** or **simulate network issues** during workflow execution! When the server is back up (and retries have not been exhausted), the workflow will continue.
+* Star the repository (if the webhook is set up).
+* Use the Obelisk CLI or Web UI to manually trigger workflow executions.
+* Don't forget you can **kill the server** or **simulate network issues** during workflow execution! When the server is back up (and retries have not been exhausted), the workflow will continue.
 
 The [repository's README](https://github.com/obeli-sk/demo-stargazers/blob/main/README.md) provides detailed instructions for each of these steps, including setting up the GitHub webhook and interacting with the running system.
 
@@ -108,16 +108,21 @@ If you're ready to start building your own custom workflows and activities, here
 
 1.  **Understand the Core Concepts:**  Familiarize yourself with the fundamental building blocks of Obelisk:
 
-    *  {{ doc_link(title="**Workflows**", path="concepts/workflows/_index.md") }}:  Learn how workflows orchestrate the execution of activities and other workflows.  Understand their deterministic nature and how Obelisk manages the execution log.
-    *  {{ doc_link(title="**Activities**", path="concepts/activities/_index.md") }}:  Understand the role of activities as the fundamental units of work.  Learn about idempotency, the WASM sandbox, and the built-in resilience features.
-    *  {{ doc_link(title="**Webhook Endpoints**", path="concepts/webhook-endpoints.md") }}:  Learn how to trigger executions via incoming HTTP requests.
-    *  {{ doc_link(title="**Join Sets**", path="concepts/workflows/join-sets.md") }}: Understand how to manage concurrent executions.
-    *  {{ doc_link(title="**Extension Functions**", path="concepts/extensions.md") }}: Learn how Obelisk auto-generates functions for submitting, awaiting and scheduling.
-    *  {{ doc_link(title="**Runtime Support**", path="concepts/runtime-support.md") }}: See functions available in the runtime.
+* {{ doc_link(title="**Workflows**", path="concepts/workflows/_index.md") }}:  Learn how workflows orchestrate the execution of activities and other workflows.  Understand their deterministic nature and how Obelisk manages the execution log.
+
+* {{ doc_link(title="**Activities**", path="concepts/activities/_index.md") }}:  Understand the role of activities as the fundamental units of work.  Learn about idempotency, the WASM sandbox, and the built-in resilience features.
+
+* {{ doc_link(title="**Webhook Endpoints**", path="concepts/webhook-endpoints.md") }}:  Learn how to trigger executions via incoming HTTP requests.
+
+* {{ doc_link(title="**Join Sets**", path="concepts/workflows/join-sets.md") }}: Understand how to manage concurrent executions.
+
+* {{ doc_link(title="**Extension Functions**", path="concepts/extensions.md") }}: Learn how Obelisk auto-generates functions for submitting, awaiting and scheduling.
+
+* {{ doc_link(title="**Runtime Support**", path="concepts/runtime-support.md") }}: See functions available in the runtime.
 
 2.  **Explore the Configuration:** Learn how to configure Obelisk using the `obelisk.toml` file:
 
-    *   {{ doc_link(title="**Configuration**", path="configuration.md") }}: Understand how to define workflows, activities, webhook endpoints, HTTP servers, and other settings.
+* {{ doc_link(title="**Configuration**", path="configuration.md") }}: Understand how to define workflows, activities, webhook endpoints, HTTP servers, and other settings.
 
 3.  **Start with a Template:**  Use the `cargo-generate` tool and the provided Obelisk templates to quickly create a new project:
 
@@ -129,13 +134,13 @@ The available templates provide a basic structure, including the necessary WIT f
 
 4.  **Build and Deploy:**
 
-    *   Compile your code into a WebAssembly Component using `cargo build --release`.
-    *   Run the Obelisk server: `obelisk server run`.
-    *   (Optional) Push your WASM component to an OCI registry using `obelisk client component push`.
+* Compile your code into a WebAssembly Component using `cargo build --release`.
+* Run the Obelisk server: `obelisk server run`.
+* (Optional) Push your WASM component to an OCI registry using `obelisk client component push`.
 
 5.  **Interact and Iterate:**
 
-    *   Use the {{ doc_link(title="Obelisk CLI", path="cli.md") }}, Web UI, or gRPC API to interact with your deployed workflows and activities.
-    *   Iteratively refine your code, configuration, and deployment process.
+* Use the {{ doc_link(title="Obelisk CLI", path="cli.md") }}, Web UI, or gRPC API to interact with your deployed workflows and activities.
+* Iteratively refine your code, configuration, and deployment process.
 
 The provided documentation links and project templates will guide you through each step of the process.

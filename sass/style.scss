@@ -13,14 +13,20 @@
     box-sizing: border-box;
 }
 
+img,
+svg,
+video {
+    max-width: 100%;
+    display: block;
+}
+
 body {
     font-family: Avenir, Montserrat, Corbel, "URW Gothic", "Helvetica Neue", sans-serif;
     background-color: var(--bg-dark);
     color: var(--text);
-    line-height: 1.6;
     padding: 0 0 2rem 0;
-    line-height: 1.8;
-    font-size: 1.1rem;
+    line-height: 1.5;
+    font-size: 1.25rem;
 }
 
 h1,
@@ -48,13 +54,6 @@ ol {
         margin-left: 20px;
         margin-bottom: 0.75rem;
     }
-}
-
-pre {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 10px;
-    overflow: auto;
 }
 
 .container {
@@ -137,7 +136,6 @@ div.logo {
     text-align: center;
 
     video {
-        max-width: 100%;
         border: 2px solid var(--primary);
         border-radius: 8px;
     }
@@ -145,7 +143,7 @@ div.logo {
 
 .cta-button {
     display: inline-block;
-    width: 180px;
+    width: 200px;
     background-color: var(--primary);
     color: var(--bg-dark);
     padding: 0.8rem 2rem;
@@ -194,16 +192,6 @@ div.logo {
         color: var(--primary);
         margin-bottom: 1rem;
     }
-}
-
-.code-section {
-    padding: 4rem 0;
-    background-color: var(--bg-lighter);
-}
-
-.code-container {
-    background-color: var(--bg-dark);
-    border-radius: 8px;
 }
 
 section#signup-section {
@@ -268,67 +256,6 @@ section#signup-section {
     margin-bottom: 2rem;
 }
 
-.install-page {
-    padding: 4rem 0;
-
-    .page-title {
-        font-size: 2.5rem;
-        margin-bottom: 2rem;
-        background: linear-gradient(45deg, var(--primary), var(--highlight));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-}
-
-.install-section {
-    margin-bottom: 2rem;
-
-    h2 {
-        color: var(--primary);
-        margin-bottom: 1.5rem;
-    }
-}
-
-.install-steps {
-    list-style: none;
-    counter-reset: step;
-
-    li {
-        margin-bottom: 2rem;
-        counter-increment: step;
-
-        h3::before {
-            content: counter(step) ". ";
-            color: var(--primary);
-        }
-    }
-}
-
-.download-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin: 1rem 0;
-}
-
-.download-card {
-    background-color: var(--bg-lighter);
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--text);
-    transition: transform 0.3s;
-
-    &:hover {
-        transform: translateY(-3px);
-    }
-
-    h4 {
-        color: var(--primary);
-        margin-bottom: 0.5rem;
-    }
-}
-
 .breadcrumb {
     a {
         text-decoration: none;
@@ -355,34 +282,42 @@ section#signup-section {
     }
 }
 
-article {
-    max-width: 100ch;
-    margin: auto;
-    line-height: 1.75;
-    font-size: 1.2em;
+pre {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    overflow: auto;
+}
 
-    img {
-        max-width: 100%;
-    }
+.code-container {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding: 1em;
+    background-color: #2b303b;
+    color: #c0c5ce;
+    border-radius: 8px;
+    font-size: 0.7em;
+}
+
+article {
 
     pre {
-        background-color: #74747422;
-        padding: 1.5em;
+        padding: 1em;
         border-radius: 6px;
         overflow-x: auto;
         font-family: ui-monospace, Menlo, monospace;
-        line-height: 1.4;
         margin: 2em 0;
+        font-size: 0.7em;
     }
 
 }
 
-:not(pre) > code {
-  display: inline-block;
-  padding: 0.15em 0.4em;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
-  font-size: 0.95em;
-  line-height: 1;
+:not(pre)>code {
+    display: inline-block;
+    padding: 0.15em 0.4em;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    font-size: 1em;
+    line-height: 1;
 }

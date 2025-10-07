@@ -6,101 +6,97 @@
 
     <section class="install-section">
         <h2>Quick Start</h2>
-        {% include "quickstart.html" %}
+        <div class="code-container">
+            <pre><code class="language-bash"># Download latest release from GitHub
+curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
+# Optionally place the binary on PATH
+
+# Generate a sample configuration
+obelisk server generate-config
+
+# Start the server
+obelisk server run</code></pre>
+        </div>
+
     </section>
 
     <section class="install-section">
         <h2>Docker</h2>
-        <p>Pull and run the official Docker image:</p>
         <div class="code-container">
-            <pre><code class="language-bash"># Pull the image
-docker pull getobelisk/obelisk:latest
+            <pre><code class="language-bash"># Run with default configuration
+docker run getobelisk/obelisk:latest
 
-# Run with default configuration
-docker run --net=host getobelisk/obelisk:latest
-
-# Run with custom config
-docker run -v $(pwd)/obelisk.toml:/etc/obelisk/obelisk.toml --net=host getobelisk/obelisk:latest</code></pre>
+# Mount local configuration file
+docker run -v $(pwd)/obelisk.toml:/etc/obelisk/obelisk.toml getobelisk/obelisk:latest</code></pre>
         </div>
     </section>
 
     <section class="install-section">
-        <h2>Manual Installation</h2>
-        <ol class="install-steps">
-            <li>
-                <h3>Download the binary</h3>
-                <p>Choose your platform:</p>
-                <div class="download-grid">
-                    <a href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-gnu.tar.gz"
-                        class="download-card">
-                        <h4>Linux (x86_64)</h4>
-                        <p>obelisk-x86_64-unknown-linux-gnu.tar.gz</p>
-                    </a>
-                    <a href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-gnu.tar.gz"
-                        class="download-card">
-                        <h4>Linux (ARM64)</h4>
-                        <p>obelisk-aarch64-unknown-linux-gnu.tar.gz</p>
-                    </a>
-                    <a href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-musl.tar.gz"
-                        class="download-card">
-                        <h4>Linux Musl (x86_64)</h4>
-                        <p>obelisk-x86_64-unknown-linux-musl.tar.gz</p>
-                    </a>
-                    <a href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-musl.tar.gz"
-                        class="download-card">
-                        <h4>Linux Musl (ARM64)</h4>
-                        <p>obelisk-aarch64-unknown-linux-musl.tar.gz</p>
-                    </a>
-                    <a href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-apple-darwin.tar.gz"
-                        class="download-card">
-                        <h4>macOS (x86_64)</h4>
-                        <p>obelisk-x86_64-apple-darwin.tar.gz</p>
-                    </a>
-                    <a href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-apple-darwin.tar.gz"
-                        class="download-card">
-                        <h4>macOS (ARM64)</h4>
-                        <p>obelisk-aarch64-apple-darwin.tar.gz</p>
-                    </a>
-                </div>
-            </li>
-            <li>
-                <h3>Extract and install</h3>
-                <div class="code-container">
-                    <pre><code class="language-bash"># Extract the archive
-tar xf obelisk-*.tar.gz
+        <h2>cargo (b)install</h2>
+        <div class="code-container">
+            <pre><code class="language-bash"># Download and install binary from GitHub:
+cargo binstall obelisk
+# or, if cargo-binstall is not available, build the latest release from crates.io
+cargo install --locked obelisk</code></pre>
+        </div>
+        Building requires <code>protoc</code>, see project's
+        <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">README</a>
+        for details.
+    </section>
 
-# Move to a directory in your PATH (Linux/macOS)
-sudo mv obelisk /usr/local/bin/</code></pre>
-                </div>
+
+    <section class="install-section">
+        <h2>Download latest release from GitHub</h2>
+        <p>Choose your platform:</p>
+        <ul>
+            <li><a
+                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-gnu.tar.gz">
+                    Linux x86 64bit, libc
+                </a>
             </li>
             <li>
-                <h3>Verify installation</h3>
-                <div class="code-container">
-                    <pre><code class="language-bash">obelisk --version</code></pre>
-                </div>
+                <a
+                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-gnu.tar.gz">
+                    Linux ARM64, libc
+                </a>
             </li>
-        </ol>
+            <li>
+                <a
+                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-musl.tar.gz">
+                    Linux x86 64bit, musl
+                </a>
+            </li>
+            <li>
+                <a
+                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-musl.tar.gz">
+                    Linux ARM64, musl
+                </a>
+            </li>
+            <li>
+                <a
+                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-apple-darwin.tar.gz">
+                    MacOS ARM64
+                </a>
+            </li>
+            <li>
+                <a
+                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-apple-darwin.tar.gz">
+                    MacOS x86 64bit
+                </a>
+            </li>
+        </ul>
     </section>
 
     <section class="install-section">
         <h2>Build from Source</h2>
-        <p>Requirements:
-        <ul>
-            <li>Rust</li>
-            <li>Protocol Buffers</li>
-            <li>See project's
-                <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">
-                    README</a>
-                for details
-            </li>
-        </ul>
-        </p>
         <div class="code-container">
-            <pre><code class="language-bash">cargo install obelisk --locked</code></pre>
+            <pre><code class="language-bash">git clone https://github.com/obeli-sk/obelisk && cd obelisk
+cargo build --release</code></pre>
         </div>
+        Building requires <code>protoc</code>, see project's
+        <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">README</a>
+        for details.
     </section>
-
-
 
     <section class="install-section">
         <h2>Nix Flake</h2>
@@ -112,8 +108,7 @@ sudo mv obelisk /usr/local/bin/</code></pre>
             <code>nix-command</code> are enabled.
         </p>
         <div class="code-container">
-            <pre><code class="language-bash"># Run the server
-nix run github:obeli-sk/obelisk/latest
+            <pre><code class="language-bash">nix run github:obeli-sk/obelisk/latest
 # Install into user's profile
 nix profile install github:obeli-sk/obelisk/latest</code></pre>
         </div>
