@@ -67,16 +67,16 @@ So we should be able to use the deployer to deploy itself (and
 
 ### <a target="_blank" href="https://github.com/obeli-sk/components-flyio">Fly.io Activity</a>
 
-Writing an activity for interacting with Fly.io by hand feels a bit boring and also overwhelming. There are many open source repos
-in many languages, stack overflow questions and blogs about this topic, even an unofficial Rust crate
-<a target="_blank" href="https://github.com/alexlatif/fly-rs/">`fly-rs`</a>, however it does not support the
+Writing an activity for interacting with Fly.io by hand feels a bit boring but also overwhelming. There are many open-source repos
+in various languages, Stack Overflow questions and blogs about this topic, even an unofficial Rust crate
+<a target="_blank" href="https://github.com/alexlatif/fly-rs/">`fly-rs`</a>. However, it does not support the
 <a target="_blank" href="https://component-model.bytecodealliance.org/">WASM Component Model</a>.
 
 An LLM should be able to generate what is essentially an HTTP client wrapper.
 
 
-I like the schema-first approach, defining the functions and types that I want to use. In WASM Component Model, the language is WIT
-and the schema can look like this:
+I prefer a schema-first approach, defining the functions and types that I want to use. In the WASM Component Model, the
+schema language is WIT, and it can look like this:
 
 ```wit
 interface apps {
@@ -96,22 +96,22 @@ interface apps {
 ```
 
 Then, looking at the official Fly.io documentation, I created similar interfaces for VMs, IPs, volumes etc.
-I've implemented one of the activity functions and gave it as an example code to Gemini 2.5 Pro.
-The process was definetly not a one-shot prompt but the LLM gave me a skeleton to work with. Even though some of the
-functions were not working correctly, mostly due to serialization issues, it was straight forward to check the HTTP status
-codes and errors from the Obelisk web console and either fix the issues or let the LLM fix it.
+I've implemented one of the activity functions and provided it as an example code to Gemini 2.5 Pro.
+The process was definetly not a one-shot prompt but the LLM gave me a skeleton to work with. Even though some
+functions didn't work correctly, mostly due to serialization issues, it was straightforward to check the HTTP status
+codes and errors from the Obelisk web console and either fix the issues manually or let the LLM fix it.
 
 ### <a target="_blank" href="https://github.com/obeli-sk/obelisk-deploy-flyio">Deployer Workflow</a>
 
-Once I finished the activity I started working on a workflow that would
-do something a bit more than what regular `fly deploy` does. Namely:
+Once I finished the activity, I started working on a workflow that would
+do a bit more than a regular `fly deploy`. Namely:
 
-* Creating a <a target="_blank" href="https://www.min.io">MinIO</a> VM
-* Creating a volume, populated using a temporary VM
-* Setting up IPs, port forwarding, secrets etc.
-* Creating a "final" VM with Obelisk server configured using supplied parameters and Litestream replication to the MinIO VM
-* Health checking
-* A cleanup routine if things fail or time out
+* Create a <a target="_blank" href="https://www.min.io">MinIO</a> VM
+* Create a volume, populated using a temporary VM
+* Set up IPs, port forwarding, secrets etc.
+* Create a "final" VM with the Obelisk server configured using the supplied parameters and Litestream replication to the MinIO VM
+* Perform health checks
+* Run a cleanup routine if things fail or time out
 
 The WIT signature of the workflow function looks like this:
 ```wit
@@ -126,7 +126,7 @@ interface workflow {
 ```
 
 I've broken this into several smaller workflow functions: `prepare`, `wait-for-secrets`, `start-final-vm`, `wait-for-health-check`.
-The main `app-init` simply calls those child workflows and performs Fly App deletion on an error.
+The main `app-init` simply calls these child workflows and performs Fly App deletion on an error.
 Calling those functions indirectly as child workflows is not only `panic` safe, but also allows invoking each step manually.
 
 As for the LLM assistance, Gemini is able to generate mostly correct workflow code when primed with an example. However,
@@ -148,9 +148,9 @@ OK that worked, but why did it fail? Luckily we can investigate:
 * each activity collects its HTTP traces,
 * as a last resort, the workflow could be replayed with added logging statements
 
-Drilling down the child executions reveals the underlying error:
+Drilling down into the child executions reveals the underlying error:
 ```json
 {"volume-write-error":"cannot verify config - ExecResponse { exit-code: Some(1), exit-signal: Some(0), stderr: Some(\"Error: missing field `location` for key `activity_wasm[0]`\\n\"), stdout: Some(\"\") }"}
 ```
 
-Passing this information back to the prompt was enough to fix the issue.
+Passing this information back into the prompt was enough to fix the issue.
