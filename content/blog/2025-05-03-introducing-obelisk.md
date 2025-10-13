@@ -3,7 +3,7 @@ title = "Introducing Obelisk deterministic workflow engine"
 date = 2025-05-03
 +++
 
-I'm excited to introduce **Obelisk**, a new workflow engine I've been passionately building for over a year. You can find the project hosted at [obeli.sk](https://obeli.sk/) and the source code openly available at [github.com/obeli-sk/obelisk](https://github.com/obeli-sk/obelisk) under an Open Source license.
+I'm excited to introduce Obelisk, a new workflow engine I've been passionately building for over a year. You can find the project hosted at [obeli.sk](https://obeli.sk/) and the source code openly available at [github.com/obeli-sk/obelisk](https://github.com/obeli-sk/obelisk) under an Open Source license.
 
 Recently, I shared Obelisk on Hacker News (<a href="https://news.ycombinator.com/item?id=43636568" target="_blank">link to story</a>), and the response was very encouraging! It received over 100 upvotes, and the GitHub repository leaped from 14 stars to over 120 in just one day. Seeing this interest encouraged me to share more about the journey and the core ideas behind Obelisk.
 

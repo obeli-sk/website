@@ -250,7 +250,7 @@ Adding print statements or logs is ignored by the execution log, so you can add 
 
 ### Backtrace capture
 
-<img src="{{ get_url(path="backtrace.png") }}" alt="A backtrace viewer" style="max-width: 100%; height: auto; display: block;border: 2px dotted #efeded;" />
+<img src="{{ get_url(path="backtrace.png") }}" alt="A backtrace viewer" style="max-width: 100%; height: auto; border: 2px dotted #efeded;" />
 
 If we specify the `backtrace.sources`, the frontend can
 display source file and line for every captured backtrace.
