@@ -92,7 +92,7 @@ fn fiboa_concurrent(n: u8, iterations: u32) -> Result<u64, ()> {
 
 Not only can we calculate Fibonacci in parallel, but we can delay the expensive `fsync`s as well:
 
-Instead of comitting on every `-submit`, we can transparently collect all events that can be delayed,
+Instead of comitting on every `fibo_submit`, we can transparently collect all events that can be delayed,
 and submit them together in one big transaction. If the workflow engine crashes, this state is not lost,
 since the exact same events will be recreated after replay in the next execution run because of guaranteed determinism.
 
