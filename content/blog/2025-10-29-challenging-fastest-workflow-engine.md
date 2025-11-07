@@ -12,6 +12,51 @@ a blog post titled
 
 <!-- more -->
 
+<script src="https://cdn.plot.ly/plotly-2.35.3.min.js"></script>
+
+<script>
+
+function colorFor(label) {
+    return label.startsWith('Obelisk') ? '#1f77b4' : '#9fb8bf';
+}
+
+function makePlot(dataArray, div, title) {
+    const sortedByTime = true;
+    let arr = dataArray.slice();
+    if (sortedByTime) {
+        arr.sort((a, b) => a[1] - b[1]);
+    }
+
+    const labels = arr.map(r => r[0]);
+    const values = arr.map(r => r[1]);
+    const colors = labels.map(colorFor);
+
+    const trace = {
+        x: values,
+        y: labels,
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: colors, line: { width: 0 } },
+        hovertemplate: '%{y}<br>Time: %{x:.3f} s<extra></extra>'
+    };
+    const css = getComputedStyle(document.documentElement);
+    const textColor = css.getPropertyValue('--text').trim();
+    const layout = {
+        margin: { l: 240, r: 24, t: 48, b: 48 },
+        xaxis: { title: 'Time (s)', showgrid: true, zeroline: false, color: textColor },
+        yaxis: { automargin: true, categoryorder: 'array', categoryarray: labels, color: textColor },
+        height: Math.max(420, labels.length * 48),
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        title: { text: title + ' — Time (s)', x: 0.01, xanchor: 'left',  font: { color: textColor } }
+    };
+
+    const config = { responsive: true, displayModeBar: false };
+
+    Plotly.newPlot(div, [trace], layout, config);
+}
+</script>
+
 The benchmark compares a naive implementation of Fibonacci written in various programming languages:
 
 ```rs
@@ -158,41 +203,47 @@ which does the actual Fibonacci calculation, so `Fibo(10) * 1000 iterations` spa
 ## Small CPU Activity
 Workflow calling a short activity sequentially 40 times.
 
-<div class="table">
+<div class="plot" id="plot-fibo-10-40"></div>
 
-| Fibo(10) * 40 iterations          | Time (s)  |
-|-----------------------------------|------------|
-| WindMill - Python                 | 4.383      |
-| WindMill Dedicated - Python       | 2.092      |
-| WindMill - JavaScript             | 2.973      |
-| WindMill Dedicated - JavaScript   | 2.125      |
-| WindMill - Go                     | 2.973      |
-| **Obelisk - Rust**                | **0.226**  |
-| **Obelisk - Rust + native**       | **0.292**  |
-| **Obelisk - Go**                  | **0.310**  |
-| **Obelisk - Python**              | **0.383**  |
-| **Obelisk - JavaScript**          | **0.263**  |
-
-</div>
+<script>
+    {
+        const raw = [
+            ["WindMill - Python", 4.383],
+            ["WindMill Dedicated - Python", 2.092],
+            ["WindMill - JavaScript", 2.973],
+            ["WindMill Dedicated - JavaScript", 2.125],
+            ["WindMill - Go", 2.973],
+            ["Obelisk - Rust", 0.226],
+            ["Obelisk - Rust + native", 0.292],
+            ["Obelisk - Go", 0.310],
+            ["Obelisk - Python", 0.383],
+            ["Obelisk - JavaScript", 0.263]
+        ];
+        makePlot(raw, "plot-fibo-10-40", "Fibo(10) * 40 iterations");
+    }
+</script>
 
 ## Medium CPU activity
 
-<div class="table">
+<div class="plot" id="plot-fibo-33-10"></div>
 
-| Fibo(33) * 10 iterations          | Time (s)   |
-|-----------------------------------|-------------|
-| WindMill - Python                 | 8.347       |
-| WindMill Dedicated - Python       | 7.701       |
-| WindMill - JavaScript             | 0.935       |
-| WindMill Dedicated - JavaScript   | 1.077       |
-| WindMill - Go                     | 0.780       |
-| **Obelisk - Rust**                | **0.379**   |
-| **Obelisk - Rust + native**       | **0.220**   |
-| **Obelisk - Go**                  | **0.444**   |
-| Obelisk - Python                  | 18.761      |
-| Obelisk - JavaScript              | 38.214      |
-
-</div>
+<script>
+    {
+        const raw = [
+            ["WindMill - Python", 8.347],
+            ["WindMill Dedicated - Python", 7.701],
+            ["WindMill - JavaScript", 0.935],
+            ["WindMill Dedicated - JavaScript", 1.077],
+            ["WindMill - Go", 0.780],
+            ["Obelisk - Rust", 0.379],
+            ["Obelisk - Rust + native", 0.220],
+            ["Obelisk - Go", 0.444],
+            ["Obelisk - Python", 18.761],
+            ["Obelisk - JavaScript", 38.214]
+        ];
+        makePlot(raw, "plot-fibo-33-10", "Fibo(33) * 10 iterations");
+    }
+</script>
 
 Both Go and Rust purely in WASM are still performing well, however Python and JavaScript in WASM lag behind.
 
@@ -207,46 +258,55 @@ This benchmark shows, perhaps unsurprisingly, that a WASM runtime cannot compete
 However, I believe in starting with a WASM and only converting it to native code when needed as most
 real-world code is going to be blocked by network calls.
 
-<div class="table">
+<div class="plot" id="plot-fibo-38-100"></div>
 
-| Fibo(38) * 100 iterations         | Time (s)   |
-|-----------------------------------|-------------|
-| WindMill - Go                     | 27.648      |
-| Obelisk - Rust                    | 35.127      |
-| **Obelisk - Rust + native**       | **15.521**  |
-| Obelisk - Go                      | 41.642      |
-
-</div>
+<script>
+{
+  const raw = [
+    ["WindMill - Go", 27.648],
+    ["Obelisk - Rust", 35.127],
+    ["Obelisk - Rust + native", 15.521],
+    ["Obelisk - Go", 41.642]
+  ];
+  makePlot(raw, "plot-fibo-38-100", "Fibo(38) * 100 iterations");
+}
+</script>
 
 ## Adding parallelism
 This benchmark calculates Fibo(38), with 100 iterations, however the activities are now processed in parallel.
 Note that the `t2-median` has only 2 vcpus, these benchmarks would look much better if more parallelism was available.
 However it shows the difference between running WASM binaries and native code.
 
-<div class="table">
+<div class="plot" id="plot-fibo-38-100-parallel"></div>
 
-| Fibo(38) * 100 iterations (parallel) | Time (s)   |
-|--------------------------------------|-------------|
-| WindMill - Go with 10 workers        | 11.899      |
-| Obelisk - Rust                       | 17.456      |
-| **Obelisk - Rust + native**          | **7.653**   |
-| Obelisk - Go                         | 20.717      |
-
-</div>
+<script>
+{
+  const raw = [
+    ["WindMill - Go with 10 workers", 11.899],
+    ["Obelisk - Rust", 17.456],
+    ["Obelisk - Rust + native", 7.653],
+    ["Obelisk - Go", 20.717]
+  ];
+  makePlot(raw, "plot-fibo-38-100-parallel", "Fibo(38) * 100 iterations (parallel)");
+}
+</script>
 
 I am adding another benchmark, with a lot of parallel executions with a very little CPU activity:
 
-<div class="table">
+<div class="plot" id="plot-fibo-10-1000-parallel"></div>
 
-| Fibo(10) * 1000 iterations (parallel) | Time (s)   |
-|---------------------------------------|-------------|
-| Obelisk - Rust                        | 4.367       |
-| Obelisk - Rust + native               | 4.729       |
-| Obelisk - Go                          | 4.262       |
-| Obelisk - Python                      | 5.233       |
-| Obelisk - JavaScript                  | 4.910       |
-
-</div>
+<script>
+{
+  const raw = [
+    ["Obelisk - Rust", 4.367],
+    ["Obelisk - Rust + native", 4.729],
+    ["Obelisk - Go", 4.262],
+    ["Obelisk - Python", 5.233],
+    ["Obelisk - JavaScript", 4.910]
+  ];
+  makePlot(raw, "plot-fibo-10-1000-parallel", "Fibo(10) * 1000 iterations (parallel)");
+}
+</script>
 
 This test focuses on database pressure more than CPU and is reaping the benefits described in the *Exploiting determinism*
 and *Exploiting idempotency* sections.
