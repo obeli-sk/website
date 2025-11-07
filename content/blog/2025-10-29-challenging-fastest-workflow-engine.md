@@ -156,7 +156,7 @@ The native benchmark runs WASM workflow, which in turn executes WASM activity, w
 which does the actual Fibonacci calculation, so `Fibo(10) * 1000 iterations` spawns 1000 `N=10 fibo` processes.
 
 ## Small CPU Activity
-Workflow calling a short activity sequentially 40 times sequentially.
+Workflow calling a short activity sequentially 40 times.
 
 <div class="table">
 
