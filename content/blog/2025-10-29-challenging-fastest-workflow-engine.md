@@ -323,6 +323,9 @@ and *Exploiting idempotency* sections.
 
 
 ## Conclusion
+
+Obelisk dominated every benchmark.
+
 A key finding is that a simple architecture can often beat a more complex system. Obelisk has no Docker Compose file,
 as the entire thing - database, orchestrator, webhooks, workflows and activities all run in a single process.
 
