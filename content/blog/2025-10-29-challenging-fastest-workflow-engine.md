@@ -12,7 +12,7 @@ a blog post titled
 
 <!-- more -->
 
-<script src="https://cdn.plot.ly/plotly-2.35.3.min.js"></script>
+<script src="{{ get_url(path="plotly-2.35.3.min.js") }}"></script>
 
 <script>
 
@@ -99,7 +99,7 @@ engines must do:
 * Managing the execution, spawning child executions in case of workflows, timeouting when needed in case of activities
 * Writing the finished execution result and notifying other executions waiting for the results
 
-Running a workflow like this one:
+Running a workflow like [this one](https://github.com/obeli-sk/benchmark-fibo/blob/main/workflow/rs/src/lib.rs):
 ```rs
 fn fiboa(n: u8, iterations: u32) -> Result<u64, ()> {
     let mut last = 0;
