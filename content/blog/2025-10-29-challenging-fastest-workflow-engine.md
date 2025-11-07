@@ -32,29 +32,39 @@ function makePlot(dataArray, div, title) {
     const colors = labels.map(colorFor);
 
     const trace = {
-        x: values,
-        y: labels,
+        x: labels,
+        y: values,
         type: 'bar',
-        orientation: 'h',
+        orientation: 'v',
         marker: { color: colors, line: { width: 0 } },
-        hovertemplate: '%{y}<br>Time: %{x:.3f} s<extra></extra>'
+        hovertemplate: '%{x}<br>Time: %{y:.3f} s<extra></extra>'
     };
+
     const css = getComputedStyle(document.documentElement);
     const textColor = css.getPropertyValue('--text').trim();
+
     const layout = {
-        margin: { l: 240, r: 24, t: 48, b: 48 },
-        xaxis: { title: 'Time (s)', showgrid: true, zeroline: false, color: textColor },
-        yaxis: { automargin: true, categoryorder: 'array', categoryarray: labels, color: textColor },
-        height: Math.max(420, labels.length * 48),
+        margin: { l: 48, r: 24, t: 48, b: 160 },
+        xaxis: {
+            tickangle: -45,
+            automargin: true,
+            color: textColor
+        },
+        yaxis: {
+            title: 'Time (s)',
+            showgrid: true,
+            zeroline: false,
+            color: textColor
+        },
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        title: { text: title + ' — Time (s)', x: 0.01, xanchor: 'left',  font: { color: textColor } }
+        title: { text: title + ' — Time (s)', x: 0.01, xanchor: 'left', font: { color: textColor } }
     };
 
     const config = { responsive: true, displayModeBar: false };
-
     Plotly.newPlot(div, [trace], layout, config);
 }
+
 </script>
 
 The benchmark compares a naive implementation of Fibonacci written in various programming languages:
