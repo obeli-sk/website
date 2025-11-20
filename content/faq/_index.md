@@ -25,23 +25,10 @@ while the engine transparently handles persistence, retries, and replay.
 
 A <a href="{{ get_url(path='@/docs/latest/concepts/workflows/_index.md') }}">workflow</a> is a deterministic, side‑effect‑free orchestration logic.
 
-An <a href="{{ get_url(path='@/docs/latest/concepts/activities/_index.md') }}">activity</a> is a unit of work that does produce side
-effects using HTTP requests, file I/O or child processes. Activities must be idempotent(retriable) so the runtime can safely and
-transparently retry them on failure. The workflow invokes activities, waits for their results, and then continues its logic based
-on those results.
-
-### What is the relation to AI
-
-Workflows can integrate AI seamlessly by treating large language model (LLM) calls as regular HTTP activities —
-for example, for data enrichment, summarization, or classification.
-
-At the same time,
-Obelisk is well-suited for building agentic systems by combining deterministic control with AI-driven reasoning.
-Its persistence provides full auditability of every step, while its structure cleanly separates precise,
-mechanical operations like setup and cleanup from the open-ended agentic loop powered by LLMs.
-Human operators can intervene at any time through events to adjust or halt behavior, making
-Obelisk a reliable and controllable foundation for building AI agents.
-
+An <a href="{{ get_url(path='@/docs/latest/concepts/activities/_index.md') }}">activity</a> is a unit of work that produces side
+effects using HTTP requests, file I/O or OS processes. Activities must be idempotent (retriable) so the runtime can safely and
+transparently retry them on failure. Once an activity successfully finishes and is checkpointed, it is never re-executed.
+However, even if it succeeds, it may be retried if the server crashes before persisting its result.
 
 ### What does determinism mean in the context of a workflow engine?
 
@@ -49,17 +36,19 @@ Determinism means that a system always produces the same result given the same i
 The outcome is fully determined by cause and effect, with no randomness or uncertainty.
 
 Many popular workflow engines like GitHub Actions use a purely declarative model (YAML), where workflow state is managed explicitly.
-These engines move state between dependent jobs or workflows by explicitly passing input/output data, typically through artifacts
+These engines move state between dependent jobs or workflows by passing input/output data, typically through artifacts
 or environment variables. However, embedding logic such as conditionals, abstracting common steps,
 and performing refactorings can be cumbersome in this model.
 
 In contrast, when a workflow is written as a function composed of many steps in a general-purpose language,
-the engine must capture all non-deterministic calls with side effects, so that the workflow can be interrupted,
-restarted, and replayed at any time. This enables reliable crash recovery, transparent retries, and the ability
+the engine must capture and persist all non-deterministic, side-effecting calls with side effects, so that the workflow can be interrupted,
+restarted, and replayed later. This enables reliable crash recovery, transparent retries, and the ability
 to unload long-running workflows from memory while waiting for results or timeouts.
 
-Deterministic execution therefore requires that all workflow state - including child executions' parameters and
-their results - be persisted in an execution log.
+The engine therefore persists the entire workflow state, including child executions' parameters and
+their results in an execution log.
+
+During replay, it verifies that the events produced by the workflow match the log and halts execution if any discrepancy is found.
 
 ### When does a code change break determinism?
 
@@ -80,10 +69,23 @@ After a crash (or restart/update), the Obelisk runtime:
 
 2. **Replays** each completed activity’s recorded result from the execution log.
 
-3. **Retries** any activity whose result wasn’t yet persisted when the crash occurred - another reason why activities must be idempotent.
+3. **Retries** any activity whose result wasn’t yet persisted when the crash occurred.
 
 ###  How to do a cleanup after an activity permanently failed?
 
-Obelisk doesn’t yet offer built‑in saga support, so you handle compensation logic directly in your workflow. In practice, you wrap
-activities in a try/catch (or equivalent) block: if an activity exhausts its retries and fails, invoke the compensating activity to
+If an activity exhausts its retries and fails, the workflow must invoke the compensating activity to
 roll back or clean up any side effects and continue or exit the workflow function.
+Check out this video on
+<a target="_blank" href="https://www.youtube.com/watch?v=0UTOLRTwOX0">Distributed sagas</a> for details.
+
+### What is the relation to AI
+
+Workflows can integrate AI seamlessly by treating large language model (LLM) calls as regular HTTP activities —
+for example, for data enrichment, summarization, or classification.
+
+At the same time,
+Obelisk is well-suited for building agentic systems by combining deterministic control with AI-driven reasoning.
+Its persistence provides full auditability of every step, while its structure cleanly separates precise,
+mechanical operations like setup and cleanup from the open-ended agentic loop powered by LLMs.
+Human operators can intervene at any time through events to adjust or halt behavior, making
+Obelisk a reliable and controllable foundation for building AI agents.
