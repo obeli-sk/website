@@ -4,7 +4,8 @@ template = "docs.html"
 weight = 30  #  Lower weights appear first
 +++
 
-Disk IO must be explicitly enabled globally in the {{ doc_link(title="configuration", path="configuration.md#global-preopened-directories-configuration") }} using `directories.enabled = true` setting.
+Disk IO must be explicitly enabled globally in the {{ doc_link(title="configuration", path="configuration.md#global-preopened-directories-configuration") }}
+using `activities.directories.enabled = true` setting.
 
 When enabled, the activity will be able to read and write to `.` (guest current directory).
 
