@@ -326,6 +326,14 @@ article {
         }
     }
 
+    blockquote {
+        margin: 0;
+        padding: 0 1em;
+        color: var(--text);
+        /* lighter primary */
+        border-left: 0.25em solid rgba(157, 242, 254, 0.4);
+    }
+
 }
 
 :not(pre)>code {
