@@ -387,8 +387,8 @@ This would lead to mixing side effects into workflows.
 Rust, JavaScript, Python, Go and more.
 * Versioning and backward-compatibility: Activities can export several versions
 of the same interface, enabling workflows to catch up on their pace.
-* Codegen allows creating multiple variants of the same exported function, so
-attaching metadata is not an issue.
+* Codegen allows creating multiple variants of the same exported function, taking
+advangates of both proxy and callback patterns without the drawbacks.
 
 
 ## Experiments
@@ -506,13 +506,109 @@ DBOS documentation {{target_link(title="warns", href="https://docs.dbos.dev/java
 
 Using any source of nondeterminism, including current date, IO, environment variables, RNG or something more subtle like hash maps will break the replay as well.
 
-For posterity, let's replace the `ArrayList` / `Vec` with a hash map:
+For posterity, let's replace the `ArrayList` / `Vec` with a hash set:
+```diff
+ @Workflow(name = "parallel-parent")
+ public long parallelParent() throws Exception {
+     System.out.println("parallel-parent started");
+-    ArrayList<Map.Entry<Integer, WorkflowHandle<Integer, Exception>>> handles = new ArrayList<>();
++    HashSet<Map.Entry<Integer, WorkflowHandle<Integer, Exception>>> handles = new HashSet<>();
+     for (int i = 0; i < 10; i++) {
+         final int index = i;
+         var handle = DBOS.startWorkflow(
+                 () -> this.proxy.childWorkflow(index),
+                 new StartWorkflowOptions().withQueue(this.queue));
+         handles.add(new AbstractMap.SimpleEntry<>(i, handle)); // Tuple (i, handle)
+     }
+     System.out.println("parallel-parent submitted all parallel-child workflows");
+     long acc = 0;
+     for (var entry : handles) {
+         int result = entry.getValue().getResult();
+         acc = 10 * acc + result; // Order-sensitive
+         int i = entry.getKey();
+         System.out.printf("parallel-child(%d)=%d, acc:%d%n", i, result, acc);
+         DBOS.sleep(Duration.ofMillis(300));
+     }
+     System.out.println("parallel-parent completed");
+     return acc;
+ }
+```
+Crasing an in-progress workflow and replaying it in a new process:
+```sh
+parallel-parent started
+parallel-parent submitted all parallel-child workflows
+parallel-child(2)=2, acc:2
+parallel-child(8)=6, acc:26
+parallel-child(5)=8, acc:268
+parallel-child(3)=5, acc:2685
+parallel-child(4)=4, acc:26854
+parallel-child(7)=9, acc:268549
+parallel-child(1)=7, acc:2685497
+parallel-child(9)=0, acc:26854970
+# replayed up to this point
+parallel-child(0)=0, acc:268549700
+parallel-child(6)=6, acc:2685497006
+parallel-parent completed: 2685497006
+```
 
+Noticed something is off? `parallel-child(n)` should always return `n`, and the final `acc` should contain every digit exactly once.
+However the ordering of `HashSet` iteration depends on each object’s memory address or a per-run JVM-specific identity value.
+This is an obvious source of nondeterminism, and in this case leads to replaying wrong return values, exactly as in Experiment B.
+The best DBOS could do here is to throw a nondeterminism detected error.
 
+Applying the same change in Obelisk:
+```diff
+ fn parallel() -> Result<u64, ()> {
+     log::info("parallel started");
+     let max_iterations = 10;
+-    let mut handles = Vec::new();
++    let mut handles = HashSet::new();
+     for i in 0..max_iterations {
+         let join_set = new_join_set_generated(ClosingStrategy::Complete);
+         step_submit(&join_set, i, i * 200);
+         handles.insert((i, join_set));
+     }
+     log::info("parallel submitted all child executions");
+     let mut acc = 0;
+     for (i, join_set) in handles {
+         let (_execution_id, result) =
+             step_await_next(&join_set).expect("every join set has 1 execution");
+         let result = result.inspect_err(|_| log::error("step timed out"))?;
+         acc = 10 * acc + result; // order-sensitive
+         log::info(&format!("step({i})={result}, acc={acc}"));
+         workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)));
+     }
+     log::info(&format!("parallel completed: {acc}"));
+     Ok(acc)
+ }
+```
+I have crashed an execution twice, but its output is stable:
+```
+TRACE (replay) parallel started
+TRACE (replay) parallel submitted all child executions
+TRACE (replay) step(2)=2, acc=2
+TRACE (replay) step(1)=1, acc=21
+TRACE (replay) step(3)=3, acc=213
+TRACE (replay) step(5)=5, acc=2135
+TRACE (replay) step(0)=0, acc=21350
+TRACE (replay) step(9)=9, acc=213509
+TRACE (replay) step(4)=4, acc=2135094
+TRACE (replay) step(7)=7, acc=21350947
+TRACE (replay) step(8)=8, acc=213509478
+ INFO step(6)=6, acc=2135094786
+ INFO parallel completed: 2135094786
+```
+I am not aware of any way how to inject nondeterminism into the code:
+Accessing IO, source of randomness, spawning a thread etc, are all forbidden
+and lead to WASM trap (a non-recoverable runtime fault).
+Even if there was a way to bypass the WASM sandbox, it would only lead to the
+same result as we saw earlier with code changes - a nondeterminism detected error.
 
 ### Experiment E: Resource usage with sleepy workflows and activities
 Have 1000 workflows that sleep for 24 hours, measure RSS, graph it.
 Same for activities.
+
+DBOS could switch to virtual threads for activities
 
 ### Experiment F: Fibo perf in AWS
 
