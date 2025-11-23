@@ -118,7 +118,7 @@ class ExampleImpl implements Example {
             final int i2 = i;
             int result = DBOS.runStep(() -> step(i2, 200 * i2), "step " + i);
             acc += result;
-            System.out.printf("Step succeeded %d==%d%n", i, result);
+            System.out.printf("step(%d)=%d%n", i, result);
 
         }
         System.out.println("serial completed");
@@ -135,7 +135,7 @@ class ExampleImpl implements Example {
     @Workflow(name = "parallel-parent")
     public long parallelParent() throws Exception {
         System.out.println("parallel-parent started");
-        ArrayList<Map.Entry<Integer, WorkflowHandle<Integer, Exception>>> handles = new ArrayList<>();
+        HashSet<Map.Entry<Integer, WorkflowHandle<Integer, Exception>>> handles = new HashSet<>();
         for (int i = 0; i < 10; i++) {
             final int index = i;
             var handle = DBOS.startWorkflow(
@@ -149,7 +149,7 @@ class ExampleImpl implements Example {
             int result = entry.getValue().getResult();
             acc = 10 * acc + result; // Order-sensitive
             int i = entry.getKey();
-            System.out.printf("parallel-child(%d)==%d, acc:%d%n", i, result, acc);
+            System.out.printf("parallel-child(%d)=%d, acc:%d%n", i, result, acc);
             DBOS.sleep(Duration.ofMillis(300));
         }
         System.out.println("parallel-parent completed");
@@ -261,11 +261,14 @@ use obelisk::{
     types::time::{Duration, ScheduleAt},
     workflow::workflow_support::{self, ClosingStrategy, new_join_set_generated},
 };
+use std::collections::HashSet;
 use tutorial::{
     activity::activity_sleepy::step,
     activity_obelisk_ext::activity_sleepy::{step_await_next, step_submit},
 };
 use wit_bindgen::generate;
+
+mod util;
 
 generate!({ generate_all });
 struct Component;
@@ -279,31 +282,32 @@ impl Guest for Component {
             log::info("Persistent sleep started");
             workflow_support::sleep(ScheduleAt::In(Duration::Seconds(1)));
             log::info("Persistent sleep finished");
-            let result = step(i, i * 200).unwrap();
+            let result = step(i, i * 200).inspect_err(|_| log::error("step timed out"))?;
             acc += result;
-            log::info(&format!("Step succeeded {i}=={result}"));
+            log::info(&format!("step({i})={result}"));
         }
         log::info("serial completed");
         Ok(acc)
     }
 
+    #[allow(clippy::mutable_key_type)]
     fn parallel() -> Result<u64, ()> {
         log::info("parallel started");
         let max_iterations = 10;
-        let mut handles = Vec::new();
+        let mut handles = HashSet::new();
         for i in 0..max_iterations {
             let join_set = new_join_set_generated(ClosingStrategy::Complete);
             step_submit(&join_set, i, i * 200);
-            handles.push((i, join_set));
+            handles.insert((i, join_set));
         }
         log::info("parallel submitted all child executions");
         let mut acc = 0;
         for (i, join_set) in handles {
             let (_execution_id, result) =
                 step_await_next(&join_set).expect("every join set has 1 execution");
-            let result = result.expect("step did not time out");
+            let result = result.inspect_err(|_| log::error("step timed out"))?;
             acc = 10 * acc + result; // order-sensitive
-            log::info(&format!("child({i})={result}, acc={acc}"));
+            log::info(&format!("step({i})={result}, acc={acc}"));
             workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)));
         }
         log::info(&format!("parallel completed: {acc}"));
