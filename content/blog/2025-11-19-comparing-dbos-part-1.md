@@ -3,9 +3,10 @@ title = "Comparing Obelisk with DBOS"
 date = 2025-11-19
 +++
 
-Obelisk and <a target="_blank" href="https://www.dbos.dev">DBOS</a> are both open-source deterministic workflow engines.
+Obelisk and <a target="_blank" href="https://www.dbos.dev">DBOS</a> are both open-source
+durable workflow engines.
 
-Let's see how they compare in terms of ease of use, how they handle determinism and how they perform.
+Let's see how they compare in terms of ease of use, nondeterminism prevention and performance.
 
 I will go through the <a target="_blank" href="https://docs.dbos.dev/java/programming-guide">Learn DBOS Java</a> tutorial
 and compare it with Rust version of the same code written for Obelisk.
@@ -25,13 +26,13 @@ For building WASM Components we need Rust and Cargo.
 ## Intro into deterministic workflow engines
 As both [Obelisk](@/faq/_index.md) and
 <a target="_blank" href="https://docs.dbos.dev/architecture#how-workflow-recovery-works">DBOS</a>
-emphasize, workflows must be deterministic and activities / steps must be idempotent (retryable).
+emphasize, workflows must be deterministic and activities / steps must be idempotent.
 
-Workflows define a DAG of child executions.
-Instead of defning workflows in a configuration language such as YAML, deterministic workflow engines allow
-you to use code with one caveiat: the code, as the name suggests, must be deterministic, meaning that the workflow
-function, executed with the same parameters, must produce the exact same DAG on every run. This ensures that workflows
-can be replayed after a server crash or when migrating a long running execution from one machine to another.
+This ensures that long running workflows
+can be replayed after a server crash or when they are migrated from one machine to another.
+
+Activities can be retried automatically on a failure, but even a successful activity might
+be retried if the server crashes just before persisting the result.
 
 ## Authoring workflows
 
@@ -341,11 +342,47 @@ async fn main(request: Request<Body>) -> Result<Response<Body>, Error> {
 }
 ```
 
+### Ergonomics
+
+DBOS uses a callback approach when submitting child executions:
+```java
+int result = DBOS.runStep(() -> step(i, 200 * i), "step " + i);
+```
+The drawback here is lower readability when orchestrating a large number of steps.
+DBOS could use Proxy pattern instead,
+but it would make more difficult to attach metadata such as name, retry configuration
+etc.
+
+Obelisk workflows can call a child execution directly without a callback:
+```rs
+let result = step(i, i * 200).unwrap();
+```
+or using {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }},
+automatically generated from the activity's WIT file:
+```rs
+step_submit(&join_set, i, i * 200);
+let (_execution_id, result) = step_await_next(&join_set).unwrap();
+```
+
+The great thing about DBOS is that the whole thing fits into a single Java file.
+
+However, schema-first approach has several advantages:
+* Strong, explicit interface contracts
+* No way of forgetting to use the callback style or to construct a proxy object.
+This would lead to mixing side effects into workflows.
+* Cross-language interoperability: The WASM Component Model supports many languages such as
+Rust, JavaScript, Python, Go and more.
+* Versioning and backward-compatibility: Activities can export several versions
+of the same interface, enabling workflows to catch up on their pace.
+* Codegen allows creating multiple variants of the same exported function, so
+attaching metadata is not an issue.
+
+
 ## Experiments
 
 ### Experiment A: Simulating a server crash
 
-The aim is to start the workflow, kill the server and start it again to see if the workflow finishes.
+The task is to start the workflow, kill the server and start it again to see if the workflow finishes.
 
 Submitting the parallel workflow in DBOS and then killing the server
 revealed an unplesent surprise: After restart the workflow ended in `ERROR` state, with an error and a huge stack trace:
@@ -455,7 +492,10 @@ DBOS documentation {{target_link(title="warns", href="https://docs.dbos.dev/java
 > Java's threading and concurrency APIs are non-deterministic. You should use them only inside steps.
 
 Using any source of nondeterminism, including current date, IO, environment variables, RNG or something more subtle like hash maps will break the replay as well.
-Keep in mind this can be hidden deep in a library that was updated.
+
+For posterity, let's replace the `ArrayList` / `Vec` with a hash map:
+
+
 
 ### Experiment E: Resource usage with sleepy workflows and activities
 Have 1000 workflows that sleep for 24 hours, measure RSS, graph it.
