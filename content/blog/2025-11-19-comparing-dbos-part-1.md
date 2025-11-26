@@ -604,16 +604,103 @@ and lead to WASM trap (a non-recoverable runtime fault).
 Even if there was a way to bypass the WASM sandbox, it would only lead to the
 same result as we saw earlier with code changes - a nondeterminism detected error.
 
+This experiment shows that without a properly isolated environment code that
+works fine on the first run can be utterly broken on replay.
+
 ### Experiment E: Resource usage with sleepy workflows and activities
-Have 1000 workflows that sleep for 24 hours, measure RSS, graph it.
-Same for activities.
 
-DBOS could switch to virtual threads for activities
+One of main selling points of workflow engines is the fact that the
+workflows can durably sleep for weeks or more.
 
-### Experiment F: Fibo perf in AWS
+Let's model the situation where we do some work then sleep for 1 day in order
+to drive some per-customer business logic.
 
-Paste the AWS Step function comparison graph.
+```java
+@Workflow
+public void sleepyWorkflow(int idx) {
+    System.out.printf("%d%n", idx);
+    DBOS.sleep(Duration.ofDays(1));
+    // do some logic here
+}
 
+// Test submitting many customer workflows
+@Workflow
+public void sleepyParent(int max) {
+    var handles = new ArrayList<WorkflowHandle<Void, RuntimeException>>();
+    for (int i = 0; i < max; i++) {
+        final int index = i;
+        System.out.printf("Submitting child workflow %d%n", i);
+        var handle = DBOS.startWorkflow(
+                () -> this.proxy.sleepyWorkflow(index),
+                new StartWorkflowOptions().withQueue(this.queue));
+        handles.add(handle);
+    }
+    System.out.printf("Created %s child workflows%n", max);
+    int counter = 0;
+    for (var handle : handles) {
+        handle.getResult();
+        counter++;
+        System.out.printf("Collected %d child workflows%n", counter);
+    }
+    System.out.printf("Done waiting for %d child workflows%n", max);
+}
+```
+When executing the parent workflow with 10k child workflows, the JVM process was slowing down until it reached
+a breaking point. After a few minutes, with parent workflow reporting the index 8602,
+the process RSS grew from ~130MB to 1.3GB,
+reported an OOM error and did not make any further progress.
+Even after restart the same thing happened:
+```
+[172,701s][warning][os,thread] Failed to start thread "Unknown thread" - pthread_create failed (EAGAIN) for attributes: stacksize: 1024k, guardsize: 0k, detached.
+[172,701s][warning][os,thread] Failed to start the native thread for java.lang.Thread "pool-1-thread-18613"
+Exception in thread "QueuesPollThread" java.lang.OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource limits reached
+```
+This could be mitigated by changing the limits on the OS level, but using one thread for each inactive workflow execution seems excessive.
+
+Let's see how Obelisk handles it:
+
+```wit
+package tutorial:sleepy;
+
+interface sleepy-workflow {
+    sleepy-workflow: func(idx: u64) -> result;
+}
+```
+```rs
+impl exports::tutorial::sleepy::sleepy_workflow::Guest for Component {
+    fn sleepy_workflow(idx: u64) -> Result<(), ()> {
+        log::info(&idx.to_string());
+        workflow_support::sleep(ScheduleAt::In(Duration::Days(1)));
+        // do some logic here
+        Ok(())
+    }
+}
+```
+```diff
+ package tutorial:workflow;
+
+ interface workflow {
+     serial:   func() -> result<u64>;
+     parallel: func() -> result<u64>;
++    sleepy-parent: func(max: u64) -> result;
+ }
+```
+```rs
+fn sleepy_parent(max: u64) -> Result<(), ()> {
+    let join_set = &new_join_set_generated(ClosingStrategy::Complete);
+    for idx in 0..max {
+        log::info(&format!("Submitting child workflow {idx}"));
+        sleepy_workflow_submit(join_set, idx);
+    }
+    log::info(&format!("Created {max} child workflows"));
+    for counter in 0..max {
+        let (_execution_id, _result) = sleepy_workflow_await_next(join_set).unwrap();
+        log::debug(&format!("Collected {counter} child workflows"));
+    }
+    log::info(&format!("Done waiting for {max} child workflows"));
+    Ok(())
+}
+```
 
 ## Conclusion
 
@@ -654,6 +741,10 @@ DBOS is several separate engines, so fix in one language does not translate to o
 Detection of code changes can be improved, however it is simply impossible to prevent
 accidental nondeterminisic constructs unless workflows are completely isolated
 in a runtime that is built around deterministic execution.
+
+
+With a guaranteed determinimsm workflow executions can be unloaded from memory transparently.
+DBOS has a large threadpool (~900 threads max), but workflows that sleep for one day still occupy it.
 
 # Bugs:
 
