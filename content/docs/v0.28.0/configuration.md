@@ -143,7 +143,7 @@ location.oci = "..."
 [[activity_external]]
 name = "..."
 location.oci = "..."
-
+```
 
 ### Preopended directory support
 Disk IO must be explicitly enabled using the global `activities.directories.enabled = true` setting described above.
