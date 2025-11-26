@@ -87,8 +87,8 @@ cleanup.older_than.minutes = 5            # Delete folders belonging to executio
 
 ### Global Workflow Configuration
 ```toml
-# [workflows]
-# lock_extension_leeway.milliseconds = 100         # Starts extending the lock a little before it expires, specifically at expires_at minus the configured leeway.
+[workflows]
+lock_extension_leeway.milliseconds = 100         # Starts extending the lock a little before it expires, specifically at expires_at minus the configured leeway.
 ```
 
 ## Component Configuration
@@ -198,7 +198,7 @@ backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 stub_wasi = false                     # Default is false.
 
 ## Automatic lock extension can be disabled by setting the duration to zero.
-# lock_extension.seconds = 1
+lock_extension.seconds = 1
 ```
 
 The blocking strategy controlls whether an execution should `await` the child execution response
