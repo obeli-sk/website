@@ -8,6 +8,9 @@ highlight_code = true
 
 [extra]
 versions = [
+    "v0.28.1",
+    "v0.28.0",
+    "v0.27.0",
     "v0.26.2",
     "v0.26.1",
     "v0.26.0",
@@ -39,4 +42,4 @@ versions = [
     "v0.18.0",
     "latest",
 ]
-latest = "v0.26.2"
+latest = "v0.28.1"
