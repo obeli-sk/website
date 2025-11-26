@@ -1,6 +1,6 @@
 +++
 title = "Comparing Obelisk with DBOS"
-date = 2025-11-19
+date = 2025-11-26
 +++
 
 Obelisk and <a target="_blank" href="https://www.dbos.dev">DBOS</a> are both open-source
@@ -29,7 +29,7 @@ As both [Obelisk](@/faq/_index.md) and
 emphasize, workflows must be deterministic and activities / steps must be idempotent.
 
 This ensures that long running workflows
-can be replayed after a server crash or when they are migrated from one machine to another.
+can continue after a server crash or when they are migrated from one machine to another.
 
 Activities can be retried automatically on a failure, but even a successful activity might
 be retried if the server crashes just before persisting the result.
@@ -607,13 +607,14 @@ same result as we saw earlier with code changes - a nondeterminism detected erro
 This experiment shows that without a properly isolated environment code that
 works fine on the first run can be utterly broken on replay.
 
-### Experiment E: Resource usage with sleepy workflows and activities
+### Experiment E: Resource usage with 10k or 100k of workflows
 
 One of main selling points of workflow engines is the fact that the
 workflows can durably sleep for weeks or more.
 
-Let's model the situation where we do some work then sleep for 1 day in order
-to drive some per-customer business logic.
+Let's model the situation where a main workflow spawns
+one child workflow for every customer. This child workflow will just sleep for 1 day in order
+to drive some business logic.
 
 ```java
 @Workflow
@@ -645,7 +646,7 @@ public void sleepyParent(int max) {
     System.out.printf("Done waiting for %d child workflows%n", max);
 }
 ```
-When executing the parent workflow with 10k child workflows, the JVM process was slowing down until it reached
+When executing the parent workflow submitting 10k child workflows, the JVM process was slowing down until it reached
 a breaking point. After a few minutes, with parent workflow reporting the index 8602,
 the process RSS grew from ~130MB to 1.3GB,
 reported an OOM error and did not make any further progress.
@@ -657,8 +658,9 @@ Exception in thread "QueuesPollThread" java.lang.OutOfMemoryError: unable to cre
 ```
 This could be mitigated by changing the limits on the OS level, but using one thread for each inactive workflow execution seems excessive.
 
-Let's see how Obelisk handles it:
+Let's see how Obelisk handles it.
 
+First we create a new workflow component:
 ```wit
 package tutorial:sleepy;
 
@@ -676,6 +678,9 @@ impl exports::tutorial::sleepy::sleepy_workflow::Guest for Component {
     }
 }
 ```
+
+Then we generate the extension WIT file and import it to the `tutorial` workflow component.
+
 ```diff
  package tutorial:workflow;
 
@@ -684,6 +689,11 @@ impl exports::tutorial::sleepy::sleepy_workflow::Guest for Component {
      parallel: func() -> result<u64>;
 +    sleepy-parent: func(max: u64) -> result;
  }
+
+ world any {
+     export tutorial:workflow/workflow;
++    import tutorial:sleepy-obelisk-ext/sleepy-workflow;
+
 ```
 ```rs
 fn sleepy_parent(max: u64) -> Result<(), ()> {
@@ -702,67 +712,48 @@ fn sleepy_parent(max: u64) -> Result<(), ()> {
 }
 ```
 
+To make it a bit more challenging let's use **100k** child workflows.
+Although Obelisk is yet not hardened for such scale, it managed to start all child workflows with RSS under 500MB.
+Part of the reason is that instead of using native threads, each execution lives inside a light-weight
+{{target_link(title="Tokio",href="https://tokio.rs")}} task.
+Inactive workflows are automatically unloaded from memory after a configurable time, which keeps the
+memory footprint low.
+
 ## Conclusion
 
+Differences between DBOS and Obelisk can be summarized in a table.
 
-easy to start - library
+<div class="table">
 
-callback hell!
+| Feature / Category | DBOS | Obelisk |
+| :--- | :--- | :--- |
+| **Compared Language** | **Java** (Other languages: Python,TypeScript,Go are supported through their respective SDKs). | **Rust** (Other languages supporting WASM Components: JavaScript, Python, Go) |
+| **Workflow Definition** | **Code-first:** Workflows and steps can reside in a single Java class. | **Schema-first:** Uses WIT (WebAssembly Interface Type) IDL to define contracts between components. |
+| **Ergonomics** | Uses a **callback approach** for steps (e.g., `DBOS.runStep(...)`), which can lower readability. | Supports **direct function calls** or generated extension functions, offering cleaner syntax (e.g., `step(...)`). |
+| **Determinism Enforcement** | **Manual/Cooperative:** Developers must avoid Java's non-deterministic APIs (threading, IO). Constructs like `HashSet` can break replay. | **Strict/Sandboxed:** WASM sandbox prevents access to non-deterministic resources (IO, RNG). `HashSet` iteration is stable. |
+| **Code Change Detection** | **Best-effort:** Hashes bytecode of a class, but not the entire codebase. Failed to detect parameter changes if step names did not encode them; marked trimmed workflows as successful. | **Strict:** reliably detects parameter mismatches and unprocessed events (e.g., trimmed events) on replay. Currently does not hash WASM files. |
+| **Execution Model** | **Thread-based:** Uses native threads for workflow executions. | **Async/Task-based:** Uses lightweight Tokio tasks. |
+| **Scalability & Resource Usage** | **Lower Scalability:** Failed at **10k** concurrent workflows (OOM, 1.3GB RSS) due to thread exhaustion. | **High Scalability:** Successfully handled **100k** concurrent workflows (<500MB RSS) by unloading inactive workflows. |
+| **Infrastructure Dependencies** | Requires **PostgreSQL**. | Embeds **SQLite**. |
 
-no isolation
-no retries on timeouts
-no determinism
-Each language requires separate SDK
+</div>
 
-Cloud: How do they run the whole app with all its dependencies? Separate concerns!
-Very tricky to upgrade, they do have versions so that old version replays with the old code but it is much easier to just run the original WASM,
-no way of breaking determinism that way. They have no type safe schema language so every pull request in the whole app must be checked
-not only for static determinism breakage (using hash maps), but also versioning breakage.
+DBOS is an interesting project that is very easy to start with, as it encourages developers to include it as a library
+in their main application. This architectural decision shapes its features.
 
-easy to start, hard to make changes - seemingly unrelated code changes can lead to (silent) determinism breakage.
+Since there is no isolation, determinism is managed by developer's discipline.
+This may make it harder to review changes, as seemingly unrelated code changes can lead to (silent) determinism breakage.
 
-Web console (conductor) - proprietary, must connect to the cloud.
-
-Obelisk
-fluid calls, no callbacks
-no footguns (thread.sleep, hash maps etc.)
-no queues (just the default one)
-sending signals - only through stubbed activities, which guarantees that the workflow is in a correct state.
-
-https://github.com/earendil-works/absurd
-nice UI
-queues
-JS Only
-
-WASM approach is good for code change detection.
-
-DBOS is several separate engines, so fix in one language does not translate to others.
-
-Detection of code changes can be improved, however it is simply impossible to prevent
+Its code change detection can be improved, however it is simply impossible to prevent
 accidental nondeterminisic constructs unless workflows are completely isolated
 in a runtime that is built around deterministic execution.
 
+On the plus side, DBOS requires no configuration, as workflows, steps and HTTP endpoints are just code.
 
-With a guaranteed determinimsm workflow executions can be unloaded from memory transparently.
-DBOS has a large threadpool (~900 threads max), but workflows that sleep for one day still occupy it.
-
-# Bugs:
-
-
-conductor UI https://github.com/dbos-inc/dbos-transact-java/issues/219
-
-# Pet peeves
-Durable sleep uses Thread.sleep, blocking a thread - nope, only for steps.
-There doesn't seem a way to transparently unload the execution that is sleeping for days from memory - not sure, debug.
-Point out that Thread.sleep in workflow is wrong and does not compile in Rust.
-Can we catch exception of persistent sleep or how does it work? - Mention it is impossible in Obelisk.
-
-Mention idempotency - lacking in docs, only mentioned in idempotent ID generation. and determinism. Mention distributed sagas video.
-
-Compare nondeterminism detected - await 10 and 20 tasks with code change. (hang)
-
-Break nondeterminism with hashset
-
-
-DBOS Props:
-+ No configuration, workflows, steps, HTTP endpoints are just code
+Obelisk's main strenth is its WASM runtime:
+* no footguns (threads, IO, hash maps etc.) in workflows
+* WASM contains the entire code, so associating executions with is original codebase  is trivial (although not implemented yet).
+* Able to unloaded running executions from memory transparently.
+* Separation of components
+* Coordination through WIT schemas
+* Easy to deploy on lightweight VM
