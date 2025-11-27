@@ -646,7 +646,7 @@ public void sleepyParent(int max) {
     System.out.printf("Done waiting for %d child workflows%n", max);
 }
 ```
-When executing the parent workflow submitting 10k child workflows, the JVM process was slowing down until it reached
+When executing the parent workflow submitting 10k child workflows (on a machine wih 16GB of RAM), the JVM process was slowing down until it reached
 a breaking point. After a few minutes, with parent workflow reporting the index 8602,
 the process RSS grew from ~130MB to 1.3GB,
 reported an OOM error and did not make any further progress.
