@@ -735,6 +735,7 @@ Differences between DBOS and Obelisk can be summarized in a table.
 | **Execution Model** | **Thread-based:** Uses native threads for workflow executions. | **Async/Task-based:** Uses lightweight Tokio tasks. |
 | **Scalability & Resource Usage** | **Lower Scalability:** Failed at **10k** concurrent workflows (OOM, 1.3GB RSS) due to thread exhaustion. | **High Scalability:** Successfully handled **100k** concurrent workflows (<500MB RSS) by unloading inactive workflows. |
 | **Infrastructure Dependencies** | Requires **PostgreSQL**. | Embeds **SQLite**. |
+| **Web UI** | Proprietary, runs in the cloud | Open source, hosted by Obelisk binary |
 
 </div>
 
