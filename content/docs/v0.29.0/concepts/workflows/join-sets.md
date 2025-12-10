@@ -182,7 +182,7 @@ During this process, all child executions that the parent execution submitted bu
 
 The parent workflow will be marked as finished only when all unattended child executions are finished.
 
-### Example - Join set without awaiting child workflow results
+### Example - Automaitcally awaiting child workflows
 The following example creates a named join set for each user fetched from the database and uses it to parallelize the execution of the `star_added` workflow.
 ```rust
 fn backfill_parallel(repo: String) -> Result<(), String> {
@@ -209,12 +209,15 @@ fn backfill_parallel(repo: String) -> Result<(), String> {
         }
         cursor = Some(resp.cursor);
         // `join_set_batch` is automatically closed here, as it is removed from the scope.
+        // Parent workflow will block until all child workflows finish.
     }
     Ok(())
 }
 ```
 
-Note that there is no corresponding `await-next` call in this example.
+Note that there is no corresponding `await-next` call in this example, however join set close blocks untill all child workflows finish.
+It is advised to always await the result of submitted child workflows explicitly.
+
 The scoped Join Set Close adds back-pressure - the first batch of five child executions are submitted,
 then implicitly awaited before the while loop begins again:
 
