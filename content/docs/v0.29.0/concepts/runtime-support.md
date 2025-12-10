@@ -61,11 +61,6 @@ Creates a new {{ doc_link(title="join set", path="concepts/workflows/join-sets.m
 
 * `join-set-close: func(join-set: join-set)`: {{ doc_link(title="Closes", path="concepts/workflows/join-sets.md#join-set-close") }} the join set.
 
-* `join-next: func() -> result<tuple<response-id, result>, join-next-error>`:
-Block the workflow execution until next response associated with the join set arrives. The response is marked as processed.
-Child execution result can be obtained using `-get` extension function using the returned execution ID.
-Return `join-next-error::all-processed` if the join set has all requests matched with responses.
-
 ### Join set resource functions
 
 * `id: func() -> string`: Get the join set identifier in the form of:
