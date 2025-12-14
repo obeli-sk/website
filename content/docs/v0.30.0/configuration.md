@@ -111,7 +111,13 @@ Value of `location.path` supports [path prefixes](#path-prefixes).
 exec.batch_size = 5                  # Executions per event loop tick
 exec.lock_expiry.seconds = 1         # Execution lock duration
 exec.tick_sleep.milliseconds = 200   # Executor sleeps the specified duration when polling for pending executions
+exec.locking_strategy = "by_ffqn"    # Specify how pending executions are selected. One of "by_ffqn"|"by_component_id"
 ```
+
+Using `by_component_id` strategy enables locking executions to the exact version
+that was available when the execution was first submitted using the WASM file's `sha256` digest.
+An execution can be upgraded to use different digest using `UpgradeExecutionComponent` RPC as
+defined in {{ github(title="obelisk.proto", path="proto/obelisk.proto") }}.
 
 ## Activities
 

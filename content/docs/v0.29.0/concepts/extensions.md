@@ -75,7 +75,7 @@ interface llm {
 
   respond-get: func(execution-id: execution-id) -> result<result<string, string>, get-extension-error>;
 
-  respond-invoke: func(label: string, user-prompt: string, settings-json: string) -> result<result<string, string>, invoke-extension-error>;
+  respond-invoke: func(label: string, user-prompt: string, settings-json: string) -> result<tuple<execution-id, result<string, string>>, invoke-extension-error>;
 }
 ```
 

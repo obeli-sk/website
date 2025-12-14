@@ -67,7 +67,8 @@ if there are no collisions, in a shortened format: `.../interface-name.fn-name`,
 - For functions with no parameters: `[]` (JSON array variant) or no arguments.
 
 Options:
-* `-f, --follow` - Follow the stream of events until the execution finishes
+* `-e`, `--execution-id` - Supply an execution id
+* `-f`, `--follow` - Follow the stream of events until the execution finishes
 * `--no-reconnect` - Do not attempt to reconnect on connection error while following the status stream
 * `--json` - Print output as JSON
 

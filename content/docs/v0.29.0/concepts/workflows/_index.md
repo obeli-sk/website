@@ -179,7 +179,7 @@ interface fibo-activity-ifc {
 
   fibo-get: func(execution-id: execution-id) -> result<result<u64>, get-extension-error>;
 
-  fibo-invoke: func(label: string, n: u8) -> result<result<u64>, invoke-extension-error>;
+  fibo-invoke: func(label: string, n: u8) -> result<tuple<execution-id, result<u64>>, invoke-extension-error>;
 }
 ```
 
