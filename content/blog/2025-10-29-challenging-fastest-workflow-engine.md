@@ -275,7 +275,7 @@ supporting creation of thousands lightweight VMs per second, unloading running w
 and replaying execution events with guaranteed determinism.
 
 As technologies like [Wasmtime](https://wasmtime.dev/), [Litestream](https://litestream.io), and
-[Turso DB](https://github.com/tursodatabase/turso) mature,
+[Limbo/Turso DB](https://github.com/tursodatabase/turso) mature,
 this simplified deployment model will become increasingly accessible and common.
 
 <script src="{{ get_url(path="plotly-2.35.3.min.js") }}"></script>
