@@ -120,3 +120,15 @@ fn close(self) {
 
 Needless to say, none of these options feels particularly elegant,
 but they illustrate how subtle Rust’s drop semantics can be when combined with wildcard patterns.
+
+## Summary (amended)
+What tipped me off was that this code worked as expected:
+```rs
+let other_field = {
+     let Server { watcher: _watcher, other_field } = self;
+     other_field
+};
+```
+However, after changing `_watcher` into `_`, `self` was only partially moved into the inner scope.
+
+To fix the drop ordering, I explicitly moved all fields into an inner scope and used drop to control when they were destroyed.
