@@ -753,8 +753,11 @@ On the plus side, DBOS requires no configuration, as workflows, steps and HTTP e
 
 Obelisk's main strenth is its WASM runtime:
 * no footguns (threads, IO, hash maps etc.) in workflows
-* WASM contains the entire code, so associating executions with is original codebase  is trivial (although not implemented yet).
+* WASM contains the entire code, so associating executions with is original codebase  is trivial (although not implemented yet). - See update below.
 * Able to unloaded running executions from memory transparently.
 * Separation of components
 * Coordination through WIT schemas
 * Easy to deploy on lightweight VM
+
+
+Update: Version 0.30.0 stores `sha256sum` of each WASM component. Executors can be configured to only lock executions with a matching digest.
