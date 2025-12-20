@@ -11,7 +11,7 @@ scopes and the `_` wildcard pattern that can lead to surprising order of destruc
 
 <!-- more -->
 
-The wildcard pattern `watcher: _` has a very different semantics
+The wildcard pattern `_` has a very different semantics
 from an actual binding `watcher: _foo`.
 
 ```rs
