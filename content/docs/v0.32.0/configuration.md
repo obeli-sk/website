@@ -22,7 +22,7 @@ webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 ### Sqlite
 Set SQLite database directory.
 ```toml
-sqlite.directory = "${DATA_DIR}/obelisk-sqlite"
+database.sqlite.directory = "${DATA_DIR}/obelisk-sqlite"
 ```
 See [Path Prefixes](#path-prefixes) for how `${DATA_DIR}` is translated.
 
@@ -31,8 +31,26 @@ Defaults are in
 {{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs") }}
 
 ```toml
-sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }
+database.sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }
 ```
+
+### PostgreSQL
+
+Configure connection to Postgres. All of the following keys support environment variable interpolation.
+
+```toml
+database.postgres.host =     "${POSTGRES_HOST}"
+database.postgres.user =     "${POSTGRES_USER}"
+database.postgres.password = "${POSTGRES_PASSWORD}"
+database.postgres.db_name =  "${POSTGRES_DATABASE}"
+```
+
+#### Database creation
+```toml
+database.postgres.provision_policy = "never" # One of "auto"|"never".
+```
+If `auto` is selected, missing database will be created on startup.
+
 
 ### Timers Watcher Configuration
 
