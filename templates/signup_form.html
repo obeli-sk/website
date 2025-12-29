@@ -1,0 +1,22 @@
+<section id="signup-section">
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('subscribe-form').addEventListener('submit', () => {
+                document.getElementById('signup-form').style.display = 'none';
+                document.getElementById('message').style.display = 'block';
+            });
+        });
+    </script>
+    <div id="message" style="display: none;">Thanks for subscribing!</div>
+    <div class="container" id="signup-form">
+        <h2 class="section-title">Follow the Progress</h2>
+        <p> Join our mailing list to receive notifications for the big milestones:</p>
+        <iframe name="hidden-frame" style="display:none;"></iframe>
+        <form id="subscribe-form" action="https://obelisk-mailing-list.fly.dev/mlist" method="POST"
+            target="hidden-frame">
+            <input name="email" type="email" placeholder="Enter your email" required>
+            <textarea name="feedback" placeholder="Feedback (optional)"></textarea>
+            <button type="submit">Join mailing list</button>
+        </form>
+    </div>
+</section>
