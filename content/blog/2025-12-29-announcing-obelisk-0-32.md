@@ -63,7 +63,7 @@ The `app-init` workflow calls several child workflows, each calling an HTTP acti
 It does not matter whether one of the child workflows or underlying activities failed due to requests being rejected, a panic,
 or due to a cancellation request. The error will propagate and the top level workflow will call `cleanup`, providing all-or-nothing semantics.
 
-## WebAPI
+## {{ doc_link(title="WebAPI", path="programmatic-access.md", version="v0.32.1") }}
 
 Obelisk server listens by default on port `5005`, where previously it only served gRPC and gRPC-Web traffic.
 As of `v0.31.0` this port handles text-over-HTTP as well:
