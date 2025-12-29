@@ -3,6 +3,8 @@ title = "Obelisk 0.32: Cancellation, WebAPI, Postgres"
 date = 2025-12-29
 +++
 
+Obelisk 0.32 introduces cooperative cancellation for workflows and activities,
+a new WebAPI with multi-format support, and PostgreSQL support for multi-node deployments and high availability.
 
 <!-- more -->
 
