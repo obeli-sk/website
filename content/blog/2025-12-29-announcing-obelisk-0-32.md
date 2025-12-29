@@ -107,8 +107,8 @@ This allows Obelisk to be deployed to hundreds of VMs without sharing anything e
 
 One caveat of asynchronous replication, however, is that during a VM crash, the last few seconds of committed transactions may be lost.
 
-Postgres support addresses both issues and is likely one of the most popular choices for more traditional deployments.
-It also enables multi-node deployments, where the
-WASM components can be split across VMs that can be dynamically scaled based on load.
+Postgres support addresses both issues and is one of the most popular choices for traditional deployments.
+It also enables multi-node deployments, where the WASM components can be split across VMs and dynamically scaled based on load.
+Most importantly, it removes the single point of failure and enables high availability.
 
 PostgreSQL can be {{ doc_link(title="configured", path="configuration.md", version="v0.32.1") }} in the `obelisk.toml`.
