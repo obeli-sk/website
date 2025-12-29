@@ -1,1 +1,12 @@
-{% if page is defined %}{% set pageorsection = page %}{% else %}{% set pageorsection = section %}{% endif %}{% set ancestor = pageorsection.ancestors[2] %}{% set parts = ancestor | split(pat="/") %}{% set actual_version = parts[1] %}<a target="_blank" href="https://github.com/obeli-sk/obelisk/blob/{{actual_version}}/{{path}}">{{title}}</a>
+{% if version is not defined %}
+  {% if page is defined %}
+    {% set pageorsection = page %}
+  {% else %}
+    {% set pageorsection = section %}
+  {% endif %}
+
+  {% set ancestor = pageorsection.ancestors[2] %}
+  {% set parts = ancestor | split(pat="/") %}
+  {% set version = parts[1] %}
+{% endif
+%}<a target="_blank" href="https://github.com/obeli-sk/obelisk/blob/{{ version }}/{{ path }}">{{ title }}</a>
