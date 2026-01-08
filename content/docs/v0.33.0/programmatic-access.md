@@ -32,15 +32,15 @@ The API supports content negotiation via the `Accept` header.
 Lists all registered components in the system.
 
 **Query Parameters:**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `type` | String | Filter by [Component Type](#component-type). |
-| `name` | String | Filter by component name. |
-| `digest` | String | Filter by `sha256sum` of the component's WASM file. |
-| `exports` | Boolean | Include exported functions in the response. |
-| `imports` | Boolean | Include imported functions in the response. |
-| `submittable`| Boolean | Filter functions that can be directly submitted. |
-| `extensions` | Boolean | Include extension exports. |
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `type` | String | Filter by [Component Type](#component-type). | `None` |
+| `name` | String | Filter by component name. | `None` |
+| `digest` | String | Filter by `sha256sum` of the component's WASM file. | `None` |
+| `exports` | Boolean | Include exported functions in the response. | `false` |
+| `imports` | Boolean | Include imported functions in the response. | `false` |
+| `submittable`| Boolean | If set, filters the `exports` list to only include functions that can be submitted. | `None` (Shows all) |
+| `extensions` | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant). | `false` |
 
 #### Example request
 ```sh
@@ -94,19 +94,7 @@ package root:component;
 
 world root {
   import wasi:io/error@0.2.6;
-  import wasi:io/streams@0.2.6;
-  import wasi:cli/environment@0.2.6;
-  import wasi:cli/exit@0.2.6;
-  import wasi:cli/stderr@0.2.6;
-
-  export testing:fibo/fibo;
-  export testing:fibo-obelisk-ext/fibo;
-  export testing:fibo-obelisk-schedule/fibo;
-}
-package testing:fibo {
-  interface fibo {
-    fibo: func(n: u8) -> result<u64>;
-  }
+  ...
 }
 ...
 ```
@@ -128,20 +116,20 @@ Generates a new, globally unique execution id.
 Lists executions with support for filtering and pagination.
 
 **Query Parameters:**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. |
-| `show_derived`| Boolean | If `true`, includes child executions. (Default: `false`). |
-| `hide_finished` | Boolean | Show only unfinished executions. |
-| `execution_id_prefix` | String | Filter by Execution ID or its prefix. |
-| `cursor` | String/Date| Pagination cursor (Timestamp or Execution ID). |
-| `length` | Integer | Number of items to return. |
-| `direction` | String | `older` (default) or `newer`. |
-| `including_cursor`| Boolean| Include the cursor item in the result. |
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. | `None` |
+| `show_derived`| Boolean | If `true`, includes child executions. | `false` |
+| `hide_finished` | Boolean | Show only unfinished executions. | `false` |
+| `execution_id_prefix` | String | Filter by Execution ID or its prefix. | `None` |
+| `cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` |
+| `length` | Integer | Number of items to return. | System Default |
+| `direction` | String | `older` or `newer`. | `older` |
+| `including_cursor`| Boolean| Include the cursor item in the result. | `false` |
 
 #### Example request
 ```sh
-curl "127.1:5005/v1/executions" -H accept:application/json
+curl "127.1:5005/v1/executions?length=10&direction=older" -H accept:application/json
 ```
 ```json
 [
@@ -170,6 +158,9 @@ Submits a new execution. The system will automatically generate an Execution ID.
 **Query Parameters:**
 - `follow`: (Boolean) If `true`, the request blocks and streams the result once finished.
 
+**Request Body:**
+- `ffqn`: (String) Function Fully Qualified Name.
+- `params`: (Array) JSON array of parameters matching the function signature.
 
 #### Example request
 ```sh
@@ -180,7 +171,7 @@ curl '127.1:5005/v1/executions' -H content-type:application/json -H accept:appli
 {"ok":"E_01KDN8Y8ZZ4XYG2J0XJW5A8WE5"}
 ```
 
-With `follow` set to `true`:
+Getting the result with `follow` set to `true`:
 ```sh
 curl '127.1:5005/v1/executions?follow=true' -H content-type:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
@@ -209,9 +200,9 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json
 ```json
 {"ok":"E_01KDN9422HAK2AHY9EXZA201TD"}
 ```
-Resending with `follow` set to `true`:
+Getting the result with `follow` set to `true`:
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
+curl "127.1:5005/v1/executions/${EXECUTION_ID}?follow=true" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 ```json
@@ -230,7 +221,6 @@ Retrieves the result of an execution.
 - `200 OK`: Returns the [Execution Result](#execution-result).
 - `425 Too Early`: Execution is still in progress (only returned if `follow=false`).
 
-
 #### Example request
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}"
@@ -242,7 +232,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}"
 ---
 
 ### `GET /v1/executions/{execution-id}/status`
-Returns the current lifecycle status (e.g., `pending`, `running`, `finished`).
+Returns the current lifecycle status (e.g., `pending`, `finished`). Unlike the root GET endpoint, this returns the internal state rather than the function return value.
 
 #### Example request
 ```sh
@@ -263,15 +253,18 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/jso
   "component_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
 }
 ```
+
 ---
 
 ### `GET /v1/executions/{execution-id}/events`
 Retrieves the history of events for an execution.
 
 **Query Parameters:**
-- `version_from`: Start from this event version.
-- `length`: Max number of events.
-- `include_backtrace_id`: Include debugging backtrace IDs.
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `version_from` | Integer | Start from this event version. | `0` |
+| `length` | Integer | Max number of events. | `20` |
+| `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false` |
 
 #### Example request
 ```sh
@@ -287,15 +280,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/jso
         "params": [
           5
         ],
-        "parent": null,
-        "scheduled_at": "2025-12-29T14:46:33.030449088Z",
-        "component_id": {
-          "component_type": "activity_wasm",
-          "name": "test_programs_fibo_activity",
-          "input_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
-        },
-        "metadata": {},
-        "scheduled_by": null
+        ...
       }
     },
     "version": 0
@@ -310,14 +295,15 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/jso
 Retrieves responses associated with an execution (used for long-running interactions).
 
 **Query Parameters:**
-- `cursor_from`: Start from this cursor index.
-- `length`: Max number of responses.
-
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `cursor_from` | Integer | Start from this cursor index. | `0` |
+| `length` | Integer | Max number of responses. | `20` |
+| `including_cursor`| Boolean | Include the event at `cursor_from`. | `false` |
 
 #### Example request
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
-
 curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo-workflow/workflow.fiboa", "params": [5,5] }'
 
@@ -354,9 +340,10 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/
 ---
 
 ### `PUT /v1/executions/{execution-id}/stub`
-Manually provides a return value for a stubbed execution.
+Manually provides a return value for a stubbed execution. The `execution-id` here is a derived ID (child execution).
 
 **Request Body (JSON):**
+The body must match the return type of the stubbed function.
 ```json
 {
   "ok": "your-return-value"
@@ -391,7 +378,7 @@ curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:appli
 ---
 
 ### `PUT /v1/executions/{execution-id}/upgrade`
-Upgrade an execution to run on with different WASM component. Upgrading only makes sense when the executor is configured
+Upgrade an execution to run with a different WASM component. Upgrading only makes sense when the executor is configured
 to lock executions by its WASM's sha256 digest:
 ```toml
 exec.locking_strategy = "by_component_id"
@@ -485,21 +472,36 @@ When filtering components, use these values:
 
 ### Execution Result
 The result object returned when an execution finishes:
-*  `{ "ok": ... }`: Optional value returned if function succeeded.
+* `{ "ok": ... }`: Optional value returned if function succeeded.
 * `{ "err": ... }`: Optional value returned if function returned an error.
 * `{ "execution_error": ... }`: Optional value returned if the execution failed. Contains fields `kind`, and optionally `reason`, `detail`.
 
 #### Execution Error Kind
-One of
-* `timed_out`: Applicable to activities only, last attempt timed out
-* `nondeterminism_detected`: Applicable to workflows
-* `out_of_fuel`: Applicable to WASM components
-* `cancelled`: Applicable to activities
-* `uncategorized`: Uncategorized, e.g. WASM trap
-
-
+One of:
+* `timed_out`: Applicable to activities only, last attempt timed out.
+* `nondeterminism_detected`: Applicable to workflows.
+* `out_of_fuel`: Applicable to WASM components.
+* `cancelled`: Applicable to activities.
+* `uncategorized`: Uncategorized, e.g. WASM trap.
 
 ### Errors
-Errors are returned with appropriate HTTP status codes (400, 404, 409, 503).
+Errors are returned with appropriate HTTP status codes:
+
+- **400 Bad Request**:
+    - Invalid parameters (`ParamsInvalid`).
+    - Attempting to submit a child ID as a top-level execution (`ExecutionIdMustBeTopLevel`).
+- **404 Not Found**:
+    - Component, Function (FFQN), or Execution not found.
+- **409 Conflict**:
+    - Execution already finished (when trying to cancel).
+    - Execution exists with different parameters (when submitting/idempotency check fails).
+- **425 Too Early**:
+    - Execution result requested but not yet finished (when `follow=false`).
+- **503 Service Unavailable**:
+    - Transient database errors or connection issues.
+- **500 Internal Server Error**:
+    - Non-retriable database errors or other generic failures.
+
+**Response Format:**
 - **JSON**: `{ "err": "Description of error" }`
 - **Text**: `Description of error`
