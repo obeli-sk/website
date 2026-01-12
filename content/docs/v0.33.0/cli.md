@@ -131,10 +131,17 @@ Arguments:
 
 ## Obelisk Generate
 
+### Generating Execution IDs
+Execution IDs are [ULIDs](https://github.com/ulid/spec) with an `E_` prefix.
+```sh
+obelisk generate execution-id
+```
+They are useful for submitting executions as they act as idempotency keys.
+
 ### Generating extension functions
 The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given WASM component can be generated using:
 ```sh
-obelisk generate extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> <OUTPUT_DIRECTORY>
+obelisk generate wit-extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> <OUTPUT_DIRECTORY>
 ```
 
 Arguments:
@@ -152,3 +159,31 @@ obelisk generate wit-support <COMPONENT_TYPE> <OUTPUT_DIRECTORY>
 Arguments:
 * `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`, `webhook_endpont`.
 * `<OUTPUT_DIRECTORY>`  - Path to directory where extensions will be written.
+
+### Generating export WITs of external dependencies
+
+When using external components, e.g. downloaded from an OCI Registry, it is useful
+to generate their exported WIT interfaces directly from WASM files. You can
+create a TOML configuration file containing just external dependencies and call:
+
+```sh
+obelisk generate wit-deps [OPTIONS] <CONFIG> <OUTPUT_DIRECTORY>
+```
+
+Generate WIT dependency folder based on activities and workflows found in provided TOML configuration
+
+Usage: obelisk generate wit-deps [OPTIONS] <CONFIG> <OUTPUT_DIRECTORY>
+
+Arguments:
+* `<CONFIG>` - Path to the TOML configuration.
+* `<OUTPUT_DIRECTORY>` - Directory where folders and WIT files will be written to.
+
+Options:
+* `-o`, `--overwrite` - Overwrite existing files
+
+### Generating TOML configuration file
+```sh
+obelisk generate config [OUTPUT]
+```
+Arguments:
+* `[OUTPUT]` - Filename to write the TOML to, defaults to <stdout>

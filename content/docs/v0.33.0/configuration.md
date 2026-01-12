@@ -9,13 +9,17 @@ weight = 20
 
 ### API Server
 ```toml
-api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
+api.listening_addr = "127.0.0.1:5005"
 ```
+If the `listening_addr` is not set, Obelisk server will spawn all the configured executors, but
+the gRPC, gRPC-Web and HTTP server will not be available, thus CLI and WebUI will not work.
 
-### Web UI
+### WebUI
 ```toml
 webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 ```
+WebUI can only be enabled if `api.listening_addr` is set. This is because the backend part
+of WebUI acts as a proxy between the browser and the API server.
 
 > **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is not yet implemented.
 
@@ -216,7 +220,6 @@ blocking_strategy = "await"           # One of ("await"|"interrupt"|{"kind"=...}
 convert_core_module = true            # Auto-convert Core WASM modules to WASM Components
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
-backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 
 # Stub WASI CLI world imports. Only needed for workflows authored in TinyGo.
 stub_wasi = false                     # Default is false.
@@ -228,6 +231,17 @@ lock_extension.seconds = 1
 The blocking strategy controlls whether an execution should `await` the child execution response
 or be `interrupt`ed and later replayed. Note that the `await` strategy will only wait until `lock_expiry`
 duration expires.
+
+### Backtrace
+The WebUI can download sources and highlight backtrace line in the debugger view, if sources
+are configured:
+```toml
+backtrace.sources = {"frame symbol file path" = "path to the source file", ".../src/lib.rs" = "path to source file"}
+backtrace.ignore_component_digest = false
+```
+If `ignore_component_digest` is set to true, sha256 digest of the requested component will not be
+compared to the loaded component's digset. This is useful for local development where current component
+might have been recompiled and not match exactly the one used when an execution was run.
 
 ## HTTP Servers and Webhooks
 
@@ -263,8 +277,20 @@ forward_stderr = "stderr"            # stderr forwarding ("stdout"|"stderr"|"non
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
-backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 ```
+
+### Backtrace
+The WebUI can download sources and highlight backtrace line in the debugger view, if sources
+are configured:
+```toml
+backtrace.sources = {"frame symbol file path" = "path to the source file", ".../src/lib.rs" = "path to source file"}
+backtrace.ignore_component_digest = false
+```
+If `ignore_component_digest` is set to true, sha256 digest of the requested component will not be
+compared to the loaded component's digset. This is useful for local development where current component
+might have been recompiled and not match exactly the one used when an execution was run.
+
+
 
 #### Route Syntax
 Routes: Define URL paths (only the path is matched):
@@ -303,7 +329,7 @@ otlp_endpoint = "http://localhost:4317"
 #### Stdout Logging
 ```toml
 [log.stdout]
-enabled = false
+enabled = true             # Enabled by default
 level = "info,app=debug"   # See filtering syntax
 style = "plain_compact"    # One of "plain"|"plain_compact"|"json"
 span = "none"              # One of "none"|"new"|"enter"|"exit"|"close"|"active"|"full"
@@ -313,7 +339,7 @@ target = false             # Whether to include the target module in message
 #### File Logging
 ```toml
 [log.file]
-enabled = false
+enabled = false            # Disabled by default
 level = "info,obeli=debug,app=debug" # See filtering syntax
 style = "json"             # One of "plain"|"plain_compact"|"json"
 span = "close"             # One of "none"|"new"|"enter"|"exit"|"close"|"active"|"full"
