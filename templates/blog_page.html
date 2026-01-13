@@ -20,8 +20,6 @@
         {{ page.content | safe }} {# Render the full markdown content of the page #}
     </article>
 
-    {% include "signup_form.html" %}
-
     {% set blog_section = get_section(path="blog/_index.md") %}
     <p><a href="{{ blog_section.permalink | safe }}">« Back to Blog List</a></p>
 
