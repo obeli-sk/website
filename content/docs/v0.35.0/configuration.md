@@ -7,6 +7,18 @@ weight = 20
 
 ## Server Configuration
 
+### Version Compatibility
+The `obelisk-version` field can be set to ensure the TOML configuration is compatible with the running Obelisk version:
+```toml
+obelisk-version = "0.35"
+```
+
+The configuration can be loaded from a file path or a URL:
+```sh
+obelisk server run -c https://example.com/obelisk.toml
+obelisk server run -c ./obelisk.toml
+```
+
 ### API Server
 ```toml
 api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
@@ -116,26 +128,29 @@ lock_extension_leeway.milliseconds = 100         # Starts extending the lock a l
 All WASM components (Activities, Workflows, Webhooks) share these configuration options:
 
 ```toml
-name = "component_name"              # Required: Component identifier
-location.path = "path/to/wasm"       # File path location (mutually exclusive with oci)
-location.oci = "docker.io/repo/image:tag"  # OCI registry location
-content_digest = "sha256:..."        # Optional: WASM file hash verification
+name = "component_name"                         # Required: Component identifier
+location = "path/to/wasm"                       # File path location
+location = "oci://docker.io/repo/image:tag"     # OCI registry location (note the oci:// prefix)
+location = "gh://owner/repo/asset.wasm"         # GitHub release location
+location = "gh://owner/repo/asset.wasm@v1.0.0"  # GitHub release at specific tag
+content_digest = "sha256:..."                   # Optional: WASM file hash verification. Recommended for GitHub releases.
 ```
-Value of `location.path` supports [path prefixes](#path-prefixes).
+Value of `location` supports [path prefixes](#path-prefixes) when used as a file path.
+
+Note: The `location` field uses a single string with optional scheme prefixes (`oci://`, `gh://`). Plain paths without a prefix are treated as local file paths.
 
 ### Common Executor Settings
 
 ```toml
-exec.batch_size = 5                  # Executions per event loop tick
-exec.lock_expiry.seconds = 1         # Execution lock duration
-exec.tick_sleep.milliseconds = 200   # Executor sleeps the specified duration when polling for pending executions
-exec.locking_strategy = "by_ffqn"    # Specify how pending executions are selected. One of "by_ffqn"|"by_component_id"
+exec.batch_size = 5                            # Executions per event loop tick
+exec.lock_expiry.seconds = 1                   # Execution lock duration
+exec.tick_sleep.milliseconds = 200             # Executor sleeps the specified duration when polling for pending executions
+exec.locking_strategy = "by_component_digest"  # Default. One of "by_component_digest"|"by_ffqns"
 ```
 
-Using `by_component_id` strategy enables locking executions to the exact version
-that was available when the execution was first submitted using the WASM file's `sha256` digest.
-An execution can be upgraded to use different digest using `UpgradeExecutionComponent` RPC as
-defined in {{ github(title="obelisk.proto", path="proto/obelisk.proto") }}.
+The default `by_component_digest` strategy locks executions to the exact WASM component version
+(by `sha256` digest) that was available when the execution was first submitted.
+An execution can be upgraded to use a different digest using the upgrade API endpoint or gRPC RPC.
 
 ## Activities
 
@@ -144,29 +159,33 @@ Configure each WASM activity component using the `activity_wasm` section:
 ```toml
 [[activity_wasm]]
 name = "..."
-location.oci = "..."
+location = "oci://..."
 # Common component and executor settings apply
 max_retries = 5                      # Maximum retry attempts
 retry_exp_backoff.milliseconds = 100 # Initial retry delay (doubles each attempt)
 retry_on_err = true                  # Retry on Result::Err returns
-forward_stdout = "stderr"            # stdout forwarding ("stdout"|"stderr"|"none")
-forward_stderr = "stderr"            # stderr forwarding ("stdout"|"stderr"|"none")
+forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
+forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
+logs_store_min_level = "debug"       # Minimum log level to persist in the database. One of "off"|"trace"|"debug"|"info"|"warn"|"error". Default: "debug"
 ```
+
+#### Permanent Error Handling
+Activities returning a variant containing a case named `permanent` will skip retries, regardless of the `retry_on_err` and `max_retries` settings.
 
 ### Stub activities
 
 ```toml
 [[activity_stub]]
 name = "..."
-location.oci = "..."
+location = "oci://..."
 ```
 
 ### External activities
 ```toml
 [[activity_external]]
 name = "..."
-location.oci = "..."
+location = "oci://..."
 ```
 
 ### Preopended directory support
@@ -203,7 +222,7 @@ Configure each workflow component using the `workflow` section:
 ```toml
 [[workflow]]
 name = "..."
-location.oci = "..."
+location = "oci://..."
 # Common component and executor settings apply
 retry_exp_backoff.milliseconds = 100  # Initial retry delay
 
@@ -213,7 +232,6 @@ blocking_strategy = "await"           # One of ("await"|"interrupt"|{"kind"=...}
 # Customize the number of non-blocking events that can be cached and written in a batch.
 # blocking_strategy = { kind = "await", non_blocking_event_batching = 100 }
 
-convert_core_module = true            # Auto-convert Core WASM modules to WASM Components
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
@@ -223,6 +241,8 @@ stub_wasi = false                     # Default is false.
 
 ## Automatic lock extension can be disabled by setting the duration to zero.
 lock_extension.seconds = 1
+
+logs_store_min_level = "debug"       # Minimum log level to persist in the database. Default: "debug"
 ```
 
 The blocking strategy controlls whether an execution should `await` the child execution response
@@ -250,7 +270,7 @@ max_inflight_requests = "unlimited"   # Concurrent request limit
 ```toml
 [[webhook_endpoint]]
 name = "..."
-location.oci = "..."
+location = "oci://..."
 # Common component settings apply
 http_server = "server_name"          # Reference to HTTP server
 routes = [                           # Route configurations
@@ -258,8 +278,8 @@ routes = [                           # Route configurations
     "/other/*",
     "/status/:param1/:param2"
 ]
-forward_stdout = "stderr"            # stdout forwarding ("stdout"|"stderr"|"none")
-forward_stderr = "stderr"            # stderr forwarding ("stdout"|"stderr"|"none")
+forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
+forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
@@ -300,14 +320,15 @@ otlp_endpoint = "http://localhost:4317"
 
 ### Logging
 
-#### Stdout Logging
+#### Console Logging
 ```toml
-[log.stdout]
+[log.console]
 enabled = false
 level = "info,app=debug"   # See filtering syntax
 style = "plain_compact"    # One of "plain"|"plain_compact"|"json"
 span = "none"              # One of "none"|"new"|"enter"|"exit"|"close"|"active"|"full"
 target = false             # Whether to include the target module in message
+writer = "stderr"          # One of "stderr"|"stdout". Default: "stderr"
 ```
 
 #### File Logging

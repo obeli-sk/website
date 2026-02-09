@@ -87,7 +87,7 @@ The configuration file `obelisk.toml` already includes the activity:
 ```toml
 [[activity_wasm]]
 name = "myactivity"
-location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/myactivity.wasm"
+location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/myactivity.wasm"
 ```
 Let's build the WASM Component and run Obelisk.
 ```sh
@@ -97,7 +97,7 @@ obelisk server run --config ./obelisk.toml
 
 In order to execute the activity, we can use the CLI or the Web UI. In either case, we need the {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and the function parameters:
 ```sh
-obelisk client execution submit --follow \
+obelisk execution submit --follow \
     template-fibo:activity/fibo-activity-ifc.fibo [10]
 ```
 

@@ -20,12 +20,11 @@ Another way to submit a persistent delay is to use {{ doc_link(title="Heterogeno
 ```rs
 fn two_delays_in_same_join_set() -> Result<(), ()> {
     let join_set = workflow_support::join_set_create();
-    let _long = join_set.submit_delay(ScheduleAt::In(DurationEnum::Seconds(10)));
-    let short = join_set.submit_delay(ScheduleAt::In(DurationEnum::Milliseconds(10)));
+    let _long = submit_delay(&join_set, ScheduleAt::In(DurationEnum::Seconds(10)));
+    let short = submit_delay(&join_set, ScheduleAt::In(DurationEnum::Milliseconds(10)));
     // child executions can be added to this join set using `-submit` extension.
     // `join_next` returns `result<tuple<response-id, result>, join-next-error>`
-    let (ResponseId::DelayId(first), res) = join_set
-        .join_next()
+    let (ResponseId::DelayId(first), res) = join_next(&join_set)
         .expect("submitted two delays, joining first, thus `join-next-error::all-processed` cannot happen")
     else {
         unreachable!("only delays have been submitted");
@@ -34,5 +33,4 @@ fn two_delays_in_same_join_set() -> Result<(), ()> {
     assert_eq!(short.id, first.id);
     // long delay will be cancelled when the join set is closed.
     Ok(())
-}
 ```

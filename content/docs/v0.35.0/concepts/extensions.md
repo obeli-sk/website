@@ -10,7 +10,7 @@ Workflows can call child executions directly using a regular function call or th
 The WIT extension exports can be generated using `obelisk generate` {{ doc_link(title="CLI command", path="cli.md#obelisk-generate") }}:
 
 ```sh
-obelisk generate extensions (activity_wasm|workflow|activity_stub) wit/ wit/gen/
+obelisk generate wit-extensions (activity_wasm|workflow|activity_stub) wit/ wit/gen/
 ```
 
 Throughout this document we will use an example {{ doc_link(title="activity", path="concepts/activities/_index.md") }} function defined in WIT like this:
@@ -67,7 +67,7 @@ Using the `llm` example from above, Obelisk runtime will auto-generate the follo
 package stargazers:llm-obelisk-ext;
 
 interface llm {
-  use obelisk:types/execution@4.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
+  use obelisk:types/execution@4.1.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
 
   respond-submit: func(join-set: borrow<join-set>, user-prompt: string, settings-json: string) -> execution-id;
 
@@ -149,8 +149,8 @@ Given the same export interface `llm` with a single function `respond`, Obelisk 
 package stargazers:llm-obelisk-schedule;
 
 interface llm {
-  use obelisk:types/execution@4.0.0.{execution-id};
-  use obelisk:types/time@4.0.0.{schedule-at};
+  use obelisk:types/execution@4.1.0.{execution-id};
+  use obelisk:types/time@4.1.0.{schedule-at};
 
   respond-schedule: func(schedule-at: schedule-at, user-prompt: string, settings-json: string) -> execution-id;
 }
@@ -182,7 +182,7 @@ Given the same WIT file from above, Obelisk will generate the following:
 package stargazers:llm-obelisk-stub;
 
 interface llm {
-  use obelisk:types/execution@4.0.0.{execution-id, stub-error};
+  use obelisk:types/execution@4.1.0.{execution-id, stub-error};
 
   respond-stub: func(execution-id: execution-id, execution-result: result<string, string>) -> result<_, stub-error>;
 }

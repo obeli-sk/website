@@ -5,6 +5,10 @@ weight = 0
 +++
 
 
+## OpenAPI Schema
+
+The Web API has an auto-generated OpenAPI schema available at {{ github(title="assets/openapi.json", path="assets/openapi.json") }}.
+
 ## gRPC, gRPC-Web
 
 See {{ github(title="obelisk.proto", path="proto/obelisk.proto") }} schema for details.
@@ -122,6 +126,8 @@ Lists executions with support for filtering and pagination.
 | `show_derived`| Boolean | If `true`, includes child executions. | `false` |
 | `hide_finished` | Boolean | Show only unfinished executions. | `false` |
 | `execution_id_prefix` | String | Filter by Execution ID or its prefix. | `None` |
+| `component_digest` | String | Filter by component's `sha256` digest. | `None` |
+| `deployment_id` | String | Filter by deployment ID. | `None` |
 | `cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` |
 | `length` | Integer | Number of items to return. | System Default |
 | `direction` | String | `older` or `newer`. | `older` |
@@ -381,7 +387,7 @@ curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:appli
 Upgrade an execution to run with a different WASM component. Upgrading only makes sense when the executor is configured
 to lock executions by its WASM's sha256 digest:
 ```toml
-exec.locking_strategy = "by_component_id"
+exec.locking_strategy = "by_component_digest"
 ```
 
 **Request Body (JSON):**
@@ -411,6 +417,101 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" -H content-type:applicat
 ```
 ```json
 {"ok":"upgraded"}
+```
+
+---
+
+### `GET /v1/executions/{execution-id}/logs`
+Retrieves stored logs and output streams for an execution. Logs are stored in the database when `forward_stdout`/`forward_stderr` is set to `"db"` (the default) or when using the `obelisk:log` API.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs" -H accept:application/json
+```
+
+---
+
+### `PUT /v1/executions/{execution-id}/pause`
+Pauses an active execution. The execution will not be scheduled for further processing until it is unpaused.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/pause" -X PUT -H accept:application/json
+```
+```json
+{"ok":"paused"}
+```
+
+---
+
+### `PUT /v1/executions/{execution-id}/unpause`
+Resumes a previously paused execution.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/unpause" -X PUT -H accept:application/json
+```
+```json
+{"ok":"unpaused"}
+```
+
+---
+
+### `PUT /v1/executions/{execution-id}/replay`
+Re-execute a workflow from its event history. Useful for testing compatibility between workflow versions.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json
+```
+
+---
+
+## Functions
+
+### `GET /v1/functions`
+Lists all available functions across all components.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/functions" -H accept:application/json
+```
+
+---
+
+### `GET /v1/functions/wit`
+Retrieves the WIT definition for a specific function.
+
+**Query Parameters:**
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `ffqn` | String | Function Fully Qualified Name |
+
+#### Example request
+```sh
+curl "127.1:5005/v1/functions/wit?ffqn=testing:fibo/fibo.fibo"
+```
+
+---
+
+## Deployments
+
+### `GET /v1/deployment-id`
+Retrieves the current deployment ID.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/deployment-id" -H accept:application/json
+```
+
+---
+
+### `GET /v1/deployments`
+Lists deployment states.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/deployments" -H accept:application/json
 ```
 
 ---
@@ -482,6 +583,7 @@ One of:
 * `nondeterminism_detected`: Applicable to workflows.
 * `out_of_fuel`: Applicable to WASM components.
 * `cancelled`: Applicable to activities.
+* `paused`: Execution was paused.
 * `uncategorized`: Uncategorized, e.g. WASM trap.
 
 ### Errors
