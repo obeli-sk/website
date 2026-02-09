@@ -152,7 +152,7 @@ Options:
 
 GitHub release paths are supported via `gh://` prefix. Example:
 ```sh
-obelisk component add activity_wasm gh://obeli-sk/demo-stargazers/activity_github.wasm --name activity_github --locked
+obelisk component add activity_wasm gh://obeli-sk/demo-stargazers@latest/activity_github.wasm --name activity_github --locked
 ```
 
 ## Obelisk Generate
