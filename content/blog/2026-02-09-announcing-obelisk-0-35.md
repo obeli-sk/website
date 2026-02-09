@@ -1,6 +1,6 @@
 +++
 title = "Obelisk 0.35: Replay, Pause, Persistent Logs, GitHub Releases"
-date = 2025-02-10
+date = 2026-02-09
 +++
 
 Obelisk 0.35 introduces workflow replay for debugging and version migration,
