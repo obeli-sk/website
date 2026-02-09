@@ -136,7 +136,7 @@ The available templates provide a basic structure, including the necessary WIT f
 
 * Compile your code into a WebAssembly Component using `cargo build --release`.
 * Run the Obelisk server: `obelisk server run`.
-* (Optional) Push your WASM component to an OCI registry using `obelisk client component push`.
+* (Optional) Push your WASM component to an OCI registry using `obelisk component push`.
 
 5.  **Interact and Iterate:**
 

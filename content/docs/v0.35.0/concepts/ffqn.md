@@ -46,7 +46,7 @@ world any {
     // Import the GitHub account activity.
     import stargazers:github/account;
     // Import the Obelisk workflow support functions.
-    import obelisk:workflow/workflow-support@2.0.0;
+    import obelisk:workflow/workflow-support@4.1.0;
 }
 ```
 
@@ -75,5 +75,5 @@ stargazers:github/account.account-info
 
 To run the function using CLI, use
 ```
-obelisk client execution submit --follow stargazers:github/account.account-info '["your-github-login"]'
+obelisk execution submit --follow stargazers:github/account.account-info '["your-github-login"]'
 ```

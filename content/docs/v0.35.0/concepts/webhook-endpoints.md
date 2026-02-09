@@ -32,7 +32,7 @@ Webhook endpoints in Obelisk provide a way to trigger executions via incoming HT
 4.  **Deployment:** Create a `[[webhook_endpoint]]` table in your `obelisk.toml` {{ doc_link(title="Obelisk configuration", path="configuration.md") }} file.  This table specifies:
     *   `name`:  A unique name for the endpoint.
     *   `http_server`: An association to a `http_server`
-    *   `location`: A table that defines where to load the wasm component from. It can be either `location.path` to a local file or `location.oci` to use a OCI registry.
+    *   `location`: A string specifying where to load the wasm component from. It can be a local file path, an OCI reference with `oci://` prefix, or a GitHub release with `gh://` prefix.
     *   `routes`: A request matching any of the specified routes will be forwarded to this endpoint. See next sections for details.
 
 5. **Execution:** When an HTTP request is made to a matching route, Obelisk:
@@ -103,7 +103,7 @@ listening_addr = "0.0.0.0:9000"
 
 [[webhook_endpoint]]
 name = "fibo"
-location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/fibo_webhook_endpoint.wasm"  # Or use location.oci
+location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/fibo_webhook_endpoint.wasm"  # Or use oci:// or gh:// prefix
 http_server = "external"
 routes = [{ methods = ["GET"], route = "/fibo/:N/:ITERATIONS" }] # Path parameters are captured
 ```

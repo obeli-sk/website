@@ -17,7 +17,7 @@ The runtime support functions are defined using [WIT (WebAssembly Interface Type
 Used by other Obelisk WIT interfaces as well as the generated {{ doc_link(title="extension", path="concepts/extensions.md") }},
 contains `time` and `execution` interfaces with types like `execution-id` and others.
 
-### {{ github(title="`obelisk:types/types@4.0.0`", path="wit/obelisk_types%404.0.0/types.wit") }}
+### {{ github(title="`obelisk:types/types@4.1.0`", path="wit/obelisk_types%404.1.0/types.wit") }}
 
 
 ## Available Support Functions
@@ -39,7 +39,7 @@ use obelisk::log::log;
 log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
-### {{ github(title="`obelisk:workflow/workflow-support@4.0.0`", path="wit/obelisk_workflow%404.0.0/workflow-support.wit") }}
+### {{ github(title="`obelisk:workflow/workflow-support@4.1.0`", path="wit/obelisk_workflow%404.1.0/workflow-support.wit") }}
 Available to:
 * {{ doc_link(title="workflows", path="concepts/workflows/_index.md") }}
 
@@ -61,6 +61,22 @@ Creates a new {{ doc_link(title="join set", path="concepts/workflows/join-sets.m
 
 * `join-set-close: func(join-set: join-set)`: {{ doc_link(title="Closes", path="concepts/workflows/join-sets.md#join-set-close") }} the join set.
 
+* `submit-delay: func(join-set: borrow<join-set>, timeout: schedule-at) -> delay-id`: Submit a delay request to the join set. The delay can be later polled using `join-next`.
+
+* `join-next: func(join-set: borrow<join-set>) -> result<tuple<response-id, result>, join-next-error>`: Block the workflow execution until next response associated with the join set arrives.
+  The response is marked as processed.
+  Child execution result can be obtained using `-get` extension function using the
+  returned execution ID.
+  Return `join-next-error::all-processed` if the join set has all requests matched with responses already processed.
+
+* `join-next-try: func(join-set: borrow<join-set>) -> result<tuple<response-id, result>, join-next-try-error>`: Non-blocking variant of `join-next`. Attempts to process the next response without blocking.
+  Return `join-next-try-error::pending` if no response is available yet but there are pending requests.
+  Return `join-next-try-error::all-processed` if all requests have been matched with responses already processed.
+
+* `submit-json: func(join-set: borrow<join-set>, function: function, params: string, config: option<submit-config>) -> result<execution-id, submit-json-error>`: Submit a child execution request with its parameters serialized as a JSON array. This enables dynamic function dispatch without compile-time bindings. The optional `submit-config` record can override activity timeout.
+
+* `get-result-json: func(execution-id: execution-id) -> result<result<option<string>, option<string>>, get-result-json-error>`: Obtain a child execution result as JSON after it has been awaited using `-await-next` extension or `join-next`.
+
 ### Join set resource functions
 
 * `id: func() -> string`: Get the join set identifier in the form of:
@@ -68,13 +84,9 @@ Creates a new {{ doc_link(title="join set", path="concepts/workflows/join-sets.m
   * `g:NAME` in case of a generated join set where `NAME` is generally an auto-incremented index,
   * `n:NAME` in case of a named join
 
-* `submit-delay: func(timeout: schedule-at) -> delay-id`: Submit a delay request to the join set. The delay can be later polled using `join-next`.
+* `submit-delay: func(timeout: schedule-at) -> delay-id`: *Deprecated in 4.1.0, moved to a standalone function in `workflow-support`.* Submit a delay request to the join set.
 
-* `join-next: func() -> result<tuple<response-id, result>, join-next-error>`: Block the workflow execution until next response associated with the join set arrives.
-  The response is marked as processed.
-  Child execution result can be obtained using `-get` extension function using the
-  returned execution ID.
-  Return `join-next-error::all-processed` if the join set has all requests matched with responses.
+* `join-next: func() -> result<tuple<response-id, result>, join-next-error>`: *Deprecated in 4.1.0, moved to a standalone function in `workflow-support`.* Block the workflow execution until next response arrives.
 
 ### {{ github(title="`obelisk:activity/process@1.0.0`", path="wit/obelisk_activity%401.0.0/process.wit") }}
 

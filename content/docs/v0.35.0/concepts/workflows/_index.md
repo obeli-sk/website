@@ -49,9 +49,9 @@ This will generate a directory with the following structure:
 │   └── lib.rs
 └── wit
     ├── deps
-    │   ├── obelisk_types@4.0.0
+    │   ├── obelisk_types@4.1.0
     │   │   └── types.wit
-    │   ├── obelisk_workflow@4.0.0
+    │   ├── obelisk_workflow@4.1.0
     │   │   └── workflow-support.wit
     │   ├── template-fibo_activity
     │   │   └── fibo-activity.wit                   # Imported activity
@@ -124,7 +124,7 @@ name = "activity_myfibo"
 
 [[workflow]]
 name = "myworkflow"
-location.path = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/myworkflow.wasm"
+location = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/myworkflow.wasm"
 ```
 
 Let's build the WASM Component and run Obelisk.
@@ -135,7 +135,7 @@ obelisk server run --config ./obelisk.toml
 
 In another terminal, let's list all the exported functions:
 ```sh
-obelisk client component list
+obelisk component list
 ```
 Expected output:
 ```
@@ -151,7 +151,7 @@ Exports:
 
 We can run the `fiboa` workflow using CLI:
 ```sh
-obelisk client execution submit --follow \
+obelisk execution submit --follow \
     template-fibo:workflow/fibo-workflow-ifc.fiboa [40,10]
 ```
 or using the WebUI:
@@ -171,7 +171,7 @@ Obelisk can generate several helper functions for every exported activity or wor
 package template-fibo:activity-obelisk-ext;
 
 interface fibo-activity-ifc {
-  use obelisk:types/execution@4.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
+  use obelisk:types/execution@4.1.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
 
   fibo-submit: func(join-set: borrow<join-set>, n: u8) -> execution-id;
 
@@ -240,8 +240,8 @@ fn schedule_child(n: u8)  {
 ## Logging and debugging
 To understand the internal state of a workflow, you can use the following:
 * Read the execution log. It contains workflow parameters, each child execution and the final result. Execution log is available in the web UI.
-* `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[workflow]]` section of the {{ doc_link(title="configuratin", path="configuration.md") }}.
-Output will appear in the server log.
+* `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[workflow]]` section of the {{ doc_link(title="configuration", path="configuration.md") }}.
+By default, output is stored in the database and available in the Web UI. It can also be forwarded to `"stdout"` or `"stderr"` to appear in the server log.
 * `obelisk:log` API - see {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}
 
 Adding print statements or logs is ignored by the execution log, so you can add it to an in-progress or a finished execution and trigger the replay.
@@ -281,7 +281,7 @@ For example, having the following configuration:
 ```toml
 [[workflow]]
 name = "myworkflow"
-location.path = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/workflow.wasm"
+location = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/workflow.wasm"
 exec.lock_expiry.seconds = 1
 join_next_blocking_strategy = "await"
 ```
