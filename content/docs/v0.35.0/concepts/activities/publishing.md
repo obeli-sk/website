@@ -21,11 +21,12 @@ Obelisk will output the OCI location together with its SHA digest. This can be u
 +location = "oci://docker.io/getobelisk/example_activity_fibo_template:2025-01-30@sha256:f67904dd6d30bc4ca9bf844d41b6c11b146ebf66adaf05a2088e2a5f7fa46d29"
 ```
 
-Components can also be referenced from GitHub releases using the `gh://` prefix:
+Components can also be referenced from GitHub releases using the `gh://` prefix.
+The format is `gh://owner/repo@tag/asset.wasm`, where `tag` is a release tag (e.g. `v1.0.0`) or `latest`:
 ```toml
 [[activity_wasm]]
 name = "myactivity"
-location = "gh://owner/repo/asset.wasm@v1.0.0"
+location = "gh://owner/repo@v1.0.0/asset.wasm"
 content_digest = "sha256:..."  # Recommended for reproducibility
 ```
 
