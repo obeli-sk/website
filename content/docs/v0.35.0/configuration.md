@@ -131,13 +131,13 @@ All WASM components (Activities, Workflows, Webhooks) share these configuration 
 name = "component_name"                         # Required: Component identifier
 location = "path/to/wasm"                       # File path location
 location = "oci://docker.io/repo/image:tag"     # OCI registry location (note the oci:// prefix)
-location = "gh://owner/repo/asset.wasm"         # GitHub release location
-location = "gh://owner/repo/asset.wasm@v1.0.0"  # GitHub release at specific tag
+location = "gh://owner/repo@v1.0.0/asset.wasm"  # GitHub release at specific tag
+location = "gh://owner/repo@latest/asset.wasm"  # GitHub release using the latest tag
 content_digest = "sha256:..."                   # Optional: WASM file hash verification. Recommended for GitHub releases.
 ```
 Value of `location` supports [path prefixes](#path-prefixes) when used as a file path.
 
-Note: The `location` field uses a single string with optional scheme prefixes (`oci://`, `gh://`). Plain paths without a prefix are treated as local file paths.
+Note: The `location` field uses a single string with optional scheme prefixes (`oci://`, `gh://`). Plain paths without a prefix are treated as local file paths. The `gh://` format is `gh://owner/repo@tag/asset.wasm`, where `tag` is a release tag or `latest`.
 
 ### Common Executor Settings
 
