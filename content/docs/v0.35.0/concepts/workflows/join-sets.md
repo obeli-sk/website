@@ -38,7 +38,7 @@ See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id")
 
 ## API
 The API for join sets is as defined in
-{{ github(title="`workflow-support.wit`", path="wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit") }}.
+{{ github(title="`workflow-support.wit`", path="wit/obelisk_workflow%404.1.0/workflow-support.wit") }}.
 
 To create a join set in Rust, use
 ```rust
@@ -142,7 +142,7 @@ for _ in 0..9 {
 ## Heterogenous Join Sets
 When a join set contains child executions of multiple functions, or delay requests, it is called heterogenous.
 It is generally not safe to call `-await-next` extension as the resolved response might not belong to the awaited function.
-Therefore one must use `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }}
+Therefore one must use the standalone `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }}
 together with `-get` extension function based on the returned `response-id`.
 
 ```rust
@@ -153,13 +153,12 @@ let execution_id_settings = get_settings_json_submit(&join_set);
 let _delay_id = submit_delay(&join_set, ScheduleAt::In(Duration::Seconds(10)));
 // Use `join-next` to get the first response.
 match join_next(&join_set) {
-    Ok(ResponseId::DelayId(_)) => println!("delay won"),
-    Ok(ResponseId::ExecutionId(execution_id)) => {
+    Ok((ResponseId::DelayId(_), _)) => println!("delay won"),
+    Ok((ResponseId::ExecutionId(execution_id), _)) => {
         if execution_id.id == execution_id_account.id {
             // use `-get` to obtain the response
-            match account_info_get(&execution_id) {
+            match account_info_get(execution_id) {
                 Ok(resp) => println!("account-info response won: {resp:?}"),
-                Err(GetExtensionError::ExecutionFailed(_)) => todo!("handle failure"),
                 Err(GetExtensionError::FunctionMismatch(_)) => {
                     unreachable!("this must be account-info based on execution id")
                 }
@@ -170,6 +169,17 @@ match join_next(&join_set) {
         }
     }
     Err(JoinNextError::AllProcessed) => unreachable!("submitted 3 child requests"),
+}
+```
+
+### Non-blocking Poll with `join-next-try`
+The `join-next-try` function is a non-blocking variant of `join-next`. It returns immediately with `join-next-try-error::pending` if no response is available yet:
+
+```rust
+match join_next_try(&join_set) {
+    Ok((response_id, result)) => { /* process response */ },
+    Err(JoinNextTryError::Pending) => { /* no response available yet, do other work */ },
+    Err(JoinNextTryError::AllProcessed) => { /* all done */ },
 }
 ```
 
