@@ -28,16 +28,18 @@ jobs:
         run: nix develop --command echo
 
       - name: zola build
-        run: nix develop --command zola build
+        run: |
+          PREVIEW_URL="https://pr-${{ github.event.number }}.website-1w7.pages.dev"
+          nix develop --command zola build --base-url "$PREVIEW_URL"
 
       - name: Deploy preview
         id: deploy
         run: |
-          OUTPUT=$(nix develop --command wrangler pages deploy ./public/ \
+          BRANCH="pr-${{ github.event.number }}"
+          URL="https://${BRANCH}.website-1w7.pages.dev"
+          nix develop --command wrangler pages deploy ./public/ \
             --project-name=website \
-            --branch="pr-${{ github.event.number }}")
-          echo "$OUTPUT"
-          URL=$(echo "$OUTPUT" | grep -oP 'https://[^\s]+'  | tail -1)
+            --branch="$BRANCH"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
