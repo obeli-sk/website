@@ -1,0 +1,42 @@
+name: Bump version
+permissions:
+  contents: write
+  pull-requests: write
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: "New version (e.g. v0.36.0)"
+        required: true
+        type: string
+      docs_link_target:
+        description: "Docs symlink target — existing version whose docs to reuse (e.g. v0.35.0)"
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash -xe {0}
+
+jobs:
+  bump:
+    name: Bump to ${{ inputs.new_version }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Run bump-version script
+        run: ./scripts/bump-version.sh "${{ inputs.new_version }}" "${{ inputs.docs_link_target }}"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bump/${{ inputs.new_version }}
+          commit-message: "Add ${{ inputs.new_version }} release"
+          title: "Add ${{ inputs.new_version }} release"
+          body: |
+            Automated version bump to **${{ inputs.new_version }}**.
+
+            - Symlink `content/docs/${{ inputs.new_version }}` → `${{ inputs.docs_link_target }}`
+            - Updated `latest` → `${{ inputs.new_version }}`
+            - Added `${{ inputs.new_version }}` to version list in `config.toml`
