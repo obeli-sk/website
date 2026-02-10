@@ -163,7 +163,7 @@ submit activities to a join set without blocking, then await their results later
 
 ## 4. Webhook Endpoint
 
-A webhook endpoint exposes your workflows over HTTP. The implementation in
+A webhook endpoint exposes your workflows and activities over HTTP. The implementation in
 `webhook/webhook-tutorial/src/lib.rs`:
 
 ```rust
