@@ -291,10 +291,6 @@ Serial workflow — steps run one at a time:
 
 ![Trace view of the serial workflow showing sequential activity executions](/tutorial-trace.png)
 
-Parallel workflow — all steps run concurrently:
-
-![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
-
 Trigger the parallel workflow:
 
 ```bash
@@ -303,9 +299,14 @@ curl http://localhost:9000/parallel
 
 All ten steps start concurrently — you'll see them interleave in the logs.
 
+Parallel workflow — all steps run concurrently:
+
+![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
+
+
 ## 7. See Crash Recovery in Action
 
-This is the key feature. Start the serial workflow, then **kill the server mid-execution**:
+Start the serial workflow, then **kill the server mid-execution**:
 
 ```bash
 # In one terminal:
