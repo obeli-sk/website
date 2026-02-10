@@ -1,0 +1,62 @@
+name: preview
+permissions:
+  contents: read
+  pull-requests: write
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+defaults:
+  run:
+    shell: bash -xe {0}
+
+jobs:
+  deploy-preview:
+    name: deploy preview
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_conf: |
+            extra-substituters = https://cache.garnix.io
+            extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g
+
+      - name: Populate the nix store
+        run: nix develop --command echo
+
+      - name: zola build
+        run: nix develop --command zola build
+
+      - name: Deploy preview
+        id: deploy
+        run: |
+          OUTPUT=$(nix develop --command wrangler pages deploy ./public/ \
+            --project-name=website \
+            --branch="pr-${{ github.event.number }}")
+          echo "$OUTPUT"
+          URL=$(echo "$OUTPUT" | grep -oP 'https://[^\s]+'  | tail -1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.number }}
+          comment-author: github-actions[bot]
+          body-includes: <!-- preview-deploy -->
+
+      - name: Comment preview URL
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.number }}
+          edit-mode: replace
+          body: |
+            <!-- preview-deploy -->
+            👀 Preview deployed: ${{ steps.deploy.outputs.url }}

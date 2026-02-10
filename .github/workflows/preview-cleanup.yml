@@ -1,0 +1,38 @@
+name: preview cleanup
+permissions:
+  contents: read
+on:
+  pull_request:
+    types: [closed]
+
+defaults:
+  run:
+    shell: bash -xe {0}
+
+jobs:
+  cleanup-preview:
+    name: cleanup preview
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Delete preview deployments
+        run: |
+          BRANCH="pr-${{ github.event.number }}"
+          PROJECT="website"
+          API="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT}/deployments"
+          AUTH="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+
+          # List deployments and find ones matching our PR branch
+          RESPONSE=$(curl -sf -H "$AUTH" "$API")
+          IDS=$(echo "$RESPONSE" | jq -r \
+            --arg branch "$BRANCH" \
+            '.result[] | select(.deployment_trigger.metadata.branch == $branch) | .id')
+
+          if [ -z "$IDS" ]; then
+            echo "No deployments found for branch $BRANCH"
+            exit 0
+          fi
+
+          for ID in $IDS; do
+            echo "Deleting deployment $ID for branch $BRANCH"
+            curl -sf -X DELETE -H "$AUTH" "${API}/${ID}?force=true" | jq .success
+          done
