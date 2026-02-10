@@ -264,8 +264,16 @@ INFO serial completed
 Note that the activity's `println!` output (`Step 0 started`, etc.) does **not** appear in the
 console — by default, stdout and stderr from components are forwarded to the database.
 You can retrieve them via the Web UI or the
-{{ doc_link(title="REST API", path="programmatic-access.md") }}
-at `GET /v1/executions/{execution-id}/logs`:
+{{ doc_link(title="REST API", path="programmatic-access.md") }}.
+
+First, list executions to get the execution ID. Use `show_derived=true` to include
+child executions (workflows spawned by webhooks, activities spawned by workflows):
+
+```bash
+curl "http://localhost:5005/v1/executions?show_derived=true" -H 'Accept: application/json'
+```
+
+Then fetch logs for a specific execution:
 
 ```bash
 curl "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: application/json'
@@ -275,6 +283,17 @@ This returns both `log` entries (from the `obelisk:log` API used in workflows) a
 entries (stdout/stderr captured from activities). See
 {{ doc_link(title="Logging", path="concepts/logging.md") }} for details on configuring
 what gets forwarded where.
+
+The Web UI at [http://localhost:8080](http://localhost:8080) provides a visual trace of every
+execution. Click on an execution and enable **Autoload children** to see the full hierarchy:
+
+Serial workflow — steps run one at a time:
+
+![Trace view of the serial workflow showing sequential activity executions](/tutorial-trace.png)
+
+Parallel workflow — all steps run concurrently:
+
+![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
 
 Trigger the parallel workflow:
 
