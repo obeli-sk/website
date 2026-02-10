@@ -253,28 +253,73 @@ article {
         font-size: 0.7em;
     }
 
-    div.table {
-        padding: 20px;
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1.5em 0;
+        font-size: 0.95em;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            padding: 1em;
+        thead {
+            background-color: rgba(255, 255, 255, 0.06);
+
+            th {
+                color: var(--primary);
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.8em;
+                letter-spacing: 0.04em;
+            }
         }
 
         th,
         td {
-            border: 1px solid #c0c5ce;
-            padding: 8px;
+            padding: 0.65em 1em;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        tbody tr {
+            transition: background-color 0.15s ease;
+
+            &:nth-child(even) {
+                background-color: rgba(255, 255, 255, 0.02);
+            }
+
+            &:hover {
+                background-color: rgba(157, 242, 254, 0.05);
+            }
+
+            &:last-child td {
+                border-bottom: none;
+            }
         }
     }
 
+    hr {
+        border: none;
+        border-top: 1px solid rgba(157, 242, 254, 0.2);
+        margin: 3em 0;
+    }
+
     blockquote {
-        margin: 0;
-        padding: 0 1em;
+        margin: 1.5em 0;
+        padding: 0.75em 1.25em;
         color: var(--text);
-        /* lighter primary */
-        border-left: 0.25em solid rgba(157, 242, 254, 0.4);
+        border-left: 3px solid rgba(157, 242, 254, 0.4);
+        background-color: rgba(157, 242, 254, 0.03);
+        border-radius: 0 6px 6px 0;
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    h4 {
+        margin-top: 1.5em;
+        margin-bottom: 0.75em;
     }
 
 }
