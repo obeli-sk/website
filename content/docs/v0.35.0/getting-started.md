@@ -201,7 +201,6 @@ The `obelisk.toml` file ties everything together:
 api.listening_addr = "127.0.0.1:5005"   # gRPC API server
 webui.listening_addr = "127.0.0.1:8080" # Web UI
 
-
 [[activity_wasm]]
 name = "activity_sleepy"
 location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/activity_sleepy.wasm"
@@ -231,9 +230,9 @@ See {{ doc_link(title="Configuration", path="configuration.md") }} for all optio
 Build all three components:
 
 ```bash
-(cd activity/activity-sleepy && cargo build --release --target=wasm32-wasip2)
-(cd workflow/workflow-tutorial && cargo build  --target=wasm32-unknown-unknown)
-(cd webhook/webhook-tutorial && cargo build  --target=wasm32-wasip2)
+(cd activity/activity-sleepy && cargo build --release --target wasm32-wasip2)
+(cd workflow/workflow-tutorial && cargo build --profile workflow --target wasm32-unknown-unknown)
+(cd webhook/webhook-tutorial && cargo build --profile webhook --target wasm32-wasip2)
 ```
 
 Start the server:
@@ -249,19 +248,33 @@ Trigger the serial workflow:
 curl http://localhost:9000/serial
 ```
 
-You should see log output as each step executes:
+You should see workflow log messages in the server console:
 
 ```
- app  INFO serial started
- app  INFO Persistent sleep started
- app  INFO Persistent sleep finished
-Step 0 started
-Step 0 creating file
-Step 0 completed
- app  INFO step(0)=0
+INFO serial started
+INFO Persistent sleep started
+INFO Persistent sleep finished
+INFO step(0)=0
+INFO Persistent sleep started
  ...
- app  INFO serial completed
+INFO step(9)=9
+INFO serial completed
 ```
+
+Note that the activity's `println!` output (`Step 0 started`, etc.) does **not** appear in the
+console — by default, stdout and stderr from components are forwarded to the database.
+You can retrieve them via the Web UI or the
+{{ doc_link(title="REST API", path="programmatic-access.md") }}
+at `GET /v1/executions/{execution-id}/logs`:
+
+```bash
+curl "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: application/json'
+```
+
+This returns both `log` entries (from the `obelisk:log` API used in workflows) and `stream`
+entries (stdout/stderr captured from activities). See
+{{ doc_link(title="Logging", path="concepts/logging.md") }} for details on configuring
+what gets forwarded where.
 
 Trigger the parallel workflow:
 
