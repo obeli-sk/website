@@ -262,8 +262,12 @@ INFO serial completed
 ```
 
 Note that the activity's `println!` output (`Step 0 started`, etc.) does **not** appear in the
-console — by default, stdout and stderr from components are forwarded to the database.
-You can retrieve them via the Web UI or the
+console — by default, stdout and stderr are forwarded to the database.
+Activities and webhooks are WASIp2 components and can use `println!`, but the preferred
+approach for all component types is the `obelisk:log` API (as used in the workflow above),
+which stores structured text entries rather than byte streams.
+
+You can retrieve all logs via the Web UI or the
 {{ doc_link(title="REST API", path="programmatic-access.md") }}.
 
 First, list executions to get the execution ID. Use `show_derived=true` to include
