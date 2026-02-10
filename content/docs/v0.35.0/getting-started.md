@@ -234,9 +234,9 @@ See {{ doc_link(title="Configuration", path="configuration.md") }} for all optio
 Build all three components:
 
 ```bash
-(cd activity/activity-sleepy && cargo build --release)
-(cd workflow/workflow-tutorial && cargo build --profile=workflow)
-(cd webhook/webhook-tutorial && cargo build --profile=webhook)
+(cd activity/activity-sleepy && cargo build --release --target=wasm32-wasip2)
+(cd workflow/workflow-tutorial && cargo build  --target=wasm32-unknown-unknown)
+(cd webhook/webhook-tutorial && cargo build  --target=wasm32-wasip2)
 ```
 
 Start the server:
