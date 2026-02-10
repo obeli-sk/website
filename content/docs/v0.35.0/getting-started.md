@@ -201,9 +201,6 @@ The `obelisk.toml` file ties everything together:
 api.listening_addr = "127.0.0.1:5005"   # gRPC API server
 webui.listening_addr = "127.0.0.1:8080" # Web UI
 
-[log.console]
-enabled = true
-level = "warn,obelisk=info,app=debug"
 
 [[activity_wasm]]
 name = "activity_sleepy"
