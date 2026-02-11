@@ -7,7 +7,7 @@ Workflows are the core of Obelisk's functionality, allowing you to define functi
 
 ## Determinism and Replayability
 
-This reliability is fundamentally enabled by ensuring **deterministic execution** and thus **replayability**. Workflows run within a WASM sandbox, guaranteeing that given the same inputs and event history, the workflow logic will always produce the exact same outputs and sequence of operations. To support this, Obelisk persistently records every child execution submission and its eventual result, forming a **durable execution log**. This log allows a workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can reliably continue from where it left off without duplicating or skipping steps.
+This reliability is fundamentally enabled by ensuring **deterministic execution** and thus **replayability**. Workflows run within a WASM sandbox, guaranteeing that given the same inputs and event history, the workflow logic will always produce the exact same outputs and sequence of operations. To support this, Obelisk persistently records every child execution submission and its eventual result, forming a **durable {{ doc_link(title="execution log", path="concepts/execution-log.md") }}**. This log allows a workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can reliably continue from where it left off without duplicating or skipping steps.
 
 ## How Workflows Are Executed in Obelisk
 
