@@ -37,7 +37,7 @@ with the {{ doc_link(title="execution log", path="concepts/execution-log.md") }}
     |   |  / lock expired |    |                              +--+-----------+  |
     |   +-----------------|----|                                 |              |
     |                     |                       response       |              |
-    |                     |         +--------------arrives--------+              |
+    |                     |         +--------------arrives-------+              |
     |                     |         |  (becomes PendingAt)                      |
     |                     |         |                                           |
     |   Finished          |         |  Finished                    Finished     |
