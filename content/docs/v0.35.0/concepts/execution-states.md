@@ -25,31 +25,31 @@ The diagram below shows all valid state transitions. Each arrow is labeled
 with the {{ doc_link(title="execution log", path="concepts/execution-log.md") }} event that triggers the transition.
 
 ```text
-                         ┌──────────────────────────────────────────────────────┐
-                         │                                                      │
- ┌──────────┐  Locked    │  ┌────────┐                                          │
- │ PendingAt├────────────┼──►Locked  │                                          │
- └──┬───▲───┘            │  └──┬──┬──┘                                          │
-    │   │                │     │  │                                              │
-    │   │  Unlocked /    │     │  │  HistoryEvent(JoinNext)    ┌──────────────┐  │
-    │   │  TemporarilyFailed / │  └────────────────────────────►BlockedByJoin │  │
-    │   │  TemporarilyTimedOut │                               │    Set       │  │
-    │   │  / lock expired │    │                               └──┬──────────┘  │
-    │   └─────────────────┼────┘                                  │             │
-    │                     │                        response       │             │
-    │                     │         ┌──────────────arrives─────────┘             │
-    │                     │         │  (becomes PendingAt)                       │
-    │                     │         │                                            │
-    │   Finished          │         │  Finished                     Finished     │
-    │   ┌─────────────────┼─────────┼───────────────────────────────────────┐    │
-    │   │                 │         │                                       │    │
-    ▼   ▼                 │         ▼                                       ▼    │
- ┌──────────┐             │                                                     │
- │ Finished │             │                                                     │
- └──────────┘             │                                                     │
-                          │         Paused / Unpaused                           │
-                          │  (overlays any non-Finished state)                  │
-                          └──────────────────────────────────────────────────────┘
+                         +------------------------------------------------------+
+                         |                                                      |
+ +----------+  Locked    |  +--------+                                          |
+ | PendingAt|------------|->|Locked  |                                          |
+ +--+---^---+            |  +--+--+--+                                          |
+    |   |                |     |  |                                             |
+    |   |  Unlocked /    |     |  |  HistoryEvent(JoinNext)   +--------------+  |
+    |   |  TemporarilyFailed / |  +-------------------------->|BlockedByJoin |  |
+    |   |  TemporarilyTimedOut |                              |    Set       |  |
+    |   |  / lock expired |    |                              +--+-----------+  |
+    |   +-----------------|----|                                 |              |
+    |                     |                       response       |              |
+    |                     |         +--------------arrives--------+              |
+    |                     |         |  (becomes PendingAt)                      |
+    |                     |         |                                           |
+    |   Finished          |         |  Finished                    Finished     |
+    |   +-----------------|---------|-----------------------------------------+ |
+    |   |                 |         |                                         | |
+    v   v                 |         v                                         v |
+ +----------+             |                                                     |
+ | Finished |             |                                                     |
+ +----------+             |                                                     |
+                          |         Paused / Unpaused                           |
+                          |  (overlays any non-Finished state)                  |
+                          +-----------------------------------------------------+
 ```
 
 ### Transitions in Detail
