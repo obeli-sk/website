@@ -6,12 +6,12 @@ on:
   workflow_dispatch:
     inputs:
       new_version:
-        description: "New version (e.g. v0.36.0)"
-        required: true
+        description: "New version (e.g. v0.36.0). Leave empty to use latest obelisk release."
+        required: false
         type: string
       docs_link_target:
-        description: "Docs symlink target — existing version whose docs to reuse (e.g. v0.35.0)"
-        required: true
+        description: "Docs symlink target — existing version whose docs to reuse. Leave empty to use current 'latest'."
+        required: false
         type: string
 
 defaults:
@@ -20,23 +20,47 @@ defaults:
 
 jobs:
   bump:
-    name: Bump to ${{ inputs.new_version }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
 
+      - name: Resolve version inputs
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ inputs.new_version }}
+          INPUT_DOCS_TARGET: ${{ inputs.docs_link_target }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Resolve new_version: use input or fetch latest obelisk release
+          if [[ -n "$INPUT_VERSION" ]]; then
+            NEW_VERSION="$INPUT_VERSION"
+          else
+            NEW_VERSION=$(gh api repos/obeli-sk/obelisk/releases/latest --jq .tag_name)
+            echo "Auto-detected latest obelisk release: $NEW_VERSION"
+          fi
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+          # Resolve docs_link_target: use input or read current 'latest' symlink
+          if [[ -n "$INPUT_DOCS_TARGET" ]]; then
+            DOCS_TARGET="$INPUT_DOCS_TARGET"
+          else
+            DOCS_TARGET=$(readlink content/docs/latest)
+            echo "Auto-detected docs link target from current latest: $DOCS_TARGET"
+          fi
+          echo "docs_link_target=$DOCS_TARGET" >> "$GITHUB_OUTPUT"
+
       - name: Run bump-version script
-        run: ./scripts/bump-version.sh "${{ inputs.new_version }}" "${{ inputs.docs_link_target }}"
+        run: ./scripts/bump-version.sh "${{ steps.resolve.outputs.new_version }}" "${{ steps.resolve.outputs.docs_link_target }}"
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: bump/${{ inputs.new_version }}
-          commit-message: "Add ${{ inputs.new_version }} release"
-          title: "Add ${{ inputs.new_version }} release"
+          branch: bump/${{ steps.resolve.outputs.new_version }}
+          commit-message: "Add ${{ steps.resolve.outputs.new_version }} release"
+          title: "Add ${{ steps.resolve.outputs.new_version }} release"
           body: |
-            Automated version bump to **${{ inputs.new_version }}**.
+            Automated version bump to **${{ steps.resolve.outputs.new_version }}**.
 
-            - Symlink `content/docs/${{ inputs.new_version }}` → `${{ inputs.docs_link_target }}`
-            - Updated `latest` → `${{ inputs.new_version }}`
-            - Added `${{ inputs.new_version }}` to version list in `config.toml`
+            - Symlink `content/docs/${{ steps.resolve.outputs.new_version }}` → `${{ steps.resolve.outputs.docs_link_target }}`
+            - Updated `latest` → `${{ steps.resolve.outputs.new_version }}`
+            - Added `${{ steps.resolve.outputs.new_version }}` to version list in `config.toml`
