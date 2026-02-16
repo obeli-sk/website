@@ -12,6 +12,11 @@
 {% endif %}
 Documentation - {{ title }}
 {% endblock title %}
+{% block head_extra %}
+{% set version_segment = section.path | split(pat="/") | nth(n=2) %}
+{% set canonical_path = section.path | replace(from="/" ~ version_segment ~ "/", to="/latest/") %}
+<link rel="canonical" href="{{ config.base_url ~ canonical_path }}" />
+{% endblock head_extra %}
 
 {% block content %}
 <div class="container">

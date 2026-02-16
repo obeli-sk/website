@@ -10,6 +10,16 @@
 {{ pageorsection.title }}
 - Documentation
 {% endblock title %}
+{% block head_extra %}
+{% if page is defined %}
+{% set doc_path = page.path %}
+{% else %}
+{% set doc_path = section.path %}
+{% endif %}
+{% set version_segment = doc_path | split(pat="/") | nth(n=2) %}
+{% set canonical_path = doc_path | replace(from="/" ~ version_segment ~ "/", to="/latest/") %}
+<link rel="canonical" href="{{ config.base_url ~ canonical_path }}" />
+{% endblock head_extra %}
 {% block content %}
 <div class="container">
     {{ macros::doc_breadcrumb(ancestors=pageorsection.ancestors, title = pageorsection.title) }}
