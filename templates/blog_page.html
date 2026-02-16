@@ -10,6 +10,11 @@
 {{ pageorsection.title }}
 - Blog
 {% endblock title %}
+{% block meta_description %}
+{% if page.summary %}
+<meta name="description" content="{{ page.summary | striptags | truncate(length=160, end='…') }}" />
+{% endif %}
+{% endblock meta_description %}
 {% block content %}
 
 <div class="container">

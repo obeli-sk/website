@@ -12,6 +12,9 @@
 {% endif %}
 Documentation - {{ title }}
 {% endblock title %}
+{% block meta_description %}
+<meta name="description" content="{{ title }} — Obelisk workflow engine documentation." />
+{% endblock meta_description %}
 {% block head_extra %}
 {% set version_segment = section.path | split(pat="/") | nth(n=2) %}
 {% set canonical_path = section.path | replace(from="/" ~ version_segment ~ "/", to="/latest/") %}
