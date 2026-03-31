@@ -17,10 +17,12 @@ A component's WIT lives under the `wit/` directory:
 
 - **`wit/impl.wit`** — the world file: declares what the component exports (functions it
   provides) and imports (functions it calls).
-- **`wit/<my-interface>/`** — interface files for the component's own exports. Keeping them in
-  a named subdirectory is a convention to distinguish them from deps, not a requirement.
-- **`wit/deps/`** — WIT files for everything the world imports: other components' interfaces,
-  generated extension interfaces, and Obelisk's built-in APIs.
+- **`wit/<my-interface>/`** — interface files for the component's own exports. This subdirectory
+  is a convention to distinguish your own interfaces from deps — there must also be a symlink
+  `wit/deps/<my-interface> -> ../<my-interface>` so that `wit-bindgen` can resolve it.
+- **`wit/deps/`** — WIT files for everything the world references: the component's own exported
+  interface (via symlink), other components' interfaces, generated extension interfaces, and
+  Obelisk's built-in APIs.
 
 The world references these files by package identity. Obelisk only cares about the exported
 interfaces; it ignores namespace, package name, and world name.
