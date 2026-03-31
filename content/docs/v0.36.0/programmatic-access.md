@@ -54,9 +54,9 @@ curl "127.1:5005/v1/components?exports=true&imports=false" -H accept:application
 [
   {
     "component_id": {
-      "component_type": "activity_wasm",
+      "component_type": "activity",
       "name": "test_programs_fibo_activity",
-      "input_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
+      "component_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
     },
     "exports": [
       {
@@ -143,14 +143,16 @@ curl "127.1:5005/v1/executions?length=10&direction=older" -H accept:application/
     "execution_id": "E_01KDJH6F811F2E0Q7AC4PDR9WE",
     "ffqn": "obelisk-flyio:workflow/workflow@1.0.0-beta.app-init",
     "pending_state": {
-      "status": "Finished",
+      "status": "finished",
       "version": 16,
       "finished_at": "2025-12-28T13:09:50.226429459Z",
       "result_kind": "ok"
     },
     "created_at": "2025-12-28T13:08:38.274234577Z",
     "first_scheduled_at": "2025-12-28T13:08:38.274234577Z",
-    "component_digest": "sha256:b2ee4bdf32367e5d4eaf3643b95b9d7261996a5fe03582bff58cc59a884dc29b"
+    "component_digest": "sha256:b2ee4bdf32367e5d4eaf3643b95b9d7261996a5fe03582bff58cc59a884dc29b",
+    "component_type": "workflow",
+    "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599"
   },
   ...
 ]
@@ -249,14 +251,16 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/jso
   "execution_id": "E_01KDQR2TGJR2XWEDM4CS6E4TF1",
   "ffqn": "testing:fibo/fibo.fibo",
   "pending_state": {
-    "status": "Finished",
+    "status": "finished",
     "version": 2,
     "finished_at": "2025-12-30T13:45:14.993810795Z",
     "result_kind": "ok"
   },
   "created_at": "2025-12-30T13:45:14.968745786Z",
   "first_scheduled_at": "2025-12-30T13:45:14.968745786Z",
-  "component_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
+  "component_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0",
+  "component_type": "activity",
+  "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599"
 }
 ```
 
@@ -277,22 +281,39 @@ Retrieves the history of events for an execution.
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json
 ```
 ```json
-[
-  {
-    "created_at": "2025-12-29T14:46:33.030449088Z",
-    "event": {
-      "Created": {
-        "ffqn": "testing:fibo/fibo.fibo",
-        "params": [
-          5
-        ],
-        ...
-      }
+{
+  "events": [
+    {
+      "created_at": "2025-12-29T14:46:33.030449088Z",
+      "event": {
+        "locked": {
+          "component_id": {
+            "component_type": "activity",
+            "name": "test_programs_fibo_activity",
+            "component_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
+          },
+          "executor_id": "Exr_01KDN7RB038RJHVZ5QS6MMWWZ4",
+          "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
+          "run_id": "Run_01KDN7RB038RJHVZ5QS6MMWWZ5",
+          "lock_expires_at": "2025-12-29T14:46:34.030449088Z",
+          "retry_config": { "max_retries": 5, "retry_exp_backoff": { "secs": 0, "nanos": 100000000 } }
+        }
+      },
+      "version": 1
     },
-    "version": 0
-  },
-  ...
-]
+    {
+      "created_at": "2025-12-29T14:46:33.082449088Z",
+      "event": {
+        "finished": {
+          "retval": { "ok": 5 },
+          "http_client_traces": []
+        }
+      },
+      "version": 2
+    }
+  ],
+  "max_version": 2
+}
 ```
 
 ---
@@ -316,31 +337,28 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:appl
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/json
 ```
 ```json
-[
-  {
-    "event": {
-      "created_at": "2025-12-29T14:58:17.290976499Z",
+{
+  "responses": [
+    {
       "event": {
-        "join_set_id": "o:1-fibo",
+        "created_at": "2025-12-29T14:58:17.290976499Z",
         "event": {
-          "type": "ChildExecutionFinished",
-          "child_execution_id": "E_01KDN9VJ2TJ396ZARNEMRBNBHP.o:1-fibo_1",
-          "finished_version": 2,
-          "result": {
-            "Ok": {
-              "ok": {
-                "type": "u64",
-                "value": 5
-              }
+          "join_set_id": "o:1-fibo",
+          "event": {
+            "type": "ChildExecutionFinished",
+            "child_execution_id": "E_01KDN9VJ2TJ396ZARNEMRBNBHP.o:1-fibo_1",
+            "finished_version": 2,
+            "result": {
+              "ok": 5
             }
           }
         }
-      }
-    },
-    "cursor": 67
-  },
-  ...
-]
+      },
+      "cursor": 67
+    }
+  ],
+  "max_cursor": 67
+}
 ```
 
 ---
@@ -400,14 +418,14 @@ exec.locking_strategy = "by_component_digest"
 
 #### Example request
 ```sh
-obelisk server run -c obelisk.toml # start with components downloaded from Docker Hub.
+obelisk server run --deployment obelisk.toml # start with components downloaded from Docker Hub.
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 # Submit a workflow
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep-workflow/workflow.sleep-host-activity", "params": [{"seconds":10}] }'
 
 # Shutdown the server before the execution finishes.
-obelisk server run -c obelisk-local.toml # Start with components built locally.
+obelisk server run --deployment obelisk-local.toml # Start with components built locally.
 # Find the old and new sha256 digest
 OLD=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/status"  -H accept:application/json | jq .component_digest)
 NEW=$(curl '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'accept:application/json' | jq .[0].component_id.input_digest)
@@ -513,6 +531,21 @@ Lists deployment states.
 ```sh
 curl "127.1:5005/v1/deployments" -H accept:application/json
 ```
+```json
+[
+  {
+    "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
+    "status": "active",
+    "created_at": "2026-03-31T10:04:01.736281506Z",
+    "last_active_at": "2026-03-31T10:04:01.736491095Z",
+    "locked": 0,
+    "pending": 0,
+    "scheduled": 0,
+    "blocked": 0,
+    "finished": 6
+  }
+]
+```
 
 ---
 
@@ -564,18 +597,22 @@ curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
 ## Data Reference
 
 ### Component Type
-When filtering components, use these values:
-- `activity_wasm`
+When filtering components or reading the `component_type` field in responses, use these values:
+- `activity`
 - `activity_stub`
 - `activity_external`
 - `workflow`
 - `webhook_endpoint`
 
 ### Execution Result
-The result object returned when an execution finishes:
-* `{ "ok": ... }`: Optional value returned if function succeeded.
-* `{ "err": ... }`: Optional value returned if function returned an error.
-* `{ "execution_error": ... }`: Optional value returned if the execution failed. Contains fields `kind`, and optionally `reason`, `detail`.
+The result object returned when an execution finishes (from `GET /v1/executions/{id}`):
+* `{ "ok": ... }`: Function succeeded; contains the return value (or `null` for no-value results).
+* `{ "err": ... }`: Function returned an error variant.
+* `{ "execution_error": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout, etc.).
+
+The `result_kind` field in status/list responses summarises the outcome:
+* `"ok"` — function returned successfully.
+* `{ "err": { "execution_failure": "<kind>" } }` — execution failed (same `kind` values as `execution_error.kind`).
 
 #### Execution Error Kind
 One of:
