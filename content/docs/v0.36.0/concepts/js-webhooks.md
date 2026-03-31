@@ -24,8 +24,8 @@ pattern = "https://api.example.com"
 methods = ["GET"]
 ```
 
-Route path segments starting with `:` are captured but are not exposed directly — read them
-from the URL if needed.
+Route path segments starting with `:` are captured and exposed as `process.env` entries
+inside the handler — `process.env['segment-name']` returns the captured value as a string.
 
 ## Handler signature
 
@@ -76,6 +76,61 @@ export default function handle(request) {
     return new Response("not found", { status: 404 });
 }
 ```
+
+## Path parameters
+
+When a route contains named segments (`:name`), the captured values are available as
+`process.env` entries inside the handler:
+
+```toml
+[[webhook_endpoint_js]]
+name    = "my_webhook"
+location = "${DEPLOYMENT_DIR}/webhook/my_webhook.js"
+routes  = ["/users/:user-id/items/:item-id"]
+```
+
+```javascript
+export default function handle(request) {
+    const userId = process.env['user-id'];
+    const itemId = process.env['item-id'];
+    return Response.json({ userId, itemId });
+}
+```
+
+## Scheduling executions
+
+Webhooks can schedule top-level executions without blocking the HTTP response. First generate
+an execution ID, then pass it to `obelisk.schedule`:
+
+```javascript
+export default function handle(request) {
+    const execId = obelisk.generateExecutionId();
+    obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
+    // optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
+    return new Response(execId, { status: 202 });
+}
+```
+
+Check or retrieve a previously scheduled or running execution:
+
+```javascript
+const status = obelisk.getStatus(execId);
+// e.g. { status: "pendingAt" } or { status: "finished" }
+
+const result = obelisk.tryGet(execId);
+// { pending: true } if not finished yet
+// { ok: value } or { err: value } when done
+```
+
+**Webhook scheduling API:**
+
+| Call | Returns | Description |
+|------|---------|-------------|
+| `obelisk.generateExecutionId()` | `executionId` (string) | Generate a unique execution ID |
+| `obelisk.schedule(execId, ffqn, args)` | — | Schedule a top-level execution immediately |
+| `obelisk.schedule(execId, ffqn, args, delay)` | — | Schedule at a delay (e.g. `{ seconds: 60 }`) |
+| `obelisk.getStatus(execId)` | `{ status: string }` | Get the current status of an execution |
+| `obelisk.tryGet(execId)` | `{ pending: true }` or `{ ok/err: value }` | Non-blocking result fetch |
 
 ## Available globals
 
