@@ -48,17 +48,70 @@ err payload as a string.
 
 ## Return values and errors
 
-The JS runtime maps `return` and `throw` to the `result` type:
+### `result` — no payload on either side
 
-| JS                    | WIT result variant | Notes                              |
-|-----------------------|--------------------|------------------------------------|
-| `return undefined`    | `ok` (no payload)  | for `return_type = "result"`       |
-| `return "value"`      | `ok("value")`      | for `return_type = "result<string>"` |
-| `throw "error"`       | `err("error")`     | err payload is always a string     |
+```toml
+return_type = "result"
+```
 
-Workflows that can throw should declare `return_type = "result<string, string>"` so that the
-err variant has a string payload. An uncaught thrown string causes the execution to fail with
-that string as the error; a non-string throw becomes a generic failure.
+```javascript
+export default function fn() {
+    return;        // ok — no payload
+    // throw null; // err — no payload; triggers Obelisk's retry policy
+}
+```
+
+### `result<string>` — ok carries a value; err has no payload
+
+```toml
+return_type = "result<string>"
+```
+
+```javascript
+export default function fn() {
+    return "hello";  // ok("hello")
+    // throw null;   // err (no payload) — triggers retry
+    // throw "oops"; // FATAL — not allowed; Obelisk requires throw null for result<T>
+}
+```
+
+Throwing a non-null value when there is no err type is a permanent failure (no retries).
+
+### `result<string, string>` — both variants carry a string
+
+```toml
+return_type = "result<string, string>"
+```
+
+```javascript
+export default function fn(ok) {
+    if (ok) return "hello";              // ok("hello")
+    throw "something went wrong";        // err("something went wrong") — triggers retry
+    // throw new Error("msg")            // also works: Error.message is used
+}
+```
+
+When an activity returns the err variant, Obelisk schedules a retry according to the
+component's retry policy. After all retries are exhausted, the final error is propagated
+to the caller. In a workflow, `obelisk.call` throws the err string once the activity
+permanently fails. The err variant can also be produced by Obelisk itself — on timeout,
+trap (panic), or type-check failure — even when the JS code never throws.
+
+## Inline WIT types
+
+In `deployment.toml`, `params` types and `return_type` accept any
+{{ doc_link(title="WIT type", path="concepts/wit-types.md") }} inline, including named types
+(`record`, `variant`, `enum`, `flags`) that standard WIT requires to be declared separately.
+Obelisk extracts them and generates the declarations automatically:
+
+```toml
+params = [
+  { name = "point", type = "record { x: u32, y: u32 }" },
+]
+return_type = "result<variant { found(string), not-found }>"
+```
+
+The generated WIT assigns sequential names (`t0`, `t1`, …) to the extracted types.
 
 ## Reading join set results
 
