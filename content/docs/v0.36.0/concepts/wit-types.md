@@ -9,6 +9,16 @@ Types) is the interface definition language of the WebAssembly Component Model. 
 synthesizes WIT interfaces from the `ffqn`, `params`, and `return_type` fields in
 `deployment.toml`, so you never write WIT by hand.
 
+Declaring accurate types matters for two reasons:
+
+- **Interoperability.** WIT is language-neutral. A JS activity and a Rust workflow share the
+  same synthesized interface, so any component — regardless of implementation language — can
+  call any other using its FFQN.
+- **Runtime behaviour.** Obelisk uses the declared return type to interpret results and drive
+  execution. For example, when an activity returns the `err` variant of a `result` type,
+  Obelisk treats it as a failure and schedules a retry; an `ok` variant marks the execution as
+  finished. Getting the types right is what lets the engine make these decisions correctly.
+
 The following types can be used in `params` and `return_type`:
 
 ## Primitive types
