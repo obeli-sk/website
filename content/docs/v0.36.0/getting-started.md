@@ -35,6 +35,7 @@ The repository contains four JavaScript files and a `deployment.toml` — nothin
 timeout or failure.
 
 ```javascript
+// ffqn: tutorial:demo/activity.step(idx: u64, sleep-millis: u64) -> result<string>
 export default async function step(idx, sleep_millis) {
     console.log(`Step ${idx} started`);
     await new Promise(r => setTimeout(r, Number(sleep_millis)));
@@ -52,6 +53,7 @@ crashes by replaying the execution log.
 `workflow/serial.js` — runs 10 steps in sequence with a persistent 1-second sleep between each:
 
 ```javascript
+// ffqn: tutorial:demo/workflow.serial() -> result<string, string>
 export default function serial() {
     let acc = 0;
     for (let i = 0; i < 10; i++) {
@@ -75,6 +77,7 @@ Key concepts:
 {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, then awaits results:
 
 ```javascript
+// ffqn: tutorial:demo/workflow.parallel() -> result<string, string>
 export default function parallel() {
     const joinSets = [];
     for (let i = 0; i < 10; i++) {
@@ -121,22 +124,11 @@ export default function handle(request) {
 
 ### Configuration
 
-`deployment.toml` wires the components together. Each JS component declares its
-{{ doc_link(title="FFQN", path="concepts/ffqn.md") }}, parameter types, and return type —
-Obelisk synthesizes a {{ doc_link(title="WIT", path="concepts/wit.md") }} interface from these
-and embeds it into the runtime.
-
-**WIT** (WebAssembly Interface Types) is the interface definition language of the
-[WebAssembly Component Model](https://component-model.bytecodealliance.org/design/wit.html).
-It describes the function signatures that components export and import. Rather than requiring
-you to write WIT by hand, Obelisk derives it from the `ffqn`, `params`, and `return_type`
-fields you specify.
-
-**FFQN** (Fully Qualified Function Name) follows the format
-`package:namespace/interface.function`. This is the address used in `obelisk.call` — for
-example, `"tutorial:demo/activity.step"` refers to the function `step` in the interface
-`activity`, under the package `tutorial:demo`. The JS function name (`step`, `serial`, etc.)
-maps directly to the WIT function name in the synthesized interface.
+`deployment.toml` wires the components together. Each entry assigns an
+{{ doc_link(title="FFQN", path="concepts/ffqn.md") }} (`package:namespace/interface.function`)
+and {{ doc_link(title="WIT types", path="concepts/wit-types.md") }} to the JS function —
+Obelisk synthesizes the interface at startup, so no WIT files are needed. The FFQN is the
+address used in `obelisk.call`; the JS function name maps to the function part of it.
 
 ```toml
 [[activity_js]]
