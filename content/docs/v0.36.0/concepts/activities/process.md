@@ -35,7 +35,7 @@ ensure!(exit_status == Some(0));
 ```
 
 Idempotency of each file IO operation is needed only when `reuse_on_retry` is enabled in the
-{{ doc_link(title="configuration", path="configuration.md#preopended-directory-support") }},
+{{ doc_link(title="configuration", path="configuration.md#preopened-directory-support") }},
 i.e. when the same temporary folder is used for retries.
 
 More examples can be found in the

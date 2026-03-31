@@ -24,7 +24,7 @@ fn ls() -> Vec<String> {
 }
 ```
 
-The {{ doc_link(title="configuration", path="configuration.md#preopended-directory-support") }} contains more information on how to configure the host path and cleanup.
+The {{ doc_link(title="configuration", path="configuration.md#preopened-directory-support") }} contains more information on how to configure the host path and cleanup.
 
 More examples are in
 {{ github(title="directory test activity", path="crates/testing/test-programs/dir/activity/src/lib.rs") }} .
