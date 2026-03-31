@@ -16,7 +16,8 @@ location     = "${DEPLOYMENT_DIR}/activity/my_activity.js"
 ffqn         = "myapp:demo/activity.my-activity"
 params       = [{ name = "input", type = "string" }]
 return_type  = "result<string>"
-exec.lock_expiry.seconds = 10   # must exceed worst-case execution time
+exec.lock_expiry.seconds = 10   # executor lease duration; if the activity runs longer,
+                                # Obelisk considers it lost and reschedules it
 max_retries  = 5
 env_vars     = [{ key = "API_KEY", value = "secret" }]
 [[activity_js.allowed_host]]
