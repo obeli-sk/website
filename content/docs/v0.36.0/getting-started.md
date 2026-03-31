@@ -128,7 +128,9 @@ export default function handle(request) {
 {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} (`package:namespace/interface.function`)
 and {{ doc_link(title="WIT types", path="concepts/wit-types.md") }} to the JS function —
 Obelisk synthesizes the interface at startup, so no WIT files are needed. The FFQN is the
-address used in `obelisk.call`; the JS function name maps to the function part of it.
+address used in `obelisk.call`; the JS function name maps to the function part of it. See
+{{ doc_link(title="JS components", path="concepts/js-components.md") }} for the full type and
+JSON encoding reference.
 
 ```toml
 [[activity_js]]
@@ -271,7 +273,8 @@ without losing progress or duplicating work.
   {{ doc_link(title="Webhook Endpoints", path="concepts/webhook-endpoints.md") }},
   {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}
 
-- **Build your own project:** Use the Rust templates for full WIT-schema-driven components:
+- **Build your own project:** See {{ doc_link(title="Rust components", path="concepts/rust-components.md") }}
+  for the WIT world, `bindgen!`, and Cargo setup, or scaffold a new project with:
 
   ```bash
   cargo generate obeli-sk/obelisk-templates
