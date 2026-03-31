@@ -1,0 +1,21 @@
+[[activity_js]]
+name = "echo_string"
+location = "${DEPLOYMENT_DIR}/activity/echo.js"
+ffqn = "validation:json-encoding/activity.echo-string"
+params = [{ name = "val", type = "string" }]
+return_type = "result<string>"
+exec.lock_expiry.seconds = 5
+
+[[activity_js]]
+name = "echo_types"
+location = "${DEPLOYMENT_DIR}/activity/echo_types.js"
+ffqn = "validation:json-encoding/activity.echo-types"
+params = [
+  { name = "a-bool",   type = "bool" },
+  { name = "a-u32",    type = "u32" },
+  { name = "a-string", type = "string" },
+  { name = "an-option", type = "option<string>" },
+  { name = "a-list",   type = "list<u32>" },
+]
+return_type = "result<string>"
+exec.lock_expiry.seconds = 5

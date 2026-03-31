@@ -4,15 +4,13 @@ template = "docs.html"
 weight = 0
 +++
 
-This guide walks you through building a durable application with Obelisk — a workflow engine that
-automatically recovers your program from failures. You'll create an activity, a workflow, and a
-webhook endpoint, then see crash recovery in action.
+This guide walks you through running a durable application with Obelisk — a workflow engine that
+automatically recovers your program from crashes. You'll write a `step` activity, serial and
+parallel workflows, and a webhook endpoint in JavaScript, then see crash recovery in action.
 
-## 1. Setting Up
+No build step or toolchain required — just install Obelisk and run.
 
-### Install Obelisk
-
-Download the latest release:
+## 1. Install Obelisk
 
 ```bash
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
@@ -20,340 +18,276 @@ curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/d
 
 See the [Installation page](https://obeli.sk/install/) for Docker, Nix, cargo-binstall, and other options.
 
-### Install Rust
-
-Obelisk components are [WebAssembly](https://webassembly.org/) modules. Rust has first-class support for compiling to WASM. Install Rust via [rustup](https://rustup.rs/):
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-### Clone the Tutorial
+## 2. Clone the Tutorial
 
 ```bash
 git clone https://github.com/obeli-sk/demo-tutorial.git
 cd demo-tutorial
 ```
 
-## 2. Activities
+The repository contains four JavaScript files and a `deployment.toml` — nothing else to install or compile.
 
-Activities are the building blocks of work — individual functions that interact with the outside world
-(call APIs, write files, sleep). Obelisk runs each activity in a WASM sandbox and automatically
-retries on failure.
+## 3. The Components
 
-### Defining the Interface
+### Activity
 
-Every component in Obelisk starts with a [WIT](https://component-model.bytecodealliance.org/design/wit.html)
-interface definition. Here's the activity interface in
-`activity/activity-sleepy/wit/tutorial_activity/tutorial_activity.wit`:
+`activity/step.js` — the unit of side-effectful work. Activities are retried automatically on
+timeout or failure.
 
-```wit
-package tutorial:activity;
-
-interface activity-sleepy {
-    step: func(idx: u64, sleep-millis: u64) -> result<u64>;
+```javascript
+// ffqn: tutorial:demo/activity.step(idx: u64, sleep-millis: u64) -> result<string>
+export default async function step(idx, sleep_millis) {
+    console.log(`Step ${idx} started`);
+    await new Promise(r => setTimeout(r, Number(sleep_millis)));
+    console.log(`Step ${idx} completed`);
+    return String(idx);
 }
 ```
 
-This declares a single function `step` that takes an index and a sleep duration, and returns a result.
-The return type must be fallible (`result`) — Obelisk needs this to handle retries and timeouts.
-
-### Implementing the Activity
-
-The Rust implementation in `activity/activity-sleepy/src/lib.rs`:
-
-```rust
-use exports::tutorial::activity::activity_sleepy::Guest;
-use std::time::Duration;
-use wit_bindgen::generate;
-
-generate!({ generate_all });
-struct Component;
-export!(Component);
-
-impl Guest for Component {
-    fn step(idx: u64, sleep_millis: u64) -> Result<u64, ()> {
-        println!("Step {idx} started");
-        std::thread::sleep(Duration::from_millis(sleep_millis));
-        println!("Step {idx} creating file");
-        let path = format!("file-{idx}.txt");
-        std::fs::File::create(path)
-            .inspect_err(|err| eprintln!("{err:?}"))
-            .map_err(|_| ())?;
-        println!("Step {idx} completed");
-        Ok(idx)
-    }
-}
-```
-
-This activity sleeps for a given duration and creates a file — simulating real-world side effects.
-Because it runs inside a WASM sandbox, file access requires explicit
-{{ doc_link(title="configuration", path="concepts/activities/preopened-dirs.md") }}.
-
-## 3. Workflows
+### Workflows
 
 Workflows orchestrate activities. They must be **deterministic** — given the same inputs and
-event history, they always produce the same sequence of operations. This is what enables
-Obelisk to recover workflows from crashes by replaying their execution log.
+event history they always produce the same sequence of calls. This lets Obelisk recover them from
+crashes by replaying the execution log.
 
-### Serial Workflow
+`workflow/serial.js` — runs 10 steps in sequence with a persistent 1-second sleep between each:
 
-The workflow in `workflow/workflow-tutorial/src/lib.rs` defines two functions. First, a serial workflow
-that runs steps one at a time with persistent sleeps:
-
-```rust
-fn serial() -> Result<u64, ()> {
-    log::info("serial started");
-    let mut acc = 0;
-    for i in 0..10 {
-        log::info("Persistent sleep started");
-        workflow_support::sleep(ScheduleAt::In(Duration::Seconds(1)))?;
-        log::info("Persistent sleep finished");
-        let result = step(i, i * 200)
-            .inspect_err(|_| log::error("step timed out"))?;
-        acc += result;
-        log::info(&format!("step({i})={result}"));
+```javascript
+// ffqn: tutorial:demo/workflow.serial() -> result<string, string>
+export default function serial() {
+    let acc = 0;
+    for (let i = 0; i < 10; i++) {
+        obelisk.sleep({ seconds: 1 });
+        const result = obelisk.call("tutorial:demo/activity.step", [i, i * 200]);
+        acc += Number(result);
+        console.log(`step(${i})=${result}`);
     }
-    log::info("serial completed");
-    Ok(acc)
+    console.log(`serial completed: ${acc}`);
+    return String(acc);
 }
 ```
 
 Key concepts:
-- **`workflow_support::sleep`** is a *persistent* sleep — its state is saved to the execution log.
-  If the server crashes during the sleep and restarts, the sleep resumes from where it left off
-  instead of starting over.
-- **`step(i, i * 200)`** calls the activity function directly. Obelisk records the call and its
-  result in the execution log.
+- **`obelisk.sleep`** is a *persistent* sleep — its position is saved to the execution log.
+  If the server crashes mid-sleep and restarts, the sleep resumes where it left off.
+- **`obelisk.call`** submits an activity and blocks until it completes. The call and its result
+  are recorded in the execution log, so on replay the activity is not re-executed.
 
-### Parallel Workflow
+`workflow/parallel.js` — submits all 10 steps concurrently using
+{{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, then awaits results:
 
-The second function runs all steps concurrently using {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}:
-
-```rust
-fn parallel() -> Result<u64, ()> {
-    log::info("parallel started");
-    let max_iterations = 10;
-    let mut handles = Vec::new();
-    for i in 0..max_iterations {
-        let join_set = workflow_support::join_set_create();
-        step_submit(&join_set, i, i * 200);
-        handles.push((i, join_set));
+```javascript
+// ffqn: tutorial:demo/workflow.parallel() -> result<string, string>
+export default function parallel() {
+    const joinSets = [];
+    for (let i = 0; i < 10; i++) {
+        const js = obelisk.createJoinSet();
+        js.submit("tutorial:demo/activity.step", [i, i * 200]);
+        joinSets.push({ i, js });
     }
-    log::info("parallel submitted all child executions");
-    let mut acc = 0;
-    for (i, join_set) in handles {
-        let (_execution_id, result) =
-            step_await_next(&join_set).expect("every join set has 1 execution");
-        let result = result
-            .inspect_err(|_| log::error("step timed out"))?;
-        acc = 10 * acc + result;
-        log::info(&format!("step({i})={result}, acc={acc}"));
-        workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)))?;
+    console.log("parallel: submitted all child executions");
+    let acc = 0;
+    for (const { i, js } of joinSets) {
+        const response = js.joinNext();
+        if (!response.ok) throw `step ${i} failed`;
+        const result = obelisk.getResult(response.id);
+        acc = 10 * acc + Number(result.ok);
+        console.log(`step(${i})=${result.ok}, acc=${acc}`);
+        obelisk.sleep({ milliseconds: 300 });
     }
-    log::info(&format!("parallel completed: {acc}"));
-    Ok(acc)
+    console.log(`parallel completed: ${acc}`);
+    return String(acc);
 }
 ```
 
-Notice the imports `step_submit` and `step_await_next` — these are
-{{ doc_link(title="extension functions", path="concepts/extensions.md") }}
-automatically generated by Obelisk from the activity interface. They let you
-submit activities to a join set without blocking, then await their results later.
+### Webhook Endpoint
 
-## 4. Webhook Endpoint
+`webhook/tutorial.js` — serves HTTP and triggers workflows via `obelisk.call`:
 
-A webhook endpoint exposes your workflows and activities over HTTP. The implementation in
-`webhook/webhook-tutorial/src/lib.rs`:
+```javascript
+export default function handle(request) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    console.log(`Handling request: ${path}`);
 
-```rust
-#[wstd::http_server]
-async fn main(request: Request<Body>) -> Result<Response<Body>, Error> {
-    let path = request.uri().path_and_query().unwrap().as_str();
-    let response = match path {
-        "/serial" => {
-            let acc = workflow::serial().unwrap();
-            Response::builder()
-                .body(Body::from(format!("serial workflow completed: {acc}")))
-        }
-        "/parallel" => {
-            let acc = workflow::parallel().unwrap();
-            Response::builder()
-                .body(Body::from(format!("parallel workflow completed: {acc}")))
-        }
-        _ => Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .body(Body::from("not found")),
+    if (path === "/serial") {
+        const result = obelisk.call("tutorial:demo/workflow.serial", []);
+        return new Response(`serial workflow completed: ${result}`, { status: 200 });
+    } else if (path === "/parallel") {
+        const result = obelisk.call("tutorial:demo/workflow.parallel", []);
+        return new Response(`parallel workflow completed: ${result}`, { status: 200 });
+    } else {
+        return new Response("not found\ntry /serial or /parallel", { status: 404 });
     }
-    .unwrap();
-    Ok(response)
 }
 ```
 
-When a request comes in, the webhook calls the workflow function directly.
-Obelisk manages the full lifecycle — the HTTP response is sent after the workflow completes.
+### Configuration
 
-## 5. Configuration
+`deployment.toml` wires the components together. Each entry assigns an
+{{ doc_link(title="FFQN", path="concepts/ffqn.md") }} (`package:namespace/interface.function`)
+and {{ doc_link(title="WIT types", path="concepts/wit-types.md") }} to the JS function —
+Obelisk synthesizes the interface at startup, so no WIT files are needed. The FFQN is the
+address used in `obelisk.call`; the JS function name maps to the function part of it. See
+{{ doc_link(title="JS components", path="concepts/js-components.md") }} for the JSON encoding
+reference and links to the per-type pages (activities, workflows, webhooks).
 
-In Obelisk 0.36, the configuration is split into two files: `server.toml` (server-level settings) and `deployment.toml` (components). For the tutorial, no `server.toml` is needed — all three built-in servers start automatically with their defaults:
-
-- **API server** at `127.0.0.1:5005`
-- **Web UI** at `127.0.0.1:8080`
-- **External webhook server** at `127.0.0.1:9090`
-
-The **`deployment.toml`** ties the components together:
 ```toml
-[[activity_wasm]]
-name = "activity_sleepy"
-location = "${DEPLOYMENT_DIR}/target/wasm32-wasip2/release/activity_sleepy.wasm"
+[[activity_js]]
+name = "step"
+location = "${DEPLOYMENT_DIR}/activity/step.js"
+ffqn = "tutorial:demo/activity.step"
+params = [
+  { name = "idx", type = "u64" },
+  { name = "sleep-millis", type = "u64" },
+]
+return_type = "result<string>"
 exec.lock_expiry.seconds = 10
 
-[[workflow_wasm]]
-name = "workflow_tutorial"
-location = "${DEPLOYMENT_DIR}/target/wasm32-unknown-unknown/workflow/workflow_tutorial.wasm"
+[[workflow_js]]
+name = "serial"
+location = "${DEPLOYMENT_DIR}/workflow/serial.js"
+ffqn = "tutorial:demo/workflow.serial"
+params = []
+return_type = "result<string, string>"
 
-[[webhook_endpoint_wasm]]
-name = "webhook_tutorial"
-location = "${DEPLOYMENT_DIR}/target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
+[[workflow_js]]
+name = "parallel"
+location = "${DEPLOYMENT_DIR}/workflow/parallel.js"
+ffqn = "tutorial:demo/workflow.parallel"
+params = []
+return_type = "result<string, string>"
+
+[[webhook_endpoint_js]]
+name = "webhook"
+location = "${DEPLOYMENT_DIR}/webhook/tutorial.js"
 routes = ["/*"]
 ```
 
-`${DEPLOYMENT_DIR}` resolves to the directory containing the deployment TOML file.
+`${DEPLOYMENT_DIR}` resolves to the directory containing the deployment file.
 See {{ doc_link(title="Configuration", path="configuration.md") }} for all options.
 
-## 6. Build and Run
-
-Build all three components:
-
-```bash
-(cd activity/activity-sleepy && cargo build --release --target wasm32-wasip2)
-(cd workflow/workflow-tutorial && cargo build --profile workflow --target wasm32-unknown-unknown)
-(cd webhook/webhook-tutorial && cargo build --profile webhook --target wasm32-wasip2)
-```
-
-Start the server:
+## 4. Run
 
 ```bash
 obelisk server run --deployment deployment.toml
 ```
 
-The Web UI is at [http://localhost:8080](http://localhost:8080).
+Three endpoints start automatically:
+- **Web UI** at [http://localhost:8080](http://localhost:8080)
+- **Webhook server** at [http://localhost:9090](http://localhost:9090)
+- **API** at [http://localhost:5005](http://localhost:5005)
+
 Trigger the serial workflow:
 
 ```bash
 curl http://localhost:9090/serial
 ```
 
-You should see workflow log messages in the server console:
+After ~20 seconds (10 steps × 1 s sleep each):
 
 ```
-INFO serial started
-INFO Persistent sleep started
-INFO Persistent sleep finished
-INFO step(0)=0
-INFO Persistent sleep started
- ...
-INFO step(9)=9
-INFO serial completed
+serial workflow completed: 45
 ```
 
-Note that the activity's `println!` output (`Step 0 started`, etc.) does **not** appear in the
-console — by default, stdout and stderr are forwarded to the database.
-Activities and webhooks are WASIp2 components and can use `println!`, but the preferred
-approach for all component types is the `obelisk:log` API (as used in the workflow above),
-which stores structured text entries rather than byte streams.
-
-You can retrieve all logs via the Web UI or the
-{{ doc_link(title="REST API", path="programmatic-access.md") }}.
-
-First, list executions to get the execution ID. Use `show_derived=true` to include
-child executions (workflows spawned by webhooks, activities spawned by workflows):
-
-```bash
-curl "http://localhost:5005/v1/executions?show_derived=true" -H 'Accept: application/json'
-```
-
-Then fetch logs for a specific execution:
-
-```bash
-curl "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: application/json'
-```
-
-This returns both `log` entries (from the `obelisk:log` API used in workflows) and `stream`
-entries (stdout/stderr captured from activities). See
-{{ doc_link(title="Logging", path="concepts/logging.md") }} for details on configuring
-what gets forwarded where.
-
-The Web UI at [http://localhost:8080](http://localhost:8080) provides a visual trace of every
-execution. Click on an execution and enable **Autoload children** to see the full hierarchy:
-
-Serial workflow — steps run one at a time:
-
-![Trace view of the serial workflow showing sequential activity executions](/tutorial-trace.png)
-
-Trigger the parallel workflow:
+Trigger the parallel workflow — all steps run concurrently, finishes in a few seconds:
 
 ```bash
 curl http://localhost:9090/parallel
 ```
 
-All ten steps start concurrently — you'll see them interleave in the logs.
+```
+parallel workflow completed: 123456789
+```
 
-Parallel workflow — all steps run concurrently:
+## 5. Inspect Executions
 
-![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
-
-
-## 7. See Crash Recovery in Action
-
-Start the serial workflow, then **kill the server mid-execution**:
+List top-level executions — one per webhook call:
 
 ```bash
-# In one terminal:
+curl -s "http://localhost:5005/v1/executions"
+```
+
+```
+E_01KN209P2PC...  Finished(ok)  wasi:http/incoming-handler.handle  2026-03-31 13:11:01 UTC
+```
+
+Fetch logs for a webhook execution (includes its `console.log` output):
+
+```bash
+EXECUTION_ID=E_01KN209P2PC...
+curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs"
+```
+
+To see the child workflow and activities spawned by a webhook, use `show_derived` and filter by
+FFQN prefix:
+
+```bash
+curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial:demo"
+```
+
+```
+E_01KN209P2PC....o:1_1              Finished(ok)  tutorial:demo/workflow.serial    2026-03-31 13:11:01 UTC
+E_01KN209P2PC....o:1_1.o:2-step_1  Finished(ok)  tutorial:demo/activity.step      2026-03-31 13:11:02 UTC
+...
+```
+
+Then fetch logs for the workflow execution by its ID — `console.log` calls appear as structured
+log entries with timestamps.
+
+The **Web UI** at [http://localhost:8080](http://localhost:8080) provides a visual trace. Click an
+execution and enable **Autoload children** to see the full hierarchy of webhook → workflow →
+activities.
+
+## 6. Crash Recovery
+
+Start the serial workflow, then kill the server while it is running:
+
+```bash
+# terminal 1
 curl http://localhost:9090/serial
 
-# In another terminal, while the workflow is running:
-# Press Ctrl+C in the server terminal, or:
+# terminal 2 — kill mid-execution
 kill $(pgrep obelisk)
 ```
 
-The curl request will fail — but the workflow state is safely persisted.
-Now restart the server:
+The curl request fails — but the workflow state is safely persisted. Restart the server:
 
 ```bash
-obelisk server run --deployment deployment.toml
+obelisk server run
 ```
 
-Obelisk automatically recovers the interrupted workflow from its last completed step.
-Already-completed activities are **not re-executed** — only the remaining work runs.
-The workflow finishes as if nothing happened.
+No `--deployment` flag needed: Obelisk persists the full deployment configuration — including
+the paths to JS source files — in the database on first run, so the server can reload all
+components on restart without re-specifying them. Obelisk resumes the workflow from its last
+completed step. Already-completed activities are **not re-executed**.
 
 This is durable execution: your workflows survive server crashes, restarts, and deployments
 without losing progress or duplicating work.
 
 ## Next Steps
 
-Now that you've seen Obelisk in action, here's where to go next:
+- **Understand the concepts:**
+  {{ doc_link(title="JS Activities", path="concepts/js-activities.md") }},
+  {{ doc_link(title="JS Workflows", path="concepts/js-workflows.md") }},
+  {{ doc_link(title="JS Webhooks", path="concepts/js-webhooks.md") }},
+  {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}
 
--  **Understand the concepts:**
-   {{ doc_link(title="Workflows", path="concepts/workflows/_index.md") }},
-   {{ doc_link(title="Activities", path="concepts/activities/_index.md") }},
-   {{ doc_link(title="Webhook Endpoints", path="concepts/webhook-endpoints.md") }},
-   {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }},
-   {{ doc_link(title="Extensions", path="concepts/extensions.md") }}
+- **Build your own project:** See {{ doc_link(title="Rust components", path="concepts/rust-components.md") }}
+  for the WIT world, `bindgen!`, and Cargo setup, or scaffold a new project with:
 
--  **Start a new project from a template:**
+  ```bash
+  cargo generate obeli-sk/obelisk-templates
+  ```
 
-   ```bash
-   cargo generate obeli-sk/obelisk-templates
-   ```
+  The `rust/` directory in the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial)
+  contains a Rust implementation of the same activity, workflow, and webhook.
 
--  **Explore a real-world example:** The [Stargazers demo](https://github.com/obeli-sk/demo-stargazers)
-   uses a GitHub webhook, OpenAI, and a database to process GitHub star events with a multi-step
-   workflow.
+- **Explore a real-world example:** The [Stargazers demo](https://github.com/obeli-sk/demo-stargazers)
+  uses a GitHub webhook, OpenAI, and a database to process GitHub star events with a multi-step workflow.
 
--  **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli.md") }} covers
-   submitting executions, inspecting state, and managing components.
+- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli.md") }} covers
+  submitting executions, inspecting state, and managing components.
 
--  **Read the blog:** [Comparing Obelisk with DBOS](@/blog/2025-11-26-comparing-dbos-part-1.md)
-   walks through this same tutorial code in depth, comparing the approach with DBOS Java.
+- **Read the blog:** [Comparing Obelisk with DBOS](@/blog/2025-11-26-comparing-dbos-part-1.md)
+  walks through this same tutorial code in depth, comparing the approach with DBOS Java.
