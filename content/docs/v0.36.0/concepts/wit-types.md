@@ -11,13 +11,14 @@ synthesizes WIT interfaces from the `ffqn`, `params`, and `return_type` fields i
 
 Declaring accurate types matters for two reasons:
 
-- **Interoperability.** WIT is language-neutral. A JS activity and a Rust workflow share the
-  same synthesized interface, so any component — regardless of implementation language — can
-  call any other using its FFQN.
+- **Interoperability.** WIT is language-neutral. A JS workflow can call a Rust activity by its
+  FFQN without any glue code — the synthesized interface is the shared contract regardless of
+  implementation language. This is the common pattern: download a pre-built Rust (or any WASM)
+  activity and wire it from a JS workflow or webhook.
 - **Runtime behaviour.** Obelisk uses the declared return type to interpret results and drive
   execution. For example, when an activity returns the `err` variant of a `result` type,
   Obelisk treats it as a failure and schedules a retry; an `ok` variant marks the execution as
-  finished. Getting the types right is what lets the engine make these decisions correctly.
+  finished.
 
 The following types can be used in `params` and `return_type`:
 
