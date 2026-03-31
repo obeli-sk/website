@@ -123,7 +123,20 @@ export default function handle(request) {
 
 `deployment.toml` wires the components together. Each JS component declares its
 {{ doc_link(title="FFQN", path="concepts/ffqn.md") }}, parameter types, and return type —
-Obelisk synthesizes a WIT interface from these and embeds it into the runtime:
+Obelisk synthesizes a {{ doc_link(title="WIT", path="concepts/wit.md") }} interface from these
+and embeds it into the runtime.
+
+**WIT** (WebAssembly Interface Types) is the interface definition language of the
+[WebAssembly Component Model](https://component-model.bytecodealliance.org/design/wit.html).
+It describes the function signatures that components export and import. Rather than requiring
+you to write WIT by hand, Obelisk derives it from the `ffqn`, `params`, and `return_type`
+fields you specify.
+
+**FFQN** (Fully Qualified Function Name) follows the format
+`package:namespace/interface.function`. This is the address used in `obelisk.call` — for
+example, `"tutorial:demo/activity.step"` refers to the function `step` in the interface
+`activity`, under the package `tutorial:demo`. The JS function name (`step`, `serial`, etc.)
+maps directly to the WIT function name in the synthesized interface.
 
 ```toml
 [[activity_js]]
@@ -250,8 +263,10 @@ The curl request fails — but the workflow state is safely persisted. Restart t
 obelisk server run
 ```
 
-No `--deployment` flag needed: the deployment is stored in the database. Obelisk resumes the
-workflow from its last completed step. Already-completed activities are **not re-executed**.
+No `--deployment` flag needed: Obelisk persists the full deployment configuration — including
+the paths to JS source files — in the database on first run, so the server can reload all
+components on restart without re-specifying them. Obelisk resumes the workflow from its last
+completed step. Already-completed activities are **not re-executed**.
 
 This is durable execution: your workflows survive server crashes, restarts, and deployments
 without losing progress or duplicating work.
