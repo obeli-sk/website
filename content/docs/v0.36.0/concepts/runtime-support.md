@@ -17,7 +17,7 @@ The runtime support functions are defined using [WIT (WebAssembly Interface Type
 Used by other Obelisk WIT interfaces as well as the generated {{ doc_link(title="extension", path="concepts/extensions.md") }},
 contains `time` and `execution` interfaces with types like `execution-id` and others.
 
-### {{ github(title="`obelisk:types/types@4.1.0`", path="wit/obelisk_types%404.1.0/types.wit") }}
+### {{ github(title="`obelisk:types/types@4.2.0`", path="wit/obelisk_types%404.2.0/types.wit") }}
 
 
 ## Available Support Functions
@@ -39,7 +39,7 @@ use obelisk::log::log;
 log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
-### {{ github(title="`obelisk:workflow/workflow-support@4.1.0`", path="wit/obelisk_workflow%404.1.0/workflow-support.wit") }}
+### {{ github(title="`obelisk:workflow/workflow-support@5.0.0`", path="wit/obelisk_workflow%405.0.0/workflow-support.wit") }}
 Available to:
 * {{ doc_link(title="workflows", path="concepts/workflows/_index.md") }}
 

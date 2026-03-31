@@ -6,6 +6,8 @@ weight = 20  #  Lower weights appear first
 
 Activities can make HTTP requests using the [WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This allows them to interact with external services and APIs. Importantly, this HTTP client is controlled, with built-in tracing to enhance security and predictability. Disk I/O is currently not permitted.
 
+> **Note**: Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in `deployment.toml`. Without them, all outbound HTTP is blocked. See {{ doc_link(title="Configuration", path="configuration.md#outbound-http-allowlist") }} for details.
+
 Let's generate a simple HTTP Client from a template:
 ```sh
 cargo generate obeli-sk/obelisk-templates activity-rs/http-simple-sync --name httpactivity

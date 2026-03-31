@@ -195,34 +195,30 @@ Obelisk manages the full lifecycle — the HTTP response is sent after the workf
 
 ## 5. Configuration
 
-The `obelisk.toml` file ties everything together:
+In Obelisk 0.36, the configuration is split into two files: `server.toml` (server-level settings) and `deployment.toml` (components). For the tutorial, no `server.toml` is needed — all three built-in servers start automatically with their defaults:
 
+- **API server** at `127.0.0.1:5005`
+- **Web UI** at `127.0.0.1:8080`
+- **External webhook server** at `127.0.0.1:9090`
+
+The **`deployment.toml`** ties the components together:
 ```toml
-api.listening_addr = "127.0.0.1:5005"   # gRPC API server
-webui.listening_addr = "127.0.0.1:8080" # Web UI
-
 [[activity_wasm]]
 name = "activity_sleepy"
-location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/activity_sleepy.wasm"
+location = "${DEPLOYMENT_DIR}/target/wasm32-wasip2/release/activity_sleepy.wasm"
 exec.lock_expiry.seconds = 10
 
-[[workflow]]
+[[workflow_wasm]]
 name = "workflow_tutorial"
-location = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/workflow/workflow_tutorial.wasm"
+location = "${DEPLOYMENT_DIR}/target/wasm32-unknown-unknown/workflow/workflow_tutorial.wasm"
 
-[[http_server]]
-name = "external"
-listening_addr = "0.0.0.0:9000"
-
-[[webhook_endpoint]]
+[[webhook_endpoint_wasm]]
 name = "webhook_tutorial"
-location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
-http_server = "external"
+location = "${DEPLOYMENT_DIR}/target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
 routes = ["/*"]
 ```
 
-Each section declares a component and points to its compiled WASM file.
-`${OBELISK_TOML_DIR}` resolves to the directory containing the TOML file.
+`${DEPLOYMENT_DIR}` resolves to the directory containing the deployment TOML file.
 See {{ doc_link(title="Configuration", path="configuration.md") }} for all options.
 
 ## 6. Build and Run
@@ -238,14 +234,14 @@ Build all three components:
 Start the server:
 
 ```bash
-obelisk server run
+obelisk server run --deployment deployment.toml
 ```
 
 The Web UI is at [http://localhost:8080](http://localhost:8080).
 Trigger the serial workflow:
 
 ```bash
-curl http://localhost:9000/serial
+curl http://localhost:9090/serial
 ```
 
 You should see workflow log messages in the server console:
@@ -298,7 +294,7 @@ Serial workflow — steps run one at a time:
 Trigger the parallel workflow:
 
 ```bash
-curl http://localhost:9000/parallel
+curl http://localhost:9090/parallel
 ```
 
 All ten steps start concurrently — you'll see them interleave in the logs.
@@ -314,7 +310,7 @@ Start the serial workflow, then **kill the server mid-execution**:
 
 ```bash
 # In one terminal:
-curl http://localhost:9000/serial
+curl http://localhost:9090/serial
 
 # In another terminal, while the workflow is running:
 # Press Ctrl+C in the server terminal, or:
@@ -325,7 +321,7 @@ The curl request will fail — but the workflow state is safely persisted.
 Now restart the server:
 
 ```bash
-obelisk server run
+obelisk server run --deployment deployment.toml
 ```
 
 Obelisk automatically recovers the interrupted workflow from its last completed step.
