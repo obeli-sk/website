@@ -6,11 +6,11 @@ weight = 22
 
 Obelisk supports three JS component types, each with its own execution model and API:
 
-- {{ doc_link(title="JS Activities", path="concepts/js-activities.md") }} — side-effectful
+- {{ doc_link(title="JS Activities", path="js/js-activities.md") }} — side-effectful
   work; retried automatically on failure
-- {{ doc_link(title="JS Workflows", path="concepts/js-workflows.md") }} — deterministic
+- {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }} — deterministic
   orchestration; survives server crashes via replay
-- {{ doc_link(title="JS Webhooks", path="concepts/js-webhooks.md") }} — HTTP handlers;
+- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — HTTP handlers;
   can call activities and workflows
 
 ## Function signatures and FFQNs
@@ -36,7 +36,7 @@ return_type = "result<string>"
 
 See {{ doc_link(title="WIT types", path="concepts/wit-types.md") }} for the full type
 reference and
-{{ doc_link(title="JS activities", path="concepts/js-activities.md") }}
+{{ doc_link(title="JS activities", path="js/js-activities.md") }}
 for how `return` and `throw` map to the `result` variants.
 
 ## JSON encoding

@@ -22,8 +22,8 @@ Declaring accurate types matters for two reasons:
 For JS components, Obelisk synthesizes WIT interfaces from the `ffqn`, `params`, and
 `return_type` fields in `deployment.toml` — no WIT files needed. Rust components define their
 own WIT files and use the `bindgen!` macro to generate bindings. See
-{{ doc_link(title="JS components", path="concepts/js-components.md") }} and
-{{ doc_link(title="Rust components", path="concepts/rust-components.md") }} for details.
+{{ doc_link(title="JS components", path="js/js-components.md") }} and
+{{ doc_link(title="Rust components", path="wasm/rust-components.md") }} for details.
 
 WIT identifiers must use **kebab-case** (e.g. `sleep-millis`, not `sleep_millis`).
 

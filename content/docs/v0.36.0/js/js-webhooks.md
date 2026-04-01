@@ -134,7 +134,7 @@ const result = obelisk.tryGet(execId);
 
 ## Available globals
 
-Same as {{ doc_link(title="JS activities", path="concepts/js-activities.md") }}:
+Same as {{ doc_link(title="JS activities", path="js/js-activities.md") }}:
 `process.env`, `fetch`, `crypto.subtle`, `console`, `TextEncoder`/`TextDecoder`.
 
 ## Examples
