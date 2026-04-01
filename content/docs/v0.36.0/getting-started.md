@@ -267,6 +267,11 @@ without losing progress or duplicating work.
 
 ## Next Steps
 
+- **Go further:** {{ doc_link(title="Saga Pattern with Fly.io", path="getting-started-fly-agent.md") }}
+  — learn the saga pattern by creating a fly.io app, running a short-lived AI agent VM,
+  and guaranteeing cleanup via a two-level workflow. Introduces pre-built WASM activities
+  and crash-safe compensation.
+
 - **Understand the concepts:**
   {{ doc_link(title="JS Activities", path="concepts/js-activities.md") }},
   {{ doc_link(title="JS Workflows", path="concepts/js-workflows.md") }},
