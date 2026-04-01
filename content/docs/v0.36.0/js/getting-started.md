@@ -129,7 +129,7 @@ export default function handle(request) {
 and {{ doc_link(title="WIT types", path="concepts/wit-types.md") }} to the JS function —
 Obelisk synthesizes the interface at startup, so no WIT files are needed. The FFQN is the
 address used in `obelisk.call`; the JS function name maps to the function part of it. See
-{{ doc_link(title="JS components", path="concepts/js-components.md") }} for the JSON encoding
+{{ doc_link(title="JS components", path="js/js-components.md") }} for the JSON encoding
 reference and links to the per-type pages (activities, workflows, webhooks).
 
 ```toml
@@ -267,18 +267,21 @@ without losing progress or duplicating work.
 
 ## Next Steps
 
-- **Go further:** {{ doc_link(title="Saga Pattern with Fly.io", path="getting-started-fly-agent.md") }}
+- **Go further:** {{ doc_link(title="Saga Pattern with Fly.io", path="js/getting-started-fly-agent.md") }}
   — learn the saga pattern by creating a fly.io app, running a short-lived AI agent VM,
   and guaranteeing cleanup via a two-level workflow. Introduces pre-built WASM activities
   and crash-safe compensation.
 
 - **Understand the concepts:**
-  {{ doc_link(title="JS Activities", path="concepts/js-activities.md") }},
-  {{ doc_link(title="JS Workflows", path="concepts/js-workflows.md") }},
-  {{ doc_link(title="JS Webhooks", path="concepts/js-webhooks.md") }},
+  {{ doc_link(title="JS Activities", path="js/js-activities.md") }},
+  {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }},
+  {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }},
   {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}
 
-- **Build your own project:** See {{ doc_link(title="Rust components", path="concepts/rust-components.md") }}
+- **WASM/Rust alternative:** {{ doc_link(title="Getting Started (Rust / WASM)", path="wasm/getting-started.md") }}
+  — same tutorial implemented in Rust compiled to WebAssembly.
+
+- **Build your own Rust project:** See {{ doc_link(title="Rust components", path="wasm/rust-components.md") }}
   for the WIT world, `bindgen!`, and Cargo setup, or scaffold a new project with:
 
   ```bash

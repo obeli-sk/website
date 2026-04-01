@@ -1,10 +1,10 @@
 +++
-title = "Next Steps: Saga Pattern with Fly.io"
+title = "Getting Started: Saga Pattern with Fly.io"
 template = "docs.html"
 weight = 1
 +++
 
-This tutorial extends the {{ doc_link(title="Getting Started", path="getting-started.md") }}
+This tutorial extends the {{ doc_link(title="Getting Started", path="js/getting-started.md") }}
 guide with two advanced topics:
 
 - **The saga pattern** — guarantee cleanup even when a workflow fails or the server crashes.
@@ -16,7 +16,7 @@ acting as an AI agent, and destroys the app afterwards — whether the agent suc
 
 ## Prerequisites
 
-- Obelisk installed (see {{ doc_link(title="Getting Started", path="getting-started.md") }})
+- Obelisk installed (see {{ doc_link(title="Getting Started", path="js/getting-started.md") }})
 - A [fly.io](https://fly.io) account with a [personal access token](https://fly.io/user/personal_access_tokens)
   saved in `FLY_API_TOKEN`
 
@@ -167,7 +167,7 @@ Key points:
 #### JSON encoding for WASM activities
 
 Arguments are JSON-encoded using the WIT type schema. Key rules
-(see {{ doc_link(title="JS components", path="concepts/js-components.md") }} for the full table):
+(see {{ doc_link(title="JS components", path="js/js-components.md") }} for the full table):
 
 | WIT type          | JS value                                 |
 |-------------------|------------------------------------------|
@@ -268,7 +268,7 @@ location = "${DEPLOYMENT_DIR}/webhook/fly-agent.js"
 routes = [{ methods = ["GET"], route = "/run/:org-slug/:app-name/:prompt" }]
 ```
 
-See {{ doc_link(title="JS Webhooks", path="concepts/js-webhooks.md") }} for the full path
+See {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} for the full path
 parameter reference and {{ doc_link(title="Configuration", path="configuration.md") }} for
 all options.
 
@@ -358,9 +358,9 @@ step and continues polling; when the VM is eventually stopped, `apps.delete` sti
 
 - **Structured concurrency:** {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}
   — run multiple agent VMs in parallel and collect results.
-- **Concepts:** {{ doc_link(title="JS Workflows", path="concepts/js-workflows.md") }},
-  {{ doc_link(title="JS Activities", path="concepts/js-activities.md") }}
+- **Concepts:** {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }},
+  {{ doc_link(title="JS Activities", path="js/js-activities.md") }}
 - **REST API:** {{ doc_link(title="Programmatic access", path="programmatic-access.md") }}
   — submit executions and query state without the webhook.
-- **Rust components:** {{ doc_link(title="Rust components", path="concepts/rust-components.md") }}
+- **Rust components:** {{ doc_link(title="Rust components", path="wasm/rust-components.md") }}
   — build your own compiled activity like the fly.io one used here.
