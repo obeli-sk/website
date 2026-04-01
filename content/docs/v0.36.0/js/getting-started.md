@@ -239,6 +239,14 @@ The **Web UI** at [http://localhost:8080](http://localhost:8080) provides a visu
 execution and enable **Autoload children** to see the full hierarchy of webhook → workflow →
 activities.
 
+Serial workflow — steps run one at a time:
+
+![Trace view of the serial workflow showing sequential activity executions](/js-tutorial-trace.png)
+
+Parallel workflow — all steps run concurrently:
+
+![Trace view of the parallel workflow showing concurrent activity executions](/js-tutorial-trace-parallel.png)
+
 ## 6. Crash Recovery
 
 Start the serial workflow, then kill the server while it is running:

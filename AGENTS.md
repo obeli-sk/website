@@ -51,7 +51,9 @@ website/
 │   │   └── target_link.md   # External links with target="_blank"
 │   └── *.html               # Page-specific templates
 ├── scripts/
-│   └── bump-version.sh      # Version bump automation
+│   ├── bump-version.sh      # Version bump automation
+│   └── screenshot-webui.js  # Playwright script to capture WebUI trace screenshots
+├── validation/              # JS docs validation deployments (run ./test.sh in each)
 └── flake.nix                # Nix devShell (zola, wrangler)
 ```
 
@@ -109,6 +111,30 @@ Used in Markdown content:
   GitHub repo at the matching version tag.
 - `{{ target_link(title="...", href="...") }}` — External link with
   `target="_blank"`.
+
+## Screenshots
+
+Screenshots in `static/` (e.g. `js-tutorial-trace.png`) were captured with Playwright using the
+system Chromium from the nix store. To regenerate:
+
+1. Start the demo-tutorial server: `cd /workspace/apps/demo-tutorial && obelisk server run --deployment deployment.toml`
+2. Trigger the workflows: `curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait`
+3. Run the capture script:
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=/nix/store/ys5hrp8fq4w5fiifw7jiqs6axffskav8-playwright-browsers \
+FONTCONFIG_FILE=/nix/store/jcg09fyjgwavdmcsl05cfi2kbjfid4mn-fonts.conf \
+/nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0/bin/node scripts/screenshot-webui.js
+```
+
+The script (`scripts/screenshot-webui.js`) uses `playwright-core` and the system Chromium
+(`chromium-146`) with `--no-sandbox --disable-gpu`. It auto-detects serial vs parallel by
+execution timing and saves to `/tmp/js-tutorial-trace*.png`, then copy to `static/`.
+
+## Validation
+
+`validation/` contains small self-contained Obelisk deployments that verify claims in the JS docs
+(return types, JSON encoding). Each subdirectory has a `test.sh`. Requires `obelisk` on `$PATH`.
 
 ## Content Conventions
 
