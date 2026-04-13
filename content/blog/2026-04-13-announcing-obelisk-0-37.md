@@ -80,6 +80,37 @@ The resulting parallel execution is fully visible in the Web UI trace view:
 
 ![Trace view of the parallel JS workflow showing concurrent activity executions](/js-tutorial-trace-parallel.png)
 
+And a webhook that accepts a list of cities, kicks off the workflow asynchronously, and
+returns the execution ID immediately:
+
+```javascript
+// ffqn: myapp:weather/webhook.handle
+export default async function handle(request) {
+    const { cities } = await request.json();
+    const execId = obelisk.executionIdGenerate();
+    obelisk.schedule(execId, "myapp:weather/workflow.city-temperatures", [cities]);
+    return Response.json({ execId }, { status: 202 });
+}
+```
+
+The deployment entry declares the route:
+
+```toml
+[[webhook_endpoint_js]]
+name     = "weather_webhook"
+location = "./webhook/weather.js"
+routes   = [{ methods = ["POST"], route = "/weather" }]
+```
+
+Callers get the execution ID back immediately and can poll for the result:
+
+```sh
+curl -s -X POST http://localhost:9090/weather \
+  -H "content-type: application/json" \
+  -d '{"cities":["London","Tokyo"]}'
+# → {"execId":"..."}
+```
+
 ### Determinism without restrictions
 
 Workflow determinism is enforced by Obelisk rather than restricted by the runtime.

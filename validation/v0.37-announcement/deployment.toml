@@ -1,0 +1,22 @@
+[[activity_js]]
+name        = "weather_activity"
+location    = "${DEPLOYMENT_DIR}/activity/weather.js"
+ffqn        = "myapp:weather/activity.get-temperature"
+params      = [{ name = "city", type = "string" }]
+return_type = "result<string, string>"
+exec.lock_expiry.seconds = 30
+[[activity_js.allowed_host]]
+pattern = "https://wttr.in"
+methods = ["GET"]
+
+[[workflow_js]]
+name        = "weather_workflow"
+location    = "${DEPLOYMENT_DIR}/workflow/city_temperatures.js"
+ffqn        = "myapp:weather/workflow.city-temperatures"
+params      = [{ name = "cities", type = "list<string>" }]
+return_type = "result<string, string>"
+
+[[webhook_endpoint_js]]
+name     = "weather_webhook"
+location = "${DEPLOYMENT_DIR}/webhook/weather.js"
+routes   = [{ methods = ["POST"], route = "/weather" }]
