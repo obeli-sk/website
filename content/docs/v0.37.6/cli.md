@@ -18,7 +18,7 @@ Options:
 * `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
 * `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted, built-in defaults are used
 * `-d, --deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is inserted and activated on startup, overriding any existing Enqueued or Active deployment in the database
-* `--deployment-empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the database
+* `--empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the database
 * `-s, --suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail type checking against the current deployment
 
 If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
