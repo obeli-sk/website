@@ -78,7 +78,7 @@ export default function city_temperatures(cities) {
 
 The resulting parallel execution is fully visible in the Web UI trace view:
 
-![Trace view of the parallel JS workflow showing concurrent activity executions](/js-tutorial-trace-parallel.png)
+![Trace view of the parallel JS workflow showing concurrent activity executions](/weather-trace-parallel.png)
 
 And a webhook that accepts a list of cities, kicks off the workflow asynchronously, and
 returns the execution ID immediately:
@@ -168,7 +168,7 @@ a child execution, awaiting a join set, scheduling a delay, and so on. The Web U
 uses these traces to let you step through any execution — in-progress or already finished
 — and see exactly which line of your code triggered each event:
 
-![Workflow debugger showing JS source and stack trace](/js-tutorial-trace.png)
+![Webhook debugger showing JS source with the obelisk.schedule call highlighted](/weather-webhook-debugger.png)
 
 This brings JS on par with WASM components, where step-through debugging was already
 possible. The difference is that WASM components require a separate source configuration
