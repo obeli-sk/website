@@ -14,3 +14,7 @@ Each subdirectory is a self-contained deployment. Run `./test.sh` inside it.
 
 - **`json-encoding/`** — validates the JSON ↔ WIT type mapping: primitives, `option`, `list`,
   and the kebab-case → snake_case parameter name conversion.
+
+- **`v0.37-announcement/`** — validates the JS example from the 0.37 announcement: a webhook
+  that accepts `POST /weather`, schedules a parallel city-temperatures workflow, and returns
+  the execution ID. Requires outbound network access (`wttr.in`).

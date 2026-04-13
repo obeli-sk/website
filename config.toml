@@ -7,8 +7,9 @@ build_search_index = false
 highlight_code = true
 
 [extra]
-latest = "v0.36.1"
+latest = "v0.37.6"
 versions = [
+    "v0.37.6",
     "v0.36.1",
     "v0.36.0",
     "v0.35.4",
