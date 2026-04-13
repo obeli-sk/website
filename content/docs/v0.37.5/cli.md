@@ -9,22 +9,19 @@ weight = 50
 ### Running the Server
 
 ```sh
-obelisk server run
+obelisk server run [OPTIONS]
 ```
 
-Following optional options can be provided:
-
-* `--clean-sqlite-directory` - Clean the sqlite database directory
-* `--clean-cache` - Clean the codegen and OCI cache directories
-* `--clean-codegen-cache` - Clean the codegen cache directory
-* `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted, built-in defaults are used.
-* `--deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is inserted and activated on startup, overriding any existing Enqueued or Active deployment in the database.
-* `--deployment-empty` - Start with an empty deployment, ignoring any existing Enqueued or Active deployment.
-* `-s, --suppress-type-checking-errors` - Ignore type checking errors
+Options:
+* `--clean-sqlite-directory` - Delete the SQLite database directory before starting (destroys all execution history)
+* `--clean-cache` - Delete both the codegen cache and the OCI image cache before starting
+* `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
+* `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted, built-in defaults are used
+* `-d, --deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is inserted and activated on startup, overriding any existing Enqueued or Active deployment in the database
+* `--deployment-empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the database
+* `-s, --suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail type checking against the current deployment
 
 If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
-
-Note: `server run` and `server verify` now fail on type checking errors by default. Use `--suppress-type-checking-errors` to override.
 
 ### Verifying the Server Configuration
 
@@ -39,14 +36,14 @@ Instead of running the server one might wish just to verify the TOML configurati
 obelisk server verify [OPTIONS]
 ```
 
-Following optional options can be provided:
-* `--clean-cache` - Clean the codegen and OCI cache directories
-* `--clean-codegen-cache` - Clean the codegen cache
-* `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted, built-in defaults are used.
-* `--deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued deployment is used, falling back to the Active deployment.
-* `-i, --ignore-missing-env-vars` - Do not verify existence of environment variables
-* `-s, --suppress-type-checking-errors` - Ignore type checking errors
-* `--skip-db` - Do not check database schema
+Options:
+* `--clean-cache` - Delete both the codegen cache and the OCI image cache before verifying
+* `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
+* `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted, built-in defaults are used
+* `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued deployment is used, falling back to the Active deployment
+* `-i, --ignore-missing-env-vars` - Skip the check that every environment variable referenced by the deployment is set
+* `-s, --suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type checking against the deployment
+* `--skip-db` - Skip opening the database and validating its schema
 
 ## Obelisk Deployment
 
@@ -55,90 +52,121 @@ Manage deployments (component configurations) stored in the database.
 ### Submitting a deployment
 Upload a deployment TOML as a new deployment; print the new deployment ID.
 ```sh
-obelisk deployment submit [OPTIONS] <PATH>
+obelisk deployment submit [OPTIONS] [PATH]
 ```
 
+Arguments:
+* `[PATH]` - Path to the deployment TOML file
+
 Options:
+* `--empty` - Submit an empty deployment with no components (mutually exclusive with `PATH`)
 * `--verify` - Verify all environment variables before persisting
 * `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Enqueueing a deployment
-Submit a deployment and enqueue it for activation on the next server restart.
+Submit a deployment (if a file is given) and enqueue it for activation on the next server restart.
 ```sh
-obelisk deployment enqueue [OPTIONS] <PATH|ID>
+obelisk deployment enqueue [OPTIONS] [PATH|ID]
 ```
 
+Arguments:
+* `[PATH|ID]` - Path to a deployment TOML file, or an existing deployment ID
+
+Options:
+* `--empty` - Enqueue an empty deployment with no components
+* `--verify` - Verify all environment variables before enqueuing
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
 ### Applying a deployment
-Submit a deployment and hot-redeploy immediately (fails if hot-redeploy is not possible).
+Submit a deployment (if a file is given) and hot-redeploy immediately. Fails if hot-redeploy is not possible.
 ```sh
-obelisk deployment apply [OPTIONS] <PATH|ID>
+obelisk deployment apply [OPTIONS] [PATH|ID]
 ```
+
+Arguments:
+* `[PATH|ID]` - Path to a deployment TOML file, or an existing deployment ID
+
+Options:
+* `--empty` - Apply an empty deployment with no components
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Listing deployments
 ```sh
 obelisk deployment list [OPTIONS]
 ```
 
+Options:
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
 ### Showing a deployment
 Show the full configuration of a deployment.
 ```sh
-obelisk deployment show <ID> [OPTIONS]
+obelisk deployment show [OPTIONS] <ID>
 ```
+
+Arguments:
+* `<ID>` - Deployment ID
+
+Options:
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ## Obelisk Execution
 
 ### Submitting an execution
 ```sh
-obelisk execution submit [OPTIONS] <FUNCTION> [PARAMETERS]
+obelisk execution submit [OPTIONS] <function> [parameters]...
 ```
 
 Arguments:
-*  `<FUNCTION>` - Function name
-*  `[PARAMETERS]`
-
-Accepted Parameter Formats:
-
-- Function name can either be in the {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }} or,
-if there are no collisions, in a shortened format: `.../interface-name.fn-name`, omitting the package and version.
-
-- JSON array string, e.g. `'["first", "second", null, 1]'`
-
-- File reference prefixed with `@`, e.g. `@file.json` (file must contain a valid JSON array)
-
-- Multiple arguments after `--`, e.g. `-- '"first"' @secondparam.json null 1`
-
-- For functions with no parameters: `[]` (JSON array variant) or no arguments.
+* `<function>` - Function to invoke, as a {{ doc_link(title="fully qualified name", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }} (`ns:pkg/ifc.fn`) or shortened to `.../ifc.fn` when the interface name is unambiguous
+* `[parameters]...` - One of:
+  - JSON array string, e.g. `'["first", "second", null, 1]'`
+  - File reference prefixed with `@`, e.g. `@file.json` (file must contain a valid JSON array)
+  - Multiple arguments after `--`, e.g. `-- '"first"' @secondparam.json null 1`
+  - For functions with no parameters: `[]` or omit entirely
 
 Options:
-* `-e`, `--execution-id` - Supply an execution id
-* `-f`, `--follow` - Follow the stream of events until the execution finishes
-* `--no-reconnect` - Do not attempt to reconnect on connection error while following the status stream
-* `-j`, `--json` - Output JSON in Web API format
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+* `-e, --execution-id <ID>` - Use this explicit execution ID instead of having the server assign one (useful for idempotency — see `obelisk generate execution-id`)
+* `-f, --follow` - Follow the status stream until the execution finishes
+* `--no-reconnect` - Do not attempt to reconnect on connection error while following
+* `-j, --json` - Output events as JSON in Web API format instead of human-readable text
 
 ### Getting the current execution state
 ```sh
 obelisk execution get [OPTIONS] <EXECUTION_ID>
 ```
-Same as with the `submit` command, the execution can be followed until it finishes:
+
+Arguments:
+* `<EXECUTION_ID>` - Execution ID to look up
+
+Options:
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 * `-f, --follow` - Follow the status stream until the execution finishes
-* `--no-reconnect` - Do not attempt to reconnect on connection error while following the status stream
+* `--no-reconnect` - Do not attempt to reconnect on connection error while following
 
 ### Cancelling an activity or a delay request
 ```sh
-obelisk execution cancel <ID>
+obelisk execution cancel [OPTIONS] <ID>
 ```
 
-Argument `ID` must be either a delay id (starting with `Delay_`), or an execution id (starting with `E_`) belonging to an activity.
+Arguments:
+* `<ID>` - Execution ID of an activity (`E_01...`) or a delay request (`Delay_01...`)
 
+Options:
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Providing the result of a stubbed activity
 ```sh
-obelisk execution stub <EXECUTION_ID> <RETURN_VALUE>
+obelisk execution stub [OPTIONS] <EXECUTION_ID> <RETURN_VAL>
 ```
+
 Arguments:
 * `<EXECUTION_ID>` - Execution ID of the stub execution waiting for its return value
-* `<RETURN_VALUE>` - Return value encoded as JSON
+* `<RETURN_VAL>` - Return value encoded as JSON
 
+Options:
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ## Obelisk Component
 
@@ -146,85 +174,90 @@ Arguments:
 ```sh
 obelisk component list [OPTIONS]
 ```
+
 Options:
+* `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 * `-i, --imports` - Show component imports
 * `-e, --extensions` - Show auto-generated export extensions
 
-### Pushing a WASM Component into an OCI Registry
-This command does not connect to the server. Use `docker login` to authenticate against the OCI registry first.
+### Pushing a component to an OCI registry
+Push a WASM or JS component to an OCI registry with Obelisk deployment metadata embedded in the image manifest. Use `docker login` to authenticate against the OCI registry first.
 ```sh
-obelisk component push <PATH> <IMAGE_NAME>
+obelisk component push --deployment <DEPLOYMENT> <COMPONENT_NAME> <OCI>
 ```
+
 Arguments:
-* `<PATH>` - WASM file to be pushed
-* `<IMAGE_NAME>` - OCI reference. Example: `docker.io/repo/image:tag`
+* `<COMPONENT_NAME>` - Component name as it appears in the deployment TOML
+* `<OCI>` - OCI reference with `oci://` prefix, e.g. `oci://docker.io/repo/image:tag`
+* `--deployment <FILE>` - Path to the input deployment TOML file *(required)*
 
 ### Adding a component to the deployment configuration
-Add a component to the deployment TOML configuration file.
+Add a component to a deployment TOML configuration file from an OCI reference. The component type is auto-detected from the OCI image metadata embedded by `component push`.
 ```sh
-obelisk component add [OPTIONS] <COMPONENT_TYPE> <LOCATION> --name <NAME>
+obelisk component add [OPTIONS] --deployment <DEPLOYMENT> <LOCATION> <COMPONENT_NAME>
 ```
+
 Arguments:
-* `<COMPONENT_TYPE>` - One of `activity_wasm`, `activity_stub`, `activity_external`, `activity_js`, `workflow_wasm`, `workflow_js`, `webhook_endpoint_wasm`, `webhook_endpoint_js`
-* `<LOCATION>` - Path to WASM file, or remote location (`oci://...`, `gh://...`)
+* `<LOCATION>` - OCI reference with `oci://` prefix, e.g. `oci://docker.io/repo/image:tag`
+* `<COMPONENT_NAME>` - Component name in the target deployment TOML
+* `--deployment <FILE>` - Path to the target deployment TOML file *(required)*
 
 Options:
-* `-n, --name <NAME>` - Component name (required)
-* `-d, --deployment <FILE>` - Path to the deployment TOML file (required)
-* `--locked` - Store the component in local cache and record its `content_digest` for reproducible builds
-
-GitHub release paths are supported via `gh://` prefix. Example:
-```sh
-obelisk component add activity_wasm gh://obeli-sk/demo-stargazers@latest/activity_github.wasm --name activity_github --deployment deployment.toml --locked
-```
+* `--locked` - Pin the location with the manifest digest (e.g. `image:tag@sha256:...`)
 
 ## Obelisk Generate
 
 ### Generating extension functions
-The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given WASM component can be generated using:
+The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given component can be generated using:
 ```sh
-obelisk generate wit-extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> <OUTPUT_DIRECTORY>
+obelisk generate wit-extensions [OPTIONS] <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> <OUTPUT_DIRECTORY>
 ```
 
 Arguments:
-* `<COMPONENT_TYPE>` - One of `workflow`, `activity`, `activity_stub`. No extensions are generated for {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }}.
-* `<INPUT_WIT_DIRECTORY>` - Path to the `wit` folder, containing the target world and possibly `deps` subfolder.
-* `<OUTPUT_DIRECTORY>`  - Path to directory where extensions will be written.
+* `<COMPONENT_TYPE>` - One of `workflow`, `activity`, `activity_stub`, `webhook_endpoint`
+* `<INPUT_WIT_DIRECTORY>` - Path to the `wit` folder, containing the target world and possibly a `deps` subfolder
+* `<OUTPUT_DIRECTORY>` - Directory where folders and WIT files will be written
+
+Options:
+* `-f, --force` - Overwrite existing files in the output directory
 
 ### Generating WIT support functions
 As described in {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}, Obelisk provides types and host functions described as WIT interfaces.
 
 ```sh
-obelisk generate wit-support <COMPONENT_TYPE> <OUTPUT_DIRECTORY>
+obelisk generate wit-support [OPTIONS] <COMPONENT_TYPE> <OUTPUT_DIRECTORY>
 ```
 
 Arguments:
-* `<COMPONENT_TYPE>` - One of `workflow`, `activity`, `activity_stub`, `webhook_endpoint`.
-* `<OUTPUT_DIRECTORY>`  - Path to directory where extensions will be written.
+* `<COMPONENT_TYPE>` - One of `workflow`, `activity`, `activity_stub`, `webhook_endpoint`
+* `<OUTPUT_DIRECTORY>` - Directory where folders and WIT files will be written
+
+Options:
+* `-o, --overwrite` - Overwrite existing files in the output directory
 
 ### Generating WIT dependencies
 Generate WIT dependency folder based on activities and workflows found in the provided deployment TOML:
 
 ```sh
-obelisk generate wit-deps [OPTIONS] <OUTPUT_DIRECTORY>
+obelisk generate wit-deps [OPTIONS] --deployment <DEPLOYMENT> <OUTPUT_DIRECTORY>
 ```
 
 Arguments:
-* `<OUTPUT_DIRECTORY>` - Directory where folders and WIT files will be written to.
+* `<OUTPUT_DIRECTORY>` - Directory where folders and WIT files will be written
+* `--deployment <FILE>` - Path to the deployment TOML file *(required)*
 
 Options:
-* `-d, --deployment <FILE>` - Path to the deployment TOML file (required)
 * `-o, --overwrite` - Overwrite existing files
 
 ### Generating server configuration
 Generate a default `server.toml` configuration file:
 
 ```sh
-obelisk generate server-config [OPTIONS] [FILE]
+obelisk generate server-config [OPTIONS] [OUTPUT]
 ```
 
 Arguments:
-* `[FILE]` - Filename to write the TOML to, defaults to `server.toml`
+* `[OUTPUT]` - Filename to write the TOML to (default: `server.toml`)
 
 Options:
 * `-o, --overwrite` - Overwrite existing file
@@ -233,11 +266,11 @@ Options:
 Generate a default `deployment.toml` configuration file:
 
 ```sh
-obelisk generate deployment [OPTIONS] [FILE]
+obelisk generate deployment [OPTIONS] [OUTPUT]
 ```
 
 Arguments:
-* `[FILE]` - Filename to write the TOML to, defaults to `deployment.toml`
+* `[OUTPUT]` - Filename to write the TOML to (default: `deployment.toml`)
 
 Options:
 * `-o, --overwrite` - Overwrite existing file

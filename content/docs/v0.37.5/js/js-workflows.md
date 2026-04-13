@@ -19,8 +19,7 @@ params      = []
 return_type = "result<string, string>"
 ```
 
-Do not use `Date.now()`, `Math.random()`, or other non-deterministic sources in workflow
-code. Use `obelisk.sleep` for delays instead of `setTimeout`.
+Use `obelisk.sleep` for delays instead of `setTimeout`. `Date.now()` and `Math.random()` are safe to use — their values are recorded in the execution log on first call and replayed deterministically on recovery.
 
 ## `obelisk.call` — submit and await
 
@@ -91,9 +90,16 @@ export default function parallel() {
 `response.ok` is `true` if the execution finished in the ok variant (or a delay elapsed);
 `response.id` is the execution ID or delay ID to pass to `obelisk.getResult`.
 
-## Random values
+## Random values and time
 
-Workflow-safe random functions (deterministic on replay — values are recorded in the execution log):
+`Math.random()` and `Date.now()` are safe to use in workflow code. Their values are recorded in the execution log on first execution and replayed identically on crash-recovery, preserving determinism.
+
+```javascript
+const rand = Math.random();   // deterministic on replay
+const now  = Date.now();      // deterministic on replay
+```
+
+Obelisk also provides explicit workflow-safe helpers:
 
 ```javascript
 const n   = obelisk.randomU64(0, 100);          // u64 in [0, 100)

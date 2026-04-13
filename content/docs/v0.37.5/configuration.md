@@ -7,15 +7,15 @@ weight = 20
 
 ## Overview
 
-In Obelisk 0.36, the configuration is split into two files:
+The configuration is split into two files:
 
 - **`server.toml`** — server-level settings: API, Web UI, database, WASM, logging, HTTP servers, etc.
-- **`deployment.toml`** — component arrays only: activities, workflows, webhook endpoints.
+- **`deployment.toml`** — component arrays: activities, workflows, webhook endpoints, and cron tasks.
 
 ### Version Compatibility
 The `obelisk-version` field can be set in either file to ensure compatibility with the running Obelisk version:
 ```toml
-obelisk-version = "0.36"
+obelisk-version = "0.37"
 ```
 
 ### Built-in Defaults
@@ -212,13 +212,10 @@ All WASM components (Activities, Workflows, Webhooks) share these configuration 
 name = "component_name"                         # Required: Component identifier
 location = "path/to/wasm"                       # File path location
 location = "oci://docker.io/repo/image:tag"     # OCI registry location (note the oci:// prefix)
-location = "gh://owner/repo@v1.0.0/asset.wasm"  # GitHub release at specific tag
-location = "gh://owner/repo@latest/asset.wasm"  # GitHub release using the latest tag
-content_digest = "sha256:..."                   # Optional: WASM file hash verification. Recommended for GitHub releases.
 ```
 Value of `location` supports [path prefixes](#path-prefixes) when used as a file path.
 
-Note: The `location` field uses a single string with optional scheme prefixes (`oci://`, `gh://`). Plain paths without a prefix are treated as local file paths. The `gh://` format is `gh://owner/repo@tag/asset.wasm`, where `tag` is a release tag or `latest`.
+Note: The `location` field uses a single string. `oci://` references an OCI image; plain paths without a prefix are treated as local file paths. Both WASM and JS components can be stored in OCI registries — see `obelisk component push` to publish them.
 
 ### Common Executor Settings
 
@@ -284,7 +281,7 @@ Secrets are injected via placeholder replacement in outgoing HTTP requests. WASM
 ```toml
 [[activity_js]]
 name = "name"
-location = "path/to/source.js"          # Local path or gh://user/repo@release/file.js
+location = "path/to/source.js"          # Local path or oci://registry/image:tag
 ffqn = "namespace:package/interface@version.function"  # Required
 params = [                               # Optional, defaults to no parameters
   { name = "param1", type = "string" },
@@ -392,7 +389,7 @@ duration expires.
 ```toml
 [[workflow_js]]
 name = "name"
-location = "path/to/workflow.js"       # Local path or gh://user/repo@release/file.js
+location = "path/to/workflow.js"       # Local path or oci://registry/image:tag
 ffqn = "namespace:package/interface@version.function"  # Required
 params = [                             # Optional
   { name = "param1", type = "string" },
@@ -465,6 +462,34 @@ Routes: Define URL paths (only the path is matched):
 ##### All paths
 - `""` or `"/*"` - Match all paths
 
+
+## Cron (Periodic Tasks)
+
+Cron tasks trigger a function on a recurring schedule or once at startup. They are defined
+directly in `deployment.toml`:
+
+```toml
+[[cron]]
+name = "my-daily-job"
+ffqn = "myapp:tasks/jobs@1.0.0.daily-cleanup"
+params = '["arg1", 42]'                  # JSON array; defaults to []
+schedule = "@daily"                      # cron expression or named shorthand
+```
+
+The `schedule` field accepts standard five-field cron expressions (`"0 3 * * *"`) or one of the
+named shorthands:
+
+| Shorthand | Meaning |
+|-----------|---------|
+| `@once` | Run exactly once when the deployment becomes active |
+| `@hourly` | `0 * * * *` |
+| `@daily` | `0 0 * * *` |
+| `@weekly` | `0 0 * * 0` |
+| `@monthly` | `0 0 1 * *` |
+| `@yearly` | `0 0 1 1 *` |
+
+See {{ doc_link(title="Cron tasks", path="concepts/cron.md") }} for a full explanation of the
+scheduling model.
 
 ## Path Prefixes
 

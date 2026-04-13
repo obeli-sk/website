@@ -442,9 +442,75 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" -H content-type:applicat
 ### `GET /v1/executions/{execution-id}/logs`
 Retrieves stored logs and output streams for an execution. Logs are stored in the database when `forward_stdout`/`forward_stderr` is set to `"db"` (the default) or when using the `obelisk:log` API.
 
+**Query Parameters:**
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `show_logs` | Boolean | Include structured log entries | `true` |
+| `show_streams` | Boolean | Include stdout/stderr stream entries | `true` |
+| `show_derived` | Boolean | Include logs from all derived (child) executions | `false` |
+| `cursor` | DateTime (ISO 8601) | Pagination cursor | start of time |
+| `length` | Integer | Max entries to return | system default |
+| `including_cursor` | Boolean | Include the entry at `cursor` | `false` |
+| `direction` | String | `older` or `newer` | `older` |
+
 #### Example request
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs" -H accept:application/json
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_derived=true" -H accept:application/json
+```
+
+---
+
+### `GET /v1/executions/{execution-id}/backtrace`
+Returns the WASM backtrace for a trapped or failed execution, including call frames and optional source symbol information.
+
+**Query Parameters:**
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `version` | String | Which backtrace to retrieve: `"first"`, `"last"`, or a version number | `"last"` |
+
+#### Example request
+```sh
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/json
+```
+```json
+{
+  "execution_id": "E_01KDQR2TGJR2XWEDM4CS6E4TF1",
+  "component_id": "workflow:my_workflow:sha256:abc123...",
+  "version_min_including": 1,
+  "version_max_excluding": 3,
+  "wasm_backtrace": {
+    "frames": [
+      {
+        "module": "my_workflow",
+        "func_name": "panic_handler",
+        "symbols": [
+          { "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+### `GET /v1/executions/{execution-id}/backtrace/source`
+Retrieves the source file content referenced by a backtrace frame. Requires the WASM component to have been compiled with embedded DWARF debug info.
+
+**Query Parameters:**
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `file` | String | File path to retrieve (suffix matching supported) | required |
+| `version` | String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
+
+**Responses:**
+- `200 OK`: Source file content as a string.
+- `404 Not Found`: Source file not found in the component.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
 ```
 
 ---
@@ -545,6 +611,87 @@ curl "127.1:5005/v1/deployments" -H accept:application/json
     "finished": 6
   }
 ]
+```
+
+---
+
+### `GET /v1/deployments/{deployment-id}`
+Returns the full details of a specific deployment, including its stored configuration JSON.
+
+**Path Parameters:**
+- `deployment-id`: The deployment ID.
+
+**Responses:**
+- `200 OK`: Returns a `DeploymentRecord` object.
+- `404 Not Found`: Deployment not found.
+
+#### Example request
+```sh
+curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:application/json
+```
+```json
+{
+  "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
+  "status": "active",
+  "created_at": "2026-03-31T10:04:01.736281506Z",
+  "last_active_at": "2026-03-31T10:04:01.736491095Z",
+  "config_json": "{...}"
+}
+```
+
+---
+
+### `POST /v1/deployments`
+Submits a new deployment configuration and stores it in the database. Returns the new deployment ID. The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
+
+**Request Body (JSON):**
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `config_json` | String | Deployment configuration encoded as a JSON string |
+| `verify` | Boolean | If `true`, verify all environment variables before persisting (default: `false`) |
+
+**Responses:**
+- `200 OK`: Deployment submitted; returns the new deployment ID string.
+- `400 Bad Request`: Invalid configuration.
+
+#### Example request
+```sh
+CONFIG=$(cat deployment.toml | obelisk generate deployment-json -)
+curl "127.1:5005/v1/deployments" -H content-type:application/json -X POST -d \
+  "{\"config_json\": $CONFIG, \"verify\": false}"
+```
+
+---
+
+### `PUT /v1/deployments/{deployment-id}/switch`
+Activates a previously submitted deployment. Supports hot-redeploy (apply without a server restart) or enqueue (activate on next restart).
+
+**Path Parameters:**
+- `deployment-id`: The deployment ID to switch to.
+
+**Request Body (JSON):**
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `hot_redeploy` | Boolean | If `true`, apply immediately without restarting (default: `false`) |
+| `verify` | Boolean | If `true`, verify environment variables before switching (default: `false`) |
+
+**Responses:**
+- `200 OK`: Returns `"switched"` (hot-redeployed) or `"restart_required"` (enqueued for next restart).
+- `404 Not Found`: Deployment not found.
+- `400 Bad Request`: Switch or validation failed.
+
+#### Example request
+```sh
+# Enqueue a deployment (activates on next restart)
+curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
+  -H content-type:application/json -X PUT -d '{"hot_redeploy": false}'
+
+# Hot-redeploy immediately
+curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
+  -H content-type:application/json -X PUT -d '{"hot_redeploy": true}'
+```
+```json
+"switched"
 ```
 
 ---

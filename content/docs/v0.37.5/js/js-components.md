@@ -63,6 +63,22 @@ and JSON (validated against obelisk 0.36.1):
 
 Note: kebab-case WIT identifiers become snake_case in JSON keys and values.
 
+## OCI distribution
+
+JS components can be pushed to and pulled from OCI registries just like WASM components.
+Obelisk embeds component metadata (type, allowed hosts, env vars, secrets, WIT config) in the
+OCI image manifest, so `component add` can reconstruct the deployment entry automatically:
+
+```sh
+# Push a JS webhook to an OCI registry
+obelisk component push --name my_webhook --deployment deployment.toml \
+  docker.io/myorg/my-webhook:v1.0.0
+
+# Add the component from OCI (type is auto-detected from manifest metadata)
+obelisk component add oci://docker.io/myorg/my-webhook:v1.0.0 \
+  --name my_webhook --deployment deployment.toml --locked
+```
+
 ## Inline WIT types
 
 In `deployment.toml`, `params` types and `return_type` accept any WIT type inline —

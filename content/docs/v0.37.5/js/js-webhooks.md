@@ -44,6 +44,27 @@ export default function handle(request) {
 | `request.method` | HTTP method (`"GET"`, `"POST"`, …) |
 | `request.headers` | `Headers` object |
 | `request.headers.get(name)` | Returns header value or `null`; multiple values joined by `", "` |
+| `await request.text()` | Read the request body as a string |
+| `await request.json()` | Parse the request body as JSON |
+| `await request.formData()` | Parse the request body as form data |
+
+### Reading the request body
+
+```javascript
+export default async function handle(request) {
+    // As plain text
+    const text = await request.text();
+
+    // As JSON
+    const data = await request.json();
+
+    // As form data (application/x-www-form-urlencoded or multipart/form-data)
+    const form = await request.formData();
+    const field = form.get("field-name");
+
+    return Response.json({ received: data });
+}
+```
 
 ## Response construction
 
@@ -104,7 +125,7 @@ an execution ID, then pass it to `obelisk.schedule`:
 
 ```javascript
 export default function handle(request) {
-    const execId = obelisk.generateExecutionId();
+    const execId = obelisk.executionIdGenerate();
     obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
     // optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
     return new Response(execId, { status: 202 });
@@ -122,11 +143,19 @@ const result = obelisk.tryGet(execId);
 // { ok: value } or { err: value } when done
 ```
 
+Get the execution ID of the current webhook invocation:
+
+```javascript
+const myExecId = obelisk.executionIdCurrent();
+// Returns the execution ID string for this webhook handler invocation
+```
+
 **Webhook scheduling API:**
 
 | Call | Returns | Description |
 |------|---------|-------------|
-| `obelisk.generateExecutionId()` | `executionId` (string) | Generate a unique execution ID |
+| `obelisk.executionIdGenerate()` | `executionId` (string) | Generate a unique execution ID |
+| `obelisk.executionIdCurrent()` | `executionId` (string) | Get the execution ID of the current webhook invocation |
 | `obelisk.schedule(execId, ffqn, args)` | — | Schedule a top-level execution immediately |
 | `obelisk.schedule(execId, ffqn, args, delay)` | — | Schedule at a delay (e.g. `{ seconds: 60 }`) |
 | `obelisk.getStatus(execId)` | `{ status: string }` | Get the current status of an execution |
