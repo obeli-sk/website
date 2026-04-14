@@ -287,6 +287,9 @@ without losing progress or duplicating work.
 - **Understand Rust components:** {{ doc_link(title="Rust Components", path="wasm/rust-components.md") }}
   covers WIT worlds, `wit-bindgen` setup, and `cargo generate` templates.
 
+- **WIT types and JSON encoding:** {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}
+  — primitive and compound types, function syntax, and how values map to JSON.
+
 - **Learn the concepts:**
   {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }},
   {{ doc_link(title="Extensions", path="concepts/extensions.md") }},

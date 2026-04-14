@@ -57,7 +57,9 @@ world any {
 ```
 
 See {{ doc_link(title="Runtime support", path="concepts/runtime-support.md") }} for the full
-list of importable Obelisk interfaces.
+list of importable Obelisk interfaces, and
+{{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }} for the type and
+function syntax reference.
 
 ### Workflow
 

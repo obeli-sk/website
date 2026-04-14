@@ -8,6 +8,7 @@ Practical patterns for building JS components — activities, workflows, and web
 For API reference see {{ doc_link(title="JS Activities", path="js/js-activities.md") }},
 {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }}, and
 {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }}.
+For WIT types and JSON encoding see {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}.
 
 ## Ready made activities
 Repository [obeli-sk/components](https://github.com/obeli-sk/components/) contains ready-made components that

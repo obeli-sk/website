@@ -7,7 +7,8 @@ weight = 23
 Activities are the units of side-effectful work. They run inside a WASM sandbox, are retried
 automatically on failure or timeout, and must be **idempotent** — Obelisk may execute them
 more than once. See {{ doc_link(title="Activities", path="concepts/activities/_index.md") }}
-for the general model.
+for the general model and {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}
+for the full type and JSON encoding reference.
 
 ```toml
 [[activity_js]]
