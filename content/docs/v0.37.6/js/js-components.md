@@ -63,6 +63,19 @@ and JSON (validated against obelisk 0.36.1):
 
 Note: kebab-case WIT identifiers become snake_case in JSON keys and values.
 
+## Inline WIT types
+
+In `deployment.toml`, `params` types and `return_type` accept any WIT type inline —
+including `record`, `variant`, `enum`, and `flags`, which standard WIT requires to be
+declared separately. Obelisk extracts them and assigns generated names (`t0`, `t1`, …):
+
+```toml
+params = [
+  { name = "point", type = "record { x: u32, y: u32 }" },
+]
+return_type = "result<variant { found(string), not-found }>"
+```
+
 ## OCI distribution
 
 JS components can be pushed to and pulled from OCI registries just like WASM components.
@@ -77,17 +90,4 @@ obelisk component push --name my_webhook --deployment deployment.toml \
 # Add the component from OCI (type is auto-detected from manifest metadata)
 obelisk component add oci://docker.io/myorg/my-webhook:v1.0.0 \
   --name my_webhook --deployment deployment.toml --locked
-```
-
-## Inline WIT types
-
-In `deployment.toml`, `params` types and `return_type` accept any WIT type inline —
-including `record`, `variant`, `enum`, and `flags`, which standard WIT requires to be
-declared separately. Obelisk extracts them and assigns generated names (`t0`, `t1`, …):
-
-```toml
-params = [
-  { name = "point", type = "record { x: u32, y: u32 }" },
-]
-return_type = "result<variant { found(string), not-found }>"
 ```

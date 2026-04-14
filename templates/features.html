@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Features — Obelisk{% endblock %}
+
+{% block meta_description %}
+<meta name="description"
+    content="Full list of Obelisk features: JavaScript & WASM components, durable workflows, crash recovery, hot redeploy, cron, Web UI debugger, and more." />
+{% endblock meta_description %}
+
+{% block content %}
+<div class="container">
+    <section class="features-page">
+        <h1 class="features-page-title">Features</h1>
+
+        <div class="new-in-banner">
+            <span class="new-in-label">New in 0.37</span>
+            <ul class="new-in-list">
+                <li><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">JavaScript components</a> —
+                    activities, workflows, and webhooks as plain <code>.js</code> files</li>
+                <li><a href="{{ get_url(path='@/docs/latest/concepts/deployments.md') }}">Deployments</a> — versioned
+                    config with hot redeploy, no server restart needed</li>
+                <li><a href="{{ get_url(path='@/docs/latest/concepts/cron.md') }}">Cron scheduling</a> — built-in,
+                    crash-safe cron tasks via <code>deployment.toml</code></li>
+                <li>OCI distribution — push/pull JS and WASM components with self-describing manifests</li>
+                <li>JS step-through debugger — stack traces on every execution log event, source visible in Web UI</li>
+            </ul>
+            <a href="{{ get_url(path='@/blog/2026-04-13-announcing-obelisk-0-37.md') }}" class="new-in-link">Read the
+                announcement →</a>
+        </div>
+
+        <div class="features-section">
+            <h2>JavaScript Support</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>No build step</h3>
+                    <p>Plain <code>.js</code> files. No bundler, no compiler, no toolchain. Point
+                        <code>deployment.toml</code> at the file and run.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-components.md') }}">Component
+                            types</a>
+                    </h3>
+                    <p><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Activities</a>, <a
+                            href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Workflows</a>, and <a
+                            href="{{ get_url(path='@/docs/latest/js/js-webhooks.md') }}">Webhook endpoints</a> — all in
+                        JavaScript.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Determinism without restrictions</h3>
+                    <p><code>Math.random()</code> and <code>Date.now()</code> are safe in workflow code. Values are
+                        recorded on first call and replayed identically on crash recovery.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Fine-grained sandbox</h3>
+                    <p>Outbound HTTP restricted to explicitly listed hosts and methods. Environment variables only
+                        expose declared keys. Token-based secrets injected without appearing in code, logs or database.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3>Step-through debugger</h3>
+                    <p>JS stack traces attached to every execution log event — submits, joins, sleeps. Step through any
+                        execution in the Web UI and see the exact source line.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2>Resilience</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Crash recovery</h3>
+                    <p>Every activity call, sleep, and result is written to the execution log. Server crash or restart?
+                        Workflows resume from the last completed step.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Workflow replay</h3>
+                    <p>Re-run a workflow against its recorded event history to verify a new version produces identical
+                        results before deploying to production.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Auto-retry</h3>
+                    <p>Activities are retried automatically on timeout, trap, or error. Configure per-component retry
+                        policy and lock expiry in <code>deployment.toml</code>.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Permanent errors</h3>
+                    <p>Activities can signal unrecoverable failures (invalid input, auth errors) to skip all remaining
+                        retries immediately.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Pause &amp; resume</h3>
+                    <p>Pause any execution via the REST API or Web UI; it stops after its current step and resumes on
+                        demand.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2>Workflows &amp; Concurrency</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/workflows/join-sets.md') }}">Join sets</a></h3>
+                    <p>Submit multiple child executions in parallel and await them individually or all at once —
+                        structured concurrency built into the model. Unawaited activities and delays are automatically
+                        cancelled.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Persistent sleep</h3>
+                    <p><code>obelisk.sleep()</code> is durable — its position is saved to the execution log. Survive a
+                        server restart mid-sleep with no progress lost.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Saga pattern</h3>
+                    <p>Nest workflows to guarantee cleanup runs even after a crash: the outer workflow catches inner
+                        failures and always executes <a
+                            href="{{ get_url(path='@/docs/latest/js/getting-started-fly-agent.md')}}">
+                            compensation logic</a>.</p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/cron.md') }}">Cron scheduling</a></h3>
+                    <p>Declare recurring tasks in <code>deployment.toml</code>. Standard five-field expressions, named
+                        shorthands (<code>@daily</code>, <code>@hourly</code>), or <code>@once</code> for one-time
+                        migrations.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2>Deployments &amp; Distribution</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/deployments.md') }}">Versioned deployments</a>
+                    </h3>
+                    <p>Every <code>obelisk deployment apply</code> stores a versioned snapshot of your full config.
+                        Executions carry a reference to the deployment that ran them.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Hot redeploy</h3>
+                    <p>Update components without restarting the server. Activity workers pick up the new version
+                        immediately; in-flight workflows continue on the old digest until explicitly upgraded.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>OCI distribution</h3>
+                    <p>Push and pull JS or WASM components from any OCI registry. Config — allowed hosts, env vars,
+                        secrets, WIT types — is embedded in the manifest so <code>component add</code> restores
+                        everything automatically.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2>Developer Experience</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Web UI</h3>
+                    <p>Visual trace view with color-coded join sets and rail lines. Step-through debugger. Autoload
+                        child executions. Filter by FFQN or execution ID. Pause/resume controls.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Persistent logs</h3>
+                    <p>Structured log output (five levels) stored in the database and queryable at any time via the REST
+                        API or Web UI — even after the execution is long finished.</p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/programmatic-access.md') }}">REST API</a></h3>
+                    <p>Full HTTP API with OpenAPI schema. Submit executions, inspect state, fetch logs, replay, pause,
+                        cancel — everything scriptable with plain <code>curl</code>.</p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/cli.md') }}">CLI</a></h3>
+                    <p><code>obelisk execution submit/list/logs</code>, <code>obelisk component add/push/inspect</code>,
+                        <code>obelisk deployment apply/list</code>. Everything from the terminal.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2>Architecture</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>WASM &amp; WIT</h3>
+                    <p>Built on the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM
+                            Component Model</a>. Components are interoperable, sandboxed, and language-agnostic. Schema
+                        defined in WIT IDL.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Single binary</h3>
+                    <p>One process. No brokers, no sidecars, no orchestration layer. Embedded SQLite for single-node;
+                        Postgres for multi-node and high availability.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Open source (AGPL)</h3>
+                    <p>Source at <a href="https://github.com/obeli-sk/obelisk"
+                            target="_blank">github.com/obeli-sk/obelisk</a>, written in Rust.</p>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+{% endblock %}
