@@ -22,6 +22,9 @@ env_vars = [{ key = "DB_URL", value = "..." }]
 [[webhook_endpoint_js.allowed_host]]
 pattern = "https://api.example.com"
 methods = ["GET"]
+[webhook_endpoint_js.allowed_host.secrets]
+env_vars = ["API_KEY"]
+replace_in = ["headers"]
 ```
 
 Route path segments starting with `:` are captured and exposed as `process.env` entries
@@ -136,7 +139,7 @@ Check or retrieve a previously scheduled or running execution:
 
 ```javascript
 const status = obelisk.getStatus(execId);
-// e.g. { status: "pendingAt" } or { status: "finished" }
+// e.g. { status: "pendingAt"|"locked"|"paused"|"blockedByJoinSet" } or { status: "finished", finishedStatus:"ok"|"err"|"executionFailure" }
 
 const result = obelisk.tryGet(execId);
 // { pending: true } if not finished yet
@@ -150,15 +153,17 @@ const myExecId = obelisk.executionIdCurrent();
 // Returns the execution ID string for this webhook handler invocation
 ```
 
-**Webhook scheduling API:**
+## Webhook API
 
 | Call | Returns | Description |
 |------|---------|-------------|
+| `obelisk.call(ffqn, argArray)` | returns ok value, throws error value |
 | `obelisk.executionIdGenerate()` | `executionId` (string) | Generate a unique execution ID |
 | `obelisk.executionIdCurrent()` | `executionId` (string) | Get the execution ID of the current webhook invocation |
-| `obelisk.schedule(execId, ffqn, args)` | — | Schedule a top-level execution immediately |
-| `obelisk.schedule(execId, ffqn, args, delay)` | — | Schedule at a delay (e.g. `{ seconds: 60 }`) |
-| `obelisk.getStatus(execId)` | `{ status: string }` | Get the current status of an execution |
+| `obelisk.schedule(execId, ffqn, argArray)` | — | Schedule a top-level execution immediately |
+| `obelisk.schedule(execId, ffqn, argArray, delay)` | — | Schedule at a delay (e.g. `{ seconds: 60 }`) |
+| `obelisk.getStatus(execId)` | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
+| `obelisk.get(execId)`    | `{ ok/err: value }` | Blocking: waits until execution finishes |
 | `obelisk.tryGet(execId)` | `{ pending: true }` or `{ ok/err: value }` | Non-blocking result fetch |
 
 ## Available globals
@@ -166,39 +171,16 @@ const myExecId = obelisk.executionIdCurrent();
 Same as {{ doc_link(title="JS activities", path="js/js-activities.md") }}:
 `process.env`, `fetch`, `crypto.subtle`, `console`, `TextEncoder`/`TextDecoder`.
 
-## Examples
+## Fetch example
 
-**Read a request header:**
-```javascript
-export default function handle(request) {
-    const value = request.headers.get("x-custom");
-    return Response.json(value !== null ? value.split(", ") : []);
-}
-```
-
-**Read environment variable:**
-```javascript
-export default function handle(_request) {
-    const value = process.env["API_KEY"];
-    if (value === undefined) return new Response("missing config", { status: 500 });
-    return new Response(value, { status: 200 });
-}
-```
-
-**Proxy an outbound fetch:**
 ```javascript
 export default async function handle(request) {
+    const someHeader = request.headers.get("x-custom");
+    const api_key = process.env["API_KEY"]; // JS code only gets a short-lived token, transformed on outbound HTTP request.
     // Requires [[webhook_endpoint_js.allowed_host]] for the target
     const resp = await fetch("https://api.example.com/data", {
-        headers: { "accept": "application/json" }
+        headers: { "accept": "application/json", "authorization": `Bearer ${api_key}` }
     });
     return resp;
-}
-```
-
-**Forward request headers to a fetch:**
-```javascript
-export default async function handle(request) {
-    return fetch("https://api.example.com/data", { headers: request.headers });
 }
 ```
