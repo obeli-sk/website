@@ -36,15 +36,15 @@
     </article>
     {% endfor %}
 
-    {# Add pagination links if paginate_by is set in _index.md #}
-    {% if section.pages and section.paginate_by %}
+    {# Add pagination links if there is more than one page #}
+    {% if paginator.number_pagers > 1 %}
     <div class="pagination">
         {% if paginator.previous %}
-        <a href="{{ paginator.previous.permalink | safe }}">Previous</a>
+        <a href="{{ paginator.previous | safe }}">Previous</a>
         {% endif %}
-        <span>Page {{ paginator.current.index }} of {{ paginator.number_pages }}</span>
+        <span>Page {{ paginator.current_index }} of {{ paginator.number_pagers }}</span>
         {% if paginator.next %}
-        <a href="{{ paginator.next.permalink | safe }}">Next</a>
+        <a href="{{ paginator.next | safe }}">Next</a>
         {% endif %}
     </div>
     {% endif %}
