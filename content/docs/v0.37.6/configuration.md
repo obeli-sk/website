@@ -226,9 +226,13 @@ exec.tick_sleep.milliseconds = 200             # Executor sleeps the specified d
 exec.locking_strategy = "by_component_digest"  # Default. One of "by_component_digest"|"by_ffqns"
 ```
 
-The default `by_component_digest` strategy locks executions to the exact WASM component version
+Workflows use `by_component_digest` strategy, which locks executions to the exact WASM component version
 (by `sha256` digest) that was available when the execution was first submitted.
 An execution can be upgraded to use a different digest using the upgrade API endpoint or gRPC RPC.
+The RPC will by default attempt to replay the execution log to avoid getting stuck with "nondeterminism detected" error.
+
+Activities use `by_ffqn` strategy. Since activities are restarted and not replayed, execution
+will be swapped to the new code on redeploy transparently.
 
 ## Activities
 

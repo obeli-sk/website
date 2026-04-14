@@ -134,6 +134,7 @@ return_type = "result<variant { found(string), not-found }>"
 | `option<T>`                       | Optional value                           |
 | `result`                          | Success/failure with no payloads         |
 | `result<T>`                       | Success with value, failure with no payload |
+| `result<_, E>`                    | Success with no payload, failure with error  |
 | `result<T, E>`                    | Success with value, failure with error   |
 | `list<T>`                         | Variable-length sequence                 |
 | `tuple<T1, T2, ...>`              | Fixed-length heterogeneous sequence      |
