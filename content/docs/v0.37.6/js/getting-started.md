@@ -126,11 +126,11 @@ export default function handle(request) {
 
 `deployment.toml` wires the components together. Each entry assigns an
 {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} (`package:namespace/interface.function`)
-and {{ doc_link(title="WIT types", path="concepts/wit-types.md") }} to the JS function —
+and {{ doc_link(title="WIT types", path="concepts/wit-reference.md") }} to the JS function —
 Obelisk synthesizes the interface at startup, so no WIT files are needed. The FFQN is the
 address used in `obelisk.call`; the JS function name maps to the function part of it. See
-{{ doc_link(title="JS components", path="js/js-components.md") }} for the JSON encoding
-reference and links to the per-type pages (activities, workflows, webhooks).
+{{ doc_link(title="JS components", path="js/js-components.md") }} for links to the per-type
+pages (activities, workflows, webhooks) and JSON encoding.
 
 ```toml
 [[activity_js]]
