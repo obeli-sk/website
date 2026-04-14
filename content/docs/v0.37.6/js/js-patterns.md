@@ -9,6 +9,12 @@ For API reference see {{ doc_link(title="JS Activities", path="js/js-activities.
 {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }}, and
 {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }}.
 
+## Ready made activities
+Repository [obeli-sk/components](https://github.com/obeli-sk/components/) contains ready-made components that
+are published to Docker Hub. They can be added to a `deployment.toml` either by copying
+`obelisk-oci.toml` from their respective folder or by using `obelisk component add`
+{{ doc_link(title="CLI", path="cli.md#adding-a-component-to-the-deployment-configuration") }}.
+
 ## Activities: Variant errors — permanent vs retryable
 
 An activity's `return_type` can use a `variant` for the error arm instead of a plain `string`.
