@@ -17,6 +17,7 @@
             zola
             nixpkgs-fmt
             wrangler
+            nodePackages.prettier
           ];
 
         };

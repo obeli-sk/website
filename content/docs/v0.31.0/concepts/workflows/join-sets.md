@@ -4,43 +4,58 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Join sets are a core mechanism for handling {{doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} and asynchronous operations in Obelisk workflows.
-A join set represents a collection of pending operations (like activity calls or spawned child workflows).
-A workflow can interact with a join set in the following ways:
+Join sets are a core mechanism for handling
+{{doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} and
+asynchronous operations in Obelisk workflows. A join set represents a collection of pending
+operations (like activity calls or spawned child workflows). A workflow can interact with a join set
+in the following ways:
 
 - Create a Join Set: A workflow can create zero to many join sets, each is initially empty.
 
-- Add Operations to a Join Set: Workflow can spawn child executions (workflow, activity) and {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }}.
+- Add Operations to a Join Set: Workflow can spawn child executions (workflow, activity) and
+  {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }}.
 
-- Await Results: The workflow can use the `-await-next` {{ doc_link(title="extension", path="concepts/extensions.md") }} or
-`join-next` {{ doc_link(title="support function", path="concepts/runtime-support.md") }} to wait for the next operation in that set to complete.
+- Await Results: The workflow can use the `-await-next`
+  {{ doc_link(title="extension", path="concepts/extensions.md") }} or `join-next`
+  {{ doc_link(title="support function", path="concepts/runtime-support.md") }} to wait for the next
+  operation in that set to complete.
 
-- Close Join Set: All unawaited activities and delay requests are cancelled, child workflows are awaited.
+- Close Join Set: All unawaited activities and delay requests are cancelled, child workflows are
+  awaited.
 
 ## Defining Features
 
-* **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by when the underlying activities or workflows finish).
-The `await-next` call returns results in the order they become available. This does not break the determinism, as responses maintain their own ordering.
+- **Completion Order**: Operations in a join set are completed in an arbitrary order (determined by
+  when the underlying activities or workflows finish). The `await-next` call returns results in the
+  order they become available. This does not break the determinism, as responses maintain their own
+  ordering.
 
-* **Persistence**: The state of join sets is persisted in the execution log, ensuring that workflows can resume correctly after failures.
+- **Persistence**: The state of join sets is persisted in the execution log, ensuring that workflows
+  can resume correctly after failures.
 
 ## Join Set Kinds
+
 There are three kinds of join sets:
 
-* One-off - created by the Obelisk runtime when the workflow calls an activity or a child workflow directly.
-* Generated - created by the workflow using the `join-set-create` function.
-* Named - created by the workflow using the `join-set-create-named` function.
+- One-off - created by the Obelisk runtime when the workflow calls an activity or a child workflow
+  directly.
+- Generated - created by the workflow using the `join-set-create` function.
+- Named - created by the workflow using the `join-set-create-named` function.
 
 ### Allowed Named Join Set Charset
-The name of a join set is limited to the following charset: Alphanumeric characters (both upper and lower case), and these special characters: `-/`
+
+The name of a join set is limited to the following charset: Alphanumeric characters (both upper and
+lower case), and these special characters: `-/`
 
 See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id") }} for details.
 
 ## API
+
 The API for join sets is as defined in
 {{ github(title="`workflow-support.wit`", path="wit/obelisk_workflow%402.0.0/workflow-support%402.0.0.wit") }}.
 
 To create a join set in Rust, use
+
 ```rust
 let named = join_set_create_named("some-name").unwrap(); // See allowed join set characters
 let generated = join_set_create()
@@ -48,8 +63,8 @@ let generated = join_set_create()
 
 ### One-off (implicit) Join Set
 
-The following example uses join sets implicitly by calling the child executions directly.
-Each call marked as 1-5 will create a one-off join set and await the result.
+The following example uses join sets implicitly by calling the child executions directly. Each call
+marked as 1-5 will create a one-off join set and await the result.
 
 ```rust
 fn star_added(login: String, repo: String) -> Result<(), String> {
@@ -70,9 +85,11 @@ fn star_added(login: String, repo: String) -> Result<(), String> {
 ```
 
 ### Named and Generated Join Set
-The implicit form has one problem: the workflow will not
-be able to handle the child execution failure due to timeouts or errors. This would lead to an unhandled child execution error that
-will mark the whole execution as failed. This is the reason why `-await-next` returns a result with the following error:
+
+The implicit form has one problem: the workflow will not be able to handle the child execution
+failure due to timeouts or errors. This would lead to an unhandled child execution error that will
+mark the whole execution as failed. This is the reason why `-await-next` returns a result with the
+following error:
 
 ```wit
 /// Error that is thrown by `-await-next` extension functions.
@@ -86,7 +103,8 @@ variant await-next-extension-error {
 }
 ```
 
-The following example creates two named join sets and uses them to parallelize `account-info` and `get-settings-json` activities.
+The following example creates two named join sets and uses them to parallelize `account-info` and
+`get-settings-json` activities.
 
 ```rust
 fn star_added_parallel(login: String, repo: String) -> Result<(), String> {
@@ -116,16 +134,22 @@ fn star_added_parallel(login: String, repo: String) -> Result<(), String> {
     Ok(())
 }
 ```
-The only difference between a named and generated join set is the way how it is created.
-The example above could be slightly simplified by switching to the join sets with generated names:
+
+The only difference between a named and generated join set is the way how it is created. The example
+above could be slightly simplified by switching to the join sets with generated names:
+
 ```rust
 let join_set_info = join_set_create();
 ```
-One benefit of naming join sets is that they can be used to group child executions that are logically related, which can be useful for debugging and monitoring.
+
+One benefit of naming join sets is that they can be used to group child executions that are
+logically related, which can be useful for debugging and monitoring.
 
 ## Homogenous Join Sets
-When a join set contains only child executions of the same function, it is called homogenous. It is safe to call `-await-next`
-until all submitted executions are awaited. Calling `-await-next` more times will result in `await-next-extension-error::all-processed` error.
+
+When a join set contains only child executions of the same function, it is called homogenous. It is
+safe to call `-await-next` until all submitted executions are awaited. Calling `-await-next` more
+times will result in `await-next-extension-error::all-processed` error.
 
 ```rust
 let join_set = join_set_create();
@@ -140,10 +164,12 @@ for _ in 0..9 {
 ```
 
 ## Heterogenous Join Sets
-When a join set contains child executions of multiple functions, or delay requests, it is called heterogenous.
-It is generally not safe to call `-await-next` extension as the resolved response might not belong to the awaited function.
-Therefore one must use `join-next` workflow {{ doc_link(title="support function", path="concepts/runtime-support.md") }}
-together with `-get` extension function based on the returned `response-id`.
+
+When a join set contains child executions of multiple functions, or delay requests, it is called
+heterogenous. It is generally not safe to call `-await-next` extension as the resolved response
+might not belong to the awaited function. Therefore one must use `join-next` workflow
+{{ doc_link(title="support function", path="concepts/runtime-support.md") }} together with `-get`
+extension function based on the returned `response-id`.
 
 ```rust
 let join_set = join_set_create();
@@ -175,15 +201,22 @@ match join_next(&join_set) {
 
 ## Join Set Close
 
-Join sets are closed either explicitly using `join_set_close` support function, or automatically when a they go out of scope or when workflow execution finishes.
-During this process, all child executions that the parent execution submitted but did not await for will be automatically processed as follows:
-* Child activities and delay requests are cancelled
-* Child workflows are awaited
+Join sets are closed either explicitly using `join_set_close` support function, or automatically
+when a they go out of scope or when workflow execution finishes. During this process, all child
+executions that the parent execution submitted but did not await for will be automatically processed
+as follows:
 
-The parent workflow will be marked as finished only when all unattended child executions are finished.
+- Child activities and delay requests are cancelled
+- Child workflows are awaited
+
+The parent workflow will be marked as finished only when all unattended child executions are
+finished.
 
 ### Example - Automaitcally awaiting child workflows
-The following example creates a named join set for each user fetched from the database and uses it to parallelize the execution of the `star_added` workflow.
+
+The following example creates a named join set for each user fetched from the database and uses it
+to parallelize the execution of the `star_added` workflow.
+
 ```rust
 fn backfill_parallel(repo: String) -> Result<(), String> {
     let page_size = 5;
@@ -215,11 +248,12 @@ fn backfill_parallel(repo: String) -> Result<(), String> {
 }
 ```
 
-Note that there is no corresponding `await-next` call in this example, however join set close blocks untill all child workflows finish.
-It is advised to always await the result of submitted child workflows explicitly.
+Note that there is no corresponding `await-next` call in this example, however join set close blocks
+untill all child workflows finish. It is advised to always await the result of submitted child
+workflows explicitly.
 
-The scoped Join Set Close adds back-pressure - the first batch of five child executions are submitted,
-then implicitly awaited before the while loop begins again:
+The scoped Join Set Close adds back-pressure - the first batch of five child executions are
+submitted, then implicitly awaited before the while loop begins again:
 
-<img src="{{ get_url(path="stargazers-backfill-parallel.png") }}" />
-Lines `o1_1` and `o2_1` are one-off join sets containing the `list-stargazers` activity.
+<img src="{{ get_url(path="stargazers-backfill-parallel.png") }}" /> Lines `o1_1` and `o2_1` are
+one-off join sets containing the `list-stargazers` activity.

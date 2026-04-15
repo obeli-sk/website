@@ -14,44 +14,52 @@ obelisk server run
 
 Following optional options can be provided:
 
-* `--clean-sqlite-directory` - Clean the sqlite database directory
-* `--clean-cache` - Clean the codegen and OCI cache directories
-* `--clean-codegen-cache` - Clean the codegen cache directory
-* `-c, --config <CONFIG>` - Path to the TOML configuration
+- `--clean-sqlite-directory` - Clean the sqlite database directory
+- `--clean-cache` - Clean the codegen and OCI cache directories
+- `--clean-codegen-cache` - Clean the codegen cache directory
+- `-c, --config <CONFIG>` - Path to the TOML configuration
 
-If the `-c` switch is not provided, Obelisk attempts to find the TOML configuration automatically in the following paths:
+If the `-c` switch is not provided, Obelisk attempts to find the TOML configuration automatically in
+the following paths:
+
 1. `obelisk.toml` in the current directory
-2. `$CONFIG_DIR/obelisk/obelisk.toml` - See {{ doc_link(title="Path Prefixes", path="configuration.md#path-prefixes") }}
+2. `$CONFIG_DIR/obelisk/obelisk.toml` - See
+   {{ doc_link(title="Path Prefixes", path="configuration.md#path-prefixes") }}
 3. `/etc/obelisk/obelisk.toml`
 
 ### Verifying the Server Configuration
 
 Instead of running the server one might wish just to verify the TOML configuration. This includes:
-* downloading artifacts from OCI registries
-* compiling WASM into the `codegen_cache` directory
-* verifying that all imports are satisfied
-* verifying that environment variables required by activities are present (can be disabled)
+
+- downloading artifacts from OCI registries
+- compiling WASM into the `codegen_cache` directory
+- verifying that all imports are satisfied
+- verifying that environment variables required by activities are present (can be disabled)
 
 ```sh
 obelisk server verify [OPTIONS]
 ```
 
 Following optional options can be provided:
-* `--clean-cache` - Clean the codegen and OCI cache directories
-* `--clean-codegen-cache` - Clean the codegen cache
-* `-c, --config <CONFIG>` - Path to the TOML configuration
-* `-i, --ignore-missing-env-vars` -Do not verify existence of environment variables
+
+- `--clean-cache` - Clean the codegen and OCI cache directories
+- `--clean-codegen-cache` - Clean the codegen cache
+- `-c, --config <CONFIG>` - Path to the TOML configuration
+- `-i, --ignore-missing-env-vars` -Do not verify existence of environment variables
 
 ## Obelisk Client
 
 ### Submitting an execution
+
 ```sh
 obelisk client execution submit [OPTIONS] <FUNCTION> [PARAMETERS]
 ```
 
 Arguments:
-*  `<FUNCTION>` - Function in the {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }}
-*  `[PARAMETERS]`
+
+- `<FUNCTION>` - Function in the
+  {{ doc_link(title="fully qualified format", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }}
+- `[PARAMETERS]`
 
 Accepted Parameter Formats:
 
@@ -64,69 +72,97 @@ Accepted Parameter Formats:
 - For functions with no parameters: `[]` (JSON array variant) or no arguments.
 
 Options:
-* `-f, --follow` - Follow the stream of events until the execution finishes
-* `--no-reconnect` - Do not attempt to reconnect on connection error while following the status stream
-* `--json` - Print output as JSON
+
+- `-f, --follow` - Follow the stream of events until the execution finishes
+- `--no-reconnect` - Do not attempt to reconnect on connection error while following the status
+  stream
+- `--json` - Print output as JSON
 
 ### Getting the current execution state
+
 ```sh
 obelisk client execution get [OPTIONS] <EXECUTION_ID>
 ```
+
 Same as with the `submit` command, the execution can be followed until it finishes:
-* `-f, --follow` - Follow the status stream until the execution finishes
-* `--no-reconnect` - Do not attempt to reconnect on connection error while following the status stream
+
+- `-f, --follow` - Follow the status stream until the execution finishes
+- `--no-reconnect` - Do not attempt to reconnect on connection error while following the status
+  stream
 
 ### Providing the result of a stubbed activity
+
 ```sh
 obelisk client execution stub <--return-value <RETURN_VALUE>|--empty|--error> <EXECUTION_ID>
 ```
-Options:
-* `--return-value <RETURN_VALUE>` - Stub a return value encoded as JSON
-* `--empty` - Stub an empty return value
-* `--error` - Stub an error
 
+Options:
+
+- `--return-value <RETURN_VALUE>` - Stub a return value encoded as JSON
+- `--empty` - Stub an empty return value
+- `--error` - Stub an error
 
 ### Listing available components and functions
+
 ```sh
 obelisk client component list [OPTIONS]
 ```
-Options:
-* `-i, --imports` - Show component imports
-* `-e, --extensions` - Show auto-generated export extensions
 
+Options:
+
+- `-i, --imports` - Show component imports
+- `-e, --extensions` - Show auto-generated export extensions
 
 ### Inspecting provided WASM file
-This command does not connect to the server, but it outputs the exported functions of a WASM component similarily to `obelisk client component list`.
+
+This command does not connect to the server, but it outputs the exported functions of a WASM
+component similarily to `obelisk client component list`.
+
 ```sh
 obelisk client component inspect [OPTIONS] <COMPONENT_TYPE> <PATH>
 ```
+
 Arguments:
-* `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`, `webhook_endpoint`
-* `<PATH>` - Path to the WASM file
+
+- `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`, `webhook_endpoint`
+- `<PATH>` - Path to the WASM file
 
 Options:
-* `-i, --imports` - Show component imports
-* `-e, --extensions` - Show auto-generated export extensions
-* `-c, --convert-core-module` - Attempt to convert Core WASM Module to a WASM Component
+
+- `-i, --imports` - Show component imports
+- `-e, --extensions` - Show auto-generated export extensions
+- `-c, --convert-core-module` - Attempt to convert Core WASM Module to a WASM Component
 
 ### Pushing a WASM Component into an OCI Registry
-This command does not connect to the server. Use `docker login` to authenticate against the OCI registry first.
+
+This command does not connect to the server. Use `docker login` to authenticate against the OCI
+registry first.
+
 ```sh
 obelisk client component push <PATH> <IMAGE_NAME>
 ```
+
 Arguments:
-* `<PATH>` - WASM file to be pushed
-* `<IMAGE_NAME>` - OCI reference. Example: `docker.io/repo/image:tag`
+
+- `<PATH>` - WASM file to be pushed
+- `<IMAGE_NAME>` - OCI reference. Example: `docker.io/repo/image:tag`
 
 ## Obelisk Generate
 
 ### Generating extension functions
-The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given WASM component can be generated using:
+
+The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given WASM
+component can be generated using:
+
 ```sh
 obelisk generate extensions <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> [OUTPUT_DEPS_DIRECTORY]
 ```
 
 Arguments:
-* `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`. No extensions are generated for {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }}.
-* `<INPUT_WIT_DIRECTORY>` - Path to the `wit` folder, containing the target world and possibly `deps` subfolder.
-* `[OUTPUT_DEPS_DIRECTORY]`  - Optional. If not set, WIT files will be written to the input directory.
+
+- `<COMPONENT_TYPE>` - One of `workflow`, `activity_wasm`, `activity_stub`. No extensions are
+  generated for {{ doc_link(title="webhook endpoints", path="concepts/webhook-endpoints.md") }}.
+- `<INPUT_WIT_DIRECTORY>` - Path to the `wit` folder, containing the target world and possibly
+  `deps` subfolder.
+- `[OUTPUT_DEPS_DIRECTORY]` - Optional. If not set, WIT files will be written to the input
+  directory.

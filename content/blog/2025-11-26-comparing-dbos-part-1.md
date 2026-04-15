@@ -3,50 +3,53 @@ title = "Comparing Obelisk with DBOS"
 date = 2025-11-26
 +++
 
-Obelisk and <a target="_blank" href="https://www.dbos.dev">DBOS</a> are both open-source
-durable workflow engines.
+Obelisk and <a target="_blank" href="https://www.dbos.dev">DBOS</a> are both open-source durable
+workflow engines.
 
 Let's see how they compare in terms of ease of use, nondeterminism prevention and performance.
 
-I will go through the <a target="_blank" href="https://docs.dbos.dev/java/programming-guide">Learn DBOS Java</a> tutorial
-and compare it with Rust version of the same code written for Obelisk.
-I chose Java because of familiarity, however the library has just been released so the code is still quite young.
-On the Obelisk side, Rust is the obvious choice as it has the best
-[performance](@/blog/2025-10-29-challenging-fastest-workflow-engine.md)
-and [tooling](@/blog/2025-05-25-comparing-rs-js-go.md).
+I will go through the <a target="_blank" href="https://docs.dbos.dev/java/programming-guide">Learn
+DBOS Java</a> tutorial and compare it with Rust version of the same code written for Obelisk. I
+chose Java because of familiarity, however the library has just been released so the code is still
+quite young. On the Obelisk side, Rust is the obvious choice as it has the best
+[performance](@/blog/2025-10-29-challenging-fastest-workflow-engine.md) and
+[tooling](@/blog/2025-05-25-comparing-rs-js-go.md).
 
 <!-- more -->
 
-
 ## Setting up the environment
+
 DBOS-Java needs a JDK, Gradle and a PosgreSQL database.
 
 For building WASM Components we need Rust and Cargo.
 
 ## Intro into deterministic workflow engines
+
 As both [Obelisk](@/faq/_index.md) and
 <a target="_blank" href="https://docs.dbos.dev/architecture#how-workflow-recovery-works">DBOS</a>
 emphasize, workflows must be deterministic and activities / steps must be idempotent.
 
-This ensures that long running workflows
-can continue after a server crash or when they are migrated from one machine to another.
+This ensures that long running workflows can continue after a server crash or when they are migrated
+from one machine to another.
 
-Activities can be retried automatically on a failure, but even a successful activity might
-be retried if the server crashes just before persisting the result.
+Activities can be retried automatically on a failure, but even a successful activity might be
+retried if the server crashes just before persisting the result.
 
 ## Authoring workflows
 
 Our test bed will be:
-* An idempotent activity (step in DBOS lingo) that interacts with the world: sleeps and creates a file
-* A `serial` and `parallel` workflows that run the activity with persistent sleep in a loop
-* An HTTP endpoint (webhook endpoint in Obelisk lingo) that triggers these workflows.
+
+- An idempotent activity (step in DBOS lingo) that interacts with the world: sleeps and creates a
+  file
+- A `serial` and `parallel` workflows that run the activity with persistent sleep in a loop
+- An HTTP endpoint (webhook endpoint in Obelisk lingo) that triggers these workflows.
 
 Skip to [Experiments](#experiments) to avoid the wall of code.
 
 ### DBOS
 
-In the DBOS <a target="_blank" href="https://github.com/tomasol/dbos-tutorial">repository</a>,
-the step, workflows and a HTTP server can be put into a single Java class:
+In the DBOS <a target="_blank" href="https://github.com/tomasol/dbos-tutorial">repository</a>, the
+step, workflows and a HTTP server can be put into a single Java class:
 
 ```java
 package com.example;
@@ -189,13 +192,15 @@ public class App {
 ```
 
 ### Obelisk
+
 Each component in the
-<a target="_blank" href="https://github.com/obeli-sk/demo-tutorial">repository</a>
- is a separate Cargo package.
-Obelisk also requires defining a schema between components using
-<a target="_blank" href="https://component-model.bytecodealliance.org/design/wit.html">WIT (WebAssembly Interface Type)</a> IDL.
+<a target="_blank" href="https://github.com/obeli-sk/demo-tutorial">repository</a> is a separate
+Cargo package. Obelisk also requires defining a schema between components using
+<a target="_blank" href="https://component-model.bytecodealliance.org/design/wit.html">WIT
+(WebAssembly Interface Type)</a> IDL.
 
 #### Activity
+
 ```wit
 package tutorial:activity;
 
@@ -233,6 +238,7 @@ impl Guest for Component {
 ```
 
 #### Workflow
+
 ```wit
 package tutorial:workflow;
 
@@ -317,6 +323,7 @@ impl Guest for Component {
 ```
 
 #### Webhook endpoint
+
 ```wit
 package any:any;
 
@@ -358,20 +365,24 @@ async fn main(request: Request<Body>) -> Result<Response<Body>, Error> {
 ### Ergonomics
 
 DBOS uses a callback approach when submitting child executions:
+
 ```java
 int result = DBOS.runStep(() -> step(i, 200 * i), "step " + i);
 ```
-The drawback here is lower readability when orchestrating a large number of steps.
-DBOS could use Proxy pattern instead,
-but it would make more difficult to attach metadata such as name, retry configuration
-etc.
+
+The drawback here is lower readability when orchestrating a large number of steps. DBOS could use
+Proxy pattern instead, but it would make more difficult to attach metadata such as name, retry
+configuration etc.
 
 Obelisk workflows can call a child execution directly without a callback:
+
 ```rs
 let result = step(i, i * 200).unwrap();
 ```
-or using {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }},
-automatically generated from the activity's WIT file:
+
+or using {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }}, automatically
+generated from the activity's WIT file:
+
 ```rs
 step_submit(&join_set, i, i * 200);
 let (_execution_id, result) = step_await_next(&join_set).unwrap();
@@ -380,59 +391,68 @@ let (_execution_id, result) = step_await_next(&join_set).unwrap();
 The great thing about DBOS is that the whole thing fits into a single Java file.
 
 However, schema-first approach has several advantages:
-* Strong, explicit interface contracts
-* No way of forgetting to use the callback style or to construct a proxy object.
-This would lead to mixing side effects into workflows.
-* Cross-language interoperability: The WASM Component Model supports many languages such as
-Rust, JavaScript, Python, Go and more.
-* Versioning and backward-compatibility: Activities can export several versions
-of the same interface, enabling workflows to catch up on their pace.
-* Codegen allows creating multiple variants of the same exported function, taking
-advangates of both proxy and callback patterns without the drawbacks.
 
+- Strong, explicit interface contracts
+- No way of forgetting to use the callback style or to construct a proxy object. This would lead to
+  mixing side effects into workflows.
+- Cross-language interoperability: The WASM Component Model supports many languages such as Rust,
+  JavaScript, Python, Go and more.
+- Versioning and backward-compatibility: Activities can export several versions of the same
+  interface, enabling workflows to catch up on their pace.
+- Codegen allows creating multiple variants of the same exported function, taking advangates of both
+  proxy and callback patterns without the drawbacks.
 
 ## Experiments
 
 ### Experiment A: Simulating a server crash
 
-The task is to start the workflow, kill the server and start it again to see if the workflow finishes.
+The task is to start the workflow, kill the server and start it again to see if the workflow
+finishes.
 
-Submitting the parallel workflow in DBOS and then killing the server
-revealed an unplesent surprise: After restart the workflow ended in `ERROR` state, with an error and a huge stack trace:
+Submitting the parallel workflow in DBOS and then killing the server revealed an unplesent surprise:
+After restart the workflow ended in `ERROR` state, with an error and a huge stack trace:
+
 ```
 11:02:54.411 [pool-1-thread-2] ERROR dev.dbos.transact.execution.DBOSExecutor -- enqueueWorkflow
 dev.dbos.transact.exceptions.DBOSWorkflowExecutionConflictException: Conflicting workflow ID 66b7739d-0d83-4b02-b99c-e824c6e2bfd5
 ...
 ```
+
 However, after I
 {{target_link(title="reported", href="https://github.com/dbos-inc/dbos-transact-java/issues/218")}}
 the bug, the PR was merged within 24 hours. Kudos to the DBOS team.
 
-Other than that, the only notable issue I found was that DBOS recovery started after around a one minute delay.
-I was {{target_link(title="instructed", href="https://discord.com/channels/1156433345631232100/1440346985675886673/1440367182415532124")}}
+Other than that, the only notable issue I found was that DBOS recovery started after around a one
+minute delay. I was
+{{target_link(title="instructed", href="https://discord.com/channels/1156433345631232100/1440346985675886673/1440367182415532124")}}
 to disable Conductor, a proprietary distributed orchestrator, which resolved the problem.
 
 No problems with Obelisk were found.
 
 ### Experiment B: Breaking determinism with code changes
 
-Changing code of a running workflow is a delicate process. It can only work when the change does not affect
-the execution log, or when the running execution did not reach the changed line yet.
+Changing code of a running workflow is a delicate process. It can only work when the change does not
+affect the execution log, or when the running execution did not reach the changed line yet.
 
 One clever trick that DBOS does is that it detects code changes by
 {{target_link(title="hashing the bytecode", href="https://github.com/dbos-inc/dbos-transact-java/blob/94713bcdd00d45a8729924703d65415f0e2296e9/transact/src/main/java/dev/dbos/transact/internal/AppVersionComputer.java#L15")}}
-of workflow classes. Obviously this is a best-effort solution, as the change can come from a dependency, or from
-using a nondeterministic construct, as discussed later.
-Instead of extracting the workflow logic into another file, I have disabled the hashing by setting a constant application version.
+of workflow classes. Obviously this is a best-effort solution, as the change can come from a
+dependency, or from using a nondeterministic construct, as discussed later. Instead of extracting
+the workflow logic into another file, I have disabled the hashing by setting a constant application
+version.
 
-Obelisk does not currently perform a hash digest of the workflow's WASM executable. In the future, it will
+Obelisk does not currently perform a hash digest of the workflow's WASM executable. In the future,
+it will
 {{target_link(title="store the WASM hash", href="https://github.com/obeli-sk/obelisk/issues/175")}}
-when an execution is created. Contrary to DBOS, this approach reliably reflects whether the code (including dependencies) changed or not.
+when an execution is created. Contrary to DBOS, this approach reliably reflects whether the code
+(including dependencies) changed or not.
 
-DBOS {{target_link(title="should", href="https://discord.com/channels/1156433345631232100/1440828912916500561/1440828912916500561")}}
+DBOS
+{{target_link(title="should", href="https://discord.com/channels/1156433345631232100/1440828912916500561/1440828912916500561")}}
 throw an error when events produced on replay do not match the original execution log.
 
 Let's start with an obvious change in the `serial` workflow:
+
 ```diff
  public int serial() throws Exception {
      ...
@@ -450,34 +470,41 @@ Let's start with an obvious change in the `serial` workflow:
         // Call the activity with different parameters
         let result = step(i, i * 200).unwrap();
 ```
-An in-progresss execution that is replayed after restart should detect it immediately as the `i` variable
-is used as a parameter to `step` invocation.
 
-Both engines detect the failure:
-<img src="{{ get_url(path="blog/2025-11-19-comparing-dbos-part-1/experiment-b-dbos.png") }}" style="border: 2px dotted #efeded;" />
+An in-progresss execution that is replayed after restart should detect it immediately as the `i`
+variable is used as a parameter to `step` invocation.
 
-<img src="{{ get_url(path="blog/2025-11-19-comparing-dbos-part-1/experiment-b-obelisk.png") }}" style="border: 2px dotted #efeded;" />
+Both engines detect the failure: <img
+src="{{ get_url(path="blog/2025-11-19-comparing-dbos-part-1/experiment-b-dbos.png") }}"
+style="border: 2px dotted #efeded;" />
+
+<img src="{{ get_url(path="blog/2025-11-19-comparing-dbos-part-1/experiment-b-obelisk.png") }}"
+style="border: 2px dotted #efeded;" />
 
 Full error:
+
 ```
 key does not match event stored at index 4:
 key: ChildExecutionRequest(E_01KAJVHDX4VAPCPAXXZ2QCVWCZ.o:1_1.o:2-step_1, tutorial:activity/activity-sleepy.step, params: [9, 1800]),
 event: JoinSetRequest(ChildExecutionRequest(E_01KAJVHDX4VAPCPAXXZ2QCVWCZ.o:1_1.o:2-step_1, tutorial:activity/activity-sleepy.step, params: [0, 0]))
 ```
 
-Notice that the DBOS error  only contains the naming differences, `step 0` vs `step 9` whereas Obelisk contains the actual parameters.
-In fact, if we are a bit lazy, and do not serialize parameters into the name properly:
+Notice that the DBOS error only contains the naming differences, `step 0` vs `step 9` whereas
+Obelisk contains the actual parameters. In fact, if we are a bit lazy, and do not serialize
+parameters into the name properly:
 
 ```diff
 - int result = DBOS.runStep(() -> step(i2, 200 * i2), "step " + i);
 + int result = DBOS.runStep(() -> step(i2, 200 * i2), "step");
 ```
+
 the workflow will finish happily with result 0+1+2+6+5+4+3+2+1+0=24!
 
 ### Experiment C: Trimming execution events
 
-Another interesting test is to lower the number of iterations.
-Let's start a `serial` workflow, wait until around `step 8`, kill the server and change:
+Another interesting test is to lower the number of iterations. Let's start a `serial` workflow, wait
+until around `step 8`, kill the server and change:
+
 ```diff
  public void serial() throws Exception {
     ...
@@ -486,9 +513,12 @@ Let's start a `serial` workflow, wait until around `step 8`, kill the server and
         ...
         int result = DBOS.runStep(() -> step(i2, 200 * i2), "step " + i);
 ```
-This kind of error can lead to resources like temporary VMs running without a cleanup and should be reported by the engine.
+
+This kind of error can lead to resources like temporary VMs running without a cleanup and should be
+reported by the engine.
 
 The latest version of Obelisk detects it correctly:
+
 ```
 found unprocessed event stored at index 18: event: JoinSetCreate(o:7-sleep)
 ```
@@ -499,14 +529,18 @@ Full disclosure: Obelisk 0.26.2 did not detect these changes correctly, fixes la
 
 ### Experiment D: Breaking determinism using nondeterministic code
 
-Instead of changing the code, determinism can be broken by using nondeterministic constructs.
-DBOS documentation {{target_link(title="warns", href="https://docs.dbos.dev/java/tutorials/workflow-tutorial#determinism")}}:
+Instead of changing the code, determinism can be broken by using nondeterministic constructs. DBOS
+documentation
+{{target_link(title="warns", href="https://docs.dbos.dev/java/tutorials/workflow-tutorial#determinism")}}:
 
-> Java's threading and concurrency APIs are non-deterministic. You should use them only inside steps.
+> Java's threading and concurrency APIs are non-deterministic. You should use them only inside
+> steps.
 
-Using any source of nondeterminism, including current date, IO, environment variables, RNG or something more subtle like hash maps will break the replay as well.
+Using any source of nondeterminism, including current date, IO, environment variables, RNG or
+something more subtle like hash maps will break the replay as well.
 
 For posterity, let's replace the `ArrayList` / `Vec` with a hash set:
+
 ```diff
  @Workflow(name = "parallel-parent")
  public long parallelParent() throws Exception {
@@ -533,7 +567,9 @@ For posterity, let's replace the `ArrayList` / `Vec` with a hash set:
      return acc;
  }
 ```
+
 Crasing an in-progress workflow and replaying it in a new process:
+
 ```sh
 parallel-parent started
 parallel-parent submitted all parallel-child workflows
@@ -551,12 +587,14 @@ parallel-child(6)=6, acc:2685497006
 parallel-parent completed: 2685497006
 ```
 
-Noticed something is off? `parallel-child(n)` should always return `n`, and the final `acc` should contain every digit exactly once.
-However the ordering of `HashSet` iteration depends on each object’s memory address or a per-run JVM-specific identity value.
-This is an obvious source of nondeterminism, and in this case leads to replaying wrong return values, exactly as in Experiment B.
+Noticed something is off? `parallel-child(n)` should always return `n`, and the final `acc` should
+contain every digit exactly once. However the ordering of `HashSet` iteration depends on each
+object’s memory address or a per-run JVM-specific identity value. This is an obvious source of
+nondeterminism, and in this case leads to replaying wrong return values, exactly as in Experiment B.
 The best DBOS could do here is to throw a nondeterminism detected error.
 
 Applying the same change in Obelisk:
+
 ```diff
  fn parallel() -> Result<u64, ()> {
      log::info("parallel started");
@@ -582,7 +620,9 @@ Applying the same change in Obelisk:
      Ok(acc)
  }
 ```
+
 I have crashed an execution twice, but its output is stable:
+
 ```
 TRACE (replay) parallel started
 TRACE (replay) parallel submitted all child executions
@@ -598,23 +638,22 @@ TRACE (replay) step(8)=8, acc=213509478
  INFO step(6)=6, acc=2135094786
  INFO parallel completed: 2135094786
 ```
-I am not aware of any way how to inject nondeterminism into the code:
-Accessing IO, source of randomness, spawning a thread etc, are all forbidden
-and lead to WASM trap (a non-recoverable runtime fault).
-Even if there was a way to bypass the WASM sandbox, it would only lead to the
-same result as we saw earlier with code changes - a nondeterminism detected error.
 
-This experiment shows that without a properly isolated environment code that
-works fine on the first run can be utterly broken on replay.
+I am not aware of any way how to inject nondeterminism into the code: Accessing IO, source of
+randomness, spawning a thread etc, are all forbidden and lead to WASM trap (a non-recoverable
+runtime fault). Even if there was a way to bypass the WASM sandbox, it would only lead to the same
+result as we saw earlier with code changes - a nondeterminism detected error.
+
+This experiment shows that without a properly isolated environment code that works fine on the first
+run can be utterly broken on replay.
 
 ### Experiment E: Resource usage with 10k or 100k of workflows
 
-One of main selling points of workflow engines is the fact that the
-workflows can durably sleep for weeks or more.
+One of main selling points of workflow engines is the fact that the workflows can durably sleep for
+weeks or more.
 
-Let's model the situation where a main workflow spawns
-one child workflow for every customer. This child workflow will just sleep for 1 day in order
-to drive some business logic.
+Let's model the situation where a main workflow spawns one child workflow for every customer. This
+child workflow will just sleep for 1 day in order to drive some business logic.
 
 ```java
 @Workflow
@@ -646,21 +685,25 @@ public void sleepyParent(int max) {
     System.out.printf("Done waiting for %d child workflows%n", max);
 }
 ```
-When executing the parent workflow submitting 10k child workflows (on a machine wih 16GB of RAM), the JVM process was slowing down until it reached
-a breaking point. After a few minutes, with parent workflow reporting the index 8602,
-the process RSS grew from ~130MB to 1.3GB,
-reported an OOM error and did not make any further progress.
-Even after restart the same thing happened:
+
+When executing the parent workflow submitting 10k child workflows (on a machine wih 16GB of RAM),
+the JVM process was slowing down until it reached a breaking point. After a few minutes, with parent
+workflow reporting the index 8602, the process RSS grew from ~130MB to 1.3GB, reported an OOM error
+and did not make any further progress. Even after restart the same thing happened:
+
 ```
 [172,701s][warning][os,thread] Failed to start thread "Unknown thread" - pthread_create failed (EAGAIN) for attributes: stacksize: 1024k, guardsize: 0k, detached.
 [172,701s][warning][os,thread] Failed to start the native thread for java.lang.Thread "pool-1-thread-18613"
 Exception in thread "QueuesPollThread" java.lang.OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource limits reached
 ```
-This could be mitigated by changing the limits on the OS level, but using one thread for each inactive workflow execution seems excessive.
+
+This could be mitigated by changing the limits on the OS level, but using one thread for each
+inactive workflow execution seems excessive.
 
 Let's see how Obelisk handles it.
 
 First we create a new workflow component:
+
 ```wit
 package tutorial:sleepy;
 
@@ -668,6 +711,7 @@ interface sleepy-workflow {
     sleepy-workflow: func(idx: u64) -> result;
 }
 ```
+
 ```rs
 impl exports::tutorial::sleepy::sleepy_workflow::Guest for Component {
     fn sleepy_workflow(idx: u64) -> Result<(), ()> {
@@ -695,6 +739,7 @@ Then we generate the extension WIT file and import it to the `tutorial` workflow
 +    import tutorial:sleepy-obelisk-ext/sleepy-workflow;
 
 ```
+
 ```rs
 fn sleepy_parent(max: u64) -> Result<(), ()> {
     let join_set = &new_join_set_generated(ClosingStrategy::Complete);
@@ -712,12 +757,11 @@ fn sleepy_parent(max: u64) -> Result<(), ()> {
 }
 ```
 
-To make it a bit more challenging let's use **100k** child workflows.
-Although Obelisk is yet not hardened for such scale, it managed to start all child workflows with RSS under 500MB.
-Part of the reason is that instead of using native threads, each execution lives inside a light-weight
-{{target_link(title="Tokio",href="https://tokio.rs")}} task.
-Inactive workflows are automatically unloaded from memory after a configurable time, which keeps the
-memory footprint low.
+To make it a bit more challenging let's use **100k** child workflows. Although Obelisk is yet not
+hardened for such scale, it managed to start all child workflows with RSS under 500MB. Part of the
+reason is that instead of using native threads, each execution lives inside a light-weight
+{{target_link(title="Tokio",href="https://tokio.rs")}} task. Inactive workflows are automatically
+unloaded from memory after a configurable time, which keeps the memory footprint low.
 
 ## Conclusion
 
@@ -725,39 +769,43 @@ Differences between DBOS and Obelisk can be summarized in a table.
 
 <div class="table">
 
-| Feature / Category | DBOS | Obelisk |
-| :--- | :--- | :--- |
-| **Compared Language** | **Java** (Other languages: Python,TypeScript,Go are supported through their respective SDKs). | **Rust** (Other languages supporting WASM Components: JavaScript, Python, Go) |
-| **Workflow Definition** | **Code-first:** Workflows and steps can reside in a single Java class. | **Schema-first:** Uses WIT (WebAssembly Interface Type) IDL to define contracts between components. |
-| **Ergonomics** | Uses a **callback approach** for steps (e.g., `DBOS.runStep(...)`), which can lower readability. | Supports **direct function calls** or generated extension functions, offering cleaner syntax (e.g., `step(...)`). |
-| **Determinism Enforcement** | **Manual/Cooperative:** Developers must avoid Java's non-deterministic APIs (threading, IO). Constructs like `HashSet` can break replay. | **Strict/Sandboxed:** WASM sandbox prevents access to non-deterministic resources (IO, RNG). `HashSet` iteration is stable. |
-| **Nondeterminism Detection** | **Best-effort:** Hashes bytecode of a class, but not the entire codebase. Cannot serialize and compare parameters; marked trimmed workflows as successful. | **Strict:** reliably detects parameter mismatches and unprocessed events (e.g., trimmed events) on replay. Currently does not hash WASM files. |
-| **Execution Model** | **Thread-based:** Uses native threads for workflow executions. | **Async/Task-based:** Uses lightweight Tokio tasks. |
-| **Scalability & Resource Usage** | **Lower Scalability:** Failed at **10k** concurrent workflows (OOM, 1.3GB RSS) due to thread exhaustion. | **High Scalability:** Successfully handled **100k** concurrent workflows (<500MB RSS) by unloading inactive workflows. |
-| **Infrastructure Dependencies** | Requires **PostgreSQL**. | Embeds **SQLite**. |
-| **Web UI** | Proprietary, runs in the cloud | Open source, hosted by Obelisk binary |
+| Feature / Category               | DBOS                                                                                                                                                       | Obelisk                                                                                                                                        |
+| :------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Compared Language**            | **Java** (Other languages: Python,TypeScript,Go are supported through their respective SDKs).                                                              | **Rust** (Other languages supporting WASM Components: JavaScript, Python, Go)                                                                  |
+| **Workflow Definition**          | **Code-first:** Workflows and steps can reside in a single Java class.                                                                                     | **Schema-first:** Uses WIT (WebAssembly Interface Type) IDL to define contracts between components.                                            |
+| **Ergonomics**                   | Uses a **callback approach** for steps (e.g., `DBOS.runStep(...)`), which can lower readability.                                                           | Supports **direct function calls** or generated extension functions, offering cleaner syntax (e.g., `step(...)`).                              |
+| **Determinism Enforcement**      | **Manual/Cooperative:** Developers must avoid Java's non-deterministic APIs (threading, IO). Constructs like `HashSet` can break replay.                   | **Strict/Sandboxed:** WASM sandbox prevents access to non-deterministic resources (IO, RNG). `HashSet` iteration is stable.                    |
+| **Nondeterminism Detection**     | **Best-effort:** Hashes bytecode of a class, but not the entire codebase. Cannot serialize and compare parameters; marked trimmed workflows as successful. | **Strict:** reliably detects parameter mismatches and unprocessed events (e.g., trimmed events) on replay. Currently does not hash WASM files. |
+| **Execution Model**              | **Thread-based:** Uses native threads for workflow executions.                                                                                             | **Async/Task-based:** Uses lightweight Tokio tasks.                                                                                            |
+| **Scalability & Resource Usage** | **Lower Scalability:** Failed at **10k** concurrent workflows (OOM, 1.3GB RSS) due to thread exhaustion.                                                   | **High Scalability:** Successfully handled **100k** concurrent workflows (<500MB RSS) by unloading inactive workflows.                         |
+| **Infrastructure Dependencies**  | Requires **PostgreSQL**.                                                                                                                                   | Embeds **SQLite**.                                                                                                                             |
+| **Web UI**                       | Proprietary, runs in the cloud                                                                                                                             | Open source, hosted by Obelisk binary                                                                                                          |
 
 </div>
 
-DBOS is an interesting project that is very easy to start with, as it encourages developers to include it as a library
-in their main application. This architectural decision shapes its features.
+DBOS is an interesting project that is very easy to start with, as it encourages developers to
+include it as a library in their main application. This architectural decision shapes its features.
 
-Since there is no isolation, determinism is managed by developer's discipline.
-This may make it harder to review changes, as seemingly unrelated code changes can lead to (silent) determinism breakage.
+Since there is no isolation, determinism is managed by developer's discipline. This may make it
+harder to review changes, as seemingly unrelated code changes can lead to (silent) determinism
+breakage.
 
-Its code change detection can be improved, however it is simply impossible to prevent
-accidental nondeterminisic constructs unless workflows are completely isolated
-in a runtime that is built around deterministic execution.
+Its code change detection can be improved, however it is simply impossible to prevent accidental
+nondeterminisic constructs unless workflows are completely isolated in a runtime that is built
+around deterministic execution.
 
-On the plus side, DBOS requires no configuration, as workflows, steps and HTTP endpoints are just code.
+On the plus side, DBOS requires no configuration, as workflows, steps and HTTP endpoints are just
+code.
 
 Obelisk's main strenth is its WASM runtime:
-* no footguns (threads, IO, hash maps etc.) in workflows
-* WASM contains the entire code, so associating executions with is original codebase  is trivial (although not implemented yet). - See update below.
-* Able to unloaded running executions from memory transparently.
-* Separation of components
-* Coordination through WIT schemas
-* Easy to deploy on lightweight VM
 
+- no footguns (threads, IO, hash maps etc.) in workflows
+- WASM contains the entire code, so associating executions with is original codebase is trivial
+  (although not implemented yet). - See update below.
+- Able to unloaded running executions from memory transparently.
+- Separation of components
+- Coordination through WIT schemas
+- Easy to deploy on lightweight VM
 
-Update: Version 0.30.0 stores `sha256sum` of each WASM component. Executors can be configured to only lock executions with a matching digest.
+Update: Version 0.30.0 stores `sha256sum` of each WASM component. Executors can be configured to
+only lock executions with a matching digest.

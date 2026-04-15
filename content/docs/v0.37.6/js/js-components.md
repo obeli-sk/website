@@ -6,18 +6,18 @@ weight = 22
 
 Obelisk supports three JS component types, each with its own execution model and API:
 
-- {{ doc_link(title="JS Activities", path="js/js-activities.md") }} — side-effectful
-  work; retried automatically on failure
-- {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }} — deterministic
-  orchestration; survives server crashes via replay
-- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — HTTP handlers;
-  can call activities and workflows
+- {{ doc_link(title="JS Activities", path="js/js-activities.md") }} — side-effectful work; retried
+  automatically on failure
+- {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }} — deterministic orchestration;
+  survives server crashes via replay
+- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — HTTP handlers; can call activities
+  and workflows
 
 ## Function signatures and FFQNs
 
 Each component's JS function name maps to the last segment of its
-{{ doc_link(title="FFQN", path="concepts/ffqn.md") }}. Parameter names use snake_case in JS
-but kebab-case in WIT and `deployment.toml`. A leading comment makes the mapping explicit:
+{{ doc_link(title="FFQN", path="concepts/ffqn.md") }}. Parameter names use snake_case in JS but
+kebab-case in WIT and `deployment.toml`. A leading comment makes the mapping explicit:
 
 ```javascript
 // ffqn: tutorial:demo/activity.step(idx: u64, sleep-millis: u64) -> result<string>
@@ -35,15 +35,14 @@ return_type = "result<string>"
 ```
 
 See {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }} for the full type
-reference and JSON encoding, and
-{{ doc_link(title="JS activities", path="js/js-activities.md") }}
+reference and JSON encoding, and {{ doc_link(title="JS activities", path="js/js-activities.md") }}
 for how `return` and `throw` map to the `result` variants.
 
 ## Inline WIT types
 
-In `deployment.toml`, `params` types and `return_type` accept any WIT type inline —
-including `record`, `variant`, `enum`, and `flags`, which standard WIT requires to be
-declared separately. Obelisk extracts them and assigns generated names (`t0`, `t1`, …):
+In `deployment.toml`, `params` types and `return_type` accept any WIT type inline — including
+`record`, `variant`, `enum`, and `flags`, which standard WIT requires to be declared separately.
+Obelisk extracts them and assigns generated names (`t0`, `t1`, …):
 
 ```toml
 params = [
@@ -54,9 +53,9 @@ return_type = "result<variant { found(string), not-found }>"
 
 ## OCI distribution
 
-JS components can be pushed to and pulled from OCI registries just like WASM components.
-Obelisk embeds component metadata (type, allowed hosts, env vars, secrets, WIT config) in the
-OCI image manifest, so `component add` can reconstruct the deployment entry automatically:
+JS components can be pushed to and pulled from OCI registries just like WASM components. Obelisk
+embeds component metadata (type, allowed hosts, env vars, secrets, WIT config) in the OCI image
+manifest, so `component add` can reconstruct the deployment entry automatically:
 
 ```sh
 # Push a JS webhook to an OCI registry
