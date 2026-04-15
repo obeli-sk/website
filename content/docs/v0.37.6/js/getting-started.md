@@ -37,9 +37,9 @@ compile.
 timeout or failure.
 
 ```javascript
-// ffqn: tutorial:demo/activity.step(idx: u64, sleep-millis: u64) -> result<string>
+// tutorial:demo/activity.step: func(idx: u64, sleep-millis: u64) -> result<string>
 export default async function step(idx, sleep_millis) {
-  console.log(`Step ${idx} started`);
+  console.log(`Step ${idx} started`); // logs are persisted
   await new Promise((r) => setTimeout(r, Number(sleep_millis)));
   console.log(`Step ${idx} completed`);
   return String(idx);
@@ -55,7 +55,7 @@ by replaying the execution log.
 `workflow/serial.js` — runs 10 steps in sequence with a persistent 1-second sleep between each:
 
 ```javascript
-// ffqn: tutorial:demo/workflow.serial() -> result<string, string>
+// tutorial:demo/workflow.serial: func() -> result<string, string>
 export default function serial() {
   let acc = 0;
   for (let i = 0; i < 10; i++) {
@@ -80,7 +80,7 @@ Key concepts:
 {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, then awaits results:
 
 ```javascript
-// ffqn: tutorial:demo/workflow.parallel() -> result<string, string>
+// tutorial:demo/workflow.parallel: func() -> result<string, string>
 export default function parallel() {
   const joinSets = [];
   for (let i = 0; i < 10; i++) {
