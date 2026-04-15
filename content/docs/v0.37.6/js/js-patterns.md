@@ -319,6 +319,49 @@ When a join set is closed (via `js.close()` or implicitly when the workflow retu
 If you submit to a join set and return without draining it, any pending activities are cancelled
 but pending sub-workflows continue running. To wait for them, drain the join set before returning.
 
+## Running an Obelisk application
+
+### Verify before starting
+
+Check that the deployment configuration is valid — compiles all JS components and resolves
+all types — without requiring real credentials:
+
+```sh
+obelisk server verify --ignore-missing-env-vars -d deployment.toml
+```
+
+### Start the server
+
+```sh
+obelisk server run --deployment deployment.toml
+```
+
+After the first run the deployment is persisted to the database; subsequent restarts
+(e.g. after a crash) can omit `--deployment`:
+
+```sh
+obelisk server run
+```
+
+### Submit a one-off execution and follow it
+
+```sh
+obelisk execution submit my-namespace:my-pkg/my-iface.my-fn '["arg1", 42]'
+# prints: E_01KN...
+```
+
+Execution IDs are `E_`-prefixed ULIDs (e.g. `E_01KN2X...`).
+
+Block until finished and print the result:
+
+```sh
+obelisk execution submit --follow my-namespace:my-pkg/my-iface.my-fn '[]'
+```
+
+Or follow a previously submitted execution by ID:
+
+```sh
+obelisk execution get --follow E_01KN2X...
 ## Common pitfalls
 
 - **Workflows cannot use `fetch`.** Push all I/O (HTTP, file, database) into activities.
@@ -331,3 +374,9 @@ but pending sub-workflows continue running. To wait for them, drain the join set
   and sanitize to `[A-Za-z0-9\-\/]`.
 - **`425 Too Early`** from `GET /v1/executions/{id}` means the execution is still running; use
   `?follow=true` to long-poll, or poll `getStatus` / `tryGet` from the webhook side.
+- **Component and cron names must use only `[a-zA-Z0-9_]`** — hyphens are not allowed. Use
+  underscores instead (e.g. `daily_monitor`, not `daily-monitor`).
+- **Secret env vars must not duplicate a key from the component's `env_vars`.**
+  A variable declared in `[allowed_host.secrets] env_vars` must not also appear in the
+  component-level `env_vars`; the runtime injects it automatically and will reject the
+  configuration with a "collides with an `env_vars` entry" error otherwise.
