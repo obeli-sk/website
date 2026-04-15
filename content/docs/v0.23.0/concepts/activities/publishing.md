@@ -12,7 +12,8 @@ obelisk client component push \
     docker.io/youraccount/yourimage:tag
 ```
 
-Obelisk will output the OCI location together with its SHA digest. This can be used instead of the file location in `obelisk.toml`:
+Obelisk will output the OCI location together with its SHA digest. This can be used instead of the
+file location in `obelisk.toml`:
 
 ```diff
  [[activity_wasm]]
@@ -22,4 +23,7 @@ Obelisk will output the OCI location together with its SHA digest. This can be u
 ```
 
 ## Note on caching of OCI artifacts
-Although including the `sha256` part is not necessary, it improves reproducibility (tags can be moved) and caching (unlike Docker, Obelisk will always check whether the tag points to an image that was downloaded already).
+
+Although including the `sha256` part is not necessary, it improves reproducibility (tags can be
+moved) and caching (unlike Docker, Obelisk will always check whether the tag points to an image that
+was downloaded already).

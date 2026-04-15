@@ -4,28 +4,32 @@ template = "docs.html"
 weight = 20
 +++
 
-
 ## Server Configuration
 
 ### API Server
+
 ```toml
 api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
 ```
 
 ### Web UI
+
 ```toml
 webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 ```
 
-> **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is not yet implemented.
+> **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is
+> not yet implemented.
 
 ### Storage
+
 ```toml
 sqlite.directory = "${DATA_DIR}/obelisk-sqlite"  # SQLite database location
 wasm_cache_directory = "${CACHE_DIR}/wasm"      # WASM file cache location
 ```
 
 ### Code Generation Cache
+
 ```toml
 [codegen_cache]
 enabled = true
@@ -72,6 +76,7 @@ env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inher
 ## Workflows Configuration
 
 ### Global workflow configuration
+
 ```toml
 workflows.backtrace.persist = true        # Persist backtraces on side effect calls for all workflows.
 ```
@@ -95,20 +100,19 @@ forward_unhandled_child_errors_in_completing_join_set_close = true
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 ```
 
-The blocking strategy controlls whether an execution should wait for blocking child executions
-or be unloaded and then replayed. Note that the `await` strategy will only wait until `lock_expiry`
+The blocking strategy controlls whether an execution should wait for blocking child executions or be
+unloaded and then replayed. Note that the `await` strategy will only wait until `lock_expiry`
 duration expires.
 
 ## HTTP and Webhook Configuration
 
-A Webhook Endpoint must be associated with a HTTP Server and must define one or
-more routes to listen on.
-Routes are divided into two categories: with HTTP methods (high priority)
-and without HTTP methods (low priority).
-When a request matches multiple routes of the same priority,
-the first webhook will receive it.
+A Webhook Endpoint must be associated with a HTTP Server and must define one or more routes to
+listen on. Routes are divided into two categories: with HTTP methods (high priority) and without
+HTTP methods (low priority). When a request matches multiple routes of the same priority, the first
+webhook will receive it.
 
 ### HTTP Servers
+
 ```toml
 [[http_server]]
 name = "server_name"                  # Server identifier
@@ -117,6 +121,7 @@ max_inflight_requests = "unlimited"   # Concurrent request limit
 ```
 
 ### Webhook Endpoints
+
 ```toml
 [[webhook_endpoint]]
 # Common component settings apply
@@ -135,29 +140,35 @@ backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 ```
 
 #### Route Syntax
+
 Routes: Define URL paths (only the path is matched):
 
 ##### Static paths
+
 - `"/"` - Root path only
 - `"/path"` - Exact path match
 
 ##### Wildcards
+
 - `"/path/*"` - Path prefix match
 - `"{ methods = ["GET"], route = "/path" }"` - Method-specific (priority) match
 
 ##### Parameterized
+
 - `"/status/:param1/:param2"` - Path parameters (exposed as env vars)
 
 ##### All paths
-- `""` or `"/*"` - Match all paths
 
+- `""` or `"/*"` - Match all paths
 
 ## Observability
 
 Levels and filtering is configured using
-[EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) syntax.
+[EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html)
+syntax.
 
 ### OTLP Tracing
+
 ```toml
 [otlp]
 enabled = true
@@ -169,6 +180,7 @@ otlp_endpoint = "http://localhost:4317"
 ### Logging
 
 #### Stdout Logging
+
 ```toml
 [log.stdout]
 enabled = true
@@ -179,6 +191,7 @@ target = false             # Whether to include the target module in message
 ```
 
 #### File Logging
+
 ```toml
 [log.file]
 enabled = true
@@ -195,10 +208,10 @@ prefix = "obelisk_server_daily" # File name prefix
 
 The following path prefixes are supported throughout the configuration:
 
-| Prefix                 | Default Path               | Details                                          |
-|------------------------|----------------------------|--------------------------------------------------|
-| `~`                    | `~`                        | Home directory                                   |
-| `${DATA_DIR}`          | `~/.local/share/obelisk`   | System data directory                            |
-| `${CACHE_DIR}`         | `~/.cache/obelisk`         | System cache directory                           |
-| `${CONFIG_DIR}`        | `~/.config/obelisk`        | System config directory                          |
-| `${OBELISK_TOML_DIR}`  | N/A                        | Directory where the obelisk.toml file is located |
+| Prefix                | Default Path             | Details                                          |
+| --------------------- | ------------------------ | ------------------------------------------------ |
+| `~`                   | `~`                      | Home directory                                   |
+| `${DATA_DIR}`         | `~/.local/share/obelisk` | System data directory                            |
+| `${CACHE_DIR}`        | `~/.cache/obelisk`       | System cache directory                           |
+| `${CONFIG_DIR}`       | `~/.config/obelisk`      | System config directory                          |
+| `${OBELISK_TOML_DIR}` | N/A                      | Directory where the obelisk.toml file is located |

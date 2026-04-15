@@ -4,16 +4,24 @@ template = "docs.html"
 weight = 25
 +++
 
-Rust activities and webhook endpoints can make outbound HTTP requests using the [WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This HTTP client is controlled, with built-in tracing to enhance security and predictability. Disk I/O is currently not permitted.
+Rust activities and webhook endpoints can make outbound HTTP requests using the
+[WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This HTTP client is controlled,
+with built-in tracing to enhance security and predictability. Disk I/O is currently not permitted.
 
-> **Note**: Components that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the deployment configuration. Without them, all outbound HTTP is blocked. See {{ doc_link(title="Configuration", path="configuration.md#outbound-http-allowlist") }} for details.
+> **Note**: Components that make outbound HTTP calls require explicit `[[allowed_host]]` entries in
+> the deployment configuration. Without them, all outbound HTTP is blocked. See
+> {{ doc_link(title="Configuration", path="configuration.md#outbound-http-allowlist") }} for
+> details.
 
 Let's generate a simple HTTP Client from a template:
+
 ```sh
 cargo generate obeli-sk/obelisk-templates activity-rs/http-simple-async --name myhttp_activity
 cd myhttp_activity
 ```
+
 This will generate a directory with the following structure:
+
 ```
 .
 ├── .cargo
@@ -37,6 +45,7 @@ This will generate a directory with the following structure:
 ```
 
 The WIT interface is stored in `http-client.wit`:
+
 ```wit
 package template-http:activity;
 
@@ -55,7 +64,9 @@ interface http-post {
 }
 ```
 
-Instead of using the WASI HTTP 0.2 bindings directly we use the [wstd](https://crates.io/crates/wstd) async runtime, which supports `async`/`await` syntax within WASM components.
+Instead of using the WASI HTTP 0.2 bindings directly we use the
+[wstd](https://crates.io/crates/wstd) async runtime, which supports `async`/`await` syntax within
+WASM components.
 
 ```rust
 use wstd::{
@@ -123,21 +134,27 @@ impl PostGuest for Component {
 ```
 
 Build the WASM component in release mode:
+
 ```sh
 just build
 ```
 
 Run the integration test:
+
 ```sh
 just test
 ```
 
 Start the Obelisk server and submit an execution:
+
 ```sh
 just serve
 just submit
 ```
 
-See the [async http template](https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/http-simple-async) for full details including how to push the component to an OCI registry.
+See the
+[async http template](https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/http-simple-async)
+for full details including how to push the component to an OCI registry.
 
-If you need to use GraphQL, check out the [cynic](https://crates.io/crates/cynic) crate and the [graphql template](https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/graphql-async).
+If you need to use GraphQL, check out the [cynic](https://crates.io/crates/cynic) crate and the
+[graphql template](https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/graphql-async).

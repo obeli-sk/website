@@ -4,7 +4,6 @@ template = "docs.html"
 weight = 0
 +++
 
-
 ## gRPC, gRPC-Web
 
 See {{ github(title="obelisk.proto", path="proto/obelisk.proto") }} schema for details.
@@ -16,11 +15,13 @@ This document describes the REST-like API for managing components and executions
 ## General Information
 
 ### Base URL
+
 All endpoints are prefixed with `/v1`.
 
 ## Content Negotiation
 
 The API supports content negotiation via the `Accept` header.
+
 - `application/json` (Default): Returns structured JSON data.
 - `text/plain`: Returns a human-readable string representation (e.g., raw IDs or formatted lists).
 
@@ -29,23 +30,22 @@ The API supports content negotiation via the `Accept` header.
 ## Components
 
 ### `GET /v1/components`
+
 Lists all registered components in the system.
 
-**Query Parameters:**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `type` | String | Filter by [Component Type](#component-type). |
-| `name` | String | Filter by component name. |
-| `digest` | String | Filter by `sha256sum` of the component's WASM file. |
-| `exports` | Boolean | Include exported functions in the response. |
-| `imports` | Boolean | Include imported functions in the response. |
-| `submittable`| Boolean | Filter functions that can be directly submitted. |
-| `extensions` | Boolean | Include extension exports. |
+**Query Parameters:** | Parameter | Type | Description | | :--- | :--- | :--- | | `type` | String |
+Filter by [Component Type](#component-type). | | `name` | String | Filter by component name. | |
+`digest` | String | Filter by `sha256sum` of the component's WASM file. | | `exports` | Boolean |
+Include exported functions in the response. | | `imports` | Boolean | Include imported functions in
+the response. | | `submittable`| Boolean | Filter functions that can be directly submitted. | |
+`extensions` | Boolean | Include extension exports. |
 
 #### Example request
+
 ```sh
 curl '127.1:5005/v1/components?exports=true&imports=false' -H 'accept:application/json'
 ```
+
 ```json
 [
   {
@@ -75,20 +75,25 @@ curl '127.1:5005/v1/components?exports=true&imports=false' -H 'accept:applicatio
 ---
 
 ### `GET /v1/components/{digest}/wit`
+
 Retrieves the WebAssembly Interface Type (WIT) definition for a specific component.
 
 **Path Parameters:**
+
 - `digest`: `sha256sum` of the component's WASM file.
 
 **Returns:**
+
 - `200 OK`: The WIT text.
 - `204 No Content`: If the component exists but has no WIT definition.
 - `404 Not Found`: Component not found.
 
 #### Example request
+
 ```sh
 curl '127.1:5005/v1/components/sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0/wit'
 ```
+
 ```
 package root:component;
 
@@ -116,31 +121,33 @@ package testing:fibo {
 ## Executions
 
 ### `GET /v1/execution-id`
+
 Generates a new, globally unique execution id.
 
 **Returns:**
+
 - JSON: quoted string, e.g. `"E_01KDN7RB038RJHVZ5QS6MMWWZ4"`
 - Text: raw id, e.g. `E_01KDN7RB038RJHVZ5QS6MMWWZ4`
 
 ---
 
 ### `GET /v1/executions`
+
 Lists executions with support for filtering and pagination.
 
-**Query Parameters:**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `ffqn` | String | Filter by Function Fully Qualified Name. |
-| `show_nested`| Boolean | If `true`, includes child executions. (Default: `false`). |
-| `cursor` | String/Date| Pagination cursor (Timestamp or Execution ID). |
-| `length` | Integer | Number of items to return. |
-| `direction` | String | `older` (default) or `newer`. |
-| `including_cursor`| Boolean| Include the cursor item in the result. |
+**Query Parameters:** | Parameter | Type | Description | | :--- | :--- | :--- | | `ffqn` | String |
+Filter by Function Fully Qualified Name. | | `show_nested`| Boolean | If `true`, includes child
+executions. (Default: `false`). | | `cursor` | String/Date| Pagination cursor (Timestamp or
+Execution ID). | | `length` | Integer | Number of items to return. | | `direction` | String |
+`older` (default) or `newer`. | | `including_cursor`| Boolean| Include the cursor item in the
+result. |
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions" -H accept:application/json
 ```
+
 ```json
 [
   {
@@ -164,89 +171,111 @@ curl "127.1:5005/v1/executions" -H accept:application/json
 ---
 
 ### `POST /v1/executions`
+
 Submits a new execution. The system will automatically generate an Execution ID.
 
 **Query Parameters:**
+
 - `follow`: (Boolean) If `true`, the request blocks and streams the result once finished.
 
-
 #### Example request
+
 ```sh
 curl '127.1:5005/v1/executions' -H content-type:application/json -H accept:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":"E_01KDN8Y8ZZ4XYG2J0XJW5A8WE5"}
+{ "ok": "E_01KDN8Y8ZZ4XYG2J0XJW5A8WE5" }
 ```
 
 With `follow` set to `true`:
+
 ```sh
 curl '127.1:5005/v1/executions?follow=true' -H content-type:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":5}
+{ "ok": 5 }
 ```
 
 ---
 
 ### `PUT /v1/executions/{execution-id}`
-Submits an execution with a client-provided ID. This is idempotent; if the execution already exists with the same parameters, it returns `200 OK`.
+
+Submits an execution with a client-provided ID. This is idempotent; if the execution already exists
+with the same parameters, it returns `200 OK`.
 
 **Path Parameters:**
+
 - `execution-id`: The unique ID for this execution.
 
 **Query Parameters:**
+
 - `follow`: (Boolean) Block and stream the result.
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":"E_01KDN9422HAK2AHY9EXZA201TD"}
+{ "ok": "E_01KDN9422HAK2AHY9EXZA201TD" }
 ```
+
 Resending with `follow` set to `true`:
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":5}
+{ "ok": 5 }
 ```
 
 ---
 
 ### `GET /v1/executions/{execution-id}`
+
 Retrieves the result of an execution.
 
 **Query Parameters:**
-- `follow`: (Boolean) If the execution is not finished, the connection stays open and streams the result as soon as it completes.
+
+- `follow`: (Boolean) If the execution is not finished, the connection stays open and streams the
+  result as soon as it completes.
 
 **Responses:**
+
 - `200 OK`: Returns the [Execution Result](#execution-result).
 - `425 Too Early`: Execution is still in progress (only returned if `follow=false`).
 
-
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}"
 ```
+
 ```json
-{"ok":5}
+{ "ok": 5 }
 ```
 
 ---
 
 ### `GET /v1/executions/{execution-id}/status`
+
 Returns the current lifecycle status (e.g., `pending`, `running`, `finished`).
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json
 ```
+
 ```json
 {
   "status": "Finished",
@@ -256,20 +285,25 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/jso
   "component_id_input_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
 }
 ```
+
 ---
 
 ### `GET /v1/executions/{execution-id}/events`
+
 Retrieves the history of events for an execution.
 
 **Query Parameters:**
+
 - `version_from`: Start from this event version.
 - `length`: Max number of events.
 - `include_backtrace_id`: Include debugging backtrace IDs.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json
 ```
+
 ```json
 [
   {
@@ -300,14 +334,16 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/jso
 ---
 
 ### `GET /v1/executions/{execution-id}/responses`
+
 Retrieves responses associated with an execution (used for long-running interactions).
 
 **Query Parameters:**
+
 - `cursor_from`: Start from this cursor index.
 - `length`: Max number of responses.
 
-
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 
@@ -316,6 +352,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:appl
 
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/json
 ```
+
 ```json
 [
   {
@@ -347,22 +384,27 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/
 ---
 
 ### `PUT /v1/executions/{execution-id}/stub`
+
 Manually provides a return value for a stubbed execution.
 
 **Request Body (JSON):**
+
 ```json
 {
   "ok": "your-return-value"
 }
 ```
+
 or
+
 ```json
 {
-    "err": "your-error-value"
+  "err": "your-error-value"
 }
 ```
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 # Submit a workflow that submits a stub activity
@@ -377,8 +419,9 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events"  | grep $CHILD_EXECUTION_
 curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:application/json -X PUT -d \
 '{"ok": "some return value"}'
 ```
+
 ```json
-{"ok":"stubbed"}
+{ "ok": "stubbed" }
 ```
 
 ---
@@ -386,10 +429,11 @@ curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:appli
 ## Cancellation requests
 
 ### `PUT /v1/executions/{execution-id}/cancel`
-Cancels an active execution.
-*Note: This is only permitted for Activity components.*
+
+Cancels an active execution. _Note: This is only permitted for Activity components._
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
@@ -397,19 +441,24 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json
 
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/cancel" -X PUT -H accept:application/json
 ```
+
 ```json
-{"ok":"cancelled"}
+{ "ok": "cancelled" }
 ```
 
 ---
+
 ### `PUT /v1/delays/{delay-id}/cancel`
-Cancels a request for {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }}.
+
+Cancels a request for
+{{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }}.
 
 **Path Parameters:**
+
 - `delay-id`: The unique ID of the delay.
 
-
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
@@ -422,8 +471,9 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events"  | grep $DELAY_ID
 
 curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
 ```
+
 ```json
-{"ok":"cancelled"}
+{ "ok": "cancelled" }
 ```
 
 ---
@@ -431,7 +481,9 @@ curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
 ## Data Reference
 
 ### Component Type
+
 When filtering components, use these values:
+
 - `activity_wasm`
 - `activity_stub`
 - `activity_external`
@@ -439,22 +491,27 @@ When filtering components, use these values:
 - `webhook_endpoint`
 
 ### Execution Result
+
 The result object returned when an execution finishes:
-*  `{ "ok": ... }`: Optional value returned if function succeeded.
-* `{ "err": ... }`: Optional value returned if function returned an error.
-* `{ "execution_error": ... }`: Optional value returned if the execution failed. Contains fields `kind`, and optionally `reason`, `detail`.
+
+- `{ "ok": ... }`: Optional value returned if function succeeded.
+- `{ "err": ... }`: Optional value returned if function returned an error.
+- `{ "execution_error": ... }`: Optional value returned if the execution failed. Contains fields
+  `kind`, and optionally `reason`, `detail`.
 
 #### Execution Error Kind
+
 One of
-* `timed_out`: Applicable to activities only, last attempt timed out
-* `nondeterminism_detected`: Applicable to workflows
-* `out_of_fuel`: Applicable to WASM components
-* `cancelled`: Applicable to activities
-* `uncategorized`: Uncategorized, e.g. WASM trap
 
-
+- `timed_out`: Applicable to activities only, last attempt timed out
+- `nondeterminism_detected`: Applicable to workflows
+- `out_of_fuel`: Applicable to WASM components
+- `cancelled`: Applicable to activities
+- `uncategorized`: Uncategorized, e.g. WASM trap
 
 ### Errors
+
 Errors are returned with appropriate HTTP status codes (400, 404, 409, 503).
+
 - **JSON**: `{ "err": "Description of error" }`
 - **Text**: `Description of error`

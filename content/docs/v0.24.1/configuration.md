@@ -4,30 +4,34 @@ template = "docs.html"
 weight = 20
 +++
 
-
 ## Server Configuration
 
 ### API Server
+
 ```toml
 api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
 ```
 
 ### Web UI
+
 ```toml
 webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 ```
 
-> **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is not yet implemented.
+> **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is
+> not yet implemented.
 
 ### Sqlite
+
 Set SQLite database directory.
+
 ```toml
 sqlite.directory = "${DATA_DIR}/obelisk-sqlite"
 ```
+
 See [Path Prefixes](#path-prefixes) for how `${DATA_DIR}` is translated.
 
-Customize PRAGMA statements. Switch to "FULL" sync to perform fsync on each commit.
-Defaults are in
+Customize PRAGMA statements. Switch to "FULL" sync to perform fsync on each commit. Defaults are in
 {{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs") }}
 
 ```toml
@@ -57,15 +61,26 @@ fuel = "unlimited" # If set to an integer, WASM instances consume fuel, details:
 See [Path Prefixes](#path-prefixes) for how `${CACHE_DIR}` is translated.
 
 ### WASM Cache Directory
-Path to directory where downloaded or transformed WASM files are stored. Supports [path prefixes](#path-prefixes).
-By default `"${CACHE_DIR}/wasm"` or `"./cache/wasm"` if no valid home directory path could be retrieved from the operating system.
+
+Path to directory where downloaded or transformed WASM files are stored. Supports
+[path prefixes](#path-prefixes). By default `"${CACHE_DIR}/wasm"` or `"./cache/wasm"` if no valid
+home directory path could be retrieved from the operating system.
 
 ### Allocator Configuration
-See [Allocation strategy](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html) for instance creation. Can be either [pooling](https://docs.wasmtime.dev/api/wasmtime/struct.PoolingAllocationConfig.html) or [on demand](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html#variant.OnDemand). Default value `auto` will attempt
-to use the `pooling` strategy with a fallback on error to `on_demand`.
+
+See
+[Allocation strategy](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html)
+for instance creation. Can be either
+[pooling](https://docs.wasmtime.dev/api/wasmtime/struct.PoolingAllocationConfig.html) or
+[on demand](https://docs.wasmtime.dev/api/wasmtime/enum.InstanceAllocationStrategy.html#variant.OnDemand).
+Default value `auto` will attempt to use the `pooling` strategy with a fallback on error to
+`on_demand`.
 
 ### Global Preopened Directories Configuration
-Preopended directory support for activities is disabled by default. It must be enabled both globally and for specifically for activity that uses disk IO.
+
+Preopended directory support for activities is disabled by default. It must be enabled both globally
+and for specifically for activity that uses disk IO.
+
 ```toml
 [activities.directories]
 enabled = false                           # Disabled by default.
@@ -76,7 +91,9 @@ cleanup.older_than.minutes = 5            # Delete folders belonging to executio
 ```
 
 ### Code Generation Cache
+
 The compiled binaries can be stored to speed up startup time.
+
 ```toml
 [codegen_cache]
 enabled = true
@@ -95,6 +112,7 @@ location.path = "path/to/wasm"       # File path location (mutually exclusive wi
 location.oci = "docker.io/repo/image:tag"  # OCI registry location
 content_digest = "sha256:..."        # Optional: WASM file hash verification
 ```
+
 Value of `location.path` supports [path prefixes](#path-prefixes).
 
 ### Common Executor Settings
@@ -123,25 +141,30 @@ env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inher
 ```
 
 ### Preopended directory support
-Disk IO must be explicitly enabled.
-When enabled, a directory will be created on host and mapped to `.` on the guest activity with all permissions.
-On host the directory is created as `activities.directories.parent_directory`/ExecutionID and is truncated after the activity finishes.
+
+Disk IO must be explicitly enabled. When enabled, a directory will be created on host and mapped to
+`.` on the guest activity with all permissions. On host the directory is created as
+`activities.directories.parent_directory`/ExecutionID and is truncated after the activity finishes.
 
 ```toml
 directories  = { enabled = true, reuse_on_retry = false}
 ```
 
-`reuse_on_retry` disabled by default: every execution attempt will start with an empty preopened directory.
+`reuse_on_retry` disabled by default: every execution attempt will start with an empty preopened
+directory.
 
-If `reuse_on_retry` is enabled, a retried activity can reuse the same directory that was used by previous attempt. This
-can be helpful if an activity e.g. downloads a file and then processes it. Activity must in this case do all of its operations
-idempotently (e.g. `mkdir -p`) and verify the integrity of all files left by previous attempts.
+If `reuse_on_retry` is enabled, a retried activity can reuse the same directory that was used by
+previous attempt. This can be helpful if an activity e.g. downloads a file and then processes it.
+Activity must in this case do all of its operations idempotently (e.g. `mkdir -p`) and verify the
+integrity of all files left by previous attempts.
 
-Read more about {{ doc_link(title="Preopened directories", path="concepts/activities/preopened-dirs.md") }}.
+Read more about
+{{ doc_link(title="Preopened directories", path="concepts/activities/preopened-dirs.md") }}.
 
 ### Process Spawn API
+
 In order to enable the `obelisk:activity/process@1.0.0` API, preopened directory must be enabled and
-`process_provider` must be set to  `"native"`.
+`process_provider` must be set to `"native"`.
 
 ```toml
 directories  = { enabled = true, reuse_on_retry = false, process_provider = "native"}
@@ -177,20 +200,19 @@ backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 stub_wasi = false                     # Default is false.
 ```
 
-The blocking strategy controlls whether an execution should `await` the child execution response
-or be `interrupt`ed and later replayed. Note that the `await` strategy will only wait until `lock_expiry`
-duration expires.
+The blocking strategy controlls whether an execution should `await` the child execution response or
+be `interrupt`ed and later replayed. Note that the `await` strategy will only wait until
+`lock_expiry` duration expires.
 
 ## HTTP Servers and Webhooks
 
-A Webhook Endpoint must be associated with a HTTP Server and must define one or
-more routes to listen on.
-Routes are divided into two categories: with HTTP methods (high priority)
-and without HTTP methods (low priority).
-When a request matches multiple routes of the same priority,
-the first webhook will receive it.
+A Webhook Endpoint must be associated with a HTTP Server and must define one or more routes to
+listen on. Routes are divided into two categories: with HTTP methods (high priority) and without
+HTTP methods (low priority). When a request matches multiple routes of the same priority, the first
+webhook will receive it.
 
 ### HTTP Servers
+
 ```toml
 [[http_server]]
 name = "server_name"                  # Server identifier
@@ -199,6 +221,7 @@ max_inflight_requests = "unlimited"   # Concurrent request limit
 ```
 
 ### Webhook Endpoints
+
 ```toml
 [[webhook_endpoint]]
 name = "..."
@@ -219,29 +242,35 @@ backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 ```
 
 #### Route Syntax
+
 Routes: Define URL paths (only the path is matched):
 
 ##### Static paths
+
 - `"/"` - Root path only
 - `"/path"` - Exact path match
 
 ##### Wildcards
+
 - `"/path/*"` - Path prefix match
 - `"{ methods = ["GET"], route = "/path" }"` - Method-specific (priority) match
 
 ##### Parameterized
+
 - `"/status/:param1/:param2"` - Path parameters (exposed as env vars)
 
 ##### All paths
-- `""` or `"/*"` - Match all paths
 
+- `""` or `"/*"` - Match all paths
 
 ## Observability
 
 Levels and filtering is configured using
-[EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) syntax.
+[EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html)
+syntax.
 
 ### OTLP Tracing
+
 ```toml
 [otlp]
 enabled = true
@@ -253,6 +282,7 @@ otlp_endpoint = "http://localhost:4317"
 ### Logging
 
 #### Stdout Logging
+
 ```toml
 [log.stdout]
 enabled = true
@@ -263,6 +293,7 @@ target = false             # Whether to include the target module in message
 ```
 
 #### File Logging
+
 ```toml
 [log.file]
 enabled = true
@@ -279,17 +310,19 @@ prefix = "obelisk_server_daily" # File name prefix
 
 The following path prefixes are supported throughout the configuration:
 
-| Prefix                 | Default Path on Linux      | Details                                           |
-|------------------------|----------------------------|---------------------------------------------------|
-| `~`                    | `~`                        | Home directory                                    |
-| `${DATA_DIR}`          | `~/.local/share/obelisk`   | System data directory                             |
-| `${CACHE_DIR}`         | `~/.cache/obelisk`         | System cache directory                            |
-| `${CONFIG_DIR}`        | `~/.config/obelisk`        | System config directory                           |
-| `${OBELISK_TOML_DIR}`  | N/A                        | Directory where the obelisk.toml file is located  |
-| `${TEMP_DIR}`          | /tmp                       | See [temp_dir](https://doc.rust-lang.org/std/env/fn.temp_dir.html)|
+| Prefix                | Default Path on Linux    | Details                                                            |
+| --------------------- | ------------------------ | ------------------------------------------------------------------ |
+| `~`                   | `~`                      | Home directory                                                     |
+| `${DATA_DIR}`         | `~/.local/share/obelisk` | System data directory                                              |
+| `${CACHE_DIR}`        | `~/.cache/obelisk`       | System cache directory                                             |
+| `${CONFIG_DIR}`       | `~/.config/obelisk`      | System config directory                                            |
+| `${OBELISK_TOML_DIR}` | N/A                      | Directory where the obelisk.toml file is located                   |
+| `${TEMP_DIR}`         | /tmp                     | See [temp_dir](https://doc.rust-lang.org/std/env/fn.temp_dir.html) |
 
-Note: the resolved path on Mac OS and Windows will be differet, e.g. for `${CONFIG_DIR}`:
-    * `/Users/youruser/Library/Application Support/com.obelisk.obelisk-App/` on Mac
-    * `C:\Users\youruser\AppData\Roaming\obelisk\obelisk\config\` on Windows
+Note: the resolved path on Mac OS and Windows will be differet, e.g. for `${CONFIG_DIR}`: _
+`/Users/youruser/Library/Application Support/com.obelisk.obelisk-App/` on Mac _
+`C:\Users\youruser\AppData\Roaming\obelisk\obelisk\config\` on Windows
 
-See the [directories crate documentation](https://docs.rs/directories/6.0.0/directories/struct.ProjectDirs.html) for details.
+See the
+[directories crate documentation](https://docs.rs/directories/6.0.0/directories/struct.ProjectDirs.html)
+for details.

@@ -4,32 +4,45 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Webhook endpoints handle incoming HTTP requests and can trigger workflows or activities in response. They run as WASM components, just like activities, but export an HTTP handler instead of named functions.
+Webhook endpoints handle incoming HTTP requests and can trigger workflows or activities in response.
+They run as WASM components, just like activities, but export an HTTP handler instead of named
+functions.
 
-A handler receives a request and returns a response. It can call a workflow or activity directly — blocking until the result is ready — or schedule one as fire-and-forget without waiting. {{ doc_link(title="Join sets", path="concepts/workflows/join-sets.md") }} are not available inside webhook handlers. URL path parameters are exposed as environment variables inside the handler.
+A handler receives a request and returns a response. It can call a workflow or activity directly —
+blocking until the result is ready — or schedule one as fire-and-forget without waiting.
+{{ doc_link(title="Join sets", path="concepts/workflows/join-sets.md") }} are not available inside
+webhook handlers. URL path parameters are exposed as environment variables inside the handler.
 
 ## Implementation
 
 For language-specific implementation details, see:
 
-- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — JavaScript handler, `obelisk.call`, `obelisk.schedule`, fetch, path parameters
-- {{ doc_link(title="Rust Components", path="wasm/rust-components.md") }} — Rust/WASM handler using `wstd`, WIT imports, `cargo generate` templates
-- {{ doc_link(title="HTTP Client (Rust)", path="wasm/http-client.md") }} — Making outbound HTTP requests from Rust activities and webhooks
+- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — JavaScript handler,
+  `obelisk.call`, `obelisk.schedule`, fetch, path parameters
+- {{ doc_link(title="Rust Components", path="wasm/rust-components.md") }} — Rust/WASM handler using
+  `wstd`, WIT imports, `cargo generate` templates
+- {{ doc_link(title="HTTP Client (Rust)", path="wasm/http-client.md") }} — Making outbound HTTP
+  requests from Rust activities and webhooks
 
 ## Example — Stargazers demo
 
-The webhook endpoint in the [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/webhook) shows a real-world integration with GitHub, covering:
+The webhook endpoint in the
+[stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/webhook) shows a
+real-world integration with GitHub, covering:
 
-* Setting a shared secret and passing it as an environment variable
-* Verifying the request signature using HMAC
-* Creating a tunnel to expose the local HTTP server
-* Testing
+- Setting a shared secret and passing it as an environment variable
+- Verifying the request signature using HMAC
+- Creating a tunnel to expose the local HTTP server
+- Testing
 
 ## Configuration
 
 ### Associating Webhook Endpoints with HTTP Servers
 
-Webhook endpoints don't listen for HTTP requests directly. Instead, they are associated with an `[[http_server]]` instance defined in your deployment configuration. This association is established using the `http_server` field within the `[[webhook_endpoint]]` or `[[webhook_endpoint_js]]` configuration.
+Webhook endpoints don't listen for HTTP requests directly. Instead, they are associated with an
+`[[http_server]]` instance defined in your deployment configuration. This association is established
+using the `http_server` field within the `[[webhook_endpoint]]` or `[[webhook_endpoint_js]]`
+configuration.
 
 ```toml
 [[http_server]]
@@ -44,7 +57,8 @@ http_server = "my_server"
 
 ### Routes Configuration
 
-Each webhook endpoint must define one or more routes. These routes determine which incoming HTTP requests will be handled by that endpoint.
+Each webhook endpoint must define one or more routes. These routes determine which incoming HTTP
+requests will be handled by that endpoint.
 
 ```toml
 [[webhook_endpoint_wasm]]
@@ -61,33 +75,37 @@ routes = [
 
 Obelisk supports several ways to define routes:
 
-* **Static Routes**: Match exact URL paths.
+- **Static Routes**: Match exact URL paths.
+  - `"/"`: Matches only the root path.
 
-  * `"/"`: Matches only the root path.
+  - `"/path"`: Matches the exact path `/path`.
 
-  * `"/path"`: Matches the exact path `/path`.
+- **Wildcard Routes**: Match path prefixes.
+  - `"/path/*"`: Matches any path that starts with `/path/`, including `/path/`, `/path/subpath`,
+    `/path/a/b/c`, etc.
 
-* **Wildcard Routes**: Match path prefixes.
+- **Parameterized Routes**: Capture parts of the path as parameters.
+  - `"/status/:PARAM1/:PARAM2"`: Matches paths like `/status/123/abc`. The values `123` and `abc`
+    will be available to the webhook endpoint as environment variables named `PARAM1` and `PARAM2`,
+    respectively.
 
-  * `"/path/*"`: Matches any path that starts with `/path/`, including `/path/`, `/path/subpath`, `/path/a/b/c`, etc.
+- **Method-Specific Routes**: These routes combine an HTTP method (or methods) with a path.
+  Method-specific routes have higher priority than routes without methods.
+  - `{ methods = ["GET"], route = "/path/*" }`: A wildcard route restricted to only `GET` requests.
 
-* **Parameterized Routes**: Capture parts of the path as parameters.
+  - `{ methods = ["POST", "PUT"], route = "/resource" }`: A static route restricted to `POST` or
+    `PUT` requests.
 
-  * `"/status/:PARAM1/:PARAM2"`: Matches paths like `/status/123/abc`. The values `123` and `abc` will be available to the webhook endpoint as environment variables named `PARAM1` and `PARAM2`, respectively.
-
-* **Method-Specific Routes**: These routes combine an HTTP method (or methods) with a path. Method-specific routes have higher priority than routes without methods.
-
-  * `{ methods = ["GET"], route = "/path/*" }`: A wildcard route restricted to only `GET` requests.
-
-  * `{ methods = ["POST", "PUT"], route = "/resource" }`: A static route restricted to `POST` or `PUT` requests.
-
-* **Matching All Paths**
-  * `""` or `"/*"` — Match all paths
+- **Matching All Paths**
+  - `""` or `"/*"` — Match all paths
 
 #### Route Priority and Matching Order
 
-When an incoming HTTP request arrives, Obelisk checks the configured routes to determine which webhook endpoint should handle it. The matching process follows these rules:
+When an incoming HTTP request arrives, Obelisk checks the configured routes to determine which
+webhook endpoint should handle it. The matching process follows these rules:
 
-* **Method-Specific Routes First**: Obelisk first tries to match the request against routes that specify HTTP methods (e.g., `{ methods = ["GET"], route = "/path" }`).
+- **Method-Specific Routes First**: Obelisk first tries to match the request against routes that
+  specify HTTP methods (e.g., `{ methods = ["GET"], route = "/path" }`).
 
-* **First Match Wins (Within Priority)**: Within each priority level (method-specific or not), the first route that matches the request wins. The order of routes in the routes list matters.
+- **First Match Wins (Within Priority)**: Within each priority level (method-specific or not), the
+  first route that matches the request wins. The order of routes in the routes list matters.

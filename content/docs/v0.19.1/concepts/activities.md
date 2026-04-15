@@ -4,30 +4,56 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-Activities are the fundamental building blocks of work within an Obelisk {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. They represent individual, idempotent operations that perform a specific task, typically a network activity. Think of them as the "verbs" of your workflow – the actions that get things done. Activities are designed to be resilient, with built-in mechanisms for handling errors and ensuring reliable execution.
+Activities are the fundamental building blocks of work within an Obelisk
+{{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. They represent individual,
+idempotent operations that perform a specific task, typically a network activity. Think of them as
+the "verbs" of your workflow – the actions that get things done. Activities are designed to be
+resilient, with built-in mechanisms for handling errors and ensuring reliable execution.
 
 ## Defining Features of Activities
-* **Idempotency**: This is the most crucial aspect of an activity. An activity must be idempotent, meaning it can be executed multiple times with the same input and produce the same result without unintended side effects. This is essential for retries and ensuring the integrity of your workflow, even in the face of failures. The responsibility for fulfilling this contract lies with the activity's implementation.
 
-* **WASM Sandboxing**: Activities are executed within a WebAssembly (WASM) sandbox. This provides a secure, isolated environment, preventing activities from having unrestricted access to the system.
+- **Idempotency**: This is the most crucial aspect of an activity. An activity must be idempotent,
+  meaning it can be executed multiple times with the same input and produce the same result without
+  unintended side effects. This is essential for retries and ensuring the integrity of your
+  workflow, even in the face of failures. The responsibility for fulfilling this contract lies with
+  the activity's implementation.
 
-* **Resilience**: Obelisk automatically handles retries for activities that fail due to errors, timeouts, or panics(traps). This retry mechanism, combined with idempotency, makes activities highly reliable. The input parameters and execution results of activities are persistently stored, contributing to this resilience.
+- **WASM Sandboxing**: Activities are executed within a WebAssembly (WASM) sandbox. This provides a
+  secure, isolated environment, preventing activities from having unrestricted access to the system.
+
+- **Resilience**: Obelisk automatically handles retries for activities that fail due to errors,
+  timeouts, or panics(traps). This retry mechanism, combined with idempotency, makes activities
+  highly reliable. The input parameters and execution results of activities are persistently stored,
+  contributing to this resilience.
 
 ## Creating an Activity
 
+1. **Definition:** You define a workflow as code. Each function must have its signature specified
+   using
+   [WIT (WebAssembly Interface Type)](https://component-model.bytecodealliance.org/design/wit.html)
+   IDL. Any language that is supported by
+   [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen/blob/main/README.md#supported-guest-languages)
+   including Rust and Go can be used.
 
-1. **Definition:** You define a workflow as code. Each function must have its signature specified using [WIT (WebAssembly Interface Type)](https://component-model.bytecodealliance.org/design/wit.html) IDL. Any language that is supported by [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen/blob/main/README.md#supported-guest-languages) including Rust and Go can be used.
+2. **Compilation to WASM:** Your activity code is compiled into a WebAssembly Component.
 
-2.  **Compilation to WASM:** Your activity code is compiled into a WebAssembly Component.
+3. **Deployment:** Create a new `[[wasm_activity]]` table with the compiled WASM file location in
+   the {{ doc_link(title="Obelisk configuration", path="configuration.md") }} file.
 
-3.  **Deployment:** Create a new `[[wasm_activity]]` table with the compiled WASM file location in the {{ doc_link(title="Obelisk configuration", path="configuration.md") }} file.
-
-4.  **Execution:** The activity can be triggered directly using CLI, WebUI or [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto), but most commonly it is executed as a step in a {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. Obelisk persists the execution submission and execution result. If the activity times out, panics(traps) or returns an error, it will be retried after a timeout.
+4. **Execution:** The activity can be triggered directly using CLI, WebUI or
+   [gRPC](https://github.com/obeli-sk/obelisk/tree/main/proto), but most commonly it is executed as
+   a step in a {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }}. Obelisk
+   persists the execution submission and execution result. If the activity times out, panics(traps)
+   or returns an error, it will be retried after a timeout.
 
 ## Example - calculating Fibonacci
-In this contrived example we will create an activity that does not communicate with an external system. Its purpose is to show
-the interactions between activities and {{ doc_link(title="workflows", path="concepts/workflows/_index.md") }}.
-First we need to define an interface with a single function using [WIT IDL](https://component-model.bytecodealliance.org/design/wit.html). We will then export the interface.
+
+In this contrived example we will create an activity that does not communicate with an external
+system. Its purpose is to show the interactions between activities and
+{{ doc_link(title="workflows", path="concepts/workflows/_index.md") }}. First we need to define an
+interface with a single function using
+[WIT IDL](https://component-model.bytecodealliance.org/design/wit.html). We will then export the
+interface.
 
 ```wit
 package template-fibo:activity;
@@ -40,8 +66,9 @@ world any {
 }
 ```
 
-The corresponding bindings are generated automatically using [wit-bindgen](https://crates.io/crates/wit-bindgen) if we
-place the WIT file in the `wit` folder. Then we implement the `Guest` trait in Rust.
+The corresponding bindings are generated automatically using
+[wit-bindgen](https://crates.io/crates/wit-bindgen) if we place the WIT file in the `wit` folder.
+Then we implement the `Guest` trait in Rust.
 
 ```rust
 impl Guest for Component {
@@ -57,20 +84,31 @@ impl Guest for Component {
 }
 ```
 
-In order to simplify creating the `Cargo` project, you can use [cargo-generate](https://crates.io/crates/cargo-generate):
+In order to simplify creating the `Cargo` project, you can use
+[cargo-generate](https://crates.io/crates/cargo-generate):
+
 ```sh
 cargo generate obeli-sk/obelisk-templates fibo/activity --name myactivity
 cd myactivity
 cargo build --release
 obelisk server run
 ```
-Follow the template's [README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/activity/README.md) to execute the activity.
+
+Follow the template's
+[README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/activity/README.md) to execute
+the activity.
 
 ## HTTP Client
-Activities can make HTTP requests using the [WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This allows them to interact with external services and APIs. Importantly, this HTTP client is controlled, with built-in tracing to enhance security and predictability. Disk I/O is not permitted.
+
+Activities can make HTTP requests using the
+[WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This allows them to interact with
+external services and APIs. Importantly, this HTTP client is controlled, with built-in tracing to
+enhance security and predictability. Disk I/O is not permitted.
 
 ### Example - WAKI based HTTP client
-Instead of using the generated bindings directly we can use the [waki](https://crates.io/crates/waki) HTTP client.
+
+Instead of using the generated bindings directly we can use the
+[waki](https://crates.io/crates/waki) HTTP client.
 
 ```rust
 impl Guest for Component {
@@ -96,31 +134,46 @@ mod tests {
     }
 }
 ```
-This project can be generated using the [http-simple template](https://github.com/obeli-sk/obelisk-templates/tree/main/http-simple/activity)
+
+This project can be generated using the
+[http-simple template](https://github.com/obeli-sk/obelisk-templates/tree/main/http-simple/activity)
+
 ```sh
 cargo generate obeli-sk/obelisk-templates http-simple/activity
 ```
 
-If you need to use GraphQL, check out the [cynic](https://crates.io/crates/cynic) crate and the following [template](https://github.com/obeli-sk/obelisk-templates/tree/main/graphql-github/activity):
+If you need to use GraphQL, check out the [cynic](https://crates.io/crates/cynic) crate and the
+following
+[template](https://github.com/obeli-sk/obelisk-templates/tree/main/graphql-github/activity):
+
 ```sh
 cargo generate obeli-sk/obelisk-templates graphql-github/activity
 ```
 
-Note: If you need an `async` HTTP client, use [wstd](https://crates.io/crates/wstd) crate instead of `waki`.
+Note: If you need an `async` HTTP client, use [wstd](https://crates.io/crates/wstd) crate instead of
+`waki`.
 
 ## Logging, debugging, testing
+
 To understand the internal state of an activity, you can use the following:
 
-* `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[activity]]` section of the {{ doc_link(title="configuratin", path="configuration.md") }}. Output will appear in the server log.
-* `obelisk:log` API - see {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}
+- `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[activity]]`
+  section of the {{ doc_link(title="configuratin", path="configuration.md") }}. Output will appear
+  in the server log.
+- `obelisk:log` API - see
+  {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}
 
 Unit testing is possible with Cargo's test harness.
 
 Run the testing WASM artifact as usual:
+
 ```sh
 cargo test
 ```
-Make sure to add the following in your `.cargo/config.toml`, so that the test binary is run with [wasmtime](https://wasmtime.dev) or other `WASI 0.2` compatible runtime:
+
+Make sure to add the following in your `.cargo/config.toml`, so that the test binary is run with
+[wasmtime](https://wasmtime.dev) or other `WASI 0.2` compatible runtime:
+
 ```toml
 [build]
 target = "wasm32-wasip2"
@@ -128,4 +181,6 @@ target = "wasm32-wasip2"
 [target.wasm32-wasip2]
 runner = "wasmtime run -Scli -Shttp  --env TEST_URL"
 ```
-The [stargazers demo](https://github.com/obeli-sk/demo-stargazers/tree/main/activity) repository contains unit and integration tests for activities.
+
+The [stargazers demo](https://github.com/obeli-sk/demo-stargazers/tree/main/activity) repository
+contains unit and integration tests for activities.

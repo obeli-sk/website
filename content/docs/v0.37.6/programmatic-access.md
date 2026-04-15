@@ -4,10 +4,10 @@ template = "docs.html"
 weight = 0
 +++
 
-
 ## OpenAPI Schema
 
-The Web API has an auto-generated OpenAPI schema available at {{ github(title="assets/openapi.json", path="assets/openapi.json") }}.
+The Web API has an auto-generated OpenAPI schema available at
+{{ github(title="assets/openapi.json", path="assets/openapi.json") }}.
 
 ## gRPC, gRPC-Web
 
@@ -20,11 +20,13 @@ This document describes the REST-like API for managing components and executions
 ## General Information
 
 ### Base URL
+
 All endpoints are prefixed with `/v1`.
 
 ## Content Negotiation
 
 The API supports content negotiation via the `Accept` header.
+
 - `application/json` (Default): Returns structured JSON data.
 - `text/plain`: Returns a human-readable string representation (e.g., raw IDs or formatted lists).
 
@@ -33,23 +35,25 @@ The API supports content negotiation via the `Accept` header.
 ## Components
 
 ### `GET /v1/components`
+
 Lists all registered components in the system.
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `type` | String | Filter by [Component Type](#component-type). | `None` |
-| `name` | String | Filter by component name. | `None` |
-| `digest` | String | Filter by `sha256sum` of the component's WASM file. | `None` |
-| `exports` | Boolean | Include exported functions in the response. | `false` |
-| `imports` | Boolean | Include imported functions in the response. | `false` |
-| `submittable`| Boolean | If set, filters the `exports` list to only include functions that can be submitted. | `None` (Shows all) |
-| `extensions` | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant). | `false` |
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`type` | String | Filter by [Component Type](#component-type). | `None` | | `name` | String | Filter
+by component name. | `None` | | `digest` | String | Filter by `sha256sum` of the component's WASM
+file. | `None` | | `exports` | Boolean | Include exported functions in the response. | `false` | |
+`imports` | Boolean | Include imported functions in the response. | `false` | | `submittable`|
+Boolean | If set, filters the `exports` list to only include functions that can be submitted. |
+`None` (Shows all) | | `extensions` | Boolean | Include
+{{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule`
+variant). | `false` |
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/components?exports=true&imports=false" -H accept:application/json
 ```
+
 ```json
 [
   {
@@ -79,20 +83,25 @@ curl "127.1:5005/v1/components?exports=true&imports=false" -H accept:application
 ---
 
 ### `GET /v1/components/{digest}/wit`
+
 Retrieves the WebAssembly Interface Type (WIT) definition for a specific component.
 
 **Path Parameters:**
+
 - `digest`: `sha256sum` of the component's WASM file.
 
 **Returns:**
+
 - `200 OK`: The WIT text.
 - `204 No Content`: If the component exists but has no WIT definition.
 - `404 Not Found`: Component not found.
 
 #### Example request
+
 ```sh
 curl '127.1:5005/v1/components/sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0/wit'
 ```
+
 ```
 package root:component;
 
@@ -108,35 +117,37 @@ world root {
 ## Executions
 
 ### `GET /v1/execution-id`
+
 Generates a new, globally unique execution id.
 
 **Returns:**
+
 - JSON: quoted string, e.g. `"E_01KDN7RB038RJHVZ5QS6MMWWZ4"`
 - Text: raw id, e.g. `E_01KDN7RB038RJHVZ5QS6MMWWZ4`
 
 ---
 
 ### `GET /v1/executions`
+
 Lists executions with support for filtering and pagination.
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. | `None` |
-| `show_derived`| Boolean | If `true`, includes child executions. | `false` |
-| `hide_finished` | Boolean | Show only unfinished executions. | `false` |
-| `execution_id_prefix` | String | Filter by Execution ID or its prefix. | `None` |
-| `component_digest` | String | Filter by component's `sha256` digest. | `None` |
-| `deployment_id` | String | Filter by deployment ID. | `None` |
-| `cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` |
-| `length` | Integer | Number of items to return. | System Default |
-| `direction` | String | `older` or `newer`. | `older` |
-| `including_cursor`| Boolean| Include the cursor item in the result. | `false` |
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. | `None` | |
+`show_derived`| Boolean | If `true`, includes child executions. | `false` | | `hide_finished` |
+Boolean | Show only unfinished executions. | `false` | | `execution_id_prefix` | String | Filter by
+Execution ID or its prefix. | `None` | | `component_digest` | String | Filter by component's
+`sha256` digest. | `None` | | `deployment_id` | String | Filter by deployment ID. | `None` | |
+`cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` | |
+`length` | Integer | Number of items to return. | System Default | | `direction` | String | `older`
+or `newer`. | `older` | | `including_cursor`| Boolean| Include the cursor item in the result. |
+`false` |
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions?length=10&direction=older" -H accept:application/json
 ```
+
 ```json
 [
   {
@@ -161,91 +172,117 @@ curl "127.1:5005/v1/executions?length=10&direction=older" -H accept:application/
 ---
 
 ### `POST /v1/executions`
+
 Submits a new execution. The system will automatically generate an Execution ID.
 
 **Query Parameters:**
+
 - `follow`: (Boolean) If `true`, the request blocks and streams the result once finished.
 
 **Request Body:**
+
 - `ffqn`: (String) Function Fully Qualified Name.
 - `params`: (Array) JSON array of parameters matching the function signature.
 
 #### Example request
+
 ```sh
 curl '127.1:5005/v1/executions' -H content-type:application/json -H accept:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":"E_01KDN8Y8ZZ4XYG2J0XJW5A8WE5"}
+{ "ok": "E_01KDN8Y8ZZ4XYG2J0XJW5A8WE5" }
 ```
 
 Getting the result with `follow` set to `true`:
+
 ```sh
 curl '127.1:5005/v1/executions?follow=true' -H content-type:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":5}
+{ "ok": 5 }
 ```
 
 ---
 
 ### `PUT /v1/executions/{execution-id}`
-Submits an execution with a client-provided ID. This is idempotent; if the execution already exists with the same parameters, it returns `200 OK`.
+
+Submits an execution with a client-provided ID. This is idempotent; if the execution already exists
+with the same parameters, it returns `200 OK`.
 
 **Path Parameters:**
+
 - `execution-id`: The unique ID for this execution.
 
 **Query Parameters:**
+
 - `follow`: (Boolean) Block and stream the result.
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":"E_01KDN9422HAK2AHY9EXZA201TD"}
+{ "ok": "E_01KDN9422HAK2AHY9EXZA201TD" }
 ```
+
 Getting the result with `follow` set to `true`:
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}?follow=true" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
+
 ```json
-{"ok":5}
+{ "ok": 5 }
 ```
 
 ---
 
 ### `GET /v1/executions/{execution-id}`
+
 Retrieves the result of an execution.
 
 **Query Parameters:**
-- `follow`: (Boolean) If the execution is not finished, the connection stays open and streams the result as soon as it completes.
+
+- `follow`: (Boolean) If the execution is not finished, the connection stays open and streams the
+  result as soon as it completes.
 
 **Responses:**
+
 - `200 OK`: Returns the [Execution Result](#execution-result).
 - `425 Too Early`: Execution is still in progress (only returned if `follow=false`).
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}"
 ```
+
 ```json
-{"ok":5}
+{ "ok": 5 }
 ```
 
 ---
 
 ### `GET /v1/executions/{execution-id}/status`
-Returns the current lifecycle status (e.g., `pending`, `finished`). Unlike the root GET endpoint, this returns the internal state rather than the function return value.
+
+Returns the current lifecycle status (e.g., `pending`, `finished`). Unlike the root GET endpoint,
+this returns the internal state rather than the function return value.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json
 ```
+
 ```json
 {
   "execution_id": "E_01KDQR2TGJR2XWEDM4CS6E4TF1",
@@ -267,19 +304,20 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/jso
 ---
 
 ### `GET /v1/executions/{execution-id}/events`
+
 Retrieves the history of events for an execution.
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `version_from` | Integer | Start from this event version. | `0` |
-| `length` | Integer | Max number of events. | `20` |
-| `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false` |
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`version_from` | Integer | Start from this event version. | `0` | | `length` | Integer | Max number
+of events. | `20` | | `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false`
+|
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json
 ```
+
 ```json
 {
   "events": [
@@ -296,7 +334,10 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/jso
           "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
           "run_id": "Run_01KDN7RB038RJHVZ5QS6MMWWZ5",
           "lock_expires_at": "2025-12-29T14:46:34.030449088Z",
-          "retry_config": { "max_retries": 5, "retry_exp_backoff": { "secs": 0, "nanos": 100000000 } }
+          "retry_config": {
+            "max_retries": 5,
+            "retry_exp_backoff": { "secs": 0, "nanos": 100000000 }
+          }
         }
       },
       "version": 1
@@ -319,16 +360,15 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/jso
 ---
 
 ### `GET /v1/executions/{execution-id}/responses`
+
 Retrieves responses associated with an execution (used for long-running interactions).
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `cursor_from` | Integer | Start from this cursor index. | `0` |
-| `length` | Integer | Max number of responses. | `20` |
-| `including_cursor`| Boolean | Include the event at `cursor_from`. | `false` |
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`cursor_from` | Integer | Start from this cursor index. | `0` | | `length` | Integer | Max number of
+responses. | `20` | | `including_cursor`| Boolean | Include the event at `cursor_from`. | `false` |
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
@@ -336,6 +376,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:appl
 
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/json
 ```
+
 ```json
 {
   "responses": [
@@ -364,23 +405,28 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/
 ---
 
 ### `PUT /v1/executions/{execution-id}/stub`
-Manually provides a return value for a stubbed execution. The `execution-id` here is a derived ID (child execution).
 
-**Request Body (JSON):**
-The body must match the return type of the stubbed function.
+Manually provides a return value for a stubbed execution. The `execution-id` here is a derived ID
+(child execution).
+
+**Request Body (JSON):** The body must match the return type of the stubbed function.
+
 ```json
 {
   "ok": "your-return-value"
 }
 ```
+
 or
+
 ```json
 {
-    "err": "your-error-value"
+  "err": "your-error-value"
 }
 ```
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 # Submit a workflow that submits a stub activity
@@ -395,20 +441,24 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events"  | grep $CHILD_EXECUTION_
 curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:application/json -X PUT -d \
 '{"ok": "some return value"}'
 ```
+
 ```json
-{"ok":"stubbed"}
+{ "ok": "stubbed" }
 ```
 
 ---
 
 ### `PUT /v1/executions/{execution-id}/upgrade`
-Upgrade an execution to run with a different WASM component. Upgrading only makes sense when the executor is configured
-to lock executions by its WASM's sha256 digest:
+
+Upgrade an execution to run with a different WASM component. Upgrading only makes sense when the
+executor is configured to lock executions by its WASM's sha256 digest:
+
 ```toml
 exec.locking_strategy = "by_component_digest"
 ```
 
 **Request Body (JSON):**
+
 ```json
 {
   "old": "sha256:old-sha",
@@ -417,6 +467,7 @@ exec.locking_strategy = "by_component_digest"
 ```
 
 #### Example request
+
 ```sh
 obelisk server run --deployment obelisk.toml # start with components downloaded from Docker Hub.
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
@@ -433,27 +484,29 @@ NEW=$(curl '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'acce
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" -H content-type:application/json -X PUT -d \
 '{"old":'$OLD', "new": '$NEW' }'
 ```
+
 ```json
-{"ok":"upgraded"}
+{ "ok": "upgraded" }
 ```
 
 ---
 
 ### `GET /v1/executions/{execution-id}/logs`
-Retrieves stored logs and output streams for an execution. Logs are stored in the database when `forward_stdout`/`forward_stderr` is set to `"db"` (the default) or when using the `obelisk:log` API.
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `show_logs` | Boolean | Include structured log entries | `true` |
-| `show_streams` | Boolean | Include stdout/stderr stream entries | `true` |
-| `show_derived` | Boolean | Include logs from all derived (child) executions | `false` |
-| `cursor` | DateTime (ISO 8601) | Pagination cursor | start of time |
-| `length` | Integer | Max entries to return | system default |
-| `including_cursor` | Boolean | Include the entry at `cursor` | `false` |
-| `direction` | String | `older` or `newer` | `older` |
+Retrieves stored logs and output streams for an execution. Logs are stored in the database when
+`forward_stdout`/`forward_stderr` is set to `"db"` (the default) or when using the `obelisk:log`
+API.
+
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`show_logs` | Boolean | Include structured log entries | `true` | | `show_streams` | Boolean |
+Include stdout/stderr stream entries | `true` | | `show_derived` | Boolean | Include logs from all
+derived (child) executions | `false` | | `cursor` | DateTime (ISO 8601) | Pagination cursor | start
+of time | | `length` | Integer | Max entries to return | system default | | `including_cursor` |
+Boolean | Include the entry at `cursor` | `false` | | `direction` | String | `older` or `newer` |
+`older` |
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs" -H accept:application/json
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_derived=true" -H accept:application/json
@@ -462,17 +515,20 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_derived=true" -H accept
 ---
 
 ### `GET /v1/executions/{execution-id}/backtrace`
-Returns the WASM backtrace for a trapped or failed execution, including call frames and optional source symbol information.
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `version` | String | Which backtrace to retrieve: `"first"`, `"last"`, or a version number | `"last"` |
+Returns the WASM backtrace for a trapped or failed execution, including call frames and optional
+source symbol information.
+
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`version` | String | Which backtrace to retrieve: `"first"`, `"last"`, or a version number |
+`"last"` |
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/json
 ```
+
 ```json
 {
   "execution_id": "E_01KDQR2TGJR2XWEDM4CS6E4TF1",
@@ -484,9 +540,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/
       {
         "module": "my_workflow",
         "func_name": "panic_handler",
-        "symbols": [
-          { "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }
-        ]
+        "symbols": [{ "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }]
       }
     ]
   }
@@ -496,19 +550,21 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/
 ---
 
 ### `GET /v1/executions/{execution-id}/backtrace/source`
-Retrieves the source file content referenced by a backtrace frame. Requires the WASM component to have been compiled with embedded DWARF debug info.
 
-**Query Parameters:**
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `file` | String | File path to retrieve (suffix matching supported) | required |
-| `version` | String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
+Retrieves the source file content referenced by a backtrace frame. Requires the WASM component to
+have been compiled with embedded DWARF debug info.
+
+**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
+`file` | String | File path to retrieve (suffix matching supported) | required | | `version` |
+String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
 
 **Responses:**
+
 - `200 OK`: Source file content as a string.
 - `404 Not Found`: Source file not found in the component.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
 ```
@@ -516,35 +572,45 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
 ---
 
 ### `PUT /v1/executions/{execution-id}/pause`
-Pauses an active execution. The execution will not be scheduled for further processing until it is unpaused.
+
+Pauses an active execution. The execution will not be scheduled for further processing until it is
+unpaused.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/pause" -X PUT -H accept:application/json
 ```
+
 ```json
-{"ok":"paused"}
+{ "ok": "paused" }
 ```
 
 ---
 
 ### `PUT /v1/executions/{execution-id}/unpause`
+
 Resumes a previously paused execution.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/unpause" -X PUT -H accept:application/json
 ```
+
 ```json
-{"ok":"unpaused"}
+{ "ok": "unpaused" }
 ```
 
 ---
 
 ### `PUT /v1/executions/{execution-id}/replay`
-Re-execute a workflow from its event history. Useful for testing compatibility between workflow versions.
+
+Re-execute a workflow from its event history. Useful for testing compatibility between workflow
+versions.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json
 ```
@@ -554,9 +620,11 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:applicat
 ## Functions
 
 ### `GET /v1/functions`
+
 Lists all available functions across all components.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/functions" -H accept:application/json
 ```
@@ -564,14 +632,14 @@ curl "127.1:5005/v1/functions" -H accept:application/json
 ---
 
 ### `GET /v1/functions/wit`
+
 Retrieves the WIT definition for a specific function.
 
-**Query Parameters:**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `ffqn` | String | Function Fully Qualified Name |
+**Query Parameters:** | Parameter | Type | Description | | :--- | :--- | :--- | | `ffqn` | String |
+Function Fully Qualified Name |
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/functions/wit?ffqn=testing:fibo/fibo.fibo"
 ```
@@ -581,9 +649,11 @@ curl "127.1:5005/v1/functions/wit?ffqn=testing:fibo/fibo.fibo"
 ## Deployments
 
 ### `GET /v1/deployment-id`
+
 Retrieves the current deployment ID.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/deployment-id" -H accept:application/json
 ```
@@ -591,12 +661,15 @@ curl "127.1:5005/v1/deployment-id" -H accept:application/json
 ---
 
 ### `GET /v1/deployments`
+
 Lists deployment states.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/deployments" -H accept:application/json
 ```
+
 ```json
 [
   {
@@ -616,19 +689,24 @@ curl "127.1:5005/v1/deployments" -H accept:application/json
 ---
 
 ### `GET /v1/deployments/{deployment-id}`
+
 Returns the full details of a specific deployment, including its stored configuration JSON.
 
 **Path Parameters:**
+
 - `deployment-id`: The deployment ID.
 
 **Responses:**
+
 - `200 OK`: Returns a `DeploymentRecord` object.
 - `404 Not Found`: Deployment not found.
 
 #### Example request
+
 ```sh
 curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:application/json
 ```
+
 ```json
 {
   "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
@@ -642,19 +720,21 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:applic
 ---
 
 ### `POST /v1/deployments`
-Submits a new deployment configuration and stores it in the database. Returns the new deployment ID. The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
 
-**Request Body (JSON):**
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `config_json` | String | Deployment configuration encoded as a JSON string |
-| `verify` | Boolean | If `true`, verify all environment variables before persisting (default: `false`) |
+Submits a new deployment configuration and stores it in the database. Returns the new deployment ID.
+The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
+
+**Request Body (JSON):** | Field | Type | Description | | :--- | :--- | :--- | | `config_json` |
+String | Deployment configuration encoded as a JSON string | | `verify` | Boolean | If `true`,
+verify all environment variables before persisting (default: `false`) |
 
 **Responses:**
+
 - `200 OK`: Deployment submitted; returns the new deployment ID string.
 - `400 Bad Request`: Invalid configuration.
 
 #### Example request
+
 ```sh
 CONFIG=$(cat deployment.toml | obelisk generate deployment-json -)
 curl "127.1:5005/v1/deployments" -H content-type:application/json -X POST -d \
@@ -664,23 +744,27 @@ curl "127.1:5005/v1/deployments" -H content-type:application/json -X POST -d \
 ---
 
 ### `PUT /v1/deployments/{deployment-id}/switch`
-Activates a previously submitted deployment. Supports hot-redeploy (apply without a server restart) or enqueue (activate on next restart).
+
+Activates a previously submitted deployment. Supports hot-redeploy (apply without a server restart)
+or enqueue (activate on next restart).
 
 **Path Parameters:**
+
 - `deployment-id`: The deployment ID to switch to.
 
-**Request Body (JSON):**
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `hot_redeploy` | Boolean | If `true`, apply immediately without restarting (default: `false`) |
-| `verify` | Boolean | If `true`, verify environment variables before switching (default: `false`) |
+**Request Body (JSON):** | Field | Type | Description | | :--- | :--- | :--- | | `hot_redeploy` |
+Boolean | If `true`, apply immediately without restarting (default: `false`) | | `verify` | Boolean
+| If `true`, verify environment variables before switching (default: `false`) |
 
 **Responses:**
-- `200 OK`: Returns `"switched"` (hot-redeployed) or `"restart_required"` (enqueued for next restart).
+
+- `200 OK`: Returns `"switched"` (hot-redeployed) or `"restart_required"` (enqueued for next
+  restart).
 - `404 Not Found`: Deployment not found.
 - `400 Bad Request`: Switch or validation failed.
 
 #### Example request
+
 ```sh
 # Enqueue a deployment (activates on next restart)
 curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
@@ -690,6 +774,7 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
 curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
   -H content-type:application/json -X PUT -d '{"hot_redeploy": true}'
 ```
+
 ```json
 "switched"
 ```
@@ -699,10 +784,11 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
 ## Cancellation requests
 
 ### `PUT /v1/executions/{execution-id}/cancel`
-Cancels an active execution.
-*Note: This is only permitted for Activity components.*
+
+Cancels an active execution. _Note: This is only permitted for Activity components._
 
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
@@ -710,19 +796,24 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json
 
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/cancel" -X PUT -H accept:application/json
 ```
+
 ```json
-{"ok":"cancelled"}
+{ "ok": "cancelled" }
 ```
 
 ---
+
 ### `PUT /v1/delays/{delay-id}/cancel`
-Cancels a request for {{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }}.
+
+Cancels a request for
+{{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }}.
 
 **Path Parameters:**
+
 - `delay-id`: The unique ID of the delay.
 
-
 #### Example request
+
 ```sh
 EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
 curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
@@ -735,8 +826,9 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events"  | grep $DELAY_ID
 
 curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
 ```
+
 ```json
-{"ok":"cancelled"}
+{ "ok": "cancelled" }
 ```
 
 ---
@@ -744,7 +836,9 @@ curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
 ## Data Reference
 
 ### Component Type
+
 When filtering components or reading the `component_type` field in responses, use these values:
+
 - `activity`
 - `activity_stub`
 - `activity_external`
@@ -752,42 +846,51 @@ When filtering components or reading the `component_type` field in responses, us
 - `webhook_endpoint`
 
 ### Execution Result
+
 The result object returned when an execution finishes (from `GET /v1/executions/{id}`):
-* `{ "ok": ... }`: Function succeeded; contains the return value (or `null` for no-value results).
-* `{ "err": ... }`: Function returned an error variant.
-* `{ "execution_error": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout, etc.).
+
+- `{ "ok": ... }`: Function succeeded; contains the return value (or `null` for no-value results).
+- `{ "err": ... }`: Function returned an error variant.
+- `{ "execution_error": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout,
+  etc.).
 
 The `result_kind` field in status/list responses summarises the outcome:
-* `"ok"` — function returned successfully.
-* `{ "err": { "execution_failure": "<kind>" } }` — execution failed (same `kind` values as `execution_error.kind`).
+
+- `"ok"` — function returned successfully.
+- `{ "err": { "execution_failure": "<kind>" } }` — execution failed (same `kind` values as
+  `execution_error.kind`).
 
 #### Execution Error Kind
+
 One of:
-* `timed_out`: Applicable to activities only, last attempt timed out.
-* `nondeterminism_detected`: Applicable to workflows.
-* `out_of_fuel`: Applicable to WASM components.
-* `cancelled`: Applicable to activities.
-* `paused`: Execution was paused.
-* `uncategorized`: Uncategorized, e.g. WASM trap.
+
+- `timed_out`: Applicable to activities only, last attempt timed out.
+- `nondeterminism_detected`: Applicable to workflows.
+- `out_of_fuel`: Applicable to WASM components.
+- `cancelled`: Applicable to activities.
+- `paused`: Execution was paused.
+- `uncategorized`: Uncategorized, e.g. WASM trap.
 
 ### Errors
+
 Errors are returned with appropriate HTTP status codes:
 
 - **400 Bad Request**:
-    - Invalid parameters (`ParamsInvalid`).
-    - Attempting to submit a child ID as a top-level execution (`ExecutionIdMustBeTopLevel`).
+  - Invalid parameters (`ParamsInvalid`).
+  - Attempting to submit a child ID as a top-level execution (`ExecutionIdMustBeTopLevel`).
 - **404 Not Found**:
-    - Component, Function (FFQN), or Execution not found.
+  - Component, Function (FFQN), or Execution not found.
 - **409 Conflict**:
-    - Execution already finished (when trying to cancel).
-    - Execution exists with different parameters (when submitting/idempotency check fails).
+  - Execution already finished (when trying to cancel).
+  - Execution exists with different parameters (when submitting/idempotency check fails).
 - **425 Too Early**:
-    - Execution result requested but not yet finished (when `follow=false`).
+  - Execution result requested but not yet finished (when `follow=false`).
 - **503 Service Unavailable**:
-    - Transient database errors or connection issues.
+  - Transient database errors or connection issues.
 - **500 Internal Server Error**:
-    - Non-retriable database errors or other generic failures.
+  - Non-retriable database errors or other generic failures.
 
 **Response Format:**
+
 - **JSON**: `{ "err": "Description of error" }`
 - **Text**: `Description of error`
