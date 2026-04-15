@@ -4,40 +4,61 @@ date = 2025-05-25
 slug = "comparing-rust-javascript-and-go-for-authoring-wasm-components"
 +++
 
-This month has already seen five Obelisk releases, each focused on adding **experimental** JavaScript and Go support to the runtime.
-Although WASM format is source-language agnostic, both JavaScript and Go needed tweaks, workarounds and sometimes upstream tooling fixes to get fully working with the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM Component Model</a>.
-In this post we'll explore rewriting an activity,
-workflow and a webhook from Rust. All code examples are available in the [Stargazers repository](https://github.com/obeli-sk/demo-stargazers/).
+This month has already seen five Obelisk releases, each focused on adding **experimental**
+JavaScript and Go support to the runtime. Although WASM format is source-language agnostic, both
+JavaScript and Go needed tweaks, workarounds and sometimes upstream tooling fixes to get fully
+working with the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM
+Component Model</a>. In this post we'll explore rewriting an activity, workflow and a webhook from
+Rust. All code examples are available in the
+[Stargazers repository](https://github.com/obeli-sk/demo-stargazers/).
 
 <!-- more -->
+
 The first to tackle is JavaScript.
 
 ## JavaScript Tooling
 
-The [Component Model Website](https://component-model.bytecodealliance.org/language-support/javascript.html) has a large section dedicated to the language. Since we are focusing on compiling into WASM, the most relevant tool is [ComponentizeJS](https://github.com/bytecodealliance/ComponentizeJS).
-It can be invoked with [jco](https://github.com/bytecodealliance/jco) CLI, but it can also be used directly as a development dependency in any npm-compatible project.
-ComponentizeJS reads a WIT folder and a JavaScript source, then creates the target WASM component bundled with the
-[StarlingMonkey](https://github.com/fermyon/StarlingMonkey) JavaScript engine, a fork of Mozilla's SpiderMonkey.
+The
+[Component Model Website](https://component-model.bytecodealliance.org/language-support/javascript.html)
+has a large section dedicated to the language. Since we are focusing on compiling into WASM, the
+most relevant tool is [ComponentizeJS](https://github.com/bytecodealliance/ComponentizeJS). It can
+be invoked with [jco](https://github.com/bytecodealliance/jco) CLI, but it can also be used directly
+as a development dependency in any npm-compatible project. ComponentizeJS reads a WIT folder and a
+JavaScript source, then creates the target WASM component bundled with the
+[StarlingMonkey](https://github.com/fermyon/StarlingMonkey) JavaScript engine, a fork of Mozilla's
+SpiderMonkey.
 
 The process of creating a JavaScript WASM component consists of following steps:
+
 1. Bundle the JavaScript with all of its dependencies as an ESModule.
 1. Call `ComponentizeJS`, which in turn:
-    1. Generates JS bindings from WIT imports and exports, transform the StarlingMonkey WASM using `spidermonkey-embedding-splicer`.
-    1. Calls [wizzer](https://github.com/bytecodealliance/wizer) that pre-initializes the engine, and optinally [weval](https://github.com/bytecodealliance/weval) for AOT.
-    1. Loads the WASM file and calling its init method to check for errors.
-    1. Optionally stubs WASI interfaces, something that Obelisk must do for Go workflows.
-    1. Finally turns the Core WASM binary into a WASM Component using `wasm-tools component new`.
+   1. Generates JS bindings from WIT imports and exports, transform the StarlingMonkey WASM using
+      `spidermonkey-embedding-splicer`.
+   1. Calls [wizzer](https://github.com/bytecodealliance/wizer) that pre-initializes the engine, and
+      optinally [weval](https://github.com/bytecodealliance/weval) for AOT.
+   1. Loads the WASM file and calling its init method to check for errors.
+   1. Optionally stubs WASI interfaces, something that Obelisk must do for Go workflows.
+   1. Finally turns the Core WASM binary into a WASM Component using `wasm-tools component new`.
 
 ## TinyGo
-There are far less tools needed when it comes to Go. Currently the only way is to use [TinyGo](https://tinygo.org/) v0.34.0 and above. A detailed guide is again available at [Component Model Website](https://component-model.bytecodealliance.org/language-support/go.html), but the process boils down to just two steps:
-1. Generate bindings using [wit-bindgen-go](https://github.com/bytecodealliance/go-modules) (`wasm-tools` is still required).
+
+There are far less tools needed when it comes to Go. Currently the only way is to use
+[TinyGo](https://tinygo.org/) v0.34.0 and above. A detailed guide is again available at
+[Component Model Website](https://component-model.bytecodealliance.org/language-support/go.html),
+but the process boils down to just two steps:
+
+1. Generate bindings using [wit-bindgen-go](https://github.com/bytecodealliance/go-modules)
+   (`wasm-tools` is still required).
 1. Compile with `-target=wasip2` switch.
 
 ## Building an HTTP Client activity
 
-Activities in Obelisk interact with the world over the network. They can write to databases, send events, etc., but must be idempotent (retriable). Executions are automatically retried on timeouts and errors. They are orchestrated by workflows and webhook endpoints.
+Activities in Obelisk interact with the world over the network. They can write to databases, send
+events, etc., but must be idempotent (retriable). Executions are automatically retried on timeouts
+and errors. They are orchestrated by workflows and webhook endpoints.
 
 Consider this WIT interface:
+
 ```wit
 package stargazers:llm;
 
@@ -45,9 +66,11 @@ interface llm {
     respond: func(user-prompt: string, settings-json: string) -> result<string, string>;
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/activity/llm/interface/llm.wit)
 
 Let's compare the Rust version with JavaScript and Go:
+
 ```rust
 // Imports and serde stucts omitted.
 
@@ -93,87 +116,92 @@ impl Guest for Component {
     }
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/activity/llm/openai/src/lib.rs).
 
-The language feels naturally integrated with the WIT specification, as WIT types like `result`, `option` and `variant` have direct Rust counterparts.
-
+The language feels naturally integrated with the WIT specification, as WIT types like `result`,
+`option` and `variant` have direct Rust counterparts.
 
 ```js
-import axios from 'axios';
-import { getEnvironment } from 'wasi:cli/environment@0.2.3';
+import axios from "axios";
+import { getEnvironment } from "wasi:cli/environment@0.2.3";
 
 export const llm = {
-    async respond(userPrompt, settingsString) {
-        console.log("Responding to", userPrompt, settingsString);
-        const ENV_OPENAI_API_KEY = "OPENAI_API_KEY";
-        // TODO: Switch to `process.env[ENV_OPENAI_API_KEY]` when https://github.com/bytecodealliance/ComponentizeJS/issues/190 is resolved.
-        const apiKey = new Map(getEnvironment()).get(ENV_OPENAI_API_KEY);
+  async respond(userPrompt, settingsString) {
+    console.log("Responding to", userPrompt, settingsString);
+    const ENV_OPENAI_API_KEY = "OPENAI_API_KEY";
+    // TODO: Switch to `process.env[ENV_OPENAI_API_KEY]` when https://github.com/bytecodealliance/ComponentizeJS/issues/190 is resolved.
+    const apiKey = new Map(getEnvironment()).get(ENV_OPENAI_API_KEY);
 
-        if (!apiKey) {
-            throw `${ENV_OPENAI_API_KEY} must be set as an environment variable or passed in options`;
-        }
-
-        let settings;
-        try {
-            settings = JSON.parse(settingsString);
-        } catch (e) {
-            throw `'settings_json' must be parseable: ${e.message}`;
-        }
-
-        const initialMessages = settings.messages || [];
-        if (!Array.isArray(initialMessages)) {
-            throw "'settings.messages' must be an array if provided.";
-        }
-
-        const messages = [
-            ...initialMessages,
-            {
-                role: "user",
-                content: userPrompt,
-            },
-        ];
-
-        const requestBody = {
-            model: settings.model,
-            messages: messages,
-            max_tokens: settings.max_tokens,
-        };
-
-        let response;
-        try {
-            response = await axios.post(
-                "https://api.openai.com/v1/chat/completions",
-                requestBody,
-                {
-                    headers: {
-                        "Authorization": `Bearer ${apiKey}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-        } catch (error) {
-            throw `Simplified error: ${error.message}. Details: ${JSON.stringify(error.response.data)}`;
-        }
-
-        if (response.status !== 200) {
-            throw `Unexpected status code: ${response.status}`;
-        }
-
-        const responseData = response.data;
-
-        if (responseData.choices && responseData.choices.length > 0 && responseData.choices[0].message) {
-            return responseData.choices[0].message.content;
-        }
-
-        throw "No response content from OpenAI or choices array is malformed.";
+    if (!apiKey) {
+      throw `${ENV_OPENAI_API_KEY} must be set as an environment variable or passed in options`;
     }
-}
+
+    let settings;
+    try {
+      settings = JSON.parse(settingsString);
+    } catch (e) {
+      throw `'settings_json' must be parseable: ${e.message}`;
+    }
+
+    const initialMessages = settings.messages || [];
+    if (!Array.isArray(initialMessages)) {
+      throw "'settings.messages' must be an array if provided.";
+    }
+
+    const messages = [
+      ...initialMessages,
+      {
+        role: "user",
+        content: userPrompt,
+      },
+    ];
+
+    const requestBody = {
+      model: settings.model,
+      messages: messages,
+      max_tokens: settings.max_tokens,
+    };
+
+    let response;
+    try {
+      response = await axios.post("https://api.openai.com/v1/chat/completions", requestBody, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      throw `Simplified error: ${error.message}. Details: ${JSON.stringify(error.response.data)}`;
+    }
+
+    if (response.status !== 200) {
+      throw `Unexpected status code: ${response.status}`;
+    }
+
+    const responseData = response.data;
+
+    if (
+      responseData.choices &&
+      responseData.choices.length > 0 &&
+      responseData.choices[0].message
+    ) {
+      return responseData.choices[0].message.content;
+    }
+
+    throw "No response content from OpenAI or choices array is malformed.";
+  },
+};
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/activity/llm/openai-js/src/index.js).
 
-Note that to return `result<string, string>` you simply return a `String` or `throw` an error of type `String`. Another nice touch is that the `wasi-http` client integrates with JavaScript's `fetch` method, allowing use of Component Model agnostic libraries like `axios`.
+Note that to return `result<string, string>` you simply return a `String` or `throw` an error of
+type `String`. Another nice touch is that the `wasi-http` client integrates with JavaScript's
+`fetch` method, allowing use of Component Model agnostic libraries like `axios`.
 
 Now, let's consider Go:
+
 ```go
 // Imports and structs for JSON parsing omitted.
 
@@ -258,24 +286,32 @@ func respond(userPrompt string, settingsJSON string) (result cm.Result[string, s
 	return cm.Err[cm.Result[string, string, string]]("no response from OpenAI")
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/activity/llm/openai-go/main.go).
 
-Writing the Go component and interfacing with the [cm](https://github.com/bytecodealliance/go-modules/tree/main/cm) package
-proved to be more difficult and less idiomatic than writing the same component in JavaScript.
+Writing the Go component and interfacing with the
+[cm](https://github.com/bytecodealliance/go-modules/tree/main/cm) package proved to be more
+difficult and less idiomatic than writing the same component in JavaScript.
 
-The JavaScript version is the shortest: only 75 lines versus around 100 for Rust and 150 for Go. However, the final WASM file sizes differ vastly:
+The JavaScript version is the shortest: only 75 lines versus around 100 for Rust and 150 for Go.
+However, the final WASM file sizes differ vastly:
 
-* JS: 12MB
-* Go: 2.6MB (with debuginfo)
-* Go: ~1MB (no debuginfo)
-* Rust: 4.2MB (with debuginfo)
-* Rust: 417KB (optimized for size, no debuginfo)
+- JS: 12MB
+- Go: 2.6MB (with debuginfo)
+- Go: ~1MB (no debuginfo)
+- Rust: 4.2MB (with debuginfo)
+- Rust: 417KB (optimized for size, no debuginfo)
 
 ## Translating the Stargazers Workflow
-Now let's do the same thing for a workflow. The main difference from activities is the fact that workflows need to be deterministic and thus completely separated from real world effects.
-Workflows can call into other workflows and activities, creating child executions. They cannot directly interact with the I/O, clocks or RNGs, as only persisted and replayed effects can guarantee deterministic reexecution.
+
+Now let's do the same thing for a workflow. The main difference from activities is the fact that
+workflows need to be deterministic and thus completely separated from real world effects. Workflows
+can call into other workflows and activities, creating child executions. They cannot directly
+interact with the I/O, clocks or RNGs, as only persisted and replayed effects can guarantee
+deterministic reexecution.
 
 For brevity let's rewrite just a single workflow with no parallelism involved:
+
 ```wit
 package stargazers:workflow;
 
@@ -286,10 +322,11 @@ interface workflow {
     ...
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/workflow/interface/workflow.wit)
 
-The Rust version is pretty simple. First step is to make a database update, and if the database does not contain user's description, the rest of the
-code will sequentially call activities to update it.
+The Rust version is pretty simple. First step is to make a database update, and if the database does
+not contain user's description, the rest of the code will sequentially call activities to update it.
 
 ```rust
 fn star_added(login: String, repo: String) -> Result<(), String> {
@@ -308,6 +345,7 @@ fn star_added(login: String, repo: String) -> Result<(), String> {
     Ok(())
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/workflow/src/lib.rs)
 
 The JavaScript version is can be mapped 1:1 to the original:
@@ -332,6 +370,7 @@ starAdded(login, repo) {
     }
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/workflow-js/src/index.js)
 
 As noted earlier, writing the Go component is more involved, mostly due to error handling.
@@ -371,23 +410,26 @@ func (c *Component) StarAdded(login string, repo string) cm.Result[string, struc
 	return cm.OK[cm.Result[string, struct{}, string]](struct{}{})
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/25655ae6b398d24840cb83ea9a22133f27c1b7c1/workflow-go/main.go)
 
-One additional [issue](https://github.com/tinygo-org/tinygo/issues/4843) with the TinyGo component is that it always includes the `wasi:cli/command@0.2.0` world,
-which imports nearly 30 interfaces like `wall-clock`, `network`, and `random`, using which adds nondeterminism on replay.
+One additional [issue](https://github.com/tinygo-org/tinygo/issues/4843) with the TinyGo component
+is that it always includes the `wasi:cli/command@0.2.0` world, which imports nearly 30 interfaces
+like `wall-clock`, `network`, and `random`, using which adds nondeterminism on replay.
 
-As mentioned earlier JavaScript tooling allows stubbing these interfaces, but Go does not.
-To work around this, I added an experimental `stub_wasi` <a href="{{ get_url(path='@/docs/latest/configuration.md') }}">configuration switch</a>
-that handles it directly in Obelisk.
+As mentioned earlier JavaScript tooling allows stubbing these interfaces, but Go does not. To work
+around this, I added an experimental `stub_wasi`
+<a href="{{ get_url(path='@/docs/latest/configuration.md') }}">configuration switch</a> that handles
+it directly in Obelisk.
 
 ## Webhook Endpoint
 
-As promised, we’ll look at rewriting the Stargazers webhook endpoint.
-This type of component is essentially an HTTP server handler.
-In this post we won’t cover the actual GitHub webhook - just a simple GET handler that queries a database and returns JSON.
+As promised, we’ll look at rewriting the Stargazers webhook endpoint. This type of component is
+essentially an HTTP server handler. In this post we won’t cover the actual GitHub webhook - just a
+simple GET handler that queries a database and returns JSON.
 
-In Rust we use the [waki](https://github.com/wacker-dev/waki) library to get rid of the `wasi-http` boilerplate. A simplified
-GET handler looks like this:
+In Rust we use the [waki](https://github.com/wacker-dev/waki) library to get rid of the `wasi-http`
+boilerplate. A simplified GET handler looks like this:
 
 ```rust
 #[handler]
@@ -424,53 +466,55 @@ fn handle_get(req: Request) -> Result<Response, ErrorCode> {
     Response::builder().json(&list).build()
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/c05bc576ea0f8208583ca25e08e96d994e9248bd/webhook/src/lib.rs)
 
 In JavaScript we will use [Hono](https://hono.dev).
 
 ```js
-import { Hono } from 'hono';
+import { Hono } from "hono";
 // WIT Imports
-import { listStargazers } from 'stargazers:db/user';
+import { listStargazers } from "stargazers:db/user";
 
 const app = new Hono();
 // Note: WIT enum variants are not exposed by the binding generator.
-const OrderingAscending = 'ascending';
-const OrderingDescending = 'descending';
+const OrderingAscending = "ascending";
+const OrderingDescending = "descending";
 
 // GET endpoint to list stargazers
-app.get('/', async (c) => {
-    try {
-        const MAX_LIMIT = 5;
-        let limit = parseInt(c.req.query('limit'), 10);
-        if (isNaN(limit) || limit <= 0) {
-            limit = MAX_LIMIT;
-        }
-        limit = Math.min(limit, MAX_LIMIT);
-        const repo = c.req.query('repo');
-        let orderingParam = c.req.query('ordering');
-        let ordering;
-        if (orderingParam === "asc") {
-            ordering = OrderingAscending;
-        } else {
-            ordering = OrderingDescending;
-        }
-        // Call the database activity
-        const list = listStargazers(limit, repo, ordering);
-        return c.json(list);
-    } catch (err) {
-        return c.text('Internal Server Error', 500);
+app.get("/", async (c) => {
+  try {
+    const MAX_LIMIT = 5;
+    let limit = parseInt(c.req.query("limit"), 10);
+    if (isNaN(limit) || limit <= 0) {
+      limit = MAX_LIMIT;
     }
+    limit = Math.min(limit, MAX_LIMIT);
+    const repo = c.req.query("repo");
+    let orderingParam = c.req.query("ordering");
+    let ordering;
+    if (orderingParam === "asc") {
+      ordering = OrderingAscending;
+    } else {
+      ordering = OrderingDescending;
+    }
+    // Call the database activity
+    const list = listStargazers(limit, repo, ordering);
+    return c.json(list);
+  } catch (err) {
+    return c.text("Internal Server Error", 500);
+  }
 });
 
 function serve(app) {
-    self.addEventListener('fetch', (event) => {
-        event.respondWith(app.fetch(event.request));
-    });
+  self.addEventListener("fetch", (event) => {
+    event.respondWith(app.fetch(event.request));
+  });
 }
 
 serve(app);
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/c05bc576ea0f8208583ca25e08e96d994e9248bd/webhook-js/src/index.js)
 
 In Go we'll employ [httprouter](github.com/julienschmidt/httprouter).
@@ -545,10 +589,11 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 ```
+
 [Source](https://github.com/obeli-sk/demo-stargazers/blob/c05bc576ea0f8208583ca25e08e96d994e9248bd/webhook-go/main.go)
 
-One nice thing is that we can use any router based on `net/http`.
-What’s less nice is that we have to rewrite structs for JSON serialization, as the binding generator is quite limited.
+One nice thing is that we can use any router based on `net/http`. What’s less nice is that we have
+to rewrite structs for JSON serialization, as the binding generator is quite limited.
 
 ## Conclusion
 
@@ -556,8 +601,8 @@ Which language should you use to write WASM components?
 
 Since most of the Component Model tooling is built in Rust, the choice is obvious for Rustaceans.
 
-However, if you're choosing between JavaScript and Go, in 2025 I’d go with JavaScript.
-Despite larger WASM file sizes, you’ll benefit from an active community and well-integrated tooling.
+However, if you're choosing between JavaScript and Go, in 2025 I’d go with JavaScript. Despite
+larger WASM file sizes, you’ll benefit from an active community and well-integrated tooling.
 
-Go’s main advantage is compile-time checking of generated bindings, preventing incorrect parameter and return types.
-This comes at the cost of higher verbosity and sometimes less idiomatic code.
+Go’s main advantage is compile-time checking of generated bindings, preventing incorrect parameter
+and return types. This comes at the cost of higher verbosity and sometimes less idiomatic code.

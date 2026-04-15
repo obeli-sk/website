@@ -3,16 +3,14 @@ title = "When Scope Lies: The Wildcard Pattern Drop Footgun in Rust"
 date = 2025-12-19
 +++
 
-One of the big strengths of Rust is its use of automatic memory management.
-When a value gets out of scope, the compiler automatically calls
-its destructor and frees the memory. During my work on graceful
-shutdown I have stumbled on a less known interaction between
-scopes and the `_` wildcard pattern that can lead to surprising order of destructors.
+One of the big strengths of Rust is its use of automatic memory management. When a value gets out of
+scope, the compiler automatically calls its destructor and frees the memory. During my work on
+graceful shutdown I have stumbled on a less known interaction between scopes and the `_` wildcard
+pattern that can lead to surprising order of destructors.
 
 <!-- more -->
 
-The wildcard pattern `_` has a very different semantics
-from an actual binding `watcher: _foo`.
+The wildcard pattern `_` has a very different semantics from an actual binding `watcher: _foo`.
 
 ```rs
 struct Watcher(&'static str);
@@ -29,9 +27,11 @@ fn main() {
     println!("Done");
 }
 ```
+
 [Playground link](https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=979027897fcb2b73931cf2bcc5f223bb)
 
 The output:
+
 ```
 Dropping _
 Done
@@ -40,9 +40,8 @@ Dropping _w1
 
 What caught me by surprise is a variant that looks similar but behaves differently.
 
-Imagine you are developing a "clean shutdown" mechanism for a server.
-The actual code used a multi-consumer channel to notify Tokio
-tasks about shutdown, but here the code is simplified.
+Imagine you are developing a "clean shutdown" mechanism for a server. The actual code used a
+multi-consumer channel to notify Tokio tasks about shutdown, but here the code is simplified.
 
 ```rs
 struct Watcher(&'static str);
@@ -82,6 +81,7 @@ fn main() {
     println!("Done");
 }
 ```
+
 [Playground link](https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=29e3024280f01793932fe66f07b34001)
 
 It was very unexpected to see this output:
@@ -94,18 +94,23 @@ Dropping shutdown_sender
 Done
 ```
 
-Turns out the wildcard pattern only tells the compiler to ignore the field in this case.
-It does not bind and therefore does not move the value. The field is still owned by self and can be accessed later.
+Turns out the wildcard pattern only tells the compiler to ignore the field in this case. It does not
+bind and therefore does not move the value. The field is still owned by self and can be accessed
+later.
 
 There are several ways to control when it is dropped:
 
-* Bind the field to force an early move: `let Server { watcher: _watcher, other_field } = self;`
-* Explicitly drop the field:
+- Bind the field to force an early move: `let Server { watcher: _watcher, other_field } = self;`
+- Explicitly drop the field:
+
 ```rs
 let Server { watcher, other_field } = self;
 drop(watcher);
 ```
-* Use `drop(self)` just after the inner scope ends, before dealing with explicitly moved `other_field`:
+
+- Use `drop(self)` just after the inner scope ends, before dealing with explicitly moved
+  `other_field`:
+
 ```rs
 fn close(self) {
     let other_field = {
@@ -118,17 +123,21 @@ fn close(self) {
 }
 ```
 
-Needless to say, none of these options feels particularly elegant,
-but they illustrate how subtle Rust’s drop semantics can be when combined with wildcard patterns.
+Needless to say, none of these options feels particularly elegant, but they illustrate how subtle
+Rust’s drop semantics can be when combined with wildcard patterns.
 
 ## Summary (amended)
+
 What tipped me off was that this code worked as expected:
+
 ```rs
 let other_field = {
      let Server { watcher: _watcher, other_field } = self;
      other_field
 };
 ```
+
 However, after changing `_watcher` into `_`, `self` was only partially moved into the inner scope.
 
-To fix the drop ordering, I explicitly moved all fields into an inner scope and used drop to control when they were destroyed.
+To fix the drop ordering, I explicitly moved all fields into an inner scope and used drop to control
+when they were destroyed.
