@@ -13,7 +13,7 @@
             <p>
                 A <a href="{{ get_url(path='@/blog/2025-10-29-challenging-fastest-workflow-engine.md') }}">fast</a>
                 Open-Source Durable & Deterministic
-                <a href="{{ get_url(path='@/faq/_index.md') }}">Workflow
+                <a href="{{ get_url(path='@/features/_index.md') }}">Workflow
                     Engine</a>
             </p>
             <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
@@ -96,6 +96,72 @@ export default function city_temperatures(cities) {
             <div class="features-more">
                 <a href="{{ get_url(path='@/features/_index.md') }}">See all features →</a>
             </div>
+        </div>
+    </section>
+</div>
+
+
+<div class="container">
+    <section class="faq-section" id="faq">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-list">
+            <details class="faq-item">
+                <summary>Why are deterministic workflow engines awesome?</summary>
+                <div class="faq-answer">
+                    <p>Workflows are long-running, crash-resilient functions. The engine persists every step — so a
+                        workflow can pause for days or months, survive server restarts, and always resume exactly where
+                        it left off.</p>
+                </div>
+            </details>
+            <details class="faq-item">
+                <summary>What is the difference between a workflow and an activity?</summary>
+                <div class="faq-answer">
+                    <p>A <strong>workflow</strong> is pure orchestration logic — deterministic and side-effect-free. An
+                        <strong>activity</strong> does real work: HTTP calls, file I/O, database writes. Activities must
+                        be idempotent so the engine can retry them safely on failure.
+                    </p>
+                </div>
+            </details>
+            <details class="faq-item">
+                <summary>What does determinism mean in the context of a workflow engine?</summary>
+                <div class="faq-answer">
+                    <p>The engine records all non-deterministic calls — random values, timestamps, child results — to the
+                        execution log. On crash recovery, the workflow replays from the log, so the same inputs always
+                        produce the same execution path.</p>
+                </div>
+            </details>
+            <details class="faq-item">
+                <summary>When does a code change break determinism?</summary>
+                <div class="faq-answer">
+                    <p>Only when it changes the sequence of recorded events. Refactoring, adding log statements, or
+                        changing logic that runs <em>after</em> the last recorded event is safe.</p>
+                </div>
+            </details>
+            <details class="faq-item">
+                <summary>What happens when the system crashes?</summary>
+                <div class="faq-answer">
+                    <p>Workflows restart and replay completed steps from the execution log. In-progress activities are
+                        retried; finished ones return their recorded results — no work is lost.</p>
+                </div>
+            </details>
+            <details class="faq-item">
+                <summary>How to handle cleanup after a permanent activity failure?</summary>
+                <div class="faq-answer">
+                    <p>Invoke a compensating activity from the workflow to roll back side effects — the <a
+                            href="{{ get_url(path='@/docs/latest/js/getting-started-fly-agent.md') }}">saga
+                            pattern</a>. The workflow catches the failure and always runs cleanup before exiting.</p>
+                </div>
+            </details>
+            <details class="faq-item">
+                <summary>What is the relation to AI?</summary>
+                <div class="faq-answer">
+                    <p>Obelisk suits AI agent development on two levels. <strong>Authoring</strong>: write agent logic
+                        in plain JS with no build step — WIT provides a type-safe schema linking workflows to
+                        activities. <strong>Operating</strong>: full execution introspection — events, logs, errors,
+                        source — lets agents diagnose failures, with hot redeploy to push fixes without a server
+                        restart.</p>
+                </div>
+            </details>
         </div>
     </section>
 </div>

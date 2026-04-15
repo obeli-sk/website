@@ -36,7 +36,6 @@ website/
 │   │       ├── configuration.md
 │   │       ├── programmatic-access.md
 │   │       └── concepts/    # Nested doc sections
-│   ├── faq/                 # FAQ page (template: faq.html)
 │   └── install/             # Install page (template: install.html)
 ├── sass/
 │   └── style.scss           # All site styling (compiled by Zola)
@@ -64,6 +63,14 @@ symlink points to the current version.
 
 Many older version directories are symlinks to the nearest real directory
 with actual content. Only a few versions have real content directories.
+
+
+## Formatting
+use
+```sh
+./scripts/fmt-md.sh
+```
+after each edit.
 
 ### Adding a New Version
 

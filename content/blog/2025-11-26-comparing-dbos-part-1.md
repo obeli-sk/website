@@ -25,7 +25,7 @@ For building WASM Components we need Rust and Cargo.
 
 ## Intro into deterministic workflow engines
 
-As both [Obelisk](@/faq/_index.md) and
+As both [Obelisk](@/features/_index.md) and
 <a target="_blank" href="https://docs.dbos.dev/architecture#how-workflow-recovery-works">DBOS</a>
 emphasize, workflows must be deterministic and activities / steps must be idempotent.
 

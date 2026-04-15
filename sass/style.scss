@@ -499,3 +499,66 @@ article {
     font-size: 1em;
     line-height: 1;
 }
+
+.faq-section {
+    padding: 4rem 0;
+
+    .faq-list {
+        max-width: 800px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+.faq-item {
+    border: 1px solid rgba(157, 242, 254, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+
+    summary {
+        cursor: pointer;
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--primary);
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--bg-lighter);
+        user-select: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::after {
+            content: '+';
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-left: 1rem;
+        }
+    }
+
+    &[open] summary {
+        border-bottom: 1px solid rgba(157, 242, 254, 0.1);
+
+        &::after {
+            content: '−';
+        }
+    }
+
+    .faq-answer {
+        padding: 1rem 1.25rem;
+        font-size: 0.95rem;
+        color: rgba(228, 228, 231, 0.85);
+        line-height: 1.6;
+        background-color: rgba(157, 242, 254, 0.03);
+
+        p {
+            margin-bottom: 0;
+        }
+    }
+}
