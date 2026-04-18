@@ -378,6 +378,27 @@ Or follow a previously submitted execution by ID:
 
 ```sh
 obelisk execution get --follow E_01KN2X...
+```
+
+### List recent executions
+
+```sh
+# Last 20 top-level executions
+obelisk execution list
+
+# Filter to a specific function
+obelisk execution list --ffqn my-namespace:my-pkg/my-iface.my-fn
+
+# Include child executions (workflows, activities) spawned by a parent
+obelisk execution list --execution-id E_.. --show-derived
+```
+
+### Inspect logs
+
+```sh
+obelisk execution logs --show-derived E_01KN2X...
+```
+
 ## Common pitfalls
 
 - **Workflows cannot use `fetch`.** Push all I/O (HTTP, file, database) into activities.
