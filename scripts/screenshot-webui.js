@@ -1,48 +1,71 @@
-const { chromium } = require('/nix/store/mb8fzf7hjf5f9ycdvzx3x7wdi157pvyx-playwright-test-1.58.2/lib/node_modules/playwright-core/index.js');
+/**
+ * Playwright script to capture Web UI screenshots for the homepage carousel.
+ *
+ * Prerequisites:
+ *   1. Start the demo-tutorial server:
+ *        cd /workspace/apps/demo-tutorial
+ *        obelisk server run --deployment deployment.toml
+ *   2. Trigger the workflows (webhooks spawn both serial and parallel):
+ *        curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait
+ *      Wait ~30s for the serial workflow to finish.
+ *   3. Run this script from the website/ directory:
+ *        FONTCONFIG_FILE=/tmp/fonts.conf \
+ *        /nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0/bin/node scripts/screenshot-webui.js
+ *
+ *      If /tmp/fonts.conf does not exist, create it first:
+ *        mkdir -p /tmp/fontcache
+ *        cat > /tmp/fonts.conf << 'EOF'
+ *        <?xml version="1.0"?>
+ *        <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+ *        <fontconfig>
+ *          <dir>/nix/store/sivwl9l4pfm16lpy4kcbqwh1a06s50m6-dejavu-fonts-minimal-2.37/share/fonts/truetype</dir>
+ *          <cachedir>/tmp/fontcache</cachedir>
+ *        </fontconfig>
+ *        EOF
+ *
+ *   4. Copy outputs to static/:
+ *        cp /tmp/sc-*.png static/
+ *
+ * Captured views (all clipped to 1280×680, saved to /tmp/sc-*.png):
+ *   sc-executions.png   — execution list (home page)
+ *   sc-trace.png        — parallel workflow execution trace
+ *   sc-events.png       — execution event log
+ *   sc-logs.png         — execution logs
+ */
+
+const { chromium } = require('/nix/store/bazma324ghwnil93pvkwcg0llmin46rm-wrangler-4.38.0/lib/node_modules/.pnpm/playwright-core@1.49.1/node_modules/playwright-core');
 
 const LAUNCH_OPTS = {
-  executablePath: '/nix/store/mwmmlaalpfnaaknbrh333agk5a01cg68-chromium-146.0.7680.164/bin/chromium',
+  executablePath: '/nix/store/77w1x7d7k3p5yjn224gmkbhkm06b426x-chromium-146.0.7680.153/bin/chromium',
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-setuid-sandbox', '--disable-gpu'],
 };
 
-async function screenshotTrace(page, execId, outputPath) {
-  await page.goto(`http://localhost:8080/execution/${execId}/trace`, { waitUntil: 'domcontentloaded' });
+const VIEWPORT = { width: 1280, height: 680 };
+
+async function shot(page, path) {
   await page.waitForTimeout(2000);
-
-  // Enable "Autoload children" if present and not already checked
-  const autoload = page.getByLabel('Autoload children');
-  if (await autoload.count() > 0) {
-    if (!(await autoload.isChecked())) await autoload.check();
-    console.log('Enabled Autoload children');
-    await page.waitForTimeout(4000); // wait for children to load
-  }
-
-  await page.screenshot({ path: outputPath });
-  console.log(`Saved ${outputPath}`);
+  await page.screenshot({ path, clip: { x: 0, y: 0, ...VIEWPORT } });
+  console.log(`Saved ${path}`);
 }
 
 (async () => {
   const browser = await chromium.launch(LAUNCH_OPTS);
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await browser.newContext({ viewport: VIEWPORT });
   const page = await ctx.newPage();
 
-  // Load executions page
+  // --- Execution list ---
   await page.goto('http://localhost:8080', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(3000);
+  await shot(page, '/tmp/sc-executions.png');
 
-  // Get only execution trace links (not filter links)
+  // Find execution IDs from the list
   const traceLinks = await page.locator('a[href^="/execution/E_"]').all();
-  console.log(`Found ${traceLinks.length} trace links`);
-
   const rows = [];
   for (const link of traceLinks) {
     const href = await link.getAttribute('href');
-    // Extract execution ID from href like /execution/E_01.../trace
     const match = href.match(/\/execution\/(E_[^/]+)/);
     if (!match) continue;
     const execId = match[1];
-    // Get the timing cell from the table row
     const row = link.locator('xpath=ancestor::tr[1]');
     const cells = await row.locator('td').all();
     const timingText = cells.length > 0 ? await cells[cells.length - 1].innerText() : '';
@@ -51,32 +74,50 @@ async function screenshotTrace(page, execId, outputPath) {
   }
 
   if (rows.length < 2) {
-    console.log('Not enough executions found, got:', rows);
+    console.error('Not enough executions found:', rows.length);
     await browser.close();
     return;
   }
 
-  // Serial took ~24s, parallel took ~8s
-  // Identify by timing text
+  // Pick the two most recently created executions (first two in the list).
+  // Among those, the one that took longer is serial, the faster one is parallel.
+  const recent = rows.slice(0, 2);
+  const secsOf = r => {
+    const m = r.timingText.match(/Took (\d+) secs?/);
+    return m ? parseInt(m[1]) : 0;
+  };
   let serialId, parallelId;
-  for (const r of rows) {
-    const secs = parseInt(r.timingText.match(/Took (\d+)/)?.[1] || '0');
-    if (secs >= 15) serialId = r.execId;
-    else parallelId = r.execId;
+  if (secsOf(recent[0]) >= secsOf(recent[1])) {
+    serialId = recent[0].execId;
+    parallelId = recent[1].execId;
+  } else {
+    serialId = recent[1].execId;
+    parallelId = recent[0].execId;
   }
+  console.log(`Serial: ${serialId}  Parallel: ${parallelId}`);
 
-  // Fallback: older ID = serial (triggered first), newer ID = parallel
-  if (!serialId || !parallelId) {
-    rows.sort((a, b) => a.execId < b.execId ? -1 : 1);
-    serialId = rows[0].execId;
-    parallelId = rows[1].execId;
+  // The top-level executions are webhooks; the workflow is the first child (.o:1_1).
+  // Use the workflow child for trace/events/logs so we see the actual workflow detail.
+  const parallelWorkflowId = `${parallelId}.o:1_1`;
+  console.log(`Parallel workflow: ${parallelWorkflowId}`);
+
+  // --- Execution trace (parallel workflow child, with children autoloaded) ---
+  await page.goto(`http://localhost:8080/execution/${parallelWorkflowId}/trace`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2000);
+  const autoload = page.getByLabel('Autoload children');
+  if (await autoload.count() > 0 && !(await autoload.isChecked())) {
+    await autoload.check();
+    await page.waitForTimeout(4000);
   }
+  await shot(page, '/tmp/sc-trace.png');
 
-  console.log(`Serial exec: ${serialId}`);
-  console.log(`Parallel exec: ${parallelId}`);
+  // --- Execution event log (default route: /execution/{id}) ---
+  await page.goto(`http://localhost:8080/execution/${parallelWorkflowId}`, { waitUntil: 'domcontentloaded' });
+  await shot(page, '/tmp/sc-events.png');
 
-  await screenshotTrace(page, serialId, '/tmp/js-tutorial-trace.png');
-  await screenshotTrace(page, parallelId, '/tmp/js-tutorial-trace-parallel.png');
+  // --- Logs ---
+  await page.goto(`http://localhost:8080/execution/${parallelWorkflowId}/logs`, { waitUntil: 'domcontentloaded' });
+  await shot(page, '/tmp/sc-logs.png');
 
   await browser.close();
 })();

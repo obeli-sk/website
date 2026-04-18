@@ -26,34 +26,36 @@
     <div class="container">
         <div class="qs-steps">
             <div class="qs-step">
-                <div class="qs-step-label">1 — Install</div>
+                <div class="qs-step-label">Install</div>
                 <pre
                     class="qs-code"><code>curl -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash</code></pre>
             </div>
             <div class="qs-step">
-                <div class="qs-step-label">2 — Write plain JavaScript</div>
-                <pre class="qs-code"><code><span class="qs-comment">// activity: fetch weather — auto-retried on failure</span>
-export default async function get_temperature(city) {
-    const resp = await fetch(`https://wttr.in/${city}?format=%t`);
-    if (!resp.ok) throw `HTTP ${resp.status}`;
-    return (await resp.text()).trim();
-}
-
-<span class="qs-comment">// workflow: fan out in parallel — crash-safe, replayable</span>
-export default function city_temperatures(cities) {
-    const handles = cities.map(city => {
-        const js = obelisk.createJoinSet();
-        js.submit("myapp:weather/activity.get-temperature", [city]);
-        return { city, js };
-    });
-    return handles.map(({ city, js }) => {
-        const r = js.joinNext();
-        return `${city}: ${obelisk.getResult(r.id).ok}`;
-    }).join(", ");
-}</code></pre>
+                <div class="qs-tabs">
+                    <input type="radio" name="qs-tab" id="qs-tab-ai" class="qs-tab-input" checked>
+                    <input type="radio" name="qs-tab" id="qs-tab-rust" class="qs-tab-input">
+                    <div class="qs-tab-labels">
+                        <label for="qs-tab-ai" class="qs-tab-label-btn">Use a Coding agent</label>
+                        <label for="qs-tab-rust" class="qs-tab-label-btn">Write components in Rust</label>
+                    </div>
+                    <div class="qs-tab-panel" id="qs-panel-ai">
+                        <pre class="qs-code"><code>obelisk generate prompt 'Create a workflow that fans out weather
+    lookups for a list of cities in parallel' | claude</code></pre>
+                        <p class="qs-note">The agent writes JavaScript activities, workflows, webhook endpoints,
+                            and a deployment file.</p>
+                    </div>
+                    <div class="qs-tab-panel" id="qs-panel-rust">
+                        <pre class="qs-code"><code>cargo generate obeli-sk/obelisk-templates</code></pre>
+                        <p class="qs-note">Use <a href="https://github.com/obeli-sk/obelisk-templates/"
+                                target="_blank">Rust starter templates</a>
+                            or any <a
+                                href="https://github.com/yoshuawuyts/awesome-wasm-components/tree/main#programming-language-support"
+                                target="_blank">WASM Component Model</a>-compatible language.</p>
+                    </div>
+                </div>
             </div>
             <div class="qs-step">
-                <div class="qs-step-label">3 — Run</div>
+                <div class="qs-step-label">Run</div>
                 <pre class="qs-code"><code>obelisk server run --deployment deployment.toml</code></pre>
                 <p class="qs-note">Use Web UI at <strong>:8080</strong>, Webhooks at <strong>:9090</strong>,
                     API at <strong>:5005</strong> or
@@ -62,8 +64,49 @@ export default function city_temperatures(cities) {
                 </p>
             </div>
         </div>
-        <div class="qs-cta">
-            <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}" class="cta-button">Full Tutorial →</a>
+    </div>
+</section>
+
+<section class="screenshots">
+    <div class="container">
+        <div class="sc-carousel">
+            <input type="radio" name="sc" id="sc-1" class="sc-input" checked>
+            <input type="radio" name="sc" id="sc-2" class="sc-input">
+            <input type="radio" name="sc" id="sc-3" class="sc-input">
+            <input type="radio" name="sc" id="sc-4" class="sc-input">
+            <div class="sc-track">
+                <div class="sc-slide">
+                    <label for="sc-4" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="/sc-executions.png" alt="Execution list in the Web UI">
+                    <label for="sc-2" class="sc-arrow sc-next">&#8250;</label>
+                    <p class="sc-caption">Execution list — browse and filter all workflow and activity executions</p>
+                </div>
+                <div class="sc-slide">
+                    <label for="sc-1" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="/sc-trace.png" alt="Parallel workflow execution trace in the Web UI">
+                    <label for="sc-3" class="sc-arrow sc-next">&#8250;</label>
+                    <p class="sc-caption">Execution trace — parallel fan-out activities visualised in a timeline</p>
+                </div>
+                <div class="sc-slide">
+                    <label for="sc-2" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="/sc-events.png" alt="Execution event log in the Web UI">
+                    <label for="sc-4" class="sc-arrow sc-next">&#8250;</label>
+                    <p class="sc-caption">Execution log — every workflow step persisted for deterministic replay
+                    </p>
+                </div>
+                <div class="sc-slide">
+                    <label for="sc-3" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="/sc-logs.png" alt="Logs in the Web UI">
+                    <label for="sc-1" class="sc-arrow sc-next">&#8250;</label>
+                    <p class="sc-caption">Logs — structured log output and stdout/stderr from executions</p>
+                </div>
+            </div>
+            <div class="sc-dots">
+                <label for="sc-1" class="sc-dot"></label>
+                <label for="sc-2" class="sc-dot"></label>
+                <label for="sc-3" class="sc-dot"></label>
+                <label for="sc-4" class="sc-dot"></label>
+            </div>
         </div>
     </div>
 </section>
@@ -74,9 +117,12 @@ export default function city_temperatures(cities) {
             <h2 class="section-title">Why Obelisk?</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>JavaScript &amp; WASM</h3>
-                    <p>Write activities, workflows, and webhooks in plain <code>.js</code> files — no build step, no
-                        bundler. Rust/Go WASM components also supported.</p>
+                    <h3>AI-agent &amp; JS &amp; WASM</h3>
+                    <p>Generate components with <code>obelisk generate prompt | claude</code>, write the JS by hand,
+                        or use <a
+                            href="https://github.com/yoshuawuyts/awesome-wasm-components/tree/main#programming-language-support"
+                            target="_blank">WASM Component Model</a>-compatible languages such as Rust and Go — no build
+                        step required for JS.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Crash-Resilient Workflows</h3>
@@ -125,7 +171,8 @@ export default function city_temperatures(cities) {
             <details class="faq-item">
                 <summary>What does determinism mean in the context of a workflow engine?</summary>
                 <div class="faq-answer">
-                    <p>The engine records all non-deterministic calls — random values, timestamps, child results — to the
+                    <p>The engine records all non-deterministic calls — random values, timestamps, child results — to
+                        the
                         execution log. On crash recovery, the workflow replays from the log, so the same inputs always
                         produce the same execution path.</p>
                 </div>

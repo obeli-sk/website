@@ -121,22 +121,44 @@ Used in Markdown content:
 
 ## Screenshots
 
-Screenshots in `static/` (e.g. `js-tutorial-trace.png`) were captured with Playwright using the
-system Chromium from the nix store. To regenerate:
+Homepage carousel screenshots (`static/sc-*.png`) are captured with Playwright using the system
+Chromium from the nix store. To regenerate:
 
-1. Start the demo-tutorial server: `cd /workspace/apps/demo-tutorial && obelisk server run --deployment deployment.toml`
-2. Trigger the workflows: `curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait`
-3. Run the capture script:
+1. Start the demo-tutorial server:
+   ```sh
+   cd /workspace/apps/demo-tutorial
+   obelisk server run --deployment deployment.toml
+   ```
+2. Trigger both workflows and wait for the serial one (~30 s) to finish:
+   ```sh
+   curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait
+   sleep 30
+   ```
+3. Create a minimal fontconfig (required once per `/tmp` lifetime):
+   ```sh
+   mkdir -p /tmp/fontcache
+   cat > /tmp/fonts.conf << 'EOF'
+   <?xml version="1.0"?>
+   <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+   <fontconfig>
+     <dir>/nix/store/sivwl9l4pfm16lpy4kcbqwh1a06s50m6-dejavu-fonts-minimal-2.37/share/fonts/truetype</dir>
+     <cachedir>/tmp/fontcache</cachedir>
+   </fontconfig>
+   EOF
+   ```
+4. Run the capture script from `website/`:
+   ```sh
+   FONTCONFIG_FILE=/tmp/fonts.conf \
+   /nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0/bin/node scripts/screenshot-webui.js
+   ```
+5. Copy outputs to `static/`:
+   ```sh
+   cp /tmp/sc-*.png static/
+   ```
 
-```sh
-PLAYWRIGHT_BROWSERS_PATH=/nix/store/ys5hrp8fq4w5fiifw7jiqs6axffskav8-playwright-browsers \
-FONTCONFIG_FILE=/nix/store/jcg09fyjgwavdmcsl05cfi2kbjfid4mn-fonts.conf \
-/nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0/bin/node scripts/screenshot-webui.js
-```
-
-The script (`scripts/screenshot-webui.js`) uses `playwright-core` and the system Chromium
-(`chromium-146`) with `--no-sandbox --disable-gpu`. It auto-detects serial vs parallel by
-execution timing and saves to `/tmp/js-tutorial-trace*.png`, then copy to `static/`.
+The script captures four views at 1280×680 pixels: execution list, parallel trace, event log, and
+logs. It auto-detects serial vs parallel by timing and always uses the two most recently created
+executions. See `scripts/screenshot-webui.js` for details.
 
 ## Validation
 

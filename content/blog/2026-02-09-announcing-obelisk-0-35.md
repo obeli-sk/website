@@ -43,7 +43,7 @@ returns it to the pending queue.
 
 ## Persistent Logs
 
-Execution logs are now stored in the database by default and can be retrieved at any time via the
+Logs are now stored in the database by default and can be retrieved at any time via the
 {{ doc_link(title="WebAPI", path="programmatic-access.md", version="v0.35.1") }} or viewed in the
 Web UI:
 

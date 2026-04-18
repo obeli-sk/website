@@ -170,6 +170,37 @@ Options:
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
 - `-j, --json` - Output events as JSON in Web API format instead of human-readable text
 
+### Listing executions
+
+```sh
+obelisk execution list [OPTIONS]
+```
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `--ffqn <FFQN_PREFIX>` - Filter by function FFQN prefix (any prefix of a fully-qualified name,
+  e.g. `namespace:`; short `.../ifc.fn` form not supported)
+- `-e, --execution_id <EXECUTION_ID_PREFIX>` - Filter by execution ID or its prefix (useful with
+  `--show-derived` to find all child executions)
+- `--show-derived` - Include child (derived) executions spawned by workflows
+- `--hide-finished` - Hide finished executions
+- `--limit <LIMIT>` - Number of executions to return (default: `20`)
+- `-j, --json` - Output as JSON instead of human-readable text
+
+#### Example
+
+```sh
+obelisk execution list -e E_01KPFKGAGSH91DRVBJZ3AK0T8A --show-derived
+```
+
+```
+E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:3-fibo_1 `Finished(ok)` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.391616296 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:2-fibo_1 `Finished(ok)` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.390617507 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:1-fibo_1 `Finished(ok)` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.388883844 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A `Finished(ok)` benchmark-fibo:workflow/fibow.fiboa `2026-04-18 06:12:31.386857278 UTC`
+```
+
 ### Getting the current execution state
 
 ```sh
@@ -185,6 +216,91 @@ Options:
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 - `-f, --follow` - Follow the status stream until the execution finishes
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
+
+### Fetching logs
+
+```sh
+obelisk execution logs [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to fetch logs for
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `--show-derived` - Include logs from child (derived) executions
+- `--level <LEVEL>` - Minimum log level: `trace`, `debug`, `info`, `warn`, `error`, `off` (default:
+  `debug`; use `off` with `--show-streams` to suppress structured logs)
+- `--show-streams` - Include stdout/stderr stream output
+- `--stream-type <TYPE>` - Filter stream output by type (`stdout`, `stderr`); repeatable; only with
+  `--show-streams`
+- `--show-run-id` - Show the run ID in each log line
+- `--after <TIMESTAMP>` - Only show entries created after this timestamp (RFC3339)
+- `--follow` - Poll for new log entries until the execution finishes
+- `--limit <LIMIT>` - Number of log entries to return per request (default: `20`, max: `200`)
+- `-j, --json` - Output as JSON instead of human-readable text
+
+### Showing execution events
+
+```sh
+obelisk execution events [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `--from <VERSION>` - Start from this event version (inclusive)
+- `--limit <LIMIT>` - Number of events to return (default: `20`)
+- `-j, --json` - Output as JSON instead of human-readable text
+
+#### Example
+
+```sh
+obelisk execution events E_01KPFKGAGSH91DRVBJZ3AK0T8A
+```
+
+```
+1 `2026-04-18 06:12:31.387608348 UTC` Locked(`2026-04-18 06:12:33.387608348 UTC`, workflow:fibow_rs:sha256:11d530...)
+2 `2026-04-18 06:12:31.388883844 UTC` HistoryEvent(JoinSetCreate(o:1-fibo))
+3 `2026-04-18 06:12:31.388883844 UTC` HistoryEvent(JoinSetRequest(ChildExecutionRequest(...)))
+...
+11 `2026-04-18 06:12:31.392790003 UTC` Finished
+```
+
+### Showing execution responses
+
+```sh
+obelisk execution responses [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `--from <CURSOR>` - Start from this response cursor (inclusive)
+- `--limit <LIMIT>` - Number of responses to return (default: `20`)
+- `-j, --json` - Output as JSON instead of human-readable text
+
+#### Example
+
+```sh
+obelisk execution responses E_01KPFKGAGSH91DRVBJZ3AK0T8A
+```
+
+```
+1 `2026-04-18 06:12:31.390150065 UTC` o:1-fibo completed successfully: E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:1-fibo_1
+2 `2026-04-18 06:12:31.391402695 UTC` o:2-fibo completed successfully: E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:2-fibo_1
+3 `2026-04-18 06:12:31.392479831 UTC` o:3-fibo completed successfully: E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:3-fibo_1
+```
 
 ### Cancelling an activity or a delay request
 
@@ -214,6 +330,71 @@ Arguments:
 Options:
 
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Pausing an execution
+
+Pause a workflow execution, preventing it from being picked up until unpaused.
+
+```sh
+obelisk execution pause [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to pause
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Resuming a paused execution
+
+```sh
+obelisk execution unpause [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to unpause
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Replaying an execution
+
+Replay a workflow execution from its execution log, checking for non-determinism.
+
+```sh
+obelisk execution replay [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to replay
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Upgrading an execution
+
+Upgrade a workflow execution to the current component version in the active deployment. Looks up the
+execution's FFQN, finds the component exporting it in the active deployment, and upgrades the
+execution from its current digest to the new one.
+
+```sh
+obelisk execution upgrade [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to upgrade
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `--skip-determinism-check` - Skip the determinism check during upgrade
 
 ## Obelisk Component
 
@@ -320,6 +501,7 @@ Arguments:
 Options:
 
 - `-o, --overwrite` - Overwrite existing files
+- `--skip-local` - Skip local-path components
 
 ### Generating server configuration
 
@@ -359,4 +541,22 @@ Generate a new execution ID:
 
 ```sh
 obelisk generate execution-id
+```
+
+### Generating a coding-agent prompt
+
+Print a prompt context for authoring an Obelisk application with a coding agent:
+
+```sh
+obelisk generate prompt <DESCRIPTION>
+```
+
+Arguments:
+
+- `<DESCRIPTION>` - Description of the application to build
+
+#### Example
+
+```sh
+obelisk generate prompt 'Create a daily task that monitors GitHub org "my-org"' | claude
 ```

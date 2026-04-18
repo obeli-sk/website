@@ -38,15 +38,18 @@ The API supports content negotiation via the `Accept` header.
 
 Lists all registered components in the system.
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`type` | String | Filter by [Component Type](#component-type). | `None` | | `name` | String | Filter
-by component name. | `None` | | `digest` | String | Filter by `sha256sum` of the component's WASM
-file. | `None` | | `exports` | Boolean | Include exported functions in the response. | `false` | |
-`imports` | Boolean | Include imported functions in the response. | `false` | | `submittable`|
-Boolean | If set, filters the `exports` list to only include functions that can be submitted. |
-`None` (Shows all) | | `extensions` | Boolean | Include
-{{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule`
-variant). | `false` |
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `type` | String | Filter by [Component Type](#component-type). | `None` |
+| `name` | String | Filter by component name. | `None` |
+| `ffqn` | String | Filter by function FFQN or its prefix (any prefix of `ns:pkg/ifc.fn`). | `None` |
+| `digest` | String | Filter by component digest (`sha256` of the WASM file for WASM components; hash of JS source + configuration for JS components). | `None` |
+| `exports` | Boolean | Include exported functions in the response. | `false` |
+| `imports` | Boolean | Include imported functions in the response. | `false` |
+| `submittable` | Boolean | If set, filters the `exports` list to only include functions that can be submitted. | `None` (Shows all) |
+| `extensions` | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant). | `false` |
 
 #### Example request
 
@@ -80,6 +83,18 @@ curl "127.1:5005/v1/components?exports=true&imports=false" -H accept:application
 ]
 ```
 
+Filtering by FFQN prefix with `text/plain` output:
+
+```sh
+curl "127.1:5005/v1/components?exports=true&ffqn=testing:fibo/fibo.fibo" -H accept:text/plain
+```
+
+```
+activity:test_programs_fibo_activity:sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0 sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0
+ exports:
+  testing:fibo/fibo.fibo: func(n: u8) -> result<u64>
+```
+
 ---
 
 ### `GET /v1/components/{digest}/wit`
@@ -88,7 +103,7 @@ Retrieves the WebAssembly Interface Type (WIT) definition for a specific compone
 
 **Path Parameters:**
 
-- `digest`: `sha256sum` of the component's WASM file.
+- `digest`: Component digest (see `digest` in `GET /v1/components`).
 
 **Returns:**
 
@@ -131,16 +146,20 @@ Generates a new, globally unique execution id.
 
 Lists executions with support for filtering and pagination.
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. | `None` | |
-`show_derived`| Boolean | If `true`, includes child executions. | `false` | | `hide_finished` |
-Boolean | Show only unfinished executions. | `false` | | `execution_id_prefix` | String | Filter by
-Execution ID or its prefix. | `None` | | `component_digest` | String | Filter by component's
-`sha256` digest. | `None` | | `deployment_id` | String | Filter by deployment ID. | `None` | |
-`cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` | |
-`length` | Integer | Number of items to return. | System Default | | `direction` | String | `older`
-or `newer`. | `older` | | `including_cursor`| Boolean| Include the cursor item in the result. |
-`false` |
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. | `None` |
+| `show_derived` | Boolean | If `true`, includes child executions. | `false` |
+| `hide_finished` | Boolean | Show only unfinished executions. | `false` |
+| `execution_id_prefix` | String | Filter by Execution ID or its prefix. | `None` |
+| `component_digest` | String | Filter by component digest (see `digest` in `GET /v1/components`). | `None` |
+| `deployment_id` | String | Filter by deployment ID. | `None` |
+| `cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` |
+| `length` | Integer | Number of items to return. | System Default |
+| `direction` | String | `older` or `newer`. | `older` |
+| `including_cursor` | Boolean | Include the cursor item in the result. | `false` |
 
 #### Example request
 
@@ -307,10 +326,13 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/jso
 
 Retrieves the history of events for an execution.
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`version_from` | Integer | Start from this event version. | `0` | | `length` | Integer | Max number
-of events. | `20` | | `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false`
-|
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `version_from` | Integer | Start from this event version. | `0` |
+| `length` | Integer | Max number of events. | `20` |
+| `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false` |
 
 #### Example request
 
@@ -363,9 +385,13 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/jso
 
 Retrieves responses associated with an execution (used for long-running interactions).
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`cursor_from` | Integer | Start from this cursor index. | `0` | | `length` | Integer | Max number of
-responses. | `20` | | `including_cursor`| Boolean | Include the event at `cursor_from`. | `false` |
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `cursor_from` | Integer | Start from this cursor index. | `0` |
+| `length` | Integer | Max number of responses. | `20` |
+| `including_cursor` | Boolean | Include the event at `cursor_from`. | `false` |
 
 #### Example request
 
@@ -497,13 +523,17 @@ Retrieves stored logs and output streams for an execution. Logs are stored in th
 `forward_stdout`/`forward_stderr` is set to `"db"` (the default) or when using the `obelisk:log`
 API.
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`show_logs` | Boolean | Include structured log entries | `true` | | `show_streams` | Boolean |
-Include stdout/stderr stream entries | `true` | | `show_derived` | Boolean | Include logs from all
-derived (child) executions | `false` | | `cursor` | DateTime (ISO 8601) | Pagination cursor | start
-of time | | `length` | Integer | Max entries to return | system default | | `including_cursor` |
-Boolean | Include the entry at `cursor` | `false` | | `direction` | String | `older` or `newer` |
-`older` |
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `show_logs` | Boolean | Include structured log entries | `true` |
+| `show_streams` | Boolean | Include stdout/stderr stream entries | `true` |
+| `show_derived` | Boolean | Include logs from all derived (child) executions | `false` |
+| `cursor` | DateTime (ISO 8601) | Pagination cursor | start of time |
+| `length` | Integer | Max entries to return | system default |
+| `including_cursor` | Boolean | Include the entry at `cursor` | `false` |
+| `direction` | String | `older` or `newer` | `older` |
 
 #### Example request
 
@@ -519,9 +549,11 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_derived=true" -H accept
 Returns the WASM backtrace for a trapped or failed execution, including call frames and optional
 source symbol information.
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`version` | String | Which backtrace to retrieve: `"first"`, `"last"`, or a version number |
-`"last"` |
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `version` | String | Which backtrace to retrieve: `"first"`, `"last"`, or a version number | `"last"` |
 
 #### Example request
 
@@ -554,9 +586,12 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/
 Retrieves the source file content referenced by a backtrace frame. Requires the WASM component to
 have been compiled with embedded DWARF debug info.
 
-**Query Parameters:** | Parameter | Type | Description | Default | | :--- | :--- | :--- | :--- | |
-`file` | String | File path to retrieve (suffix matching supported) | required | | `version` |
-String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `file` | String | File path to retrieve (suffix matching supported) | required |
+| `version` | String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
 
 **Responses:**
 
@@ -615,6 +650,10 @@ versions.
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json
 ```
 
+```json
+{ "ok": "replayed" }
+```
+
 ---
 
 ## Functions
@@ -635,8 +674,11 @@ curl "127.1:5005/v1/functions" -H accept:application/json
 
 Retrieves the WIT definition for a specific function.
 
-**Query Parameters:** | Parameter | Type | Description | | :--- | :--- | :--- | | `ffqn` | String |
-Function Fully Qualified Name |
+**Query Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `ffqn` | String | Function Fully Qualified Name |
 
 #### Example request
 
@@ -724,9 +766,12 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:applic
 Submits a new deployment configuration and stores it in the database. Returns the new deployment ID.
 The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
 
-**Request Body (JSON):** | Field | Type | Description | | :--- | :--- | :--- | | `config_json` |
-String | Deployment configuration encoded as a JSON string | | `verify` | Boolean | If `true`,
-verify all environment variables before persisting (default: `false`) |
+**Request Body (JSON):**
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `config_json` | String | Deployment configuration encoded as a JSON string |
+| `verify` | Boolean | If `true`, verify all environment variables before persisting (default: `false`) |
 
 **Responses:**
 
@@ -752,9 +797,12 @@ or enqueue (activate on next restart).
 
 - `deployment-id`: The deployment ID to switch to.
 
-**Request Body (JSON):** | Field | Type | Description | | :--- | :--- | :--- | | `hot_redeploy` |
-Boolean | If `true`, apply immediately without restarting (default: `false`) | | `verify` | Boolean
-| If `true`, verify environment variables before switching (default: `false`) |
+**Request Body (JSON):**
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `hot_redeploy` | Boolean | If `true`, apply immediately without restarting (default: `false`) |
+| `verify` | Boolean | If `true`, verify environment variables before switching (default: `false`) |
 
 **Responses:**
 
