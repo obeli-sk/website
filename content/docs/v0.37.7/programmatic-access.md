@@ -40,16 +40,16 @@ Lists all registered components in the system.
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `type` | String | Filter by [Component Type](#component-type). | `None` |
-| `name` | String | Filter by component name. | `None` |
-| `ffqn` | String | Filter by function FFQN or its prefix (any prefix of `ns:pkg/ifc.fn`). | `None` |
-| `digest` | String | Filter by component digest (`sha256` of the WASM file for WASM components; hash of JS source + configuration for JS components). | `None` |
-| `exports` | Boolean | Include exported functions in the response. | `false` |
-| `imports` | Boolean | Include imported functions in the response. | `false` |
-| `submittable` | Boolean | If set, filters the `exports` list to only include functions that can be submitted. | `None` (Shows all) |
-| `extensions` | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant). | `false` |
+| Parameter     | Type    | Description                                                                                                                      | Default            |
+| :------------ | :------ | :------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| `type`        | String  | Filter by [Component Type](#component-type).                                                                                     | `None`             |
+| `name`        | String  | Filter by component name.                                                                                                        | `None`             |
+| `ffqn`        | String  | Filter by function FFQN or its prefix (any prefix of `ns:pkg/ifc.fn`).                                                           | `None`             |
+| `digest`      | String  | Filter by component digest (`sha256` of the WASM file for WASM components; hash of JS source + configuration for JS components). | `None`             |
+| `exports`     | Boolean | Include exported functions in the response.                                                                                      | `false`            |
+| `imports`     | Boolean | Include imported functions in the response.                                                                                      | `false`            |
+| `submittable` | Boolean | If set, filters the `exports` list to only include functions that can be submitted.                                              | `None` (Shows all) |
+| `extensions`  | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant).           | `false`            |
 
 #### Example request
 
@@ -148,18 +148,18 @@ Lists executions with support for filtering and pagination.
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `ffqn_prefix` | String | Filter by Function Fully Qualified Name or its prefix. | `None` |
-| `show_derived` | Boolean | If `true`, includes child executions. | `false` |
-| `hide_finished` | Boolean | Show only unfinished executions. | `false` |
-| `execution_id_prefix` | String | Filter by Execution ID or its prefix. | `None` |
-| `component_digest` | String | Filter by component digest (see `digest` in `GET /v1/components`). | `None` |
-| `deployment_id` | String | Filter by deployment ID. | `None` |
-| `cursor` | String | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None` |
-| `length` | Integer | Number of items to return. | System Default |
-| `direction` | String | `older` or `newer`. | `older` |
-| `including_cursor` | Boolean | Include the cursor item in the result. | `false` |
+| Parameter             | Type    | Description                                                         | Default        |
+| :-------------------- | :------ | :------------------------------------------------------------------ | :------------- |
+| `ffqn_prefix`         | String  | Filter by Function Fully Qualified Name or its prefix.              | `None`         |
+| `show_derived`        | Boolean | If `true`, includes child executions.                               | `false`        |
+| `hide_finished`       | Boolean | Show only unfinished executions.                                    | `false`        |
+| `execution_id_prefix` | String  | Filter by Execution ID or its prefix.                               | `None`         |
+| `component_digest`    | String  | Filter by component digest (see `digest` in `GET /v1/components`).  | `None`         |
+| `deployment_id`       | String  | Filter by deployment ID.                                            | `None`         |
+| `cursor`              | String  | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None`         |
+| `length`              | Integer | Number of items to return.                                          | System Default |
+| `direction`           | String  | `older` or `newer`.                                                 | `older`        |
+| `including_cursor`    | Boolean | Include the cursor item in the result.                              | `false`        |
 
 #### Example request
 
@@ -328,10 +328,10 @@ Retrieves the history of events for an execution.
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `version_from` | Integer | Start from this event version. | `0` |
-| `length` | Integer | Max number of events. | `20` |
+| Parameter              | Type    | Description                      | Default |
+| :--------------------- | :------ | :------------------------------- | :------ |
+| `version_from`         | Integer | Start from this event version.   | `0`     |
+| `length`               | Integer | Max number of events.            | `20`    |
 | `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false` |
 
 #### Example request
@@ -387,10 +387,10 @@ Retrieves responses associated with an execution (used for long-running interact
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `cursor_from` | Integer | Start from this cursor index. | `0` |
-| `length` | Integer | Max number of responses. | `20` |
+| Parameter          | Type    | Description                         | Default |
+| :----------------- | :------ | :---------------------------------- | :------ |
+| `cursor_from`      | Integer | Start from this cursor index.       | `0`     |
+| `length`           | Integer | Max number of responses.            | `20`    |
 | `including_cursor` | Boolean | Include the event at `cursor_from`. | `false` |
 
 #### Example request
@@ -525,15 +525,15 @@ API.
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `show_logs` | Boolean | Include structured log entries | `true` |
-| `show_streams` | Boolean | Include stdout/stderr stream entries | `true` |
-| `show_derived` | Boolean | Include logs from all derived (child) executions | `false` |
-| `cursor` | DateTime (ISO 8601) | Pagination cursor | start of time |
-| `length` | Integer | Max entries to return | system default |
-| `including_cursor` | Boolean | Include the entry at `cursor` | `false` |
-| `direction` | String | `older` or `newer` | `older` |
+| Parameter          | Type                | Description                                      | Default        |
+| :----------------- | :------------------ | :----------------------------------------------- | :------------- |
+| `show_logs`        | Boolean             | Include structured log entries                   | `true`         |
+| `show_streams`     | Boolean             | Include stdout/stderr stream entries             | `true`         |
+| `show_derived`     | Boolean             | Include logs from all derived (child) executions | `false`        |
+| `cursor`           | DateTime (ISO 8601) | Pagination cursor                                | start of time  |
+| `length`           | Integer             | Max entries to return                            | system default |
+| `including_cursor` | Boolean             | Include the entry at `cursor`                    | `false`        |
+| `direction`        | String              | `older` or `newer`                               | `older`        |
 
 #### Example request
 
@@ -551,8 +551,8 @@ source symbol information.
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
+| Parameter | Type   | Description                                                           | Default  |
+| :-------- | :----- | :-------------------------------------------------------------------- | :------- |
 | `version` | String | Which backtrace to retrieve: `"first"`, `"last"`, or a version number | `"last"` |
 
 #### Example request
@@ -588,9 +588,9 @@ have been compiled with embedded DWARF debug info.
 
 **Query Parameters:**
 
-| Parameter | Type | Description | Default |
-| :--- | :--- | :--- | :--- |
-| `file` | String | File path to retrieve (suffix matching supported) | required |
+| Parameter | Type   | Description                                                              | Default  |
+| :-------- | :----- | :----------------------------------------------------------------------- | :------- |
+| `file`    | String | File path to retrieve (suffix matching supported)                        | required |
 | `version` | String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
 
 **Responses:**
@@ -676,9 +676,9 @@ Retrieves the WIT definition for a specific function.
 
 **Query Parameters:**
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `ffqn` | String | Function Fully Qualified Name |
+| Parameter | Type   | Description                   |
+| :-------- | :----- | :---------------------------- |
+| `ffqn`    | String | Function Fully Qualified Name |
 
 #### Example request
 
@@ -768,10 +768,10 @@ The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to ac
 
 **Request Body (JSON):**
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `config_json` | String | Deployment configuration encoded as a JSON string |
-| `verify` | Boolean | If `true`, verify all environment variables before persisting (default: `false`) |
+| Field         | Type    | Description                                                                      |
+| :------------ | :------ | :------------------------------------------------------------------------------- |
+| `config_json` | String  | Deployment configuration encoded as a JSON string                                |
+| `verify`      | Boolean | If `true`, verify all environment variables before persisting (default: `false`) |
 
 **Responses:**
 
@@ -799,10 +799,10 @@ or enqueue (activate on next restart).
 
 **Request Body (JSON):**
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `hot_redeploy` | Boolean | If `true`, apply immediately without restarting (default: `false`) |
-| `verify` | Boolean | If `true`, verify environment variables before switching (default: `false`) |
+| Field          | Type    | Description                                                                 |
+| :------------- | :------ | :-------------------------------------------------------------------------- |
+| `hot_redeploy` | Boolean | If `true`, apply immediately without restarting (default: `false`)          |
+| `verify`       | Boolean | If `true`, verify environment variables before switching (default: `false`) |
 
 **Responses:**
 

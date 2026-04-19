@@ -405,16 +405,19 @@ obelisk execution logs --show-derived E_01KN2X...
 - **`max_retries=0` does not mean idempotency is optional.** A server restart before an activity
   finishes will retry it regardless. Use `permanent-*` variant cases to disable retry on specific
   errors without losing retries for transient ones.
-- **`Math.random()` and `Date.now()` are deterministic in workflows.** Their values are recorded
-  in the execution log on first call and replayed identically on crash-recovery.
-- **Join set names must be unique per execution.** Derive them from stable inputs (IDs, keys)
-  and sanitize to `[A-Za-z0-9\-\/]`.
+- **`Math.random()` and `Date.now()` are deterministic in workflows.** Their values are recorded in
+  the execution log on first call and replayed identically on crash-recovery.
+- **Join set names must be unique per execution.** Derive them from stable inputs (IDs, keys) and
+  sanitize to `[A-Za-z0-9\-\/]`.
 - **`425 Too Early`** from `GET /v1/executions/{id}` means the execution is still running; use
   `?follow=true` to long-poll, or poll `getStatus` / `tryGet` from the webhook side.
 - **Component and cron names must use only `[a-zA-Z0-9_]`** — hyphens are not allowed. Use
   underscores instead (e.g. `daily_monitor`, not `daily-monitor`).
-- **Secret env vars must not duplicate a key from the component's `env_vars`.**
-  A variable declared in `[allowed_host.secrets] env_vars` must not also appear in the
-  component-level `env_vars`; the runtime injects it automatically and will reject the
-  configuration with a "collides with an `env_vars` entry" error otherwise.
+- **Secret env vars must not duplicate a key from the component's `env_vars`.** A variable declared
+  in `[allowed_host.secrets] env_vars` must not also appear in the component-level `env_vars`; the
+  runtime injects it automatically and will reject the configuration with a "collides with an
+  `env_vars` entry" error otherwise.
+
+```
+
 ```
