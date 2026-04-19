@@ -117,14 +117,6 @@
             <h2 class="section-title">Why Obelisk?</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>AI-agent &amp; JS &amp; WASM</h3>
-                    <p>Generate components with <code>obelisk generate prompt | claude</code>, write the JS by hand,
-                        or use <a
-                            href="https://github.com/yoshuawuyts/awesome-wasm-components/tree/main#programming-language-support"
-                            target="_blank">WASM Component Model</a>-compatible languages such as Rust and Go — no build
-                        step required for JS.</p>
-                </div>
-                <div class="feature-card">
                     <h3>Crash-Resilient Workflows</h3>
                     <p>Every call, sleep, and result is persisted to the execution log. Crash mid-workflow — it resumes
                         from the last completed step on restart.</p>
@@ -134,9 +126,9 @@
                     <p>Single binary, embedded SQLite or Postgres. No brokers, no sidecars, no YAML pipelines.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Great for AI Agents</h3>
-                    <p>Full execution introspection via REST or CLI — fetch events, responses, child executions, logs,
-                        and source code. Hot redeploy lets agents push fixes without a server restart.</p>
+                    <h3>Sanity for the Age of AI</h3>
+                    <p>Claw-like agents blur planning and side effects into an opaque, breach-prone tangle. Obelisk
+                        keeps them strictly separate: deterministic execution, contained secrets, full audit trail.</p>
                 </div>
             </div>
             <div class="features-more">
@@ -202,11 +194,13 @@
             <details class="faq-item">
                 <summary>What is the relation to AI?</summary>
                 <div class="faq-answer">
-                    <p>Obelisk suits AI agent development on two levels. <strong>Authoring</strong>: write agent logic
-                        in plain JS with no build step — WIT provides a type-safe schema linking workflows to
-                        activities. <strong>Operating</strong>: full execution introspection — events, logs, errors,
-                        source — lets agents diagnose failures, with hot redeploy to push fixes without a server
-                        restart.</p>
+                    <p>AI-generated workflows are non-deterministic at authoring time — the same prompt can produce
+                        different logic on different runs. Obelisk enforces a strict separation between workflow design
+                        and execution: once deployed, every step is deterministic and recorded. When something goes
+                        wrong, the execution log — events, responses, child executions, logs, and source code,
+                        accessible via Web UI, REST, or CLI — answers exactly <em>why</em> it happened. This
+                        auditability and predictability stands in sharp contrast to today's agentic tools, where
+                        planning and side effects blur together.</p>
                 </div>
             </details>
         </div>

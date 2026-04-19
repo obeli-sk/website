@@ -133,7 +133,7 @@ Rust/Go components alike:
 - **Allowed HTTP endpoints** — outbound requests are restricted to explicitly listed host patterns
   and HTTP methods; any other request is rejected at the runtime level.
 - **Token-based HTTP secrets** — short-lived tokens can be injected as `Authorization` headers for
-  specific hosts, without the secret value ever appearing in component code.
+  specific hosts; secret values never appear in application logs or in the execution log database.
 - **Environment variables** — only explicitly declared keys are visible to the component; the host
   environment is not leaked.
 
