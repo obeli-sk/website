@@ -19,7 +19,12 @@
             wrangler
             nodePackages.prettier
           ];
-
+        };
+        devShells.screenshots = pkgs.mkShell {
+          packages = with pkgs; [
+            nodejs
+            playwright-test
+          ];
         };
       }
     );

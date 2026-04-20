@@ -121,8 +121,9 @@ Used in Markdown content:
 
 ## Screenshots
 
-Homepage carousel screenshots (`static/sc-*.png`) are captured with Playwright using the system
-Chromium from the nix store. To regenerate:
+Homepage carousel screenshots (`static/sc-*.png`) are captured with Playwright. Use the
+`screenshots` devShell (`nix develop .#screenshots`) which provides `node` and `playwright`
+on `$PATH`. To regenerate:
 
 1. Start the demo-tutorial server:
    ```sh
@@ -148,8 +149,7 @@ Chromium from the nix store. To regenerate:
    ```
 4. Run the capture script from `website/`:
    ```sh
-   FONTCONFIG_FILE=/tmp/fonts.conf \
-   /nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0/bin/node scripts/screenshot-webui.js
+   FONTCONFIG_FILE=/tmp/fonts.conf node scripts/screenshot-webui.js
    ```
 5. Copy outputs to `static/`:
    ```sh
