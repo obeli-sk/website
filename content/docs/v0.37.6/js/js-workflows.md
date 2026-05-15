@@ -78,18 +78,17 @@ export default function parallel() {
 }
 ```
 
-**Join set API:** | Call | Returns | Description | |------|---------|-------------| |
-`let js = obelisk.createJoinSet()` | join set object | Create a new join set (optionally
-`{ name: "…" }`) | | `js.submit(ffqn, argArray)` | childExecId (string) | Submit a child execution
-without blocking | | `js.submitDelay(duration)` | `delayId` (string) | Submit a timer (e.g.
-`{ milliseconds: 500 }`). Duration key is one of: milliseconds/seconds/minutes/hours/days | |
-`js.joinNext()` | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }` | Block until
-the next result in this join set | | `js.joinNextTry()` |
-`{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }` or
-`{ status: "allProcessed"/"pending" }` | Attempt to get next response without waiting if no response
-arrived yet | | `js.close()` | | Cancel activities and delays, await child workflows | |
-`obelisk.getResult(childExecId)` | `{ ok/err: value }` | Fetch a result after child execution was
-submitted and consumed with `joinNext*` |
+**Join set API:**
+
+| Call                               | Returns                                                                                                        | Description                                                                                                    |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `let js = obelisk.createJoinSet()` | join set object                                                                                                | Create a new join set (optionally `{ name: "…" }`)                                                             |
+| `js.submit(ffqn, argArray)`        | childExecId (string)                                                                                           | Submit a child execution without blocking                                                                      |
+| `js.submitDelay(duration)`         | `delayId` (string)                                                                                             | Submit a timer (e.g. `{ milliseconds: 500 }`). Duration key is one of: milliseconds/seconds/minutes/hours/days |
+| `js.joinNext()`                    | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }`                                           | Block until the next result in this join set                                                                   |
+| `js.joinNextTry()`                 | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }` or `{ status: "allProcessed"/"pending" }` | Attempt to get next response without waiting if no response arrived yet                                        |
+| `js.close()`                       |                                                                                                                | Cancel activities and delays, await child workflows                                                            |
+| `obelisk.getResult(childExecId)`   | `{ ok/err: value }`                                                                                            | Fetch a result after child execution was submitted and consumed with `joinNext*`                               |
 
 ## Random values and time
 
