@@ -1,0 +1,9 @@
+{% set version = page.ancestors | last %}
+{% set vs = get_section(path=version) %}
+{{ page.extra.preamble | safe }}
+## Docs
+{% for p in vs.pages %}{% if p.slug != "llms.txt" %}- [{{ p.title | safe }}]({{ config.base_url ~ p.path }})
+{% endif %}{% endfor %}
+{% for sub_path in vs.subsections %}{% set sub = get_section(path=sub_path) %}- [{{ sub.title | safe }}]({{ config.base_url ~ sub.path }})
+{% for p in sub.pages %}- [{{ sub.title | safe }} / {{ p.title | safe }}]({{ config.base_url ~ p.path }})
+{% endfor %}{% endfor %}

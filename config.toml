@@ -3,6 +3,9 @@ title = "Obelisk Workflow Engine"
 compile_sass = true
 build_search_index = false
 
+[slugify]
+paths = "safe"
+
 [markdown]
 highlight_code = true
 
