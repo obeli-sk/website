@@ -9,6 +9,7 @@ highlight_code = true
 [extra]
 latest = "v0.37.7"
 versions = [
+    "v0.38.0",
     "v0.37.7",
     "v0.37.6",
     "v0.36.1",
