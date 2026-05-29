@@ -10,8 +10,9 @@ paths = "safe"
 highlight_code = true
 
 [extra]
-latest = "v0.37.7"
+latest = "v0.38.1"
 versions = [
+    "v0.38.1",
     "v0.38.0",
     "v0.37.7",
     "v0.37.6",

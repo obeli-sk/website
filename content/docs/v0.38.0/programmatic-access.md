@@ -7,7 +7,7 @@ weight = 0
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/openapi.json", path="assets/openapi.json") }}.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json") }}.
 
 ## gRPC, gRPC-Web
 
@@ -40,16 +40,17 @@ Lists all registered components in the system.
 
 **Query Parameters:**
 
-| Parameter     | Type    | Description                                                                                                                      | Default            |
-| :------------ | :------ | :------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
-| `type`        | String  | Filter by [Component Type](#component-type).                                                                                     | `None`             |
-| `name`        | String  | Filter by component name.                                                                                                        | `None`             |
-| `ffqn`        | String  | Filter by function FFQN or its prefix (any prefix of `ns:pkg/ifc.fn`).                                                           | `None`             |
-| `digest`      | String  | Filter by component digest (`sha256` of the WASM file for WASM components; hash of JS source + configuration for JS components). | `None`             |
-| `exports`     | Boolean | Include exported functions in the response.                                                                                      | `false`            |
-| `imports`     | Boolean | Include imported functions in the response.                                                                                      | `false`            |
-| `submittable` | Boolean | If set, filters the `exports` list to only include functions that can be submitted.                                              | `None` (Shows all) |
-| `extensions`  | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant).           | `false`            |
+| Parameter       | Type    | Description                                                                                                                      | Default            |
+| :-------------- | :------ | :------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| `type`          | String  | Filter by [Component Type](#component-type).                                                                                     | `None`             |
+| `name`          | String  | Filter by component name.                                                                                                        | `None`             |
+| `ffqn`          | String  | Filter by function FFQN or its prefix (any prefix of `ns:pkg/ifc.fn`).                                                           | `None`             |
+| `digest`        | String  | Filter by component digest (`sha256` of the WASM file for WASM components; hash of JS source + configuration for JS components). | `None`             |
+| `deployment_id` | String  | Filter by deployment ID.                                                                                                         | `None`             |
+| `exports`       | Boolean | Include exported functions in the response.                                                                                      | `false`            |
+| `imports`       | Boolean | Include imported functions in the response.                                                                                      | `false`            |
+| `submittable`   | Boolean | If set, filters the `exports` list to only include functions that can be submitted.                                              | `None` (Shows all) |
+| `extensions`    | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant).           | `false`            |
 
 #### Example request
 
@@ -105,6 +106,12 @@ Retrieves the WebAssembly Interface Type (WIT) definition for a specific compone
 
 - `digest`: Component digest (see `digest` in `GET /v1/components`).
 
+**Query Parameters:**
+
+| Parameter       | Type   | Description          | Default |
+| :-------------- | :----- | :------------------- | :------ |
+| `deployment_id` | String | Filter by deployment | `None`  |
+
 **Returns:**
 
 - `200 OK`: The WIT text.
@@ -121,7 +128,7 @@ curl '127.1:5005/v1/components/sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558
 package root:component;
 
 world root {
-  import wasi:io/error@0.2.6;
+  import wasi:io/error@0.2.3;
   ...
 }
 ...
@@ -202,6 +209,8 @@ Submits a new execution. The system will automatically generate an Execution ID.
 
 - `ffqn`: (String) Function Fully Qualified Name.
 - `params`: (Array) JSON array of parameters matching the function signature.
+- `paused`: (Boolean, optional) If `true`, the execution is created in paused state and won't run
+  until explicitly unpaused or advanced. Default: `false`.
 
 #### Example request
 
@@ -641,8 +650,13 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/unpause" -X PUT -H accept:applica
 
 ### `PUT /v1/executions/{execution-id}/replay`
 
-Re-execute a workflow from its event history. Useful for testing compatibility between workflow
-versions.
+Replay a workflow execution from its execution log. The response indicates what would happen next
+without actually applying any writes:
+
+- `advanceable` — replay produced captured writes that can be forwarded to the advance endpoint
+- `finished` — execution would complete; includes the return value
+- `blocked` — execution is waiting for an external event (e.g. a stub response or delay)
+- `replay_failed` — non-determinism detected or other replay error
 
 #### Example request
 
@@ -651,7 +665,80 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:applicat
 ```
 
 ```json
-{ "ok": "replayed" }
+{ "type": "finished", "retval": { "ok": 5 } }
+```
+
+---
+
+### `PUT /v1/executions/{execution-id}/advance`
+
+Advance a paused execution by applying captured writes from a previous replay. The typical workflow
+is: create a paused execution, call `replay` to preview what would happen, then `advance` to apply
+those writes. This enables step-through debugging — you can inspect each step, trim events, or mark
+child executions as paused before they execute.
+
+**Request Body (JSON):**
+
+```json
+{
+  "captured_writes": [...]
+}
+```
+
+The `captured_writes` array should contain the writes returned by a previous `replay` call.
+
+**Responses:**
+
+- `200 OK`: Returns the advance outcome:
+  - `{ "type": "finished", "value": { "ok": ... } }` — execution completed
+  - `{ "type": "in_progress", "pending_state": {...} }` — execution advanced but not yet finished
+- `404 Not Found`: Execution not found.
+- `422 Unprocessable Entity`: Advance failed. Error types:
+  - `no_writes` — no captured writes provided
+  - `replay_error` — replay during advance encountered an error
+  - `version_mismatch` — the execution was modified since the replay
+  - `replay_mismatch` — the replayed state doesn't match the captured writes
+
+#### Example request
+
+```sh
+# 1. Create a paused execution
+curl "127.1:5005/v1/executions" -H content-type:application/json -X POST -d \
+'{ "ffqn":"my:app/workflow.run", "params": [], "paused": true }'
+
+# 2. Replay to preview the next step
+REPLAY=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json)
+
+# 3. Advance to apply the captured writes
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/advance" -X PUT \
+  -H content-type:application/json -H accept:application/json \
+  -d "{\"captured_writes\": $(echo $REPLAY | jq .captured_writes)}"
+```
+
+---
+
+## Delays
+
+### `PUT /v1/delays/{delay-id}/pause`
+
+Pauses a pending delay request, preventing it from firing until unpaused.
+
+#### Example request
+
+```sh
+curl "127.1:5005/v1/delays/${DELAY_ID}/pause" -X PUT -H accept:application/json
+```
+
+---
+
+### `PUT /v1/delays/{delay-id}/unpause`
+
+Resumes a previously paused delay request.
+
+#### Example request
+
+```sh
+curl "127.1:5005/v1/delays/${DELAY_ID}/unpause" -X PUT -H accept:application/json
 ```
 
 ---
@@ -899,16 +986,16 @@ The result object returned when an execution finishes (from `GET /v1/executions/
 
 - `{ "ok": ... }`: Function succeeded; contains the return value (or `null` for no-value results).
 - `{ "err": ... }`: Function returned an error variant.
-- `{ "execution_error": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout,
+- `{ "execution_failure": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout,
   etc.).
 
 The `result_kind` field in status/list responses summarises the outcome:
 
 - `"ok"` — function returned successfully.
 - `{ "err": { "execution_failure": "<kind>" } }` — execution failed (same `kind` values as
-  `execution_error.kind`).
+  `execution_failure.kind`).
 
-#### Execution Error Kind
+#### Execution Failure Kind
 
 One of:
 

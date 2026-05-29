@@ -37,12 +37,12 @@ compile.
 timeout or failure.
 
 ```javascript
-// tutorial:demo/activity.step: func(idx: u64, sleep-millis: u64) -> result<string>
+// tutorial:demo/activity.step: func(idx: u32, sleep-millis: u32) -> result<u32>
 export default async function step(idx, sleep_millis) {
   console.log(`Step ${idx} started`); // logs are persisted
-  await new Promise((r) => setTimeout(r, Number(sleep_millis)));
+  await new Promise((r) => setTimeout(r, sleep_millis));
   console.log(`Step ${idx} completed`);
-  return String(idx);
+  return idx;
 }
 ```
 
@@ -55,69 +55,77 @@ by replaying the execution log.
 `workflow/serial.js` — runs 10 steps in sequence with a persistent 1-second sleep between each:
 
 ```javascript
-// tutorial:demo/workflow.serial: func() -> result<string, string>
+import { step } from "tutorial:demo/activity";
+
+// tutorial:demo/workflow.serial: func() -> result<u32, string>
 export default function serial() {
   let acc = 0;
   for (let i = 0; i < 10; i++) {
     obelisk.sleep({ seconds: 1 });
-    const result = obelisk.call("tutorial:demo/activity.step", [i, i * 200]);
-    acc += Number(result);
+    const result = step(i, i * 200);
+    acc += result;
     console.log(`step(${i})=${result}`);
   }
   console.log(`serial completed: ${acc}`);
-  return String(acc);
+  return acc;
 }
 ```
 
 Key concepts:
 
+- **ES module imports** — `import { step } from "tutorial:demo/activity"` imports the activity by
+  its WIT interface path. Obelisk resolves the import at startup: calling `step(...)` submits the
+  activity, blocks until it completes, and returns the ok payload. The call and its result are
+  recorded in the execution log, so on replay the activity is not re-executed. Function names are
+  converted from kebab-case (WIT) to camelCase (JS) automatically.
 - **`obelisk.sleep`** is a _persistent_ sleep — its position is saved to the execution log. If the
   server crashes mid-sleep and restarts, the sleep resumes where it left off.
-- **`obelisk.call`** submits an activity and blocks until it completes. The call and its result are
-  recorded in the execution log, so on replay the activity is not re-executed.
 
 `workflow/parallel.js` — submits all 10 steps concurrently using
 {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, then awaits results:
 
 ```javascript
-// tutorial:demo/workflow.parallel: func() -> result<string, string>
+import { stepSubmit, stepAwaitNext } from "tutorial:demo-obelisk-ext/activity";
+
+// tutorial:demo/workflow.parallel: func() -> result<u32, string>
 export default function parallel() {
-  const joinSets = [];
+  const handles = [];
   for (let i = 0; i < 10; i++) {
     const js = obelisk.createJoinSet();
-    js.submit("tutorial:demo/activity.step", [i, i * 200]);
-    joinSets.push({ i, js });
+    stepSubmit(js, i, i * 200);
+    handles.push({ i, js });
   }
   console.log("parallel: submitted all child executions");
   let acc = 0;
-  for (const { i, js } of joinSets) {
-    const response = js.joinNext();
-    if (!response.ok) throw `step ${i} failed`;
-    const result = obelisk.getResult(response.id);
-    acc = 10 * acc + Number(result.ok);
-    console.log(`step(${i})=${result.ok}, acc=${acc}`);
+  for (const { i, js } of handles) {
+    const result = stepAwaitNext(js);
+    acc = 10 * acc + result;
+    console.log(`step(${i})=${result}, acc=${acc}`);
     obelisk.sleep({ milliseconds: 300 });
   }
   console.log(`parallel completed: ${acc}`);
-  return String(acc);
+  return acc;
 }
 ```
 
 ### Webhook Endpoint
 
-`webhook/tutorial.js` — serves HTTP and triggers workflows via `obelisk.call`:
+`webhook/tutorial.js` — serves HTTP and triggers workflows via imports:
 
 ```javascript
+import { serial } from "tutorial:demo/workflow";
+import { parallel } from "tutorial:demo/workflow";
+
 export default function handle(request) {
   const url = new URL(request.url);
   const path = url.pathname;
   console.log(`Handling request: ${path}`);
 
   if (path === "/serial") {
-    const result = obelisk.call("tutorial:demo/workflow.serial", []);
+    const result = serial();
     return new Response(`serial workflow completed: ${result}`, { status: 200 });
   } else if (path === "/parallel") {
-    const result = obelisk.call("tutorial:demo/workflow.parallel", []);
+    const result = parallel();
     return new Response(`parallel workflow completed: ${result}`, { status: 200 });
   } else {
     return new Response("not found\ntry /serial or /parallel", { status: 404 });
@@ -130,8 +138,8 @@ export default function handle(request) {
 `deployment.toml` wires the components together. Each entry assigns an
 {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} (`package:namespace/interface.function`) and
 {{ doc_link(title="WIT types", path="concepts/wit-reference.md") }} to the JS function — Obelisk
-synthesizes the interface at startup, so no WIT files are needed. The FFQN is the address used in
-`obelisk.call`; the JS function name maps to the function part of it. See
+synthesizes the interface at startup, so no WIT files are needed. The FFQN is the address used in ES
+module imports and `obelisk.call`; the JS function name maps to the function part of it. See
 {{ doc_link(title="JS components", path="js/js-components.md") }} for links to the per-type pages
 (activities, workflows, webhooks) and JSON encoding.
 
@@ -141,10 +149,10 @@ name = "step"
 location = "${DEPLOYMENT_DIR}/activity/step.js"
 ffqn = "tutorial:demo/activity.step"
 params = [
-  { name = "idx", type = "u64" },
-  { name = "sleep-millis", type = "u64" },
+  { name = "idx", type = "u32" },
+  { name = "sleep-millis", type = "u32" },
 ]
-return_type = "result<string>"
+return_type = "result<u32>"
 exec.lock_expiry.seconds = 10
 
 [[workflow_js]]
@@ -152,14 +160,14 @@ name = "serial"
 location = "${DEPLOYMENT_DIR}/workflow/serial.js"
 ffqn = "tutorial:demo/workflow.serial"
 params = []
-return_type = "result<string, string>"
+return_type = "result<u32, string>"
 
 [[workflow_js]]
 name = "parallel"
 location = "${DEPLOYMENT_DIR}/workflow/parallel.js"
 ffqn = "tutorial:demo/workflow.parallel"
 params = []
-return_type = "result<string, string>"
+return_type = "result<u32, string>"
 
 [[webhook_endpoint_js]]
 name = "webhook"

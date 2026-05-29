@@ -151,20 +151,6 @@ enabled = true
 directory = "${CACHE_DIR}/codegen"   # Path to directory where AOT generated code is cached. Supports path prefixes.
 ```
 
-### Global Preopened Directories Configuration
-
-Preopened directory support for activities is disabled by default. It must be enabled both globally
-and specifically for each activity that uses disk IO.
-
-```toml
-[activities.directories]
-enabled = false                           # Disabled by default.
-parent_directory = "${TEMP_DIR}/obelisk"  # Make sure the folder is not on a RAM-backed filesystem if you plan to write large files.
-cleanup.enabled = true                    # Periodic cleanup job can be disabled, it is enabled by default.
-cleanup.run_every.minutes = 1             # Run the cleanup every minute by default.
-cleanup.older_than.minutes = 5            # Delete folders belonging to executions that finished 5 minutes earlier by default.
-```
-
 ### Global Workflow Configuration
 
 ```toml
@@ -345,7 +331,73 @@ logs_store_min_level = "debug"
 
 Outbound HTTP allowlist: same `[[activity_js.allowed_host]]` syntax as `activity_wasm`.
 
-### Stub activities
+### Exec Activities
+
+Exec activities run a native executable (shell script, Python script, Docker command, etc.) as a
+durable activity. The child process receives function parameters as JSON-encoded CLI arguments. The
+result is read from stdout — exit code 0 means success, non-zero means error. Both stdout and stderr
+are streamed and persisted, available via the CLI, REST API, and Web UI.
+
+```toml
+[[activity_exec]]
+name = "name"                                # Optional. Defaults to {ifc_name}.{function_name} from ffqn
+location = "${DEPLOYMENT_DIR}/scripts/my-script.sh" # Local path or oci://registry/image:tag
+# content = '''#!/usr/bin/env bash
+# echo "\"hello\""
+# '''
+# content_digest = "sha256:..."
+ffqn = "namespace:package/interface.function" # Required
+params = [
+  { name = "a", type = "u32" },
+  { name = "b", type = "u32" },
+]
+return_type = "result<u32, string>"          # See return type conventions below
+max_retries = 5
+retry_exp_backoff.milliseconds = 100
+forward_stdout = "db"                        # One of "none"|"stdout"|"stderr"|"db". Default: "db"
+forward_stderr = "db"
+logs_store_min_level = "debug"
+max_output_bytes = 4096                      # Max bytes from stdout for the response. Default: 4096
+```
+
+Exactly one of `location` or `content` must be set:
+
+- `location` can point to a local script file or an `oci://...` reference.
+- Local files are read at deploy time and converted into embedded content, making the deployment
+  self-contained.
+- `content` embeds the script directly in `deployment.toml`.
+- `content_digest` can be used to pin and verify the resolved script contents.
+
+#### Environment variables and secrets
+
+```toml
+# Only listed vars are exposed; host environment is cleared
+env_vars = ["PATH", {key = "MY_VAR", value = "my_value"}]
+
+# Secrets: resolved at startup and piped to stdin as JSON {"KEY":"value",...}
+[activity_exec.secrets]
+env_vars = [{name = "MY_SECRET", value = "${HOST_SECRET_VAR}"}]
+```
+
+#### Return type conventions
+
+The `return_type` field must be one of:
+
+- `result` — no return data; exit 0 = ok, non-zero = error
+- `result<T>` — stdout is parsed as JSON value of type T on success
+- `result<T, string>` — on error, stderr is captured as the error string
+- `result<T, variant { execution-failed, ... }>` — structured error type where `execution-failed` is
+  a variant case
+
+`T` can be `_` to indicate no ok value (e.g. `result<_, string>`). In this case `stdout` is ignored.
+
+#### Retry and timeout
+
+Exec activities follow the same retry semantics as WASM and JS activities. The `exec.lock_expiry`
+setting controls how long the child process is allowed to run before being killed — the execution is
+then retried or marked as permanently timed out.
+
+### Stub Activities
 
 ```toml
 [[activity_stub]]
@@ -357,13 +409,13 @@ Inline mode (no WASM file required):
 
 ```toml
 [[activity_stub]]
-name = "my-stub"
+name = "my-stub"                             # Optional. Defaults to {ifc_name}.{function_name} from ffqn
 ffqn = "namespace:package/interface.function"
 params = [{ name = "id", type = "u64" }]
 return_type = "result<string, string>"
 ```
 
-### External activities
+### External Activities
 
 ```toml
 [[activity_external]]
@@ -371,38 +423,15 @@ name = "..."
 location = "oci://..."
 ```
 
-### Preopened directory support
-
-Disk IO must be explicitly enabled using the global `activities.directories.enabled = true` setting
-in `server.toml`. When enabled, a directory will be created on host and mapped to `.` on the guest
-activity with all permissions. On host the directory is created as
-`activities.directories.parent_directory`/ExecutionID and is truncated after the activity finishes.
+Inline mode (no WASM file required):
 
 ```toml
-directories  = { enabled = true, reuse_on_retry = false}
+[[activity_external]]
+name = "my-external-activity"                # Optional. Defaults to {ifc_name}.{function_name} from ffqn
+ffqn = "namespace:package/interface.function"
+params = [{ name = "id", type = "u64" }]
+return_type = "result<string, string>"
 ```
-
-`reuse_on_retry` disabled by default: every execution attempt will start with an empty preopened
-directory.
-
-If `reuse_on_retry` is enabled, a retried activity can reuse the same directory that was used by
-previous attempt. This can be helpful if an activity e.g. downloads a file and then processes it.
-Activity must in this case do all of its operations idempotently (e.g. `mkdir -p`) and verify the
-integrity of all files left by previous attempts.
-
-Read more about
-{{ doc_link(title="Preopened directories", path="concepts/activities/preopened-dirs.md") }}.
-
-### Process Spawn API
-
-In order to enable the `obelisk:activity/process@1.0.0` API, preopened directory must be enabled and
-`process_provider` must be set to `"native"`.
-
-```toml
-directories  = { enabled = true, reuse_on_retry = false, process_provider = "native"}
-```
-
-Read more about {{ doc_link(title="Process API", path="concepts/activities/process.md") }}.
 
 ## Workflows
 

@@ -178,9 +178,9 @@ one activity, both implemented in the same language, compiled to
 [WASM Components](https://component-model.bytecodealliance.org).
 
 The native benchmark runs WASM workflow, which in turn executes WASM activity, which uses the
-{{ doc_link(title="Process API", path="concepts/activities/process.md") }} to execute the native
-process, which does the actual Fibonacci calculation, so `Fibo(10) * 1000 iterations` spawns 1000
-`N=10 fibo` processes.
+{{ doc_link(title="Process API", path="concepts/activities/process.md", version="v0.37.7") }} to
+execute the native process, which does the actual Fibonacci calculation, so
+`Fibo(10) * 1000 iterations` spawns 1000 `N=10 fibo` processes.
 
 ## Small CPU Activity
 

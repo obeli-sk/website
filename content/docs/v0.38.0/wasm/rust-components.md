@@ -32,7 +32,7 @@ ignores the world's package name and world name.
 ### Activity
 
 An activity can export multiple interfaces, each containing multiple functions. It can also import
-Obelisk's logging and process APIs:
+Obelisk's logging API:
 
 ```wit
 // wit/tutorial_activity/tutorial_activity.wit
@@ -51,8 +51,7 @@ package any:any;
 
 world any {
     export tutorial:activity/activity-sleepy;
-    // optional: import obelisk:log/log@1.0.0;      -- structured logging
-    // optional: import obelisk:activity/process@1.0.0; -- spawn local processes
+    // optional: import obelisk:log/log@1.0.0; -- structured logging
 }
 ```
 
@@ -75,7 +74,7 @@ world any {
     import tutorial:activity/activity-sleepy;             // activity to orchestrate
     import tutorial:activity-obelisk-ext/activity-sleepy; // generated — enables join sets
     import tutorial:workflow/other-workflow;              // child workflow (also submittable)
-    import obelisk:workflow/workflow-support@5.0.0;
+    import obelisk:workflow/workflow-support@5.1.0;
     import obelisk:log/log@1.0.0;
 }
 ```

@@ -5,8 +5,8 @@ weight = 25
 +++
 
 Webhook endpoints serve HTTP requests. The handler receives a `Request` object and must return a
-`Response`. Webhooks can call activities and workflows via `obelisk.call` and make outbound HTTP
-requests via `fetch`. See
+`Response`. Webhooks can call activities and workflows via imports or `obelisk.call` and make
+outbound HTTP requests via `fetch`. See
 {{ doc_link(title="Webhook Endpoints", path="concepts/webhook-endpoints.md") }} for the general
 model.
 
@@ -86,20 +86,24 @@ return resp;
 
 ## Calling activities and workflows
 
-Webhooks have access to `obelisk.call` — the call blocks until the child execution completes, so the
-HTTP response is only sent after the workflow finishes.
+Import functions by their WIT interface path. The call blocks until the child execution completes,
+so the HTTP response is only sent after the child finishes.
 
 ```javascript
+import { serial } from "myapp:demo/workflow";
+
 // ffqn: myapp:demo/webhook.handle
 export default function handle(request) {
   const url = new URL(request.url);
   if (url.pathname === "/serial") {
-    const result = obelisk.call("myapp:demo/workflow.serial", []);
+    const result = serial();
     return new Response(`serial completed: ${result}`, { status: 200 });
   }
   return new Response("not found", { status: 404 });
 }
 ```
+
+For dynamic FFQNs, use `obelisk.call(ffqn, argArray)` directly.
 
 ## Path parameters
 
@@ -123,16 +127,24 @@ export default function handle(request) {
 
 ## Scheduling executions
 
-Webhooks can schedule top-level executions without blocking the HTTP response. First generate an
-execution ID, then pass it to `obelisk.schedule`:
+Webhooks can schedule top-level executions without blocking the HTTP response. Import from the
+`-obelisk-schedule` suffix:
 
 ```javascript
+import { sendEmailSchedule } from "myapp:demo-obelisk-schedule/activity";
+
 export default function handle(request) {
-  const execId = obelisk.executionIdGenerate();
-  obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
-  // optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
+  const execId = sendEmailSchedule(null, "user@example.com");
+  // With a delay: sendEmailSchedule({ seconds: 60 }, "user@example.com");
   return new Response(execId, { status: 202 });
 }
+```
+
+For dynamic FFQNs, use `obelisk.schedule` directly:
+
+```javascript
+const execId = obelisk.executionIdGenerate();
+obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
 ```
 
 Check or retrieve a previously scheduled or running execution:
@@ -142,8 +154,8 @@ const status = obelisk.getStatus(execId);
 // e.g. { status: "pendingAt"|"locked"|"paused"|"blockedByJoinSet" } or { status: "finished", finishedStatus:"ok"|"err"|"executionFailure" }
 
 const result = obelisk.tryGet(execId);
-// { pending: true } if not finished yet
-// { ok: value } or { err: value } when done
+// undefined if not finished yet
+// returns ok value (or throws err value) when done
 ```
 
 Get the execution ID of the current webhook invocation:
@@ -155,16 +167,25 @@ const myExecId = obelisk.executionIdCurrent();
 
 ## Webhook API
 
+**Import-based calls (preferred):**
+
+| Import pattern                                             | Description                          |
+| ---------------------------------------------------------- | ------------------------------------ |
+| `import { fn } from "ns:pkg/ifc"`                          | Call and await a child execution     |
+| `import { fnSchedule } from "ns:pkg-obelisk-schedule/ifc"` | Schedule a fire-and-forget execution |
+
+**Dynamic calls (when FFQN isn't known statically):**
+
 | Call                                              | Returns                                                                                                                 | Description                                            |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws error value                                                                                    |
+| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws error value                                                                                    | Call and await a child execution                       |
 | `obelisk.executionIdGenerate()`                   | `executionId` (string)                                                                                                  | Generate a unique execution ID                         |
 | `obelisk.executionIdCurrent()`                    | `executionId` (string)                                                                                                  | Get the execution ID of the current webhook invocation |
 | `obelisk.schedule(execId, ffqn, argArray)`        | —                                                                                                                       | Schedule a top-level execution immediately             |
 | `obelisk.schedule(execId, ffqn, argArray, delay)` | —                                                                                                                       | Schedule at a delay (e.g. `{ seconds: 60 }`)           |
 | `obelisk.getStatus(execId)`                       | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
-| `obelisk.get(execId)`                             | `{ ok/err: value }`                                                                                                     | Blocking: waits until execution finishes               |
-| `obelisk.tryGet(execId)`                          | `{ pending: true }` or `{ ok/err: value }`                                                                              | Non-blocking result fetch                              |
+| `obelisk.get(execId)`                             | ok value (throws err value)                                                                                             | Blocking: waits until execution finishes               |
+| `obelisk.tryGet(execId)`                          | ok value (throws err value), `undefined` if not finished yet                                                            | Non-blocking result fetch                              |
 
 ## Available globals
 

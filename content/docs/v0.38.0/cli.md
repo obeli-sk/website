@@ -168,6 +168,8 @@ Options:
   (useful for idempotency — see `obelisk generate execution-id`)
 - `-f, --follow` - Follow the status stream until the execution finishes
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
+- `--paused` - Create the execution in paused state so it won't run until explicitly unpaused or
+  advanced
 - `-j, --json` - Output events as JSON in Web API format instead of human-readable text
 
 ### Listing executions
@@ -204,7 +206,7 @@ E_01KPFKGAGSH91DRVBJZ3AK0T8A `Finished(ok)` benchmark-fibo:workflow/fibow.fiboa 
 ### Getting the current execution state
 
 ```sh
-obelisk execution get [OPTIONS] <EXECUTION_ID>
+obelisk execution status [OPTIONS] <EXECUTION_ID>
 ```
 
 Arguments:
@@ -216,6 +218,24 @@ Options:
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 - `-f, --follow` - Follow the status stream until the execution finishes
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
+- `-j, --json` - Output as JSON instead of human-readable text
+
+### Getting the final result
+
+```sh
+obelisk execution result [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to look up
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-f, --follow` - Follow until the execution finishes and the final result is available
+- `--no-reconnect` - Do not attempt to reconnect on connection error while following
+- `-j, --json` - Output as JSON instead of human-readable text
 
 ### Fetching logs
 
@@ -232,10 +252,9 @@ Options:
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 - `--show-derived` - Include logs from child (derived) executions
 - `--level <LEVEL>` - Minimum log level: `trace`, `debug`, `info`, `warn`, `error`, `off` (default:
-  `debug`; use `off` with `--show-streams` to suppress structured logs)
-- `--show-streams` - Include stdout/stderr stream output
-- `--stream-type <TYPE>` - Filter stream output by type (`stdout`, `stderr`); repeatable; only with
-  `--show-streams`
+  `debug`)
+- `--stream-type <TYPE>` - Select which stream output to show: `stdout`, `stderr`, `none`. If not
+  specified, both stdout and stderr are shown. Use `none` to hide all stream output
 - `--show-run-id` - Show the run ID in each log line
 - `--after <TIMESTAMP>` - Only show entries created after this timestamp (RFC3339)
 - `--follow` - Poll for new log entries until the execution finishes
@@ -363,7 +382,8 @@ Options:
 
 ### Replaying an execution
 
-Replay a workflow execution from its execution log, checking for non-determinism.
+Replay a workflow execution from its execution log, checking for non-determinism. The response
+indicates whether the execution is advanceable, finished, blocked, or if replay failed.
 
 ```sh
 obelisk execution replay [OPTIONS] <EXECUTION_ID>
@@ -376,6 +396,35 @@ Arguments:
 Options:
 
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-j, --json` - Output as JSON instead of human-readable text
+
+### Advancing a paused execution
+
+Advance a paused workflow execution by replaying it and applying the next captured writes. This
+enables step-through debugging: create an execution with `--paused`, then call `replay` to preview
+what would happen next, and `advance` to apply those writes. This lets you inspect each step before
+it takes effect, trim events, or mark child executions and delays as paused for further control.
+
+```sh
+obelisk execution advance [OPTIONS] <EXECUTION_ID>
+```
+
+Arguments:
+
+- `<EXECUTION_ID>` - Execution ID to advance
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-j, --json` - Output as JSON instead of human-readable text
+- `--trim <TRIM>` - Send only the first N captured writes from replay to advance
+- `-p, --pause-all` (alias: `--pause`) - Pause both replayed child executions and delay requests
+  when applying the advance
+- `--pause-submitted-executions` - Rewrite replayed submitted executions so they are created paused
+  when advance is applied
+- `--pause-delays` - Rewrite replayed delay requests so they are created paused when advance is
+  applied
+- `--force` - Advance even if replay finishes with an execution failure, persisting it
 
 ### Upgrading an execution
 
