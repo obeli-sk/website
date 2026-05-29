@@ -87,7 +87,7 @@ Namespace imports, schedule imports, stub imports, and extension imports are all
 
 ```javascript
 import * as activity from "tutorial:demo/activity"; // namespace
-import { step } from "tutorial:demo-obelisk-schedule/activity"; // schedule (returns execution ID)
+import { stepSchedule } from "tutorial:demo-obelisk-schedule/activity"; // schedule (returns execution ID)
 import { stepSubmit, stepAwaitNext } from "tutorial:demo-obelisk-ext/activity"; // join set extensions
 ```
 
@@ -209,7 +209,7 @@ controls for pausing, unpausing, and upgrading the component:
 ![Step-through debugging in the Web UI](/blog/0-38-advance-trace.png)
 
 Advance supports fine-grained control: pause child executions or delays as they are created, trim
-writes to stop early, or force-advance past failures. The same operations are available via the CLI
+writes to limit child execution creation. The same operations are available via the CLI
 (`obelisk execution replay` / `obelisk execution advance`) and the REST API.
 
 A follow-up blog post will explore step-through debugging in detail with a real-world example.
