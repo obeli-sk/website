@@ -335,14 +335,16 @@ div.logo {
         #sc-1:checked ~ .sc-track .sc-slide:nth-child(1),
         #sc-2:checked ~ .sc-track .sc-slide:nth-child(2),
         #sc-3:checked ~ .sc-track .sc-slide:nth-child(3),
-        #sc-4:checked ~ .sc-track .sc-slide:nth-child(4) {
+        #sc-4:checked ~ .sc-track .sc-slide:nth-child(4),
+        #sc-5:checked ~ .sc-track .sc-slide:nth-child(5) {
             display: block;
         }
 
         #sc-1:checked ~ .sc-dots label:nth-child(1),
         #sc-2:checked ~ .sc-dots label:nth-child(2),
         #sc-3:checked ~ .sc-dots label:nth-child(3),
-        #sc-4:checked ~ .sc-dots label:nth-child(4) {
+        #sc-4:checked ~ .sc-dots label:nth-child(4),
+        #sc-5:checked ~ .sc-dots label:nth-child(5) {
             background: var(--primary);
         }
     }
