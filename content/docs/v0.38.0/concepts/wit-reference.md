@@ -164,3 +164,19 @@ Arguments to `obelisk.call` and results are JSON-encoded. The mapping between WI
 | `flags { flag-name }`               | Array of active flag strings: `["flag_name"]`                         |
 
 Note: kebab-case WIT identifiers become snake_case in JSON keys and values.
+
+### Numeric precision
+
+JavaScript components return numbers as JSON numbers. Obelisk accepts numeric conversions between
+integer and floating-point WIT types only when the conversion is lossless:
+
+- A whole-number JSON float such as `42.0` can be returned for an integer WIT field.
+- A JSON integer such as `42` can be returned for an `f32` or `f64` WIT field when the float can
+  represent it exactly.
+- Fractional values cannot be returned for integer WIT fields.
+- Values that would lose precision are rejected instead of rounded silently.
+
+For JavaScript `Number`, integers are exact only up to `Number.MAX_SAFE_INTEGER` (`2^53 - 1`). Use a
+`string` field when a JavaScript component needs to return larger integer identifiers without
+precision loss. `f32` has a smaller precision range than `f64`, so some values that fit in `f64`
+still cannot be returned for an `f32` field without rounding.
