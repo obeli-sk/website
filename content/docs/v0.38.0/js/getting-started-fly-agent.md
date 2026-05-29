@@ -93,16 +93,19 @@ functions. Their FFQNs follow the WIT package structure:
 ### Inner Workflow — `workflow/agent.js`
 
 ```javascript
+import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
+import * as machines from "obelisk-flyio:activity-fly-http/machines@1.0.0-beta";
+
 // ffqn: demo:fly-agent/workflow.agent(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 export default function agent(app_name, org_slug, prompt) {
   // Step 1: Create the fly.io app.
-  obelisk.call("obelisk-flyio:activity-fly-http/apps@1.0.0-beta.put", [org_slug, app_name]);
+  apps.put(org_slug, app_name);
 
   // Step 2: Launch a VM.
   // The init command runs the agent in the background and writes the result to
   // /result.txt. The foreground `sleep 3600` keeps the VM alive so we can read
   // the file via exec. Replace the backgrounded command with your agent.
-  const machine_id = obelisk.call("obelisk-flyio:activity-fly-http/machines@1.0.0-beta.create", [
+  const machine_id = machines.create(
     app_name,
     "agent-vm",
     {
@@ -129,15 +132,12 @@ export default function agent(app_name, org_slug, prompt) {
       files: null,
     },
     "ams",
-  ]);
+  );
 
   // Step 3: Durable poll — obelisk.sleep is recorded in the execution log.
   let started = false;
   for (let i = 0; i < 20; i++) {
-    const machine = obelisk.call("obelisk-flyio:activity-fly-http/machines@1.0.0-beta.get", [
-      app_name,
-      machine_id,
-    ]);
+    const machine = machines.get(app_name, machine_id);
     if (machine !== null && machine.state === "started") {
       started = true;
       break;
@@ -151,12 +151,10 @@ export default function agent(app_name, org_slug, prompt) {
   // Throws if the VM becomes unreachable (e.g. stopped externally).
   let output = null;
   for (let i = 0; i < 30; i++) {
-    const cat = obelisk.call("obelisk-flyio:activity-fly-http/machines@1.0.0-beta.exec", [
-      app_name,
-      machine_id,
-      ["cat", "/result.txt"],
-      { timeout_secs: 10, stdin: null },
-    ]);
+    const cat = machines.exec(app_name, machine_id, ["cat", "/result.txt"], {
+      timeout_secs: 10,
+      stdin: null,
+    });
     if (cat.exit_code === 0) {
       output = (cat.stdout || "").trim();
       break;
@@ -172,8 +170,8 @@ Key points:
 
 - **`obelisk.sleep` is durable.** Its position is saved in the execution log. A crash during either
   polling loop is recovered on restart without re-creating the VM or re-running work.
-- **`obelisk.call` on an activity** blocks until the activity completes (with auto-retry on
-  transient failures). The result is recorded; on replay the activity is not re-executed.
+- **Imported activity calls** block until the activity completes (with auto-retry on transient
+  failures). The result is recorded; on replay the activity is not re-executed.
 - **`exec` vs `exec-check-success`:** `exec` returns the exit code without throwing, which lets the
   workflow distinguish "file not ready yet" (exit 1) from "VM unreachable" (error variant → throws).
   A long exec inside `exec-check-success` would hit fly.io's exec timeout; the file-polling approach
@@ -211,6 +209,9 @@ return_type = "result<string, string>"
 ### Outer Workflow — `workflow/run.js`
 
 ```javascript
+import { agent } from "demo:fly-agent/workflow";
+import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
+
 // ffqn: demo:fly-agent/workflow.run(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 export default function run(app_name, org_slug, prompt) {
   let result = null;
@@ -218,7 +219,7 @@ export default function run(app_name, org_slug, prompt) {
 
   // Call the inner workflow; capture any failure so cleanup still runs.
   try {
-    result = obelisk.call("demo:fly-agent/workflow.agent", [app_name, org_slug, prompt]);
+    result = agent(app_name, org_slug, prompt);
   } catch (e) {
     error = String(e);
     console.log(`Agent workflow failed: ${error}`);
@@ -229,7 +230,7 @@ export default function run(app_name, org_slug, prompt) {
   // on restart and continues from this point.
   console.log(`Deleting app: ${app_name}`);
   try {
-    obelisk.call("obelisk-flyio:activity-fly-http/apps@1.0.0-beta.delete", [app_name, true]);
+    apps.delete(app_name, true);
     console.log("App deleted");
   } catch (e) {
     console.log(`App deletion failed (manual cleanup may be needed): ${e}`);
@@ -265,12 +266,14 @@ Route path segments starting with `:` are captured and exposed via `process.env`
 The webhook uses three segments for org, app name, and prompt:
 
 ```javascript
+import { run } from "demo:fly-agent/workflow";
+
 // Route: /run/:org-slug/:app-name/:prompt
 export default function handle(_request) {
   const org_slug = process.env["org-slug"];
   const app_name = process.env["app-name"];
   const prompt = process.env["prompt"];
-  const result = obelisk.call("demo:fly-agent/workflow.run", [app_name, org_slug, prompt]);
+  const result = run(app_name, org_slug, prompt);
   return new Response(`Agent completed:\n${result}\n`, { status: 200 });
 }
 ```

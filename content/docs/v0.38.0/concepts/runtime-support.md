@@ -49,7 +49,7 @@ log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
 
-### {{ github(title="`obelisk:workflow/workflow-support@5.0.0`", path="wit/obelisk_workflow%405.0.0/workflow-support.wit") }}
+### {{ github(title="`obelisk:workflow/workflow-support@5.1.0`", path="wit/obelisk_workflow%405.1.0/obelisk_workflow%405.1.0.wit") }}
 
 Available to:
 
@@ -128,11 +128,3 @@ activity to obtain e.g. a random number. Other functions are related to
 - `join-next: func() -> result<tuple<response-id, result>, join-next-error>`: _Deprecated in 4.1.0,
   moved to a standalone function in `workflow-support`._ Block the workflow execution until next
   response arrives.
-
-### {{ github(title="`obelisk:activity/process@1.0.0`", path="wit/obelisk_activity%401.0.0/process.wit") }}
-
-Available to: {{ doc_link(title="Activities", path="concepts/activities/_index.md") }}
-
-The `process` WIT interface allows activities to spawn, wait for, kill etc. a local process.
-
-See {{ doc_link(title="Process API", path="concepts/activities/process.md") }} for details.

@@ -7,15 +7,15 @@ weight = 20  #  Lower weights appear first
 In the following sections, we describe the structure of a WIT package name, interface fully
 qualified name (IFQN), and function fully qualified name (FFQN). We use the GitHub account activity
 from
-[stargazers](https://github.com/obeli-sk/demo-stargazers/blob/main/activity/github/interface/github.wit)
+[stargazers](https://github.com/obeli-sk/demo-stargazers/blob/main/activity/github/wit-interface/stargazers_github/github.wit)
 repository as an example.
 
 # Package Name
 
 As per the
-[WIT Specification](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md#package-names)
-each WIT package consits of a namespace field and a package field separated by a colon. Optionally a
-WIT package can contain a version.
+[WIT Specification](https://component-model.bytecodealliance.org/design/wit.html#packages) each WIT
+package consits of a namespace field and a package field separated by a colon. Optionally a WIT
+package can contain a version.
 
 Package names are specified at the top of a WIT file via a package declaration:
 
@@ -58,7 +58,7 @@ world any {
     // Import the GitHub account activity.
     import stargazers:github/account;
     // Import the Obelisk workflow support functions.
-    import obelisk:workflow/workflow-support@4.1.0;
+    import obelisk:workflow/workflow-support@5.1.0;
 }
 ```
 

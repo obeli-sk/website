@@ -173,7 +173,8 @@ The response contains a list of events, each with its version, timestamp, and ev
 ### CLI
 
 ```sh
-obelisk execution get {id}
+obelisk execution status {id}
+obelisk execution result {id}
 ```
 
 ### Web UI

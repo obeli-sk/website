@@ -13,7 +13,7 @@ languages than Rust for authoring WASM Components.
 
 <!-- more -->
 
-## Experimental support for {{ doc_link(title="Process spawning", path="concepts/activities/process.md") }} and {{ doc_link(title="disk IO", path="concepts/activities/preopened-dirs.md") }}
+## Experimental support for {{ doc_link(title="Process spawning", path="concepts/activities/process.md", version="v0.37.7") }} and {{ doc_link(title="disk IO", path="concepts/activities/preopened-dirs.md", version="v0.37.7") }}
 
 Process API allows for spawning processes on the same machine that runs the
 {{ doc_link(title="activity", path="concepts/activities/_index.md") }}. Moreover, with preopened

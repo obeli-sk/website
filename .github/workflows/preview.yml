@@ -27,6 +27,12 @@ jobs:
       - name: Populate the nix store
         run: nix develop --command echo
 
+      - name: zola check
+        run: nix develop --command zola check --skip-external-links
+
+      - name: latest docs external links
+        run: nix develop --command bash scripts/check-latest-docs-external-links.sh
+
       - name: zola build
         run: |
           PREVIEW_URL="https://pr-${{ github.event.number }}.website-1w7.pages.dev"

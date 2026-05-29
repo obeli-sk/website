@@ -12,20 +12,33 @@ executed at least once for resiliency.
 
 ## Defining Features of Activities
 
-- **Idempotency**: This is the most crucial aspect of an activity. An activity must be idempotent,
-  meaning it can be executed multiple times with the same input and produce the same result without
-  unintended side effects. This is essential for retries and ensuring the integrity of your
-  workflow, even in the face of failures. The responsibility for fulfilling this contract lies with
-  the activity's implementation.
+- **Idempotency**: Activities must be safe to execute more than once with the same logical input.
+  Repeating the activity must not produce an incorrect duplicate side effect. This is the most
+  important activity contract, and the responsibility for satisfying it lies with the activity
+  implementation.
 
 - **WASM Sandboxing**: Activities are executed within a WebAssembly (WASM) sandbox. This provides a
   secure, isolated environment, preventing activities from having unrestricted access to the system.
 
-- **Resilience**: Obelisk automatically handles retries for activities that fail due to errors,
-  timeouts, or panics(traps). This retry mechanism makes activities highly reliable. The input
-  parameters and execution results of activities are persistently stored. Keep in mind that an
-  activity can be retried even after it succeeded - in a rare case when persisting the result fails,
-  e.g. during a server restart.
+- **Retry safety**: Activities must be safe to retry after errors, timeouts, and traps, but also
+  after ambiguous outcomes. In particular, an activity may be executed again even if it already
+  completed successfully, for example if the server crashes before the result is durably persisted.
+  A correct activity therefore needs to converge to the intended final outcome even when Obelisk
+  cannot tell whether a previous attempt already applied the side effect.
+
+- **No unrecoverable local state**: Activities may talk to stateful external systems, but they must
+  not depend on important in-memory or process-local state that would be lost on retry. Any state
+  required for correctness must be reconstructible from persisted inputs, persisted workflow state,
+  or the external world itself.
+
+- **Short-lived**: Activities should do bounded work and complete. Long waits, polling loops, human
+  approval, or management of long-lived resources should be modeled as repeated activity invocations
+  coordinated by a workflow, not as one attempt that stays alive indefinitely.
+
+- **Resilience**: Obelisk automatically retries activities that fail due to errors, timeouts, or
+  panics (traps). The input parameters and execution results of activities are persistently stored.
+  This makes retries reliable at the engine level, but correctness still depends on the activity
+  honoring the contracts above.
 
 ## Defining activity functions in WIT
 
