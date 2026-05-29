@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Features — Obelisk{% endblock %}
+{% block title %}Features – Obelisk{% endblock %}
 
 {% block meta_description %}
 <meta name="description"
@@ -13,60 +13,22 @@
         <h1 class="features-page-title">Features</h1>
 
         <div class="new-in-banner">
-            <span class="new-in-label">New in 0.37</span>
+            <span class="new-in-label">New in 0.38</span>
             <ul class="new-in-list">
-                <li><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">JavaScript components</a> —
-                    activities, workflows, and webhooks as plain <code>.js</code> files</li>
-                <li><a href="{{ get_url(path='@/docs/latest/concepts/deployments.md') }}">Deployments</a> — versioned
-                    config with hot redeploy, no server restart needed</li>
-                <li><a href="{{ get_url(path='@/docs/latest/concepts/cron.md') }}">Cron scheduling</a> — built-in,
-                    crash-safe cron tasks via <code>deployment.toml</code></li>
-                <li>OCI distribution — push/pull JS and WASM components with self-describing manifests</li>
-                <li>JS step-through debugger — stack traces on every execution log event, source visible in Web UI</li>
+                <li><a href="{{ get_url(path='@/docs/latest/configuration.md') }}">Exec activities</a> –
+                    shell scripts, Python, Docker, or any executable as durable activities</li>
+                <li>Self-contained deployments – inline JS and shell scripts directly in
+                    <code>deployment.toml</code></li>
+                <li>Step-through debugging – Replay and Advance via the Web UI, CLI, and REST API</li>
+                <li>Idiomatic JS imports – call activities and workflows with <code>import</code> instead of
+                    FFQN strings</li>
             </ul>
-            <a href="{{ get_url(path='@/blog/2026-04-13-announcing-obelisk-0-37.md') }}" class="new-in-link">Read the
+            <a href="{{ get_url(path='@/blog/2026-05-29-announcing-obelisk-0-38.md') }}" class="new-in-link">Read the
                 announcement →</a>
         </div>
 
         <div class="features-section">
-            <h2>JavaScript Support</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3>No build step</h3>
-                    <p>Plain <code>.js</code> files. No bundler, no compiler, no toolchain. Point
-                        <code>deployment.toml</code> at the file and run.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-components.md') }}">Component
-                            types</a>
-                    </h3>
-                    <p><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Activities</a>, <a
-                            href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Workflows</a>, and <a
-                            href="{{ get_url(path='@/docs/latest/js/js-webhooks.md') }}">Webhook endpoints</a> — all in
-                        JavaScript.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Determinism without restrictions</h3>
-                    <p><code>Math.random()</code> and <code>Date.now()</code> are safe in workflow code. Values are
-                        recorded on first call and replayed identically on crash recovery.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Fine-grained sandbox</h3>
-                    <p>Outbound HTTP restricted to explicitly listed hosts and methods. Environment variables only
-                        expose declared keys. Token-based secrets injected without appearing in code, logs or database.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <h3>Step-through debugger</h3>
-                    <p>Stack traces attached to every execution log event — submits, joins, sleeps. Step through any
-                        execution in the Web UI and see the exact source line.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="features-section">
-            <h2>Resilience</h2>
+            <h2>Durable Workflows</h2>
             <div class="feature-grid">
                 <div class="feature-card">
                     <h3>Crash recovery</h3>
@@ -75,40 +37,21 @@
                         full history intact.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Workflow replay</h3>
-                    <p>Re-run a workflow against its recorded event history to verify a new version produces identical
-                        results before deploying to production.</p>
-                </div>
-                <div class="feature-card">
                     <h3>Auto-retry</h3>
-                    <p>Activities are retried automatically on timeout, trap, or error. Configure per-component retry
-                        policy and lock expiry in <code>deployment.toml</code>.</p>
+                    <p>Activities are retried automatically on timeout, trap, or error. Activities can also signal
+                        permanent failure to skip remaining retries. Configure per-component retry policy and lock
+                        expiry in <code>deployment.toml</code>.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Permanent errors</h3>
-                    <p>Activities can signal unrecoverable failures (invalid input, auth errors) to skip all remaining
-                        retries immediately.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Pause &amp; resume</h3>
-                    <p>Pause any execution via the API or Web UI; it stops after its current step and resumes on
-                        demand.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="features-section">
-            <h2>Workflows &amp; Concurrency</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/workflows/join-sets.md') }}">Join sets</a></h3>
-                    <p>Submit multiple child executions in parallel and await them individually or all at once —
-                        structured concurrency built into the model. Unawaited activities and delays are automatically
-                        cancelled.</p>
+                    <h3><a
+                            href="{{ get_url(path='@/docs/latest/concepts/workflows/join-sets.md') }}">Structured
+                            concurrency</a></h3>
+                    <p>Submit multiple child executions in parallel and await them individually or all at once.
+                        Unawaited activities and delays are automatically cancelled when the parent completes.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Persistent sleep</h3>
-                    <p><code>obelisk.sleep()</code> is durable — its position is saved to the execution log. Survive a
+                    <p><code>obelisk.sleep()</code> is durable: its position is saved to the execution log. Survive a
                         server restart mid-sleep with no progress lost.</p>
                 </div>
                 <div class="feature-card">
@@ -123,6 +66,55 @@
                     <p>Declare recurring tasks in <code>deployment.toml</code>. Standard five-field expressions, named
                         shorthands (<code>@daily</code>, <code>@hourly</code>), or <code>@once</code> for one-time
                         migrations.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Replay &amp; Advance</h3>
+                    <p>Pause any execution, then step through it one event at a time. Replay previews the next writes;
+                        Advance applies them. Verify a new component version produces identical results before deploying
+                        to production.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Step-through debugger</h3>
+                    <p>Stack traces attached to every execution log event: submits, joins, sleeps. Step through any
+                        execution in the Web UI and see the exact source line.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2>JavaScript &amp; Exec Activities</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>No build step</h3>
+                    <p>Plain <code>.js</code> files. No bundler, no compiler, no toolchain. Point
+                        <code>deployment.toml</code> at the file and run.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-components.md') }}">JS component
+                            types</a>
+                    </h3>
+                    <p><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Activities</a>, <a
+                            href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Workflows</a>, and <a
+                            href="{{ get_url(path='@/docs/latest/js/js-webhooks.md') }}">Webhook endpoints</a>, all in
+                        JavaScript. Import activities and workflows directly instead of calling by FFQN string.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Exec activities</h3>
+                    <p>Any executable (shell script, Python, Docker command) can be a durable activity with the same
+                        retry, timeout, and observability guarantees as WASM and JS components. Parameters arrive as
+                        JSON arguments, results go to stdout.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Determinism without restrictions</h3>
+                    <p><code>Math.random()</code> and <code>Date.now()</code> are safe in workflow code. Values are
+                        recorded on first call and replayed identically on crash recovery.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Fine-grained sandbox</h3>
+                    <p>Outbound HTTP restricted to explicitly listed hosts and methods. Environment variables only
+                        expose declared keys. Token-based secrets injected without appearing in code, logs or database.
+                    </p>
                 </div>
             </div>
         </div>
@@ -142,9 +134,15 @@
                         immediately; in-flight workflows continue on the old digest until explicitly upgraded.</p>
                 </div>
                 <div class="feature-card">
+                    <h3>Self-contained deployments</h3>
+                    <p>Inline JavaScript and shell scripts directly in <code>deployment.toml</code> with
+                        <code>content</code>. A complete application (activities, workflows, webhooks) can live in a
+                        single file. Local file paths are embedded at deploy time automatically.</p>
+                </div>
+                <div class="feature-card">
                     <h3>OCI distribution</h3>
-                    <p>Push and pull JS or WASM components from any OCI registry. Config — allowed hosts, env vars,
-                        secrets, WIT types — is embedded in the manifest so <code>component add</code> restores
+                    <p>Push and pull JS or WASM components from any OCI registry. Config (allowed hosts, env vars,
+                        secrets, WIT types) is embedded in the manifest so <code>component add</code> restores
                         everything automatically.</p>
                 </div>
             </div>
@@ -173,13 +171,13 @@
                 <div class="feature-card">
                     <h3>Execution introspection</h3>
                     <p>Fetch execution events (with stack traces attached), follow responses and child executions,
-                        collect errors, stream logs, and retrieve source code — all via the API or CLI. AI agents can
+                        collect errors, stream logs, and retrieve source code, all via the API or CLI. AI agents can
                         diagnose defects autonomously and push fixes via hot redeploy, no server restart needed.</p>
                 </div>
                 <div class="feature-card">
                     <h3><a href="{{ get_url(path='@/docs/latest/programmatic-access.md') }}">HTTP and gRPC API</a></h3>
                     <p>Full HTTP API with OpenAPI schema. Submit executions, inspect state, fetch logs, replay, pause,
-                        cancel — everything scriptable with plain <code>curl</code>.</p>
+                        cancel, all scriptable with plain <code>curl</code>.</p>
                 </div>
                 <div class="feature-card">
                     <h3><a href="{{ get_url(path='@/docs/latest/cli.md') }}">CLI</a></h3>
