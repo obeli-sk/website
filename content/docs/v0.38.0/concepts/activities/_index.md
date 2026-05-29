@@ -17,8 +17,9 @@ executed at least once for resiliency.
   important activity contract, and the responsibility for satisfying it lies with the activity
   implementation.
 
-- **WASM Sandboxing**: Activities are executed within a WebAssembly (WASM) sandbox. This provides a
-  secure, isolated environment, preventing activities from having unrestricted access to the system.
+- **Sandboxing**: WASM and JS activities are executed within a WebAssembly sandbox, providing a
+  secure, isolated environment. Exec activities run as native child processes and rely on OS-level
+  isolation.
 
 - **Retry safety**: Activities must be safe to retry after errors, timeouts, and traps, but also
   after ambiguous outcomes. In particular, an activity may be executed again even if it already
@@ -39,6 +40,53 @@ executed at least once for resiliency.
   panics (traps). The input parameters and execution results of activities are persistently stored.
   This makes retries reliable at the engine level, but correctness still depends on the activity
   honoring the contracts above.
+
+## Activity Types
+
+Obelisk supports three kinds of activities:
+
+- **WASM Activities** (`activity_wasm`) — compiled WebAssembly components (Rust, TinyGo, etc.)
+- **JavaScript Activities** (`activity_js`) — JavaScript functions executed in the built-in JS
+  runtime
+- **Exec Activities** (`activity_exec`) — native executables (shell scripts, Python scripts, Docker
+  commands, etc.) run as child processes
+
+All three types share the same retry, durability, and observability guarantees. The choice depends
+on your toolchain and use case.
+
+### Exec Activities
+
+Exec activities run any executable as a durable activity. The child process receives function
+parameters as JSON-encoded CLI arguments. The result is read from stdout — exit code 0 means
+success, non-zero means error. Both stdout and stderr are streamed and persisted, available via the
+CLI, REST API, and Web UI.
+
+Example `deployment.toml`:
+
+```toml
+[[activity_exec]]
+ffqn = "myapp:scripts/greet.greet"
+location = "${DEPLOYMENT_DIR}/scripts/greet.sh"
+params = [{ name = "name", type = "string" }]
+return_type = "result<string, string>"
+env_vars = ["PATH"]
+max_retries = 5
+```
+
+With a corresponding script `scripts/greet.sh`:
+
+```sh
+#!/usr/bin/env bash
+set -euo pipefail
+NAME=$(echo "$1" | jq -r '.')
+echo "\"Hello, ${NAME}!\""
+```
+
+The script receives each parameter as a JSON-encoded positional argument and must write a
+JSON-encoded return value to stdout.
+
+See {{ doc_link(title="Configuration", path="configuration.md") }} for all `activity_exec` fields
+including inline `content`, secrets, environment variables, and output size limits.
 
 ## Defining activity functions in WIT
 

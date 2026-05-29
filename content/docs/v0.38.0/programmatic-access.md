@@ -976,9 +976,9 @@ When filtering components or reading the `component_type` field in responses, us
 
 - `activity`
 - `activity_stub`
-- `activity_external`
 - `workflow`
 - `webhook_endpoint`
+- `cron`
 
 ### Execution Result
 

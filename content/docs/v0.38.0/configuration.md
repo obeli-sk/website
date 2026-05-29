@@ -247,6 +247,7 @@ exec.batch_size = 5                            # Executions per event loop tick
 exec.lock_expiry.seconds = 1                   # Execution lock duration
 exec.tick_sleep.milliseconds = 200             # Executor sleeps the specified duration when polling for pending executions
 exec.locking_strategy = "by_component_digest"  # Default. One of "by_component_digest"|"by_ffqns"
+exec.instance_limiter = "unlimited"            # If set to an integer, limits concurrent executions for this executor. Default: "unlimited"
 ```
 
 Workflows use `by_component_digest` strategy, which locks executions to the exact WASM component
