@@ -16,6 +16,7 @@
           packages = with pkgs; [
             zola
             nixpkgs-fmt
+            ripgrep
             wrangler
             nodePackages.prettier
           ];
