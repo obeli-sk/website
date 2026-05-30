@@ -15,12 +15,18 @@
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
 # Optionally place the binary on PATH
 
-# Generate a sample configuration
-obelisk server generate-config
+# Ask a coding agent to create JavaScript components and deployment.toml
+obelisk generate prompt 'Create a workflow that fans out weather
+  lookups for a list of cities in parallel' | claude
 
-# Start the server
-obelisk server run</code></pre>
+# Start the server with the generated deployment
+obelisk server run --deployment deployment.toml</code></pre>
         </div>
+        <p>
+            The prompt includes the matching Obelisk docs context for your installed version.
+            Prefer to write the deployment file by hand? Start with
+            <code>obelisk generate deployment</code>.
+        </p>
 
     </section>
 
