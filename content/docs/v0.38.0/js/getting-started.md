@@ -29,6 +29,15 @@ cd demo-tutorial
 The repository contains four JavaScript files and a `deployment.toml` — nothing else to install or
 compile.
 
+Starting from an empty project instead? Generate the commented deployment reference first:
+
+```bash
+obelisk generate deployment
+```
+
+Then add your activities, workflows, and webhook endpoints to `deployment.toml`. The rest of this
+guide explains the same pieces using the tutorial repository.
+
 ## 3. The Components
 
 ### Activity
@@ -313,9 +322,12 @@ losing progress or duplicating work.
   The `rust/` directory in the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) contains a
   Rust implementation of the same activity, workflow, and webhook.
 
-- **Explore a real-world example:** The
-  [Stargazers demo](https://github.com/obeli-sk/demo-stargazers) uses a GitHub webhook, OpenAI, and
-  a database to process GitHub star events with a multi-step workflow.
+- **Explore example apps:** [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) is the app
+  from this guide, [demo-stargazers](https://github.com/obeli-sk/demo-stargazers) uses a GitHub
+  webhook, OpenAI, and a database,
+  [obelisk-deploy-flyio](https://github.com/obeli-sk/obelisk-deploy-flyio) deploys Obelisk apps to
+  Fly.io, and [obelisk-templates](https://github.com/obeli-sk/obelisk-templates) contains starter
+  templates.
 
 - **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli.md") }} covers submitting
   executions, inspecting state, and managing components.

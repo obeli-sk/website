@@ -24,8 +24,8 @@ obelisk server run --deployment deployment.toml</code></pre>
         </div>
         <p>
             The prompt includes the matching Obelisk docs context for your installed version.
-            Prefer to write the deployment file by hand? Start with
-            <code>obelisk generate deployment</code>.
+            Prefer to write the deployment file by hand? See the
+            <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}">Getting Started guide</a>.
         </p>
 
     </section>
@@ -33,21 +33,26 @@ obelisk server run --deployment deployment.toml</code></pre>
     <section class="install-section">
         <h2>Docker</h2>
         <div class="code-container">
-            <pre><code class="language-bash"># Use host's network. Ports 8080 (Web UI), 5005 (gRPC, Web API) and 9090 (`external` webhook) will be bound to 127.0.0.1
-docker run --net=host getobelisk/obelisk
+            <pre><code class="language-bash"># Start Obelisk in a container
+docker run --rm --name obelisk \
+  -p 8080:8080 -p 5005:5005 -p 9090:9090 \
+  getobelisk/obelisk
 
-# Forward ports explicitly
-docker run -p 8080:8080 -p 5005:5005  -p 9090:9090 getobelisk/obelisk
+# In another terminal, use the same Docker image to deploy an app
+git clone https://github.com/obeli-sk/demo-tutorial
+cd demo-tutorial
+docker run --rm --network container:obelisk \
+  -v "$PWD":/app -w /app \
+  getobelisk/obelisk deployment apply deployment.toml
 
-# Share the config and cache directory from host
-docker run --net=host \
-  -u $(id -u):$(id -g) \
-  -v $(pwd):/config \
-  -e 'OBELISK__WASM__CACHE_DIRECTORY=/cache/obelisk/wasm' \
-  -v ~/.cache/obelisk/wasm:/cache/obelisk/wasm \
-  getobelisk/obelisk \
-  server run --deployment /config/deployment.toml</code></pre>
+# Trigger the demo workflow
+curl http://127.0.0.1:9090/parallel</code></pre>
         </div>
+        <p>
+            <code>deployment apply</code> uploads the deployment and hot-redeploys the running server. See the
+            <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}">Getting Started guide</a>
+            for the full tutorial.
+        </p>
     </section>
 
     <section class="install-section">
