@@ -1,6 +1,7 @@
 base_url = "https://obeli.sk"
 title = "Obelisk Workflow Engine"
 description = "Blog posts about the Obelisk workflow engine: releases, benchmarks, architecture, and comparisons."
+author = "Obelisk"
 compile_sass = true
 build_search_index = false
 feed_filenames = ["rss.xml"]
