@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{{ config.title }}{% endblock %}</title>
     {% block meta_description %}{% endblock %}
+    {% block rss %}
+    <link rel="alternate" type="application/rss+xml" title="Obelisk Blog RSS"
+        href="{{ get_url(path='blog/rss.xml', trailing_slash=false) | safe }}" />
+    {% endblock %}
     {% block head_extra %}{% endblock %}
     <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}" />
 </head>
