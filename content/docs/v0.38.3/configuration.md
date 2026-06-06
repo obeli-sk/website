@@ -246,18 +246,27 @@ registries — see `obelisk component push` to publish them.
 exec.batch_size = 5                            # Executions per event loop tick
 exec.lock_expiry.seconds = 1                   # Execution lock duration
 exec.tick_sleep.milliseconds = 200             # Executor sleeps the specified duration when polling for pending executions
-exec.locking_strategy = "by_component_digest"  # Default. One of "by_component_digest"|"by_ffqns"
+exec.locking_strategy = "auto"                 # Workflow default. See supported strategies below.
 exec.instance_limiter = "unlimited"            # If set to an integer, limits concurrent executions for this executor. Default: "unlimited"
 ```
 
-Workflows use `by_component_digest` strategy, which locks executions to the exact WASM component
-version (by `sha256` digest) that was available when the execution was first submitted. An execution
-can be upgraded to use a different digest using the upgrade API endpoint or gRPC RPC. The RPC will
-by default attempt to replay the execution log to avoid getting stuck with "nondeterminism detected"
-error.
+Workflows support all three locking strategies:
 
-Activities use `by_ffqn` strategy. Since activities are restarted and not replayed, execution will
-be swapped to the new code on redeploy transparently.
+- `auto` (default) selects executions by exported FFQNs. After a redeployment, an in-progress
+  execution is replayed against the current workflow component. If replay succeeds, Obelisk upgrades
+  the execution and associates it with the current deployment. If replay detects nondeterminism, the
+  execution stays on its previous component version and is not repeatedly retried against the
+  incompatible digest. The upgrade outcome is recorded in the execution history.
+- `by_ffqns` selects executions by the FFQNs exported by the component, without automatically
+  upgrading their component assignment.
+- `by_component_digest` selects only executions assigned to the exact component version (by `sha256`
+  digest) that was available when the execution was first submitted. Such an execution can be
+  upgraded using the upgrade API endpoint or gRPC RPC. The RPC attempts to replay the execution log
+  by default to avoid upgrading to incompatible workflow code.
+
+Activities support `by_ffqns` (default) and `by_component_digest`, but not `auto`. Since activities
+are restarted and not replayed, the default `by_ffqns` strategy lets pending executions use the new
+code after redeployment without an upgrade.
 
 ## Activities
 

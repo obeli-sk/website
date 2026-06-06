@@ -30,8 +30,8 @@ processing. This means:
 - You can filter executions by `deployment_id` in the Web API or Web UI.
 - Replay and upgrade operations know exactly which component version handled each event.
 - Hot redeploy (see below) switches activity and webhook work to the new deployment immediately,
-  while in-flight workflow executions become pending until explicitly upgraded to the new component
-  version.
+  while in-flight workflow executions are replayed and upgraded automatically when using the default
+  `auto` locking strategy.
 
 ## Deployment lifecycle
 
@@ -48,13 +48,16 @@ Only zero or one deployment can be `enqueued` and one can be `active` at any giv
 Hot redeploy activates a new deployment **without restarting the server**. The behavior differs by
 component type:
 
-- **Activities** — Pending activity executions start running on the newly deployed activity workers
-  transparently. Activity executors lock executions with currently-active FFQNs, so any pending
-  execution is immediately eligible to be picked up by the new worker.
-- **Workflows** — Workflow executors lock executions by component digest (computed from the WASM or
-  JS source). When the deployment changes, no executor works on executions assigned to the old
-  digest, so they become pending. An explicit upgrade is required to migrate them to the new
-  component version (see [Upgrading workflow executions](#upgrading-workflow-executions) below).
+- **Activities** — Activities default to the `by_ffqns` locking strategy. Pending executions are
+  selected by the currently active FFQNs and start running on the newly deployed activity workers
+  transparently, without replay or an upgrade.
+- **Workflows** — With the default `auto` locking strategy, in-progress executions are replayed
+  against the current workflow component after redeployment. Compatible executions are upgraded and
+  associated with the current deployment. If replay detects nondeterminism, the execution stays on
+  its previous component version. With `by_ffqns`, executions are selected by the functions exported
+  by the current component without an automatic component upgrade. With `by_component_digest`,
+  executions remain pending until explicitly upgraded (see
+  [Upgrading workflow executions](#upgrading-workflow-executions) below).
 - **Webhooks** — Existing TCP connections continue to be served by the old deployment. New
   connections use the new deployment.
 
@@ -76,8 +79,9 @@ API returns `"restart_required"` and the deployment is enqueued for the next sta
 
 ## Upgrading workflow executions
 
-When you update a workflow component, existing in-flight executions still reference the old
-component digest. To migrate them to the new version use the upgrade API:
+The default `auto` locking strategy upgrades compatible in-flight workflow executions automatically.
+If a workflow uses `by_component_digest`, existing in-flight executions continue to reference the
+old component digest. To migrate one to the new version, use the upgrade API:
 
 ```sh
 OLD=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json | jq .component_digest)
