@@ -124,13 +124,25 @@ cargo build --release</code></pre>
 
     <section class="install-section">
         <h2>Nix Flake</h2>
-        <p>Built artifacts are stored in
-            <a href="https://garnix.io/docs/caching" target="_blank">Garnix Cache</a>.<br />
+        <p>Built artifacts are stored in the
+            <a href="https://app.cachix.org/cache/obeli-sk" target="_blank">obeli-sk Cachix cache</a>.<br />
             Make sure experimental features
             <code>flakes</code>
             and
             <code>nix-command</code> are enabled.
         </p>
+        <p>To pull pre-built binaries from the cache, add it to your Nix config
+            (either with the <code>cachix</code> CLI or by editing
+            <code>/etc/nix/nix.conf</code> or <code>~/.config/nix/nix.conf</code>):
+        </p>
+        <div class="code-container">
+            <pre><code class="language-bash"># Option 1: cachix CLI
+nix run nixpkgs#cachix -- use obeli-sk
+
+# Option 2: append to nix.conf
+extra-substituters = https://obeli-sk.cachix.org
+extra-trusted-public-keys = obeli-sk.cachix.org-1:31iM9GWSEhAXvvuTWQ7CvAcwvgRzsuJ9yJghywSd3Jw=</code></pre>
+        </div>
         <div class="code-container">
             <pre><code class="language-bash">nix run github:obeli-sk/obelisk/latest
 # Install into user's profile
