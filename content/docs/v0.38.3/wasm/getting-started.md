@@ -18,8 +18,7 @@ same demo-tutorial but with JS files that run directly without compilation.
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
 ```
 
-See the [Installation page](https://obeli.sk/install/) for Docker, Nix, cargo-binstall, and other
-options.
+See the [Installation page](@/install/_index.md) for Docker, Nix, cargo-binstall, and other options.
 
 ## 2. Install Rust
 
