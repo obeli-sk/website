@@ -9,8 +9,8 @@ feed_filenames = ["rss.xml"]
 [slugify]
 paths = "safe"
 
-[markdown]
-highlight_code = true
+[markdown.highlighting]
+theme = "catppuccin-mocha"
 
 [extra]
 latest = "v0.38.3"
