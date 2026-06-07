@@ -18,7 +18,7 @@
             nixpkgs-fmt
             ripgrep
             wrangler
-            nodePackages.prettier
+            prettier
           ];
         };
         devShells.screenshots = pkgs.mkShell {
