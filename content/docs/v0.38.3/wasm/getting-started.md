@@ -243,17 +243,18 @@ Via the API:
 
 ```bash
 # List top-level executions
-curl -s "http://localhost:5005/v1/executions"
+curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain'
 
 # Include child executions (workflows + activities)
-curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial"
+curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial" \
+  -H 'Accept: text/plain'
 ```
 
 Fetch logs for a specific execution:
 
 ```bash
 EXECUTION_ID=E_01...
-curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs"
+curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: text/plain'
 ```
 
 ## 7. Crash Recovery

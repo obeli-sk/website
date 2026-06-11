@@ -92,7 +92,7 @@ Both `obelisk:log` messages and forwarded `stdout`/`stderr` streams can be store
 Stored logs can be retrieved via the {{ doc_link(title="WebAPI", path="programmatic-access.md") }}:
 
 ```sh
-curl 127.1:5005/v1/executions/<EXECUTION_ID>/logs
+curl 127.1:5005/v1/executions/<EXECUTION_ID>/logs -H 'Accept: text/plain'
 ```
 
 Logs are also visible in the Web UI on the execution detail page.

@@ -315,7 +315,8 @@ Result: 42 is the answer
 List executions to see the full hierarchy:
 
 ```bash
-curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent"
+curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent" \
+  -H 'Accept: text/plain'
 ```
 
 ```
@@ -348,7 +349,8 @@ When the VM stops, the next `cat /result.txt` exec call returns an error (VM unr
 Check the execution log to confirm:
 
 ```bash
-curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent"
+curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent" \
+  -H 'Accept: text/plain'
 ```
 
 ```

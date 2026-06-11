@@ -27,8 +27,15 @@ All endpoints are prefixed with `/v1`.
 
 The API supports content negotiation via the `Accept` header.
 
-- `application/json` (Default): Returns structured JSON data.
-- `text/plain`: Returns a human-readable string representation (e.g., raw IDs or formatted lists).
+- `application/json`: Returns structured JSON data.
+- `text/plain`: Returns raw text or a human-readable representation.
+
+Structured endpoints default to `application/json`. Endpoints that return raw identifiers or
+file-like content default to `text/plain`: `/v1/execution-id`, `/v1/deployment-id`, WIT endpoints,
+and `/v1/executions/{execution-id}/backtrace/source`.
+
+Send an explicit `Accept` header to override an endpoint's default where both representations are
+supported.
 
 ---
 
@@ -470,7 +477,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json
 # Create the expected child execution id based on code or execution log
 CHILD_EXECUTION_ID="${EXECUTION_ID}.o:1-foo_1"
 # Optionally verify the id:
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/events"  | grep $CHILD_EXECUTION_ID
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $CHILD_EXECUTION_ID
 # returns a row containing: HistoryEvent(JoinSetRequest(ChildExecutionRequest(E_01KDNB650P06H69YR1FD973MA0.o:1-foo_1, testing:stub-activity/activity.foo, params: ["test"])))
 
 curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:application/json -X PUT -d \
@@ -956,7 +963,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json
 # Create the expected delay id based on code or execution log
 DELAY_ID="Delay_${EXECUTION_ID#E_}.o:1-sleep_1"
 # Optionally verify the id:
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/events"  | grep $DELAY_ID
+curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $DELAY_ID
 # returns a row containing: HistoryEvent(JoinSetRequest(DelayRequest(Delay_01KDNCA38TYGKHF7GKH3XQJH02.o:1-sleep_1, expires_at: `2025-12-29 15:43:39.751469133 UTC`, schedule_at: `In(150s)`)))
 
 curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json

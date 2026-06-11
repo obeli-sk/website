@@ -225,7 +225,7 @@ parallel workflow completed: 123456789
 List top-level executions — one per webhook call:
 
 ```bash
-curl -s "http://localhost:5005/v1/executions"
+curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain'
 ```
 
 ```
@@ -236,14 +236,15 @@ Fetch logs for a webhook execution (includes its `console.log` output):
 
 ```bash
 EXECUTION_ID=E_01KN209P2PC...
-curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs"
+curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: text/plain'
 ```
 
 To see the child workflow and activities spawned by a webhook, use `show_derived` and filter by FFQN
 prefix:
 
 ```bash
-curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial:demo"
+curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial:demo" \
+  -H 'Accept: text/plain'
 ```
 
 ```
