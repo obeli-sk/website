@@ -131,6 +131,10 @@ for (let i = 0; i < items.length; i++) {
 
 ## Workflows: Saga pattern — crash-safe compensation
 
+For the reusable parent/child lifecycle pattern, including an operator teardown race and child
+workflow shutdown semantics, see
+{{ doc_link(title="Cleanup supervisor (saga)", path="patterns/cleanup-supervisor.md") }}.
+
 Wrap the main action in `try/catch`, capture any error, run the compensation unconditionally, then
 re-throw. The compensation always runs because Obelisk replays the execution log on restart and
 continues from the last completed step.
