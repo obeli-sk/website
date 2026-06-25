@@ -15,7 +15,7 @@ See {{ github(title="obelisk.proto", path="proto/obelisk.proto") }} schema for d
 
 ## WebAPI
 
-This document describes the REST-like API for managing components and executions.
+This document describes the REST-like API for managing components, deployments, and executions.
 
 ## General Information
 
@@ -800,6 +800,16 @@ curl "127.1:5005/v1/deployment-id" -H accept:application/json
 
 Lists deployment states.
 
+**Query Parameters:**
+
+| Parameter                   | Type    | Description                                     | Default        |
+| :-------------------------- | :------ | :---------------------------------------------- | :------------- |
+| `cursor_from`               | String  | Deployment ID cursor for pagination             | `None`         |
+| `length`                    | Integer | Number of items to return                       | System Default |
+| `including_cursor`          | Boolean | Include the cursor item in the result           | `false`        |
+| `include_derived`           | Boolean | Include child executions in execution summaries | `false`        |
+| `include_component_summary` | Boolean | Include component counts by manifest section    | `false`        |
+
 #### Example request
 
 ```sh
@@ -810,6 +820,8 @@ curl "127.1:5005/v1/deployments" -H accept:application/json
 [
   {
     "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
+    "description": "production",
+    "digest": "sha256:...",
     "status": "active",
     "created_at": "2026-03-31T10:04:01.736281506Z",
     "last_active_at": "2026-03-31T10:04:01.736491095Z",
@@ -817,7 +829,11 @@ curl "127.1:5005/v1/deployments" -H accept:application/json
     "pending": 0,
     "scheduled": 0,
     "blocked": 0,
-    "finished": 6
+    "paused": 0,
+    "finished_ok": 6,
+    "finished_error": 0,
+    "finished_execution_failure": 0,
+    "component_summary": null
   }
 ]
 ```
@@ -826,7 +842,7 @@ curl "127.1:5005/v1/deployments" -H accept:application/json
 
 ### `GET /v1/deployments/{deployment-id}`
 
-Returns the full details of a specific deployment, including its stored configuration JSON.
+Returns the full details of a specific deployment, including its stored `deployment.toml`.
 
 **Path Parameters:**
 
@@ -846,10 +862,12 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:applic
 ```json
 {
   "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599",
+  "description": "production",
+  "digest": "sha256:...",
   "status": "active",
   "created_at": "2026-03-31T10:04:01.736281506Z",
   "last_active_at": "2026-03-31T10:04:01.736491095Z",
-  "config_json": "{...}"
+  "deployment_toml": "..."
 }
 ```
 
@@ -857,27 +875,43 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:applic
 
 ### `POST /v1/deployments`
 
-Submits a new deployment configuration and stores it in the database. Returns the new deployment ID.
-The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
+Submits a new deployment package and stores it in the database. Returns the new deployment ID. The
+deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
 
 **Request Body (JSON):**
 
-| Field         | Type    | Description                                                                      |
-| :------------ | :------ | :------------------------------------------------------------------------------- |
-| `config_json` | String  | Deployment configuration encoded as a JSON string                                |
-| `verify`      | Boolean | If `true`, verify all environment variables before persisting (default: `false`) |
+| Field                          | Type    | Description                                                      |
+| :----------------------------- | :------ | :--------------------------------------------------------------- |
+| `deployment_toml`              | String  | Verbatim deployment manifest                                     |
+| `description`                  | String  | Optional human-readable description                              |
+| `allow_missing_runtime_config` | Boolean | Tolerate missing environment variables / secrets (`false`)       |
+| `deployment_id`                | String  | Optional client-supplied deployment ID for idempotent submission |
+
+`POST /v1/deployments` also accepts `multipart/form-data`. Use text fields for `deployment_toml`,
+`description`, `allow_missing_runtime_config`, and `deployment_id`. Every other part is treated as a
+deployment-owned file blob; its `filename` is the deployment-relative path and the form-field name
+is either the claimed `sha256:...` digest or `file`.
 
 **Responses:**
 
 - `200 OK`: Deployment submitted; returns the new deployment ID string.
 - `400 Bad Request`: Invalid configuration.
+- `409 Conflict`: Incomplete or invalid package. The JSON body lists missing digest fields, missing
+  files, unexpected files, digest mismatches, and oversized files. No deployment is stored.
 
 #### Example request
 
 ```sh
-CONFIG=$(cat deployment.toml | obelisk generate deployment-json -)
 curl "127.1:5005/v1/deployments" -H content-type:application/json -X POST -d \
-  "{\"config_json\": $CONFIG, \"verify\": false}"
+  "$(jq -Rs '{deployment_toml: ., description: "production"}' deployment.toml)"
+```
+
+Multipart package with a deployment-owned script:
+
+```sh
+curl "127.1:5005/v1/deployments" -X POST \
+  -F deployment_toml=@deployment.toml \
+  -F 'file=@scripts/run.sh;filename=scripts/run.sh'
 ```
 
 ---
@@ -893,10 +927,10 @@ or enqueue (activate on next restart).
 
 **Request Body (JSON):**
 
-| Field          | Type    | Description                                                                 |
-| :------------- | :------ | :-------------------------------------------------------------------------- |
-| `hot_redeploy` | Boolean | If `true`, apply immediately without restarting (default: `false`)          |
-| `verify`       | Boolean | If `true`, verify environment variables before switching (default: `false`) |
+| Field                          | Type    | Description                                                                                                    |
+| :----------------------------- | :------ | :------------------------------------------------------------------------------------------------------------- |
+| `hot_redeploy`                 | Boolean | If `true`, apply immediately without restarting (default: `false`)                                             |
+| `allow_missing_runtime_config` | Boolean | Tolerate missing environment variables / secrets before switching. Hot redeploy always requires strict config. |
 
 **Responses:**
 

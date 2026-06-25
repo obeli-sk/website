@@ -13,14 +13,16 @@ workflows, webhook endpoints, and cron tasks that Obelisk should run. Every time
 Each Deployment record contains:
 
 - A unique **Deployment ID** (e.g. `Dep_01KN1NK9A6NMHP31TVJ875X599`).
-- The full **configuration JSON** derived from your `deployment.toml`, including component
-  locations, allowed hosts, environment variable keys, retry settings, cron schedules, and (for JS
-  components) the JS source code itself.
+- The verbatim **`deployment.toml`** submitted by the client.
+- Deployment-owned source files referenced by JS components, exec activities, and backtrace source
+  maps, stored in a content-addressed file store.
+- A deployment digest, computed from the stored manifest.
 - The **status**: `enqueued`, `active`, or `inactive`.
 - Timestamps (`created_at`, `last_active_at`).
 
-Because the JS source is stored inside the deployment, the server can provide it to the time-travel
-debugger for any historical execution exactly as it ran — even after the component has been updated.
+Because the manifest is stored verbatim and deployment-owned sources are stored with it, the server
+can recreate a deployment directory and provide source context to replay, advance, logs, and
+backtrace inspection even after the active deployment has moved on.
 
 ## Execution - Deployment relationship
 
@@ -105,7 +107,10 @@ workflow code is not replay-compatible — unless `skip_determinism_check` is se
 | `obelisk deployment enqueue <PATH\|ID>` | Submit (if path) and enqueue for next restart |
 | `obelisk deployment apply <PATH\|ID>`   | Submit (if path) and hot-redeploy immediately |
 | `obelisk deployment list`               | List recent deployments and their status      |
-| `obelisk deployment show <ID>`          | Show full configuration of a deployment       |
+| `obelisk deployment active`             | Print the active deployment ID                |
+| `obelisk deployment show <ID> [FILE]`   | Show stored TOML or a stored file             |
+| `obelisk deployment get <ID>`           | Recreate deployment TOML and source files     |
+| `obelisk deployment gc`                 | Delete unreferenced deployment file blobs     |
 
 **Web API:** see
 {{ doc_link(title="Programmatic Access — Deployments", path="programmatic-access.md") }}.

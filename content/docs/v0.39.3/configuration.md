@@ -19,7 +19,7 @@ The `obelisk-version` field can be set in either file to ensure compatibility wi
 Obelisk version:
 
 ```toml
-obelisk-version = "0.37"
+obelisk-version = "0.39"
 ```
 
 ### Built-in Defaults
@@ -351,7 +351,7 @@ are streamed and persisted, available via the CLI, REST API, and Web UI.
 ```toml
 [[activity_exec]]
 name = "name"                                # Optional. Defaults to {ifc_name}.{function_name} from ffqn
-location = "${DEPLOYMENT_DIR}/scripts/my-script.sh" # Local path or oci://registry/image:tag
+location = "scripts/my-script.sh"             # Deployment-local path or oci://registry/image:tag
 # content = '''#!/usr/bin/env bash
 # echo "\"hello\""
 # '''
@@ -368,15 +368,21 @@ forward_stdout = "db"                        # One of "none"|"stdout"|"stderr"|"
 forward_stderr = "db"
 logs_store_min_level = "debug"
 max_output_bytes = 4096                      # Max bytes from stdout for the response. Default: 4096
+params_via_stdin = false                     # Pass params via stdin instead of argv
 ```
 
 Exactly one of `location` or `content` must be set:
 
 - `location` can point to a local script file or an `oci://...` reference.
-- Local files are read at deploy time and converted into embedded content, making the deployment
-  self-contained.
+- Local files must be deployment-local: relative to the directory containing `deployment.toml`, with
+  no absolute paths or `..` escapes. The legacy `${DEPLOYMENT_DIR}/` prefix is still accepted, but
+  is no longer needed.
+- Local files are read at deploy time and stored with the deployment, making the deployment
+  reconstructable.
 - `content` embeds the script directly in `deployment.toml`.
 - `content_digest` can be used to pin and verify the resolved script contents.
+- `params_via_stdin = true` passes parameters in a stdin JSON `params` array, avoiding operating
+  system argument-size limits for large inputs.
 
 #### Environment variables and secrets
 
@@ -384,10 +390,13 @@ Exactly one of `location` or `content` must be set:
 # Only listed vars are exposed; host environment is cleared
 env_vars = ["PATH", {key = "MY_VAR", value = "my_value"}]
 
-# Secrets: resolved at startup and piped to stdin as JSON {"KEY":"value",...}
+# Secrets: resolved at startup and piped to stdin as JSON {"secrets":{"KEY":"value",...}}
 [activity_exec.secrets]
 env_vars = [{name = "MY_SECRET", value = "${HOST_SECRET_VAR}"}]
 ```
+
+When both `params_via_stdin` and secrets are configured, stdin contains both top-level fields:
+`{"params":[...],"secrets":{"KEY":"value"}}`.
 
 #### Return type conventions
 

@@ -77,7 +77,10 @@ Arguments:
 Options:
 
 - `--empty` - Submit an empty deployment with no components (mutually exclusive with `PATH`)
-- `--verify` - Verify all environment variables before persisting
+- `--allow-missing-runtime-config` - Tolerate missing environment variables / secrets while
+  verifying the deployment before persisting it
+- `--description <DESCRIPTION>` - Optional human-readable description
+- `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Enqueueing a deployment
@@ -95,7 +98,12 @@ Arguments:
 Options:
 
 - `--empty` - Enqueue an empty deployment with no components
-- `--verify` - Verify all environment variables before enqueuing
+- `--allow-missing-runtime-config` - Tolerate missing environment variables / secrets while
+  verifying the deployment before enqueuing it
+- `--description <DESCRIPTION>` - Optional human-readable description for a newly submitted
+  deployment
+- `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
+  submitting a file or empty deployment
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Applying a deployment
@@ -114,6 +122,10 @@ Arguments:
 Options:
 
 - `--empty` - Apply an empty deployment with no components
+- `--description <DESCRIPTION>` - Optional human-readable description for a newly submitted
+  deployment
+- `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
+  submitting a file or empty deployment
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Listing deployments
@@ -126,17 +138,64 @@ Options:
 
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
-### Showing a deployment
-
-Show the full configuration of a deployment.
+### Showing the active deployment ID
 
 ```sh
-obelisk deployment show [OPTIONS] <ID>
+obelisk deployment active [OPTIONS]
+```
+
+Options:
+
+- `--json` - Output as JSON instead of plain text
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Showing a deployment
+
+Show the stored `deployment.toml` for a deployment, a single deployment-owned source file, or the
+stored TOML manifest rendered as JSON. The TOML output preserves the submitted formatting and
+comments.
+
+```sh
+obelisk deployment show [OPTIONS] <ID> [FILE]
 ```
 
 Arguments:
 
 - `<ID>` - Deployment ID
+- `[FILE]` - Deployment-relative path of a stored source file to print
+
+Options:
+
+- `--json` - Print the stored TOML manifest as JSON instead of TOML
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Retrieving a deployment
+
+Retrieve a deployment to disk as a re-submittable `deployment.toml` plus its deployment-owned source
+files.
+
+```sh
+obelisk deployment get [OPTIONS] <ID>
+```
+
+Arguments:
+
+- `<ID>` - Deployment ID
+
+Options:
+
+- `-o, --output <DIR>` - Directory to write `deployment.toml` and source files into (default:
+  current directory)
+- `-f, --force` - Overwrite existing files in the output directory
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+### Garbage collecting deployment files
+
+Delete content-addressed file blobs that are not referenced by any stored deployment.
+
+```sh
+obelisk deployment gc [OPTIONS]
+```
 
 Options:
 
@@ -513,6 +572,7 @@ Arguments:
 
 Options:
 
+- `-j, --json` - Output as JSON instead of human-readable text
 - `-f, --force` - Overwrite existing files in the output directory
 
 ### Generating WIT support functions
@@ -531,7 +591,8 @@ Arguments:
 
 Options:
 
-- `-o, --overwrite` - Overwrite existing files in the output directory
+- `-j, --json` - Output as JSON instead of human-readable text
+- `-f, --force` - Overwrite existing files in the output directory
 
 ### Generating WIT dependencies
 
@@ -549,7 +610,8 @@ Arguments:
 
 Options:
 
-- `-o, --overwrite` - Overwrite existing files
+- `-j, --json` - Output as JSON instead of human-readable text
+- `-f, --force` - Overwrite existing files
 - `--skip-local` - Skip local-path components
 
 ### Generating server configuration
@@ -566,7 +628,8 @@ Arguments:
 
 Options:
 
-- `-o, --overwrite` - Overwrite existing file
+- `-j, --json` - Output as JSON instead of human-readable text
+- `-f, --force` - Overwrite existing file
 
 ### Generating deployment configuration
 
@@ -582,7 +645,20 @@ Arguments:
 
 Options:
 
-- `-o, --overwrite` - Overwrite existing file
+- `-j, --json` - Output as JSON instead of human-readable text
+- `-f, --force` - Overwrite existing file
+
+### Generating a deployment ID
+
+Generate a new deployment ID:
+
+```sh
+obelisk generate deployment-id
+```
+
+Options:
+
+- `-j, --json` - Output as JSON instead of plain text
 
 ### Generating an execution ID
 
@@ -591,6 +667,10 @@ Generate a new execution ID:
 ```sh
 obelisk generate execution-id
 ```
+
+Options:
+
+- `-j, --json` - Output as JSON instead of plain text
 
 ### Generating a coding-agent prompt
 
