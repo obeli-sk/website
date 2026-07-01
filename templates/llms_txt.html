@@ -1,6 +1,11 @@
 {% set version = page.ancestors | last %}
 {% set vs = get_section(path=version) %}
 {{ page.extra.preamble | safe }}
+{% if page.extra.common_design_patterns is defined %}
+## Common design patterns
+{% for link in page.extra.common_design_patterns %}- [{{ link.title | safe }}]({{ config.base_url ~ vs.path ~ link.path }})
+{% endfor %}
+{% endif %}
 ## Docs
 {% for p in vs.pages %}{% if p.slug != "llms.txt" %}- [{{ p.title | safe }}]({{ config.base_url ~ p.path }})
 {% endif %}{% endfor %}

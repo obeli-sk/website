@@ -307,6 +307,8 @@ env_vars = [{key = "API_BASE_URL", value = "${API_BASE_URL:-https://api.openai.c
 [[activity_wasm.allowed_host]]
 pattern = "${API_BASE_URL:-https://api.openai.com}"
 methods = ["POST"]
+# Optional extra restriction after pattern and methods match.
+request_url_regex = "^POST https://api\\.openai\\.com/v1/"
 
 [activity_wasm.allowed_host.secrets]
 env_vars = ["OPENAI_API_KEY"]
@@ -316,6 +318,13 @@ replace_in = ["headers"]
 Pattern supports wildcards: `"*"` matches all HTTPS hosts on port 443, `"*://*"` matches any host on
 default ports, `"*.example.com"` matches subdomains. The `pattern` field supports `${VAR}` and
 `${VAR:-default}` env var interpolation.
+
+`request_url_regex` is an optional extra restriction on top of the required host `pattern` and
+`methods` allowlist entry. It is checked only after the host and method match, and omitting it
+allows all paths accepted by those required restrictions. The regex is matched against `METHOD URL`
+with query parameters removed, for example `GET https://api.example.com/v1/items`. The regex also
+supports `${VAR}` and `${VAR:-default}` interpolation; interpolated values are treated as regex
+syntax, so escape them when they should match literally.
 
 Secrets are injected via placeholder replacement in outgoing HTTP requests. WASM receives an opaque
 placeholder; the runtime substitutes real values only for requests to approved hosts.
