@@ -66,3 +66,17 @@ variant stub-error {
 
 An {{ github(title="example stub workflow", path="crates/testing/test-programs/stub/workflow") }} is
 available in the repository.
+
+## Cancellation and pending stubs
+
+A pending stub is a member of the join set its owning workflow submitted it to. When that join set
+closes — including when a `-cancellable` workflow is cancelled and Obelisk closes its join sets from
+the execution log — the still-pending stub is cancelled and finishes as an execution failure. An
+external party blocked on its result (for example a webhook awaiting the stub via `obelisk.get` or
+`GET /v1/executions/{id}?follow=true`) is released at that point.
+
+This unblocking happens through join-set close, not through the owning workflow's own code: a
+cancelled workflow is not advanced again, so its `catch`/`finally` handlers do not run. Keep a stub
+that an external reader depends on inside a join set owned by the workflow whose cancellation should
+release that reader. See
+{{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }}.

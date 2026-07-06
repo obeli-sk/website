@@ -22,6 +22,16 @@ Use `obelisk.sleep` for delays instead of `setTimeout`. `Date.now()` and `Math.r
 use — their values are recorded in the execution log on first call and replayed deterministically on
 recovery.
 
+## Configuration via parameters (no environment access)
+
+Workflows cannot read environment variables — a consequence of
+{{ doc_link(title="determinism", path="concepts/workflows/_index.md") }} that applies to every
+language. In JS specifically, `process.env` is available in
+{{ doc_link(title="activities", path="js/js-activities.md") }} and
+{{ doc_link(title="webhooks", path="js/js-webhooks.md") }} but not in workflow code. Pass runtime
+configuration in as workflow parameters instead, read by a webhook or parent execution that supplies
+it when scheduling or calling the workflow.
+
 ## Calling activities and workflows
 
 The recommended way to call child executions is via ES module imports. Import the function by its

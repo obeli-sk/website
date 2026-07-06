@@ -21,6 +21,13 @@ eventual result, forming a **durable
 workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can
 reliably continue from where it left off without duplicating or skipping steps.
 
+A direct consequence of determinism is that a workflow must not read anything that could differ
+between the original run and a replay. In particular, workflows — in any language — cannot read
+environment variables or other ambient host state. Supply runtime configuration as workflow
+**parameters** instead: a component that can read the environment (a webhook, an activity, or a
+parent execution) reads the value and passes it in when it schedules or calls the workflow, so the
+value is recorded in the execution log and replays identically.
+
 ## How Workflows Are Executed in Obelisk
 
 1. The Obelisk runtime instantiates the WASM component and calls the requested workflow function.
