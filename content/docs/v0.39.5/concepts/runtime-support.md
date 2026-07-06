@@ -88,7 +88,7 @@ activity to obtain e.g. a random number. Other functions are related to
 
 - `join-set-close: func(join-set: join-set)`:
   {{ doc_link(title="Closes", path="concepts/workflows/join-sets.md#join-set-close") }} the join
-  set.
+  set. Has no error result.
 
 - `submit-delay: func(join-set: borrow<join-set>, timeout: schedule-at) -> delay-id`: Submit a delay
   request to the join set. The delay can be later polled using `join-next`.
