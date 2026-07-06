@@ -625,7 +625,8 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
 ### `PUT /v1/executions/{execution-id}/pause`
 
 Pauses an active execution. The execution will not be scheduled for further processing until it is
-unpaused.
+unpaused. Running activities cannot be paused while locked; activity pausing applies between runs.
+Cancel a running activity if it must be interrupted immediately.
 
 #### Example request
 
@@ -830,6 +831,7 @@ curl "127.1:5005/v1/deployments" -H accept:application/json
     "scheduled": 0,
     "blocked": 0,
     "paused": 0,
+    "cancelling": 0,
     "finished_ok": 6,
     "finished_error": 0,
     "finished_execution_failure": 0,
@@ -961,7 +963,14 @@ curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
 
 ### `PUT /v1/executions/{execution-id}/cancel`
 
-Cancels an active execution. _Note: This is only permitted for Activity components._
+Cancels an active activity or cancellable workflow execution. Workflow cancellation is accepted only
+when the workflow's exported function name ends in `-cancellable`.
+
+Cancelling a workflow requests structured-concurrency teardown: Obelisk stops advancing that
+workflow, closes its join sets from the persisted execution log, cancels activities, delays, and
+cancellable workflow children, and waits for any non-cancellable workflow children. This is useful
+for operator cleanup of workflows stuck on long-lived stubs or stranded by a failed upgrade. See
+{{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }}.
 
 #### Example request
 
@@ -1043,7 +1052,7 @@ One of:
 - `timed_out`: Applicable to activities only, last attempt timed out.
 - `nondeterminism_detected`: Applicable to workflows.
 - `out_of_fuel`: Applicable to WASM components.
-- `cancelled`: Applicable to activities.
+- `cancelled`: Applicable to activities and cancellable workflows.
 - `paused`: Execution was paused.
 - `uncategorized`: Uncategorized, e.g. WASM trap.
 

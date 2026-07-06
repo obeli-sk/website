@@ -10,13 +10,14 @@ waiting for an external event, or has finished.
 
 ## States
 
-| State                | Description                                                                                                                                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PendingAt**        | The execution is ready to be picked up by an executor at (or after) the specified time. A newly created execution starts in this state.                                                                             |
-| **Locked**           | An executor has acquired the execution and is actively running it. The lock has an expiry time; if the executor crashes or fails to renew the lock, the execution becomes pending again after the lock expires.     |
-| **BlockedByJoinSet** | The execution called `-await-next` or `join-next` and is waiting for a response in a {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}. No executor can pick it up until a response arrives. |
-| **Paused**           | The execution has been explicitly paused via the CLI or API. A paused execution retains its underlying state (PendingAt, Locked, or BlockedByJoinSet) and resumes from that state when unpaused.                    |
-| **Finished**         | The execution has completed — either successfully, with an application error, or due to a terminal failure (timeout, cancellation, nondeterminism). This is a terminal state.                                       |
+| State                | Description                                                                                                                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PendingAt**        | The execution is ready to be picked up by an executor at (or after) the specified time. A newly created execution starts in this state.                                                                                                          |
+| **Locked**           | An executor has acquired the execution and is actively running it. The lock has an expiry time; if the executor crashes or fails to renew the lock, the execution becomes pending again after the lock expires.                                  |
+| **BlockedByJoinSet** | The execution called `-await-next` or `join-next` and is waiting for a response in a {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}. No executor can pick it up until a response arrives.                              |
+| **Paused**           | The execution has been explicitly paused via the CLI or API. A paused execution retains its underlying state (PendingAt or BlockedByJoinSet) and resumes from that state when unpaused. Activities can be paused between runs, not while locked. |
+| **Cancelling**       | Cancellation has been requested. An activity is being stopped, or a cancellable workflow is closing its join sets without advancing its WASM again.                                                                                              |
+| **Finished**         | The execution has completed — either successfully, with an application error, or due to a terminal failure (timeout, cancellation, nondeterminism). This is a terminal state.                                                                    |
 
 ## State Machine
 
@@ -110,9 +111,23 @@ Finished results are classified as:
 
 #### Paused / Unpaused
 
-A `Paused` event can be appended at any time (except when already finished). It wraps the current
-underlying state. The execution will not be picked up by any executor while paused. An `Unpaused`
-event restores the underlying state.
+A `Paused` event can be appended to an execution that is not finished or cancelling. It wraps the
+current underlying state. The execution will not be picked up by any executor while paused. An
+`Unpaused` event restores the underlying state.
+
+Activities can be paused only between runs, when they are not locked by an executor. A running
+activity should be cancelled if it must be interrupted. Workflows may be paused before their next
+run; if a workflow currently holds a lock, Obelisk first releases that run and then records the
+pause.
+
+#### CancellationRequested / Cancelling
+
+`CancellationRequested` moves an activity or cancellable workflow into **Cancelling**. A cancelling
+activity is interrupted and finishes with `ExecutionFailure::Cancelled`. A cancellable workflow is
+not advanced again; the cancellation driver tears down its join sets and, once teardown completes,
+the workflow finishes with `ExecutionFailure::Cancelled`. See
+{{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }} for the
+teardown rules.
 
 ## Retry Behavior
 

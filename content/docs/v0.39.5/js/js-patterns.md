@@ -28,7 +28,7 @@ must always be present.
 ```toml
 [[activity_js]]
 name = "fetch_dev_deps"
-location = "${DEPLOYMENT_DIR}/activity/fetch_dev_deps.js"
+location = "activity/fetch_dev_deps.js"
 ffqn = "myorg:monitor/repos.fetch-dev-deps" # Every function must have Function Fully Qualified Name
 params = [{ name = "repo", type = "string" }]
 return_type = "result<string, variant { permanent-not-found, transient-error(string), execution-failed }>"
@@ -41,7 +41,7 @@ Throw a snake_case string to select a no-payload case; throw `{ case_name: paylo
 with payload:
 
 ```javascript
-// activity/fetch_dev_deps.js
+// myorg:monitor/repos.fetch-dev-deps: func(repo: string) -> result<string, variant { permanent-not-found, transient-error(string), execution-failed }>
 export default async function fetch_dev_deps(repo) {
   const branches = ["main", "master"];
   for (const branch of branches) {
@@ -67,7 +67,7 @@ Create **one named join set per item** so the execution log labels each child by
 all children, then drain in submission order via `joinNext()`.
 
 ```javascript
-// workflow/monitor.js
+// myorg:monitor/monitor.run: func() -> result<list<tuple<string, string>>, string>
 import { listRepos } from "myorg:monitor/repos";
 import { fetchDevDepsSubmit, fetchDevDepsAwaitNext } from "myorg:monitor-obelisk-ext/repos";
 
@@ -143,7 +143,7 @@ Keep the outer saga workflow **minimal** — move complex logic into a child wor
 complex logic fails the child (catchable), not the outer saga itself:
 
 ```javascript
-// workflow/run.js — outer saga; kept intentionally simple
+// demo:fly-agent/workflow.run: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 import { agent } from "demo:fly-agent/workflow";
 import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
 
@@ -181,7 +181,7 @@ Use a bounded `for` loop with `obelisk.sleep` between probes. The sleep position
 server crash during the loop resumes from the last completed step on restart.
 
 ```javascript
-// workflow/agent.js — inner workflow
+// demo:fly-agent/workflow.agent: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 import * as machines from "obelisk-flyio:activity-fly-http/machines@1.0.0-beta";
 
 export default function agent(app_name, org_slug, prompt) {
@@ -231,7 +231,7 @@ configurable:
 ```toml
 [[webhook_endpoint_js]]
 name = "show"
-location = "${DEPLOYMENT_DIR}/webhook/show.js"
+location = "webhook/show.js"
 routes = [{ methods = ["GET"], route = "/" }]
 env_vars = [{ key = "OBELISK_API_URL", value = "${OBELISK_API_URL:-http://127.0.0.1:5005}" }]
 [[webhook_endpoint_js.allowed_host]]
@@ -288,8 +288,9 @@ export default async function handle(_request) {
 }
 ```
 
-`pending_state.status` values: `locked`, `pending_at`, `blocked_by_join_set`, `paused`, `finished`.
-Pass `?follow=true` to `GET /v1/executions/{id}` instead of `425 Too Early` while still running. See
+`pending_state.status` values: `locked`, `pending_at`, `blocked_by_join_set`, `paused`,
+`cancelling`, `finished`. Pass `?follow=true` to `GET /v1/executions/{id}` instead of
+`425 Too Early` while still running. See
 {{ doc_link(title="Programmatic access", path="programmatic-access.md") }} for the full API.
 
 ## Workflow import API (preferred)
@@ -307,7 +308,8 @@ Function names are converted from kebab-case (WIT) to camelCase (JS): `get-tempe
 
 ## Workflow `obelisk.*` API (dynamic)
 
-Use these when the FFQN cannot be specified statically:
+Prefer imports when the target function is known statically; imports are verified when the
+deployment starts. Use these dynamic calls only when the FFQN is constructed at runtime:
 
 | Call                                                     | Returns                              | Description                                                                         |
 | -------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------- |
@@ -323,18 +325,19 @@ Use these when the FFQN cannot be specified statically:
 
 ## Workflow join set API (dynamic)
 
-Use these when the FFQN cannot be specified statically (otherwise prefer extension imports):
+Prefer extension imports when the target function is known statically; imports are verified when the
+deployment starts. Use this dynamic join set API only when the FFQN is constructed at runtime:
 
-| Call                               | Returns                                                                                          | Description                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `let js = obelisk.createJoinSet()` | join set object                                                                                  | Create a new join set (optionally `{ name: "…" }`)                               |
-| `js.submit(ffqn, argArray)`        | childExecId (string)                                                                             | Submit a child execution without blocking                                        |
-| `js.submitDelay(duration)`         | `delayId` (string)                                                                               | Submit a timer, duration: {milliseconds/seconds/minutes/hours/days: int}         |
-| `js.joinNext()`                    | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }`                             | Block until the next result in this join set                                     |
-| `js.joinNextTry()`                 | ok value (throws err value), `undefined` if pending, throws `JoinSetExhaustedError` if exhausted | Non-blocking: attempt to get next result without waiting                         |
-| `js.lastId`                        | string                                                                                           | ID of the last child completed via `joinNext*` or `awaitNext`                    |
-| `js.close()`                       |                                                                                                  | Cancel activities and delays, await child workflows                              |
-| `obelisk.getResult(childExecId)`   | ok value (throws err value)                                                                      | Fetch a result after child execution was submitted and consumed with `joinNext*` |
+| Call                               | Returns                                                                                          | Description                                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `let js = obelisk.createJoinSet()` | join set object                                                                                  | Create a new join set (optionally `{ name: "…" }`)                                                   |
+| `js.submit(ffqn, argArray)`        | childExecId (string)                                                                             | Submit a child execution without blocking                                                            |
+| `js.submitDelay(duration)`         | `delayId` (string)                                                                               | Submit a timer, duration: {milliseconds/seconds/minutes/hours/days: int}                             |
+| `js.joinNext()`                    | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }`                             | Block until the next result in this join set                                                         |
+| `js.joinNextTry()`                 | ok value (throws err value), `undefined` if pending, throws `JoinSetExhaustedError` if exhausted | Non-blocking: attempt to get next result without waiting                                             |
+| `js.lastId`                        | string                                                                                           | ID of the last child completed via `joinNext*` or `awaitNext`                                        |
+| `js.close()`                       |                                                                                                  | Cancel activities, delays, and `-cancellable` child workflows; await non-cancellable child workflows |
+| `obelisk.getResult(childExecId)`   | ok value (throws err value)                                                                      | Fetch a result after child execution was submitted and consumed with `joinNext*`                     |
 
 ## Webhook import API (preferred)
 
@@ -345,18 +348,19 @@ Use these when the FFQN cannot be specified statically (otherwise prefer extensi
 
 ## Webhook `obelisk.*` API (dynamic)
 
-Use these when the FFQN cannot be specified statically:
+Prefer imports when the target function is known statically; imports are verified when the
+deployment starts. Use these dynamic calls only when the FFQN is constructed at runtime:
 
-| Call                                                       | Returns                                                                                                                 | Description                                              |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `obelisk.call(ffqn, argArray)`                             | returns ok value, throws error value                                                                                    | Call and await a child execution                         |
-| `obelisk.executionIdGenerate()`                            | `executionId` (string)                                                                                                  | Generate a unique execution ID                           |
-| `obelisk.executionIdCurrent()`                             | `executionId` (string)                                                                                                  | Get the execution ID of the current webhook invocation   |
-| `obelisk.schedule(execId, ffqn, argArray)`                 | `executionId` (string)                                                                                                  | Schedule a top-level execution immediately               |
-| `obelisk.schedule(execId, ffqn, argArray, { seconds: 1 })` | `executionId` (string)                                                                                                  | Delay is one of: milliseconds/seconds/minutes/hours/days |
-| `obelisk.getStatus(execId)`                                | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
-| `obelisk.get(execId)`                                      | ok value (throws err value)                                                                                             | Blocking: waits until execution finishes                 |
-| `obelisk.tryGet(execId)`                                   | ok value (throws err value), `undefined` if not finished yet                                                            | Non-blocking result fetch                                |
+| Call                                                       | Returns                                                                                                                              | Description                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `obelisk.call(ffqn, argArray)`                             | returns ok value, throws error value                                                                                                 | Call and await a child execution                         |
+| `obelisk.executionIdGenerate()`                            | `executionId` (string)                                                                                                               | Generate a unique execution ID                           |
+| `obelisk.executionIdCurrent()`                             | `executionId` (string)                                                                                                               | Get the execution ID of the current webhook invocation   |
+| `obelisk.schedule(execId, ffqn, argArray)`                 | `executionId` (string)                                                                                                               | Schedule a top-level execution immediately               |
+| `obelisk.schedule(execId, ffqn, argArray, { seconds: 1 })` | `executionId` (string)                                                                                                               | Delay is one of: milliseconds/seconds/minutes/hours/days |
+| `obelisk.getStatus(execId)`                                | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"cancelling"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
+| `obelisk.get(execId)`                                      | ok value (throws err value)                                                                                                          | Blocking: waits until execution finishes                 |
+| `obelisk.tryGet(execId)`                                   | ok value (throws err value), `undefined` if not finished yet                                                                         | Non-blocking result fetch                                |
 
 Webhooks also have `fetch`, `Response`, `Request`, `process.env`, `crypto.subtle` — same as
 {{ doc_link(title="JS Activities", path="js/js-activities.md") }}.
@@ -366,11 +370,14 @@ Webhooks also have `fetch`, `Response`, `Request`, `process.env`, `crypto.subtle
 When a join set is closed (via `js.close()` or implicitly when the workflow returns or throws):
 
 - Unpolled child **activities** and **delays** are **cancelled**.
-- Unpolled child **workflows** are **awaited** (not cancelled).
+- Unpolled child **workflows** are **awaited** unless their exported function name ends in
+  `-cancellable`, in which case they are cancelled.
 
-`obelisk.call` creates and closes a join set internally — the same rules apply. If you submit to a
-join set and return without draining it, any pending activities are cancelled but pending
-sub-workflows continue running. To wait for them, drain the join set before returning.
+An imported direct call and `obelisk.call` both create and close a join set internally — the same
+rules apply. If you submit to a join set and return without draining it, any pending activities are
+cancelled, cancellable sub-workflows are cancelled recursively, and non-cancellable sub-workflows
+continue running until they finish. To wait for them, drain the join set before returning. See
+{{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }}.
 
 ## Running an Obelisk application
 

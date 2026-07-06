@@ -63,9 +63,9 @@ by replaying the execution log.
 `workflow/serial.js` — runs 10 steps in sequence with a persistent 1-second sleep between each:
 
 ```javascript
+// tutorial:demo/workflow.serial: func() -> result<u32, string>
 import { step } from "tutorial:demo/activity";
 
-// tutorial:demo/workflow.serial: func() -> result<u32, string>
 export default function serial() {
   let acc = 0;
   for (let i = 0; i < 10; i++) {
@@ -93,9 +93,9 @@ Key concepts:
 {{ doc_link(title="join sets", path="concepts/workflows/join-sets.md") }}, then awaits results:
 
 ```javascript
+// tutorial:demo/workflow.parallel: func() -> result<u32, string>
 import { stepSubmit, stepAwaitNext } from "tutorial:demo-obelisk-ext/activity";
 
-// tutorial:demo/workflow.parallel: func() -> result<u32, string>
 export default function parallel() {
   const handles = [];
   for (let i = 0; i < 10; i++) {
@@ -151,10 +151,13 @@ module imports and `obelisk.call`; the JS function name maps to the function par
 {{ doc_link(title="JS components", path="js/js-components.md") }} for links to the per-type pages
 (activities, workflows, webhooks) and JSON encoding.
 
+Prefer imports when the target function is known statically. Imports are verified when the
+deployment starts; use dynamic FFQN calls only when the target is constructed at runtime.
+
 ```toml
 [[activity_js]]
 name = "step"
-location = "${DEPLOYMENT_DIR}/activity/step.js"
+location = "activity/step.js"
 ffqn = "tutorial:demo/activity.step"
 params = [
   { name = "idx", type = "u32" },
@@ -165,26 +168,25 @@ exec.lock_expiry.seconds = 10
 
 [[workflow_js]]
 name = "serial"
-location = "${DEPLOYMENT_DIR}/workflow/serial.js"
+location = "workflow/serial.js"
 ffqn = "tutorial:demo/workflow.serial"
 params = []
 return_type = "result<u32, string>"
 
 [[workflow_js]]
 name = "parallel"
-location = "${DEPLOYMENT_DIR}/workflow/parallel.js"
+location = "workflow/parallel.js"
 ffqn = "tutorial:demo/workflow.parallel"
 params = []
 return_type = "result<u32, string>"
 
 [[webhook_endpoint_js]]
 name = "webhook"
-location = "${DEPLOYMENT_DIR}/webhook/tutorial.js"
+location = "webhook/tutorial.js"
 routes = ["/*"]
 ```
 
-`${DEPLOYMENT_DIR}` resolves to the directory containing the deployment file. See
-{{ doc_link(title="Configuration", path="configuration.md") }} for all options.
+See {{ doc_link(title="Configuration", path="configuration.md") }} for all options.
 
 ## 4. Run
 

@@ -12,7 +12,7 @@ call and its result; on crash-recovery it replays the log, skipping already-comp
 ```toml
 [[workflow_js]]
 name        = "my_workflow"
-location    = "${DEPLOYMENT_DIR}/workflow/my_workflow.js"
+location    = "workflow/my_workflow.js"
 ffqn        = "myapp:demo/workflow.my-workflow"
 params      = []
 return_type = "result<string, string>"
@@ -30,9 +30,9 @@ child execution, blocks until it completes, and returns the ok payload (or throw
 it permanently fails).
 
 ```javascript
+// myapp:demo/workflow.serial: func() -> result<string, string>
 import { step } from "myapp:demo/activity";
 
-// ffqn: myapp:demo/workflow.serial() -> result<string, string>
 export default function serial() {
   let acc = 0;
   for (let i = 0; i < 10; i++) {
@@ -48,6 +48,7 @@ export default function serial() {
 Star imports are also supported:
 
 ```javascript
+// myapp:demo/workflow.serial: func() -> result<string, string>
 import * as activity from "myapp:demo/activity";
 
 export default function serial() {
@@ -59,8 +60,9 @@ export default function serial() {
 Function names are converted from kebab-case (WIT) to camelCase (JS) automatically: a WIT function
 `get-temperature` becomes `getTemperature` in the import.
 
-For cases where the function name cannot be specified statically (e.g. dynamic dispatch), use
-`obelisk.call(ffqn, argArray)` directly:
+Imports are verified when the deployment starts, so prefer them whenever the target function is
+known statically. Only use `obelisk.call(ffqn, argArray)` when the function name is constructed at
+runtime and cannot be imported statically:
 
 ```javascript
 const result = obelisk.call("myapp:demo/activity.step", [i, i * 200]);
@@ -90,9 +92,9 @@ throws the err value), matching the semantics of direct calls. The execution ID 
 completed is available via `js.lastId`:
 
 ```javascript
+// myapp:demo/workflow.parallel: func() -> result<string, string>
 import { stepSubmit, stepAwaitNext } from "myapp:demo-obelisk-ext/activity";
 
-// ffqn: myapp:demo/workflow.parallel() -> result<string, string>
 export default function parallel() {
   const handles = [];
   for (let i = 0; i < 10; i++) {
@@ -110,8 +112,8 @@ export default function parallel() {
 }
 ```
 
-You can also use the lower-level join set API with string FFQNs when the function isn't known
-statically:
+You can also use the lower-level join set API with string FFQNs when the function is constructed at
+runtime and cannot be imported statically:
 
 **Join set API:**
 
@@ -123,7 +125,7 @@ statically:
 | `js.joinNext()`                    | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }`                             | Block until the next result in this join set                                                                   |
 | `js.joinNextTry()`                 | ok value (throws err value), `undefined` if pending, throws `JoinSetExhaustedError` if exhausted | Non-blocking: attempt to get next result without waiting                                                       |
 | `js.lastId`                        | string                                                                                           | ID (execution or delay) of the last child completed via `joinNext*` or `awaitNext`                             |
-| `js.close()`                       |                                                                                                  | Cancel activities and delays, await child workflows                                                            |
+| `js.close()`                       |                                                                                                  | Cancel activities, delays, and `-cancellable` child workflows; await non-cancellable child workflows           |
 | `obelisk.getResult(childExecId)`   | ok value (throws err value)                                                                      | Fetch a result after child execution was submitted and consumed with `joinNext*`                               |
 
 ## Random values and time
@@ -158,7 +160,7 @@ const execId = sendEmailSchedule(null, "user@example.com");
 
 The first argument is the schedule timing: `null` for immediate, or a duration object.
 
-For dynamic FFQNs, use `obelisk.schedule` directly:
+For FFQNs constructed at runtime, use `obelisk.schedule` directly:
 
 ```javascript
 const execId = obelisk.executionIdGenerate();
@@ -169,8 +171,8 @@ obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"])
 ## Stub imports — inject a result for a stub activity
 
 {{ doc_link(title="Stub activities", path="concepts/activities/stub.md") }} have no implementation —
-the result is supplied externally (via the CLI, Web UI, or from workflow code). Use the
-`-obelisk-stub` suffix imports to inject results with typed functions:
+the result is supplied externally (via the CLI, Web UI, or from workflow code). Use `-obelisk-ext`
+imports to submit and await the stub activity, and the `-obelisk-stub` import to inject the result:
 
 ```javascript
 import { approveSubmit, approveAwaitNext } from "myapp:stubs-obelisk-ext/approval";
@@ -182,7 +184,7 @@ approveStub(execId, { ok: "approved" }); // inject result (idempotent for same v
 const result = approveAwaitNext(js);
 ```
 
-For dynamic FFQNs, use `obelisk.stub` directly:
+For FFQNs constructed at runtime, use `obelisk.stub` directly:
 
 ```javascript
 obelisk.stub(execId, { ok: "approved" });

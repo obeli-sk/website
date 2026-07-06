@@ -1,6 +1,6 @@
 [[activity_js]]
 name = "return_result"
-location = "${DEPLOYMENT_DIR}/activity/return_result.js"
+location = "activity/return_result.js"
 ffqn = "validation:return-types/activity.return-result"
 params = [{ name = "action", type = "string" }]
 return_type = "result"
@@ -8,7 +8,7 @@ exec.lock_expiry.seconds = 5
 
 [[activity_js]]
 name = "return_result_string"
-location = "${DEPLOYMENT_DIR}/activity/return_result_string.js"
+location = "activity/return_result_string.js"
 ffqn = "validation:return-types/activity.return-result-string"
 params = [{ name = "action", type = "string" }]
 return_type = "result<string>"
@@ -16,7 +16,7 @@ exec.lock_expiry.seconds = 5
 
 [[activity_js]]
 name = "return_result_string_string"
-location = "${DEPLOYMENT_DIR}/activity/return_result_string_string.js"
+location = "activity/return_result_string_string.js"
 ffqn = "validation:return-types/activity.return-result-string-string"
 params = [{ name = "action", type = "string" }]
 return_type = "result<string, string>"

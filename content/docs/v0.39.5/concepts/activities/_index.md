@@ -66,7 +66,7 @@ Example `deployment.toml`:
 ```toml
 [[activity_exec]]
 ffqn = "myapp:scripts/greet.greet"
-location = "${DEPLOYMENT_DIR}/scripts/greet.sh"
+location = "scripts/greet.sh"
 params = [{ name = "name", type = "string" }]
 return_type = "result<string, string>"
 env_vars = ["PATH"]
@@ -84,6 +84,11 @@ echo "\"Hello, ${NAME}!\""
 
 The script receives each parameter as a JSON-encoded positional argument and must write a
 JSON-encoded return value to stdout.
+
+On failure, exit with a non-zero status and write the `err` value, also JSON-encoded, to stdout
+(stderr is only logged, never captured into the result). For example, `printf '"not found"'; exit 1`
+produces `err("not found")`. A non-zero exit with empty stdout cannot be decoded into a non-unit
+`err` arm and instead becomes an uncategorized execution failure.
 
 See {{ doc_link(title="Configuration", path="configuration.md") }} for all `activity_exec` fields
 including inline `content`, secrets, environment variables, and output size limits.

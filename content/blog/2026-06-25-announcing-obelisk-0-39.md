@@ -28,9 +28,8 @@ sources that belonged to the deployment, even if the active deployment has moved
 
 ## Deployment-Local Paths
 
-For deployment-owned source files, relative paths are now resolved from the directory containing
-`deployment.toml`. The old `${DEPLOYMENT_DIR}/` prefix still works for compatibility, but it is no
-longer needed:
+For deployment-owned source files, relative paths are resolved from the directory containing
+`deployment.toml`:
 
 ```toml
 [[activity_exec]]

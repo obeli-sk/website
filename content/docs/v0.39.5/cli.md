@@ -380,7 +380,7 @@ obelisk execution responses E_01KPFKGAGSH91DRVBJZ3AK0T8A
 3 `2026-04-18 06:12:31.392479831 UTC` o:3-fibo completed successfully: E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:3-fibo_1
 ```
 
-### Cancelling an activity or a delay request
+### Cancelling an activity, cancellable workflow, or delay request
 
 ```sh
 obelisk execution cancel [OPTIONS] <ID>
@@ -388,11 +388,19 @@ obelisk execution cancel [OPTIONS] <ID>
 
 Arguments:
 
-- `<ID>` - Execution ID of an activity (`E_01...`) or a delay request (`Delay_01...`)
+- `<ID>` - Execution ID of an activity or cancellable workflow (`E_01...`) or a delay request
+  (`Delay_01...`)
 
 Options:
 
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+
+Workflow cancellation is accepted only for workflows whose exported function name ends in
+`-cancellable`. This lets an operator release a workflow that is stuck on a long-lived stub, blocked
+on a child, or unable to replay after a failed upgrade. Obelisk does not run the cancelled workflow
+again; it closes that workflow's join sets and cancels activities, delays, and cancellable workflow
+children held by those sets. See
+{{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }}.
 
 ### Providing the result of a stubbed activity
 
@@ -409,31 +417,33 @@ Options:
 
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
-### Pausing an execution
+### Pausing an execution or delay
 
-Pause a workflow execution, preventing it from being picked up until unpaused.
+Pause a workflow execution, pending activity execution, or pending delay, preventing it from being
+picked up until unpaused. A running activity cannot be paused while it is locked; pause applies
+between activity runs. Cancel a running activity when it must be interrupted immediately.
 
 ```sh
-obelisk execution pause [OPTIONS] <EXECUTION_ID>
+obelisk execution pause [OPTIONS] <ID>
 ```
 
 Arguments:
 
-- `<EXECUTION_ID>` - Execution ID to pause
+- `<ID>` - Execution ID (`E_01...`) or delay ID (`Delay_01...`) to pause
 
 Options:
 
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
-### Resuming a paused execution
+### Resuming a paused execution or delay
 
 ```sh
-obelisk execution unpause [OPTIONS] <EXECUTION_ID>
+obelisk execution unpause [OPTIONS] <ID>
 ```
 
 Arguments:
 
-- `<EXECUTION_ID>` - Execution ID to unpause
+- `<ID>` - Execution ID (`E_01...`) or delay ID (`Delay_01...`) to unpause
 
 Options:
 

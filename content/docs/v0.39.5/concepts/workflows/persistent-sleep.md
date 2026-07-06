@@ -12,7 +12,9 @@ The {{ doc_link(title="Runtime Support API", path="concepts/runtime-support.md")
 {{ doc_link(title="Join Set", path="concepts/workflows/join-sets.md") }} and blocks the execution
 until the delay has timed out.
 
-If the durable sleep is cancelled, `sleep` returns an error that must be handled by the workflow:
+If the durable sleep is cancelled, `sleep` returns an error that must be handled by the workflow.
+See {{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }} for
+how delay cancellation fits into structured concurrency:
 
 ```rs
 workflow_support::sleep(ScheduleAt::In(SchedulingDuration::Seconds(10)))

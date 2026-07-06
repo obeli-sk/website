@@ -20,7 +20,7 @@ Each component's JS function name maps to the last segment of its
 kebab-case in WIT and `deployment.toml`. A leading comment makes the mapping explicit:
 
 ```javascript
-// ffqn: tutorial:demo/activity.step(idx: u64, sleep-millis: u64) -> result<string>
+// tutorial:demo/activity.step: func(idx: u32, sleep-millis: u32) -> result<u32>
 export default async function step(idx, sleep_millis) { ... }
 ```
 
@@ -28,10 +28,10 @@ export default async function step(idx, sleep_millis) { ... }
 [[activity_js]]
 ffqn    = "tutorial:demo/activity.step"
 params  = [
-  { name = "idx",         type = "u64" },
-  { name = "sleep-millis", type = "u64" },
+  { name = "idx",          type = "u32" },
+  { name = "sleep-millis", type = "u32" },
 ]
-return_type = "result<string>"
+return_type = "result<u32>"
 ```
 
 See {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }} for the full type

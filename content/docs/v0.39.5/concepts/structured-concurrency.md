@@ -62,6 +62,37 @@ Obelisk uses to implement and enforce structured concurrency.
   {{ doc_link(title="Join Set Close", path="concepts/workflows/join-sets.md#join-set-close") }} for
   details.
 
+### Cancellation
+
+Cancellation is part of Obelisk's structured-concurrency guarantee: a child execution must not
+outlive its parent. When a join set closes, Obelisk tears down the still-pending members that are
+safe to stop and waits for the members that must finish cooperatively:
+
+During normal execution, a join set closes when workflow code closes an explicit join set or leaves
+an implicit direct-call join set. During cancellation, Obelisk closes persisted join sets from the
+execution log, so teardown does not depend on the workflow replaying to the close point.
+
+- Pending activities and delay requests are cancelled. Running WASM and JS activities are
+  interrupted in-process by dropping the Wasmtime invocation before cancellation is reported as
+  finished. Running exec activities have their process group signalled with `SIGKILL` and the direct
+  child is awaited; terminating descendants is best effort because a native process can spawn
+  children or block in the kernel.
+- Child workflows are awaited by default.
+- Child workflows whose exported function name ends in `-cancellable` are cancelled instead of
+  awaited. Cancellation closes their own join sets from the persisted execution log, recursively
+  applying the same rules; the workflow WASM is not advanced again.
+
+A cancellable workflow is useful when an operator or parent workflow needs to release a subtree that
+is stuck on a long-lived stub, blocked on a child, or unable to replay after a code change. It is
+also a stronger shutdown primitive than cancelling only the leaf activities because it can reach a
+workflow that cannot currently run.
+
+The tradeoff is cleanup ownership. Since a cancelled workflow is not run again, its own `finally`
+blocks, catch handlers, or compensation code do not execute. Mark a workflow `-cancellable` only
+when any resources it uses are owned and compensated by an ancestor. To make an entire subtree
+tearable-down, every workflow on the path must be cancellable; a non-cancellable workflow remains an
+await barrier.
+
 ### Contrast with Unstructured Concurrency (`-schedule`)
 
 Obelisk also provides the `-schedule` extension function. It's important to understand that using

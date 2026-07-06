@@ -13,7 +13,7 @@ and JSON encoding reference.
 ```toml
 [[activity_js]]
 name         = "my_activity"
-location     = "${DEPLOYMENT_DIR}/activity/my_activity.js"
+location     = "activity/my_activity.js"
 ffqn         = "myapp:demo/activity.my-activity"
 params       = [{ name = "input", type = "string" }]
 return_type  = "result<string>"
@@ -33,6 +33,7 @@ The JS runtime maps `return` and `throw` to the `result` return type.
 ### `result` — no payload on either side
 
 ```javascript
+// myapp:demo/activity.fn: func() -> result
 export default function fn() {
   return; // ok variant, no payload
   // throw null // err variant, no payload — Obelisk retries the activity
@@ -42,7 +43,7 @@ export default function fn() {
 ### `result<string>` — ok carries a value; err has no payload
 
 ```javascript
-// ffqn: myapp:demo/activity.greet(name: string) -> result<string>
+// myapp:demo/activity.greet: func(name: string) -> result<string>
 export default function greet(name) {
   console.info("Greeting", name);
   return "Hello, " + name + "!"; // ok("Hello, ...")
@@ -57,7 +58,7 @@ Throwing any non-null value is a permanent failure — no retries.
 ### `result<string, string>` — both variants carry a string
 
 ```javascript
-// ffqn: myapp:demo/activity.fetch-data(url: string) -> result<string, string>
+// myapp:demo/activity.fetch-data: func(url: string) -> result<string, string>
 export default async function fetch_data(url) {
   const resp = await fetch(url);
   if (!resp.ok) throw `HTTP ${resp.status}`; // err("HTTP 404") — triggers retry
@@ -87,6 +88,7 @@ throws.
 **Environment variable:**
 
 ```javascript
+// myapp:demo/activity.read-env: func(key: string) -> result<string, string>
 export default function read_env(key) {
   const value = process.env[key];
   if (value === undefined) throw "env var not found: " + key;
@@ -97,6 +99,7 @@ export default function read_env(key) {
 **Async sleep:**
 
 ```javascript
+// myapp:demo/activity.sleep: func(milliseconds: u64) -> result
 export default async function sleep(milliseconds) {
   await new Promise((r) => setTimeout(r, milliseconds));
 }
@@ -105,7 +108,7 @@ export default async function sleep(milliseconds) {
 **Outbound HTTP with request headers:**
 
 ```javascript
-// params: url: string, headers: list<tuple<string, string>>
+// myapp:demo/activity.fetch-get: func(url: string, headers: list<tuple<string, string>>) -> result<string, string>
 export default async function fetch_get(url, headersArr) {
   const resp = await fetch(url, { headers: Object.fromEntries(headersArr) });
   return await resp.text();
@@ -115,6 +118,7 @@ export default async function fetch_get(url, headersArr) {
 **HMAC-SHA256 with crypto.subtle:**
 
 ```javascript
+// myapp:demo/activity.hmac-sign: func(key-str: string, message: string) -> result<string, string>
 export default async function hmac_sign(key_str, message) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -132,7 +136,7 @@ export default async function hmac_sign(key_str, message) {
 **Record return type:**
 
 ```javascript
-// return_type = "result<record { name: string, count: u32 }>"
+// myapp:demo/activity.make-record: func(name: string) -> result<record { name: string, count: u32 }>
 export default function make_record(name) {
   return { name: name, count: 42 }; // returned as {"name": "...", "count": 42}
 }

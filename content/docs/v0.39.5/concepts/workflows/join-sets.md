@@ -20,8 +20,8 @@ in the following ways:
   {{ doc_link(title="support function", path="concepts/runtime-support.md") }} to wait for the next
   operation in that set to complete.
 
-- Close Join Set: All unawaited activities and delay requests are cancelled, child workflows are
-  awaited.
+- Close Join Set: All unawaited activities, delay requests, and cancellable child workflows are
+  cancelled; non-cancellable child workflows are awaited.
 
 ## Defining Features
 
@@ -219,12 +219,19 @@ executions that the parent execution submitted but did not await for will be aut
 as follows:
 
 - Child activities and delay requests are cancelled
-- Child workflows are awaited
+- Child workflows whose exported function name ends in `-cancellable` are cancelled
+- Other child workflows are awaited
 
 The parent workflow will be marked as finished only when all unattended child executions are
 finished.
 
-### Example - Automaitcally awaiting child workflows
+Cancellable child workflows are the opt-in form of workflow cancellation used by structured
+concurrency. They let join-set close release a stuck or blocked child without running that child's
+WASM again. Use them only when cleanup is owned by an ancestor, not by the cancelled child itself.
+See
+{{ doc_link(title="Cancellable child workflows", path="patterns/cleanup-supervisor.md#cancellable-child-workflows") }}.
+
+### Example - Automatically awaiting child workflows
 
 The following example creates a named join set for each user fetched from the database and uses it
 to parallelize the execution of the `star_added` workflow.

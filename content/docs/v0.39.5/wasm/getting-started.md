@@ -165,21 +165,20 @@ async fn main(request: Request<Body>) -> Result<Response<Body>, Error> {
 ```toml
 [[activity_wasm]]
 name = "activity_sleepy"
-location = "${DEPLOYMENT_DIR}/target/wasm32-wasip2/release/activity_sleepy.wasm"
+location = "target/wasm32-wasip2/release/activity_sleepy.wasm"
 exec.lock_expiry.seconds = 10
 
 [[workflow_wasm]]
 name = "workflow_tutorial"
-location = "${DEPLOYMENT_DIR}/target/wasm32-unknown-unknown/workflow/workflow_tutorial.wasm"
+location = "target/wasm32-unknown-unknown/workflow/workflow_tutorial.wasm"
 
 [[webhook_endpoint_wasm]]
 name = "webhook_tutorial"
-location = "${DEPLOYMENT_DIR}/target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
+location = "target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
 routes = ["/*"]
 ```
 
-`${DEPLOYMENT_DIR}` resolves to the directory containing the deployment file. See
-{{ doc_link(title="Configuration", path="configuration.md") }} for all options.
+See {{ doc_link(title="Configuration", path="configuration.md") }} for all options.
 
 ## 5. Build and Run
 

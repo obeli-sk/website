@@ -34,6 +34,10 @@ Each entry in the execution log is an **event** with a monotonically increasing 
 | **HistoryEvent**             | A workflow’s internal decision or interaction with the runtime. See [History Events](#history-events) below.                                                                                | Varies                               |
 | **Paused**                   | The execution was paused via CLI or API.                                                                                                                                                    | Any non-Finished → Paused            |
 | **Unpaused**                 | The execution was resumed.                                                                                                                                                                  | Paused → (previous underlying state) |
+| **CancellationRequested**    | Cancellation was requested for an activity or cancellable workflow.                                                                                                                         | Any non-Finished → Cancelling        |
+
+See {{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }} for
+the structured-concurrency teardown rules.
 
 ### History Events
 

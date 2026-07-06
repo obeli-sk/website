@@ -93,10 +93,10 @@ functions. Their FFQNs follow the WIT package structure:
 ### Inner Workflow — `workflow/agent.js`
 
 ```javascript
+// demo:fly-agent/workflow.agent: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
 import * as machines from "obelisk-flyio:activity-fly-http/machines@1.0.0-beta";
 
-// ffqn: demo:fly-agent/workflow.agent(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 export default function agent(app_name, org_slug, prompt) {
   // Step 1: Create the fly.io app.
   apps.put(org_slug, app_name);
@@ -196,7 +196,7 @@ In `deployment.toml`:
 ```toml
 [[workflow_js]]
 name = "agent"
-location = "${DEPLOYMENT_DIR}/workflow/agent.js"
+location = "workflow/agent.js"
 ffqn = "demo:fly-agent/workflow.agent"
 params = [
   { name = "app-name", type = "string" },
@@ -209,10 +209,10 @@ return_type = "result<string, string>"
 ### Outer Workflow — `workflow/run.js`
 
 ```javascript
+// demo:fly-agent/workflow.run: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 import { agent } from "demo:fly-agent/workflow";
 import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
 
-// ffqn: demo:fly-agent/workflow.run(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 export default function run(app_name, org_slug, prompt) {
   let result = null;
   let error = null;
@@ -250,7 +250,7 @@ In `deployment.toml`:
 ```toml
 [[workflow_js]]
 name = "run"
-location = "${DEPLOYMENT_DIR}/workflow/run.js"
+location = "workflow/run.js"
 ffqn = "demo:fly-agent/workflow.run"
 params = [
   { name = "app-name", type = "string" },
@@ -283,7 +283,7 @@ In `deployment.toml`:
 ```toml
 [[webhook_endpoint_js]]
 name = "webhook"
-location = "${DEPLOYMENT_DIR}/webhook/fly-agent.js"
+location = "webhook/fly-agent.js"
 routes = [{ methods = ["GET"], route = "/run/:org-slug/:app-name/:prompt" }]
 ```
 

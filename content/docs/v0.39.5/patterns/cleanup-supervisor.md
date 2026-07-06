@@ -27,19 +27,35 @@ Obelisk records completed steps in the execution log. After a process or server 
 continues from the recorded state and still reaches cleanup. Activity calls used for creation and
 cleanup should be idempotent.
 
+## Cancellable child workflows
+
+When the child workflow is safe to stop without running its own cleanup code, mark the exported
+function as cancellable by ending the FFQN with `-cancellable`:
+
+```toml
+[[workflow_js]]
+ffqn = "example:app/workflow.supervisor"
+location = "workflow/run.js"
+params = [{ name = "input", type = "string" }]
+return_type = "result<string, string>"
+
+[[workflow_js]]
+ffqn = "example:app/workflow.run-child-cancellable"
+...
+```
+
 ```javascript
-// workflow/run.js - minimal resource supervisor
+// example:app/workflow.supervisor: func(input: string) -> result<string, string>
 import * as resource from "example:infra/resource";
+import { runChildCancellable } from "example:app/workflow";
 
-const CHILD_FFQN = "example:app/workflow.run-child";
-
-export default function run(input) {
+export default function supervisor(input) {
   const resourceId = resource.create(input);
   let result = null;
   let childError = null;
 
   try {
-    result = obelisk.call(CHILD_FFQN, [resourceId, input]);
+    result = runChildCancellable(resourceId, input);
   } catch (error) {
     childError = error;
   }
@@ -56,10 +72,28 @@ export default function run(input) {
 }
 ```
 
-Keep the supervisor intentionally simple. Put polling, tool dispatch, approvals, and other complex
-or long-running logic in the child workflow.
+The supervisor FFQN intentionally does **not** end in `-cancellable`, so it is not the teardown
+target. Making the supervisor cancellable would defeat the pattern by skipping its cleanup code.
+External monitoring systems and operators cancel the `run-child-cancellable` execution. The
+supervisor observes that child failure, runs cleanup, and then propagates the result or error.
+
+When the child execution is cancelled, it cannot append any events to its execution log; only its
+open join sets are closed. Use `-cancellable` only when the ancestor owns the external resource and
+performs compensation itself, as this supervisor does with `resource.delete`.
+
+To make the whole subtree cancellable without blocking, every workflow submitted to a join set by
+`run-child-cancellable` must be cancellable. A non-cancellable workflow remains an await barrier:
+its parent can enter cancellation, but Obelisk still waits for that child to finish before the
+parent reaches a terminal result. See
+{{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }}.
+
+Keep the supervisor intentionally simple. Put polling, approvals, and other complex or long-running
+logic in the child workflow.
 
 ## Racing work against a teardown signal
+
+The teardown-signal pattern is more complex than a `-cancellable` child. Use it when the child
+workflow cannot be cancelled directly because it owns cleanup that must run inside the child.
 
 For operator-controlled teardown, submit both the child workflow and a long-lived stub activity to
 one join set. The first completion wakes the supervisor:
@@ -72,8 +106,14 @@ params = []
 return_type = "result<_, string>"
 
 [[workflow_js]]
+ffqn = "example:app/workflow.supervisor"
+location = "workflow/run.js"
+params = [{ name = "input", type = "string" }]
+return_type = "result<string, string>"
+
+[[workflow_js]]
 ffqn = "example:app/workflow.run-child"
-location = "${DEPLOYMENT_DIR}/workflow/run-child.js"
+location = "workflow/run-child.js"
 params = [
   { name = "resource-id", type = "string" },
   { name = "input",       type = "string" },
@@ -82,13 +122,12 @@ return_type = "result<string, string>"
 ```
 
 ```javascript
-// workflow/run.js - supervisor with operator teardown
+// example:app/workflow.supervisor: func(input: string) -> result<string, string>
 import * as resource from "example:infra/resource";
+import { teardownSignalSubmit } from "example:app-obelisk-ext/control";
+import { runChildSubmit } from "example:app-obelisk-ext/workflow";
 
-const CHILD_FFQN = "example:app/workflow.run-child";
-const TEARDOWN_FFQN = "example:app/control.teardown-signal";
-
-export default function run(input) {
+export default function supervisor(input) {
   const resourceId = resource.create(input);
   const race = obelisk.createJoinSet({ name: "session" });
 
@@ -97,8 +136,8 @@ export default function run(input) {
   let tornDown = false;
 
   try {
-    const childId = race.submit(CHILD_FFQN, [resourceId, input]);
-    const teardownId = race.submit(TEARDOWN_FFQN, []);
+    const childId = runChildSubmit(race, resourceId, input);
+    const teardownId = teardownSignalSubmit(race);
     const completed = race.joinNext();
 
     if (completed.id === teardownId) {
@@ -113,13 +152,14 @@ export default function run(input) {
       childError = `Unexpected child completion: ${completed.id}`;
     }
   } finally {
-    // Cleanup precedes join-set close so teardown is not delayed by the child.
+    // Cleanup precedes join-set close so teardown is not delayed by non-cancellable children.
     try {
       resource.delete(resourceId);
     } catch (cleanupError) {
       if (childError === null) childError = cleanupError;
     }
-    race.close();
+    race.close(); // Explicit join set close.
+    // If not included, all join sets are closed when finalizing the execution.
   }
 
   if (childError !== null) throw childError;
@@ -140,9 +180,10 @@ if the child is waiting on an unrelated activity or human-input stub.
 
 Cleanup and child termination are related but separate:
 
-- Closing a join set cancels its pending **activities and delays**.
-- Closing a join set does not directly cancel a pending **child workflow**. The parent waits for
-  that child workflow to finish, preserving structured concurrency.
+- Closing a join set cancels its pending **activities, delays, and `-cancellable` child workflows**.
+- Closing a join set awaits any pending **non-cancellable child workflows**.
+- Cancelling a `-cancellable` workflow recursively closes that workflow's join sets, preserving
+  structured concurrency throughout the subtree.
 
 Therefore, the supervisor must perform resource cleanup before closing the race join set. The child
 should then unwind when its resource-dependent activity fails, observe a cooperative shutdown
@@ -155,7 +196,8 @@ For a child parked on a long-lived stub, the teardown handler should:
 3. Enumerate unfinished descendants and cancel pending activities, activity stubs, and delays.
 
 The handler does not need to understand the child's join sets or business logic. It cancels leaf
-work so the child can unwind; it does not attempt to cancel the child workflow directly.
+work so the child can unwind; it does not attempt to cancel a non-cancellable child workflow
+directly.
 
 Do not put the teardown signal inside the child workflow. If the child is blocked on another join
 set, it cannot observe that signal. The parent supervisor must own both the resource and the

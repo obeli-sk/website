@@ -384,8 +384,7 @@ Exactly one of `location` or `content` must be set:
 
 - `location` can point to a local script file or an `oci://...` reference.
 - Local files must be deployment-local: relative to the directory containing `deployment.toml`, with
-  no absolute paths or `..` escapes. The legacy `${DEPLOYMENT_DIR}/` prefix is still accepted, but
-  is no longer needed.
+  no absolute paths or `..` escapes.
 - Local files are read at deploy time and stored with the deployment, making the deployment
   reconstructable.
 - `content` embeds the script directly in `deployment.toml`.
@@ -411,13 +410,20 @@ When both `params_via_stdin` and secrets are configured, stdin contains both top
 
 The `return_type` field must be one of:
 
-- `result` — no return data; exit 0 = ok, non-zero = error
-- `result<T>` — stdout is parsed as JSON value of type T on success
-- `result<T, string>` — on error, stderr is captured as the error string
+- `result` — no return data; exit 0 = ok, non-zero = error. stdout is ignored.
+- `result<T>` — on exit 0, stdout is parsed as the ok JSON value of type T.
+- `result<T, string>` — on exit 0, stdout is the ok JSON value of type T; on non-zero exit, stdout
+  is the err string, JSON-encoded (e.g. `"boom"`).
 - `result<T, variant { execution-failed, ... }>` — structured error type where `execution-failed` is
-  a variant case
+  a variant case; on non-zero exit, stdout is the err-variant JSON.
 
-`T` can be `_` to indicate no ok value (e.g. `result<_, string>`). In this case `stdout` is ignored.
+Both the ok and err values are read from **stdout**. stderr is only forwarded to the logs (see
+`forward_stderr`) and is never captured into the result, so a non-zero exit with empty stdout fails
+to type-check a non-unit err arm and surfaces as an uncategorized execution failure instead of
+`err`.
+
+`T` can be `_` to indicate no ok value (e.g. `result<_, string>`). In this case `stdout` is ignored
+on exit 0.
 
 #### Retry and timeout
 
@@ -617,14 +623,13 @@ In `deployment.toml`:
 
 <div class="table">
 
-| Prefix              | Default Path on Linux    | Details                                                            |
-| ------------------- | ------------------------ | ------------------------------------------------------------------ |
-| `~`                 | `~`                      | Home directory                                                     |
-| `${DATA_DIR}`       | `~/.local/share/obelisk` | System data directory                                              |
-| `${CACHE_DIR}`      | `~/.cache/obelisk`       | System cache directory                                             |
-| `${CONFIG_DIR}`     | `~/.config/obelisk`      | System config directory                                            |
-| `${DEPLOYMENT_DIR}` | N/A                      | Directory where the deployment.toml file is located                |
-| `${TEMP_DIR}`       | /tmp                     | See [temp_dir](https://doc.rust-lang.org/std/env/fn.temp_dir.html) |
+| Prefix          | Default Path on Linux    | Details                                                            |
+| --------------- | ------------------------ | ------------------------------------------------------------------ |
+| `~`             | `~`                      | Home directory                                                     |
+| `${DATA_DIR}`   | `~/.local/share/obelisk` | System data directory                                              |
+| `${CACHE_DIR}`  | `~/.cache/obelisk`       | System cache directory                                             |
+| `${CONFIG_DIR}` | `~/.config/obelisk`      | System config directory                                            |
+| `${TEMP_DIR}`   | /tmp                     | See [temp_dir](https://doc.rust-lang.org/std/env/fn.temp_dir.html) |
 
 </div>
 

@@ -1,6 +1,6 @@
 [[activity_js]]
 name = "echo_string"
-location = "${DEPLOYMENT_DIR}/activity/echo.js"
+location = "activity/echo.js"
 ffqn = "validation:json-encoding/activity.echo-string"
 params = [{ name = "val", type = "string" }]
 return_type = "result<string>"
@@ -8,7 +8,7 @@ exec.lock_expiry.seconds = 5
 
 [[activity_js]]
 name = "echo_types"
-location = "${DEPLOYMENT_DIR}/activity/echo_types.js"
+location = "activity/echo_types.js"
 ffqn = "validation:json-encoding/activity.echo-types"
 params = [
   { name = "a-bool",   type = "bool" },
