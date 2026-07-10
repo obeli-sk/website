@@ -3,13 +3,13 @@
 //   /tmp/weather-webhook-debugger.png — webhook execution debugger (shows JS + schedule call)
 //
 // Usage:
-//   WEBHOOK_EXEC_ID=<id> WORKFLOW_EXEC_ID=<id> node scripts/screenshot-weather-webhook.js
+//   nix develop .#screenshots -c node scripts/screenshot-weather-webhook.js
+//   WEBHOOK_EXEC_ID=<id> WORKFLOW_EXEC_ID=<id> nix develop .#screenshots -c node scripts/screenshot-weather-webhook.js
 // or without args (script will auto-detect from the executions list).
 
-const { chromium } = require('/nix/store/bazma324ghwnil93pvkwcg0llmin46rm-wrangler-4.38.0/lib/node_modules/.pnpm/playwright-core@1.49.1/node_modules/playwright-core/index.js');
+const { chromium } = require('playwright-core');
 
 const LAUNCH_OPTS = {
-  executablePath: '/nix/store/77w1x7d7k3p5yjn224gmkbhkm06b426x-chromium-146.0.7680.153/bin/chromium',
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-setuid-sandbox', '--disable-gpu'],
 };

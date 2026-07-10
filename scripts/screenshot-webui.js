@@ -9,19 +9,7 @@
  *        curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait
  *      Wait ~30s for the serial workflow to finish.
  *   3. Run this script from the website/ directory:
- *        FONTCONFIG_FILE=/tmp/fonts.conf \
- *        /nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0/bin/node scripts/screenshot-webui.js
- *
- *      If /tmp/fonts.conf does not exist, create it first:
- *        mkdir -p /tmp/fontcache
- *        cat > /tmp/fonts.conf << 'EOF'
- *        <?xml version="1.0"?>
- *        <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
- *        <fontconfig>
- *          <dir>/nix/store/sivwl9l4pfm16lpy4kcbqwh1a06s50m6-dejavu-fonts-minimal-2.37/share/fonts/truetype</dir>
- *          <cachedir>/tmp/fontcache</cachedir>
- *        </fontconfig>
- *        EOF
+ *        nix develop .#screenshots -c node scripts/screenshot-webui.js
  *
  *   4. Copy outputs to static/:
  *        cp /tmp/sc-*.png static/
@@ -33,10 +21,9 @@
  *   sc-logs.png         — execution logs
  */
 
-const { chromium } = require('/nix/store/bazma324ghwnil93pvkwcg0llmin46rm-wrangler-4.38.0/lib/node_modules/.pnpm/playwright-core@1.49.1/node_modules/playwright-core');
+const { chromium } = require('playwright-core');
 
 const LAUNCH_OPTS = {
-  executablePath: '/nix/store/77w1x7d7k3p5yjn224gmkbhkm06b426x-chromium-146.0.7680.153/bin/chromium',
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-setuid-sandbox', '--disable-gpu'],
 };

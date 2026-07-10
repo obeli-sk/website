@@ -10,6 +10,9 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        screenshotFonts = pkgs.makeFontsConf {
+          fontDirectories = [ pkgs.dejavu_fonts ];
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -26,6 +29,11 @@
             nodejs
             playwright-test
           ];
+          shellHook = ''
+            export NODE_PATH=${pkgs.playwright-test}/lib/node_modules''${NODE_PATH:+:$NODE_PATH}
+            export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+            export FONTCONFIG_FILE=${screenshotFonts}
+          '';
         };
       }
     );

@@ -135,23 +135,11 @@ on `$PATH`. To regenerate:
    curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait
    sleep 30
    ```
-3. Create a minimal fontconfig (required once per `/tmp` lifetime):
+3. Run the capture script from `website/`:
    ```sh
-   mkdir -p /tmp/fontcache
-   cat > /tmp/fonts.conf << 'EOF'
-   <?xml version="1.0"?>
-   <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
-   <fontconfig>
-     <dir>/nix/store/sivwl9l4pfm16lpy4kcbqwh1a06s50m6-dejavu-fonts-minimal-2.37/share/fonts/truetype</dir>
-     <cachedir>/tmp/fontcache</cachedir>
-   </fontconfig>
-   EOF
+   nix develop .#screenshots -c node scripts/screenshot-webui.js
    ```
-4. Run the capture script from `website/`:
-   ```sh
-   FONTCONFIG_FILE=/tmp/fonts.conf node scripts/screenshot-webui.js
-   ```
-5. Copy outputs to `static/`:
+4. Copy outputs to `static/`:
    ```sh
    cp /tmp/sc-*.png static/
    ```
