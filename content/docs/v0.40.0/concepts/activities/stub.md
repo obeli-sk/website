@@ -41,7 +41,7 @@ interface can only be imported by workflows.
 package testing:stub-activity-obelisk-stub;
 
 interface activity {
-    use obelisk:types/execution@4.2.0.{execution-id, stub-error};
+    use obelisk:types/execution@5.0.0.{execution-id, stub-error};
 
     foo-stub: func(execution-id: execution-id, return-value: string) -> result<_, stub-error>;
 

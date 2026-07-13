@@ -163,13 +163,16 @@ it may continue directly without an additional Locked event.
 
 ### REST API
 
+Export `OBELISK_API_TOKEN` as described in
+{{ doc_link(title="Authentication", path="authentication.md") }} first:
+
 ```sh
 # Get execution events
-curl -H 'Accept: application/json' \
+curl -H 'Accept: application/json' -H "Authorization: Bearer $OBELISK_API_TOKEN" \
   http://127.0.0.1:5005/v1/executions/{id}/events
 
 # Include backtrace IDs (for source mapping in the Web UI)
-curl -H 'Accept: application/json' \
+curl -H 'Accept: application/json' -H "Authorization: Bearer $OBELISK_API_TOKEN" \
   'http://127.0.0.1:5005/v1/executions/{id}/events?include_backtrace_id=true'
 ```
 

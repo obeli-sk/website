@@ -6,9 +6,13 @@ export default function city_temperatures(cities) {
         return { city, joinSet, execId };
     });
     const results = handles.map(({ city, joinSet, execId }) => {
-        const response = joinSet.joinNext();
-        if (!response.ok) throw `failed to fetch weather for ${city}`;
-        return `${city}: ${obelisk.getResult(response.id).ok}`;
+        let temperature;
+        try {
+            temperature = joinSet.joinNext(); // ok value directly; throws on failure
+        } catch (e) {
+            throw `failed to fetch weather for ${city}`;
+        }
+        return `${city}: ${temperature}`;
     });
     return results.join(", ");
 }

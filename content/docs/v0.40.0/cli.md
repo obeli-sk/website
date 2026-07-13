@@ -4,6 +4,15 @@ template = "docs.html"
 weight = 50
 +++
 
+## Global Options
+
+These flags are accepted by any subcommand:
+
+- `--api-token <TOKEN>` - API token presented to the server as `Authorization: Bearer <token>` by
+  subcommands that talk to the API. Falls back to `$OBELISK_API_TOKEN`, then `$OBELISK__API__TOKEN`.
+  See {{ doc_link(title="Authentication", path="authentication.md") }}
+- `-v, --version` - Print version
+
 ## Obelisk Server
 
 ### Running the Server
@@ -25,8 +34,10 @@ Options:
   database
 - `--empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the
   database
-- `-s, --suppress-type-checking-errors` - Do not fail startup when a component's imports/exports
-  fail type checking against the current deployment
+- `--suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail
+  type checking against the current deployment
+- `--allow-unauthenticated-api` - Accept unauthenticated requests on the API port. Development /
+  recovery override; see {{ doc_link(title="Authentication", path="authentication.md") }}
 
 If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
 
@@ -52,9 +63,10 @@ Options:
   built-in defaults are used
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued
   deployment is used, falling back to the Active deployment
-- `-i, --ignore-missing-env-vars` - Skip the check that every environment variable referenced by the
-  deployment is set
-- `-s, --suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type
+- `-a, --allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this
+  server (missing environment variables / secrets, or server capabilities such as exec activities)
+  while verifying
+- `--suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type
   checking against the deployment
 - `--skip-db` - Skip opening the database and validating its schema
 
@@ -77,7 +89,8 @@ Arguments:
 Options:
 
 - `--empty` - Submit an empty deployment with no components (mutually exclusive with `PATH`)
-- `--allow-missing-runtime-config` - Tolerate missing environment variables / secrets while
+- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this server
+  (missing environment variables / secrets, or server capabilities such as exec activities) while
   verifying the deployment before persisting it
 - `--description <DESCRIPTION>` - Optional human-readable description
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission
@@ -98,7 +111,8 @@ Arguments:
 Options:
 
 - `--empty` - Enqueue an empty deployment with no components
-- `--allow-missing-runtime-config` - Tolerate missing environment variables / secrets while
+- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this server
+  (missing environment variables / secrets, or server capabilities such as exec activities) while
   verifying the deployment before enqueuing it
 - `--description <DESCRIPTION>` - Optional human-readable description for a newly submitted
   deployment
@@ -676,6 +690,21 @@ Generate a new execution ID:
 
 ```sh
 obelisk generate execution-id
+```
+
+Options:
+
+- `-j, --json` - Output as JSON instead of plain text
+
+### Generating an API token
+
+Generate a random API token plus the `sha256:` hash entry accepted in `server.toml`
+`api.token_hashes`. The plaintext token is printed once and never stored; revoke it by deleting its
+hash line and restarting the server. See
+{{ doc_link(title="Authentication", path="authentication.md") }}.
+
+```sh
+obelisk generate token
 ```
 
 Options:

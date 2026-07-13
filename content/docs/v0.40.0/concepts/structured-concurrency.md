@@ -95,11 +95,13 @@ await barrier.
 
 A cancelled child cannot report its own cancellation — because its code is not run, it cannot return
 a sentinel value. A parent observes the outcome only externally. A cancelled child finishes as an
-{{ doc_link(title="execution failure", path="concepts/execution-states.md") }}, so `obelisk.getResult`
-throws and `obelisk.getStatus` reports `finishedStatus: "executionFailure"` — a coarse category it
-shares with nondeterminism and out-of-fuel failures. To distinguish a deliberate cancellation from a
-genuine fault, read the execution's specific classification (`Cancelled`) from the REST API
-(`GET /v1/executions/{id}`).
+{{ doc_link(title="execution failure", path="concepts/execution-states.md") }}, so
+`obelisk.getResult` (and an awaited `joinNext` / `awaitNext`) throws `obelisk.ChildExecutionError`,
+and `obelisk.getStatus` reports `finishedStatus: "executionFailure"` — a coarse category it shares
+with nondeterminism and out-of-fuel failures. To distinguish a deliberate cancellation from a
+genuine fault inside the workflow, read `e.failureKind === "cancelled"` (equivalently `e.cancelled`)
+on the thrown error; externally, read the execution's specific classification (`Cancelled`) from the
+REST API (`GET /v1/executions/{id}`).
 
 ### Contrast with Unstructured Concurrency (`-schedule`)
 
@@ -114,11 +116,11 @@ Obelisk also provides the `-schedule` extension function. It's important to unde
   immediately needed by the parent, or for delaying execution until a specific time, effectively
   detaching the child's lifecycle from the parent's immediate scope.
 
-Because a scheduled execution has no parent to enforce its lifetime, a long-lived detached root — for
-example a session workflow started by a webhook via `-schedule` — is responsible for bounding its own
-lifetime. Give it an internal limit so it cannot run forever if its driver disappears: an idle
-timeout (a persistent sleep raced against its next unit of work), an absolute cap such as a maximum
-number of iterations, or both.
+Because a scheduled execution has no parent to enforce its lifetime, a long-lived detached root —
+for example a session workflow started by a webhook via `-schedule` — is responsible for bounding
+its own lifetime. Give it an internal limit so it cannot run forever if its driver disappears: an
+idle timeout (a persistent sleep raced against its next unit of work), an absolute cap such as a
+maximum number of iterations, or both.
 
 ### Benefits of Structured Concurrency
 

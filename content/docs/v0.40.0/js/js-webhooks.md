@@ -158,7 +158,7 @@ const status = obelisk.getStatus(execId);
 
 const result = obelisk.tryGet(execId);
 // undefined if not finished yet
-// returns ok value (or throws err value) when done
+// returns ok value when done, or throws obelisk.ChildExecutionError on failure
 ```
 
 Get the execution ID of the current webhook invocation:
@@ -181,14 +181,14 @@ const myExecId = obelisk.executionIdCurrent();
 
 | Call                                              | Returns                                                                                                                              | Description                                            |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws error value                                                                                                 | Call and await a child execution                       |
+| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws `obelisk.ChildExecutionError` on failure                                                                    | Call and await a child execution                       |
 | `obelisk.executionIdGenerate()`                   | `executionId` (string)                                                                                                               | Generate a unique execution ID                         |
 | `obelisk.executionIdCurrent()`                    | `executionId` (string)                                                                                                               | Get the execution ID of the current webhook invocation |
 | `obelisk.schedule(execId, ffqn, argArray)`        | —                                                                                                                                    | Schedule a top-level execution immediately             |
 | `obelisk.schedule(execId, ffqn, argArray, delay)` | —                                                                                                                                    | Schedule at a delay (e.g. `{ seconds: 60 }`)           |
 | `obelisk.getStatus(execId)`                       | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"cancelling"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
-| `obelisk.get(execId)`                             | ok value (throws err value)                                                                                                          | Blocking: waits until execution finishes               |
-| `obelisk.tryGet(execId)`                          | ok value (throws err value), `undefined` if not finished yet                                                                         | Non-blocking result fetch                              |
+| `obelisk.get(execId)`                             | ok value (throws `obelisk.ChildExecutionError` on failure)                                                                           | Blocking: waits until execution finishes               |
+| `obelisk.tryGet(execId)`                          | ok value (throws `obelisk.ChildExecutionError` on failure), `undefined` if not finished yet                                          | Non-blocking result fetch                              |
 
 ## Available globals
 

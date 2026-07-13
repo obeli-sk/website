@@ -90,8 +90,10 @@ FFQN derived from the target: `obelisk:schedule/<name>.<target-function>-cron`.
 obelisk execution submit --follow myapp:tasks/jobs@1.0.0.daily-cleanup '["archive", 30]'
 ```
 
-You can also list all executions for a cron function:
+You can also list all executions for a cron function after exporting `OBELISK_API_TOKEN` as
+described in {{ doc_link(title="Authentication", path="authentication.md") }}:
 
 ```sh
-curl "127.1:5005/v1/executions?ffqn_prefix=obelisk:schedule/" -H accept:application/json
+curl "127.1:5005/v1/executions?ffqn_prefix=obelisk:schedule/" -H accept:application/json \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```

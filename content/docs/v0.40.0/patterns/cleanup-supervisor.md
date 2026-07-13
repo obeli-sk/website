@@ -138,18 +138,24 @@ export default function supervisor(input) {
   try {
     const childId = runChildSubmit(race, resourceId, input);
     const teardownId = teardownSignalSubmit(race);
-    const completed = race.joinNext();
 
-    if (completed.id === teardownId) {
-      tornDown = true;
-    } else if (completed.id === childId) {
-      try {
-        result = obelisk.getResult(childId);
-      } catch (error) {
-        childError = error;
+    // `joinNext` returns the winner's ok value directly, or throws
+    // `obelisk.ChildExecutionError` if it failed or was cancelled.
+    // `race.lastId` tells us which member of the race completed.
+    try {
+      const value = race.joinNext();
+      if (race.lastId === childId) {
+        result = value;
+      } else {
+        childError = `Unexpected child completion: ${race.lastId}`;
       }
-    } else {
-      childError = `Unexpected child completion: ${completed.id}`;
+    } catch (error) {
+      if (!(error instanceof obelisk.ChildExecutionError)) throw error;
+      if (race.lastId === teardownId && error.cancelled) {
+        tornDown = true; // operator cancelled the teardown stub
+      } else {
+        childError = error; // the child itself failed
+      }
     }
   } finally {
     // Cleanup precedes join-set close so teardown is not delayed by non-cancellable children.

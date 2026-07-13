@@ -89,10 +89,13 @@ forward_stderr = "db"      # One of "none"|"stdout"|"stderr"|"db". Default: "db"
 ## Persistent Log Storage
 
 Both `obelisk:log` messages and forwarded `stdout`/`stderr` streams can be stored in the database.
-Stored logs can be retrieved via the {{ doc_link(title="WebAPI", path="programmatic-access.md") }}:
+Stored logs can be retrieved via the {{ doc_link(title="WebAPI", path="programmatic-access.md") }}.
+Export `OBELISK_API_TOKEN` as described in
+{{ doc_link(title="Authentication", path="authentication.md") }} first:
 
 ```sh
-curl 127.1:5005/v1/executions/<EXECUTION_ID>/logs -H 'Accept: text/plain'
+curl 127.1:5005/v1/executions/<EXECUTION_ID>/logs -H 'Accept: text/plain' \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 Logs are also visible in the Web UI on the execution detail page.

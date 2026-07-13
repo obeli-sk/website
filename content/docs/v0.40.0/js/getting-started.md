@@ -224,10 +224,23 @@ parallel workflow completed: 123456789
 
 ## 5. Inspect Executions
 
+The API port (`5005`) requires a bearer token. On startup Obelisk prints an ephemeral token to the
+console; export it so the `curl` examples below can authenticate (the webhook port `9090` above
+needs no token):
+
+```bash
+export OBELISK_API_TOKEN=<token printed on server startup>
+```
+
+For a throwaway tutorial you can instead start the server with `--allow-unauthenticated-api` and
+drop the `Authorization` header. See
+{{ doc_link(title="Authentication", path="authentication.md") }}.
+
 List top-level executions — one per webhook call:
 
 ```bash
-curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain'
+curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain' \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ```
@@ -238,7 +251,8 @@ Fetch logs for a webhook execution (includes its `console.log` output):
 
 ```bash
 EXECUTION_ID=E_01KN209P2PC...
-curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: text/plain'
+curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: text/plain' \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 To see the child workflow and activities spawned by a webhook, use `show_derived` and filter by FFQN
@@ -246,7 +260,7 @@ prefix:
 
 ```bash
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial:demo" \
-  -H 'Accept: text/plain'
+  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ```

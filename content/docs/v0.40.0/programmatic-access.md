@@ -23,6 +23,27 @@ This document describes the REST-like API for managing components, deployments, 
 
 All endpoints are prefixed with `/v1`.
 
+### Authentication
+
+The API port denies any request without a valid `Authorization: Bearer <token>` header, returning
+HTTP `401` (gRPC `UNAUTHENTICATED`). The same requirement applies to the web API, gRPC, and
+gRPC-web.
+
+Present an accepted token on every request:
+
+```sh
+export OBELISK_API_TOKEN=<accepted-token>
+export OBELISK_API_AUTH="Authorization: Bearer $OBELISK_API_TOKEN"
+curl -H "$OBELISK_API_AUTH" http://127.0.0.1:5005/v1/components
+```
+
+An ephemeral startup token is printed to the console on every server start; persistent tokens are
+configured as SHA-256 hashes. See {{ doc_link(title="Authentication", path="authentication.md") }}
+for how to generate and configure tokens. The `--allow-unauthenticated-api` server flag restores the
+old open behavior for development or recovery.
+
+All `curl` examples below use `$OBELISK_API_AUTH` defined above.
+
 ## Content Negotiation
 
 The API supports content negotiation via the `Accept` header.
@@ -62,7 +83,7 @@ Lists all registered components in the system.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/components?exports=true&imports=false" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/components?exports=true&imports=false" -H accept:application/json
 ```
 
 ```json
@@ -94,7 +115,7 @@ curl "127.1:5005/v1/components?exports=true&imports=false" -H accept:application
 Filtering by FFQN prefix with `text/plain` output:
 
 ```sh
-curl "127.1:5005/v1/components?exports=true&ffqn=testing:fibo/fibo.fibo" -H accept:text/plain
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/components?exports=true&ffqn=testing:fibo/fibo.fibo" -H accept:text/plain
 ```
 
 ```
@@ -128,7 +149,7 @@ Retrieves the WebAssembly Interface Type (WIT) definition for a specific compone
 #### Example request
 
 ```sh
-curl '127.1:5005/v1/components/sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0/wit'
+curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/components/sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0/wit'
 ```
 
 ```
@@ -178,7 +199,7 @@ Lists executions with support for filtering and pagination.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions?length=10&direction=older" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions?length=10&direction=older" -H accept:application/json
 ```
 
 ```json
@@ -222,7 +243,7 @@ Submits a new execution. The system will automatically generate an Execution ID.
 #### Example request
 
 ```sh
-curl '127.1:5005/v1/executions' -H content-type:application/json -H accept:application/json -X POST -d \
+curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/executions' -H content-type:application/json -H accept:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 
@@ -233,7 +254,7 @@ curl '127.1:5005/v1/executions' -H content-type:application/json -H accept:appli
 Getting the result with `follow` set to `true`:
 
 ```sh
-curl '127.1:5005/v1/executions?follow=true' -H content-type:application/json -X POST -d \
+curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/executions?follow=true' -H content-type:application/json -X POST -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 
@@ -259,8 +280,8 @@ with the same parameters, it returns `200 OK`.
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
-curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
+EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 
@@ -271,7 +292,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json
 Getting the result with `follow` set to `true`:
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}?follow=true" -H content-type:application/json -H accept:application/json -X PUT -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}?follow=true" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 
@@ -298,7 +319,7 @@ Retrieves the result of an execution.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}"
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}"
 ```
 
 ```json
@@ -315,7 +336,7 @@ this returns the internal state rather than the function return value.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json
 ```
 
 ```json
@@ -353,7 +374,7 @@ Retrieves the history of events for an execution.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json
 ```
 
 ```json
@@ -412,11 +433,11 @@ Retrieves responses associated with an execution (used for long-running interact
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
-curl "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
+EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo-workflow/workflow.fiboa", "params": [5,5] }'
 
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/json
 ```
 
 ```json
@@ -470,17 +491,17 @@ or
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
 # Submit a workflow that submits a stub activity
-curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:stub-workflow/workflow.submit-await", "params": ["test"] }'
 # Create the expected child execution id based on code or execution log
 CHILD_EXECUTION_ID="${EXECUTION_ID}.o:1-foo_1"
 # Optionally verify the id:
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $CHILD_EXECUTION_ID
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $CHILD_EXECUTION_ID
 # returns a row containing: HistoryEvent(JoinSetRequest(ChildExecutionRequest(E_01KDNB650P06H69YR1FD973MA0.o:1-foo_1, testing:stub-activity/activity.foo, params: ["test"])))
 
-curl "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:application/json -X PUT -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:application/json -X PUT -d \
 '{"ok": "some return value"}'
 ```
 
@@ -512,18 +533,18 @@ exec.locking_strategy = "by_component_digest"
 
 ```sh
 obelisk server run --deployment obelisk.toml # start with components downloaded from Docker Hub.
-EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
 # Submit a workflow
-curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep-workflow/workflow.sleep-host-activity", "params": [{"seconds":10}] }'
 
 # Shutdown the server before the execution finishes.
 obelisk server run --deployment obelisk-local.toml # Start with components built locally.
 # Find the old and new sha256 digest
-OLD=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/status"  -H accept:application/json | jq .component_digest)
-NEW=$(curl '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'accept:application/json' | jq .[0].component_id.input_digest)
+OLD=$(curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/status"  -H accept:application/json | jq .component_digest)
+NEW=$(curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'accept:application/json' | jq .[0].component_id.input_digest)
 
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" -H content-type:application/json -X PUT -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" -H content-type:application/json -X PUT -d \
 '{"old":'$OLD', "new": '$NEW' }'
 ```
 
@@ -554,8 +575,8 @@ API.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs" -H accept:application/json
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_derived=true" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/logs" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_derived=true" -H accept:application/json
 ```
 
 ---
@@ -574,7 +595,7 @@ source symbol information.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/json
 ```
 
 ```json
@@ -588,7 +609,9 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace" -H accept:application/
       {
         "module": "my_workflow",
         "func_name": "panic_handler",
-        "symbols": [{ "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }]
+        "symbols": [
+          { "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }
+        ]
       }
     ]
   }
@@ -617,7 +640,7 @@ have been compiled with embedded DWARF debug info.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
 ```
 
 ---
@@ -631,7 +654,7 @@ Cancel a running activity if it must be interrupted immediately.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/pause" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/pause" -X PUT -H accept:application/json
 ```
 
 ```json
@@ -647,7 +670,7 @@ Resumes a previously paused execution.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/unpause" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/unpause" -X PUT -H accept:application/json
 ```
 
 ```json
@@ -669,7 +692,7 @@ without actually applying any writes:
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json
 ```
 
 ```json
@@ -711,14 +734,14 @@ The `captured_writes` array should contain the writes returned by a previous `re
 
 ```sh
 # 1. Create a paused execution
-curl "127.1:5005/v1/executions" -H content-type:application/json -X POST -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions" -H content-type:application/json -X POST -d \
 '{ "ffqn":"my:app/workflow.run", "params": [], "paused": true }'
 
 # 2. Replay to preview the next step
-REPLAY=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json)
+REPLAY=$(curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/replay" -X PUT -H accept:application/json)
 
 # 3. Advance to apply the captured writes
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/advance" -X PUT \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/advance" -X PUT \
   -H content-type:application/json -H accept:application/json \
   -d "{\"captured_writes\": $(echo $REPLAY | jq .captured_writes)}"
 ```
@@ -734,7 +757,7 @@ Pauses a pending delay request, preventing it from firing until unpaused.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/delays/${DELAY_ID}/pause" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/delays/${DELAY_ID}/pause" -X PUT -H accept:application/json
 ```
 
 ---
@@ -746,7 +769,7 @@ Resumes a previously paused delay request.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/delays/${DELAY_ID}/unpause" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/delays/${DELAY_ID}/unpause" -X PUT -H accept:application/json
 ```
 
 ---
@@ -760,7 +783,7 @@ Lists all available functions across all components.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/functions" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/functions" -H accept:application/json
 ```
 
 ---
@@ -778,7 +801,7 @@ Retrieves the WIT definition for a specific function.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/functions/wit?ffqn=testing:fibo/fibo.fibo"
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/functions/wit?ffqn=testing:fibo/fibo.fibo"
 ```
 
 ---
@@ -792,7 +815,7 @@ Retrieves the current deployment ID.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/deployment-id" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployment-id" -H accept:application/json
 ```
 
 ---
@@ -814,7 +837,7 @@ Lists deployment states.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/deployments" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments" -H accept:application/json
 ```
 
 ```json
@@ -858,7 +881,7 @@ Returns the full details of a specific deployment, including its stored `deploym
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599" -H accept:application/json
 ```
 
 ```json
@@ -882,17 +905,20 @@ deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activa
 
 **Request Body (JSON):**
 
-| Field                          | Type    | Description                                                      |
-| :----------------------------- | :------ | :--------------------------------------------------------------- |
-| `deployment_toml`              | String  | Verbatim deployment manifest                                     |
-| `description`                  | String  | Optional human-readable description                              |
-| `allow_missing_runtime_config` | Boolean | Tolerate missing environment variables / secrets (`false`)       |
-| `deployment_id`                | String  | Optional client-supplied deployment ID for idempotent submission |
+| Field                              | Type    | Description                                                                                                                                                     |
+| :--------------------------------- | :------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deployment_toml`                  | String  | Verbatim deployment manifest                                                                                                                                    |
+| `description`                      | String  | Optional human-readable description                                                                                                                             |
+| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server, such as missing environment variables / secrets or server capabilities like exec activities (`false`) |
+| `deployment_id`                    | String  | Optional client-supplied deployment ID for idempotent submission                                                                                                |
+
+The field was renamed from `allow_missing_runtime_config`; the old name is still accepted as an
+alias so 0.39.x HTTP clients keep working for now.
 
 `POST /v1/deployments` also accepts `multipart/form-data`. Use text fields for `deployment_toml`,
-`description`, `allow_missing_runtime_config`, and `deployment_id`. Every other part is treated as a
-deployment-owned file blob; its `filename` is the deployment-relative path and the form-field name
-is either the claimed `sha256:...` digest or `file`.
+`description`, `allow_unavailable_runtime_config`, and `deployment_id`. Every other part is treated
+as a deployment-owned file blob; its `filename` is the deployment-relative path and the form-field
+name is either the claimed `sha256:...` digest or `file`.
 
 **Responses:**
 
@@ -904,14 +930,14 @@ is either the claimed `sha256:...` digest or `file`.
 #### Example request
 
 ```sh
-curl "127.1:5005/v1/deployments" -H content-type:application/json -X POST -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments" -H content-type:application/json -X POST -d \
   "$(jq -Rs '{deployment_toml: ., description: "production"}' deployment.toml)"
 ```
 
 Multipart package with a deployment-owned script:
 
 ```sh
-curl "127.1:5005/v1/deployments" -X POST \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments" -X POST \
   -F deployment_toml=@deployment.toml \
   -F 'file=@scripts/run.sh;filename=scripts/run.sh'
 ```
@@ -929,10 +955,10 @@ or enqueue (activate on next restart).
 
 **Request Body (JSON):**
 
-| Field                          | Type    | Description                                                                                                    |
-| :----------------------------- | :------ | :------------------------------------------------------------------------------------------------------------- |
-| `hot_redeploy`                 | Boolean | If `true`, apply immediately without restarting (default: `false`)                                             |
-| `allow_missing_runtime_config` | Boolean | Tolerate missing environment variables / secrets before switching. Hot redeploy always requires strict config. |
+| Field                              | Type    | Description                                                                                                                                                                            |
+| :--------------------------------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hot_redeploy`                     | Boolean | If `true`, apply immediately without restarting (default: `false`)                                                                                                                     |
+| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server before switching (accepts the former `allow_missing_runtime_config` as an alias). Hot redeploy always requires strict config. |
 
 **Responses:**
 
@@ -945,11 +971,11 @@ or enqueue (activate on next restart).
 
 ```sh
 # Enqueue a deployment (activates on next restart)
-curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
   -H content-type:application/json -X PUT -d '{"hot_redeploy": false}'
 
 # Hot-redeploy immediately
-curl "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
   -H content-type:application/json -X PUT -d '{"hot_redeploy": true}'
 ```
 
@@ -975,11 +1001,11 @@ for operator cleanup of workflows stuck on long-lived stubs or stranded by a fai
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
-curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
+EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep/sleep.sleep", "params": [{"seconds":100}] }'
 
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/cancel" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/cancel" -X PUT -H accept:application/json
 ```
 
 ```json
@@ -1000,16 +1026,16 @@ Cancels a request for
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl 127.1:5005/v1/execution-id)
-curl "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
+EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep-workflow/workflow.sleep-host-activity", "params": [{"seconds":100}] }'
 # Create the expected delay id based on code or execution log
 DELAY_ID="Delay_${EXECUTION_ID#E_}.o:1-sleep_1"
 # Optionally verify the id:
-curl "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $DELAY_ID
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $DELAY_ID
 # returns a row containing: HistoryEvent(JoinSetRequest(DelayRequest(Delay_01KDNCA38TYGKHF7GKH3XQJH02.o:1-sleep_1, expires_at: `2025-12-29 15:43:39.751469133 UTC`, schedule_at: `In(150s)`)))
 
-curl "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json
 ```
 
 ```json

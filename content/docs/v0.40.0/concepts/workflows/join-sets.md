@@ -52,7 +52,7 @@ See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id")
 ## API
 
 The API for join sets is as defined in
-{{ github(title="`obelisk_workflow@5.1.0.wit`", path="wit/obelisk_workflow%405.1.0/obelisk_workflow%405.1.0.wit") }}.
+{{ github(title="`obelisk_workflow@6.0.0.wit`", path="wit/obelisk_workflow%406.0.0/obelisk_workflow%406.0.0.wit") }}.
 
 To create a join set in Rust, use
 
@@ -119,13 +119,12 @@ fn star_added_parallel(login: String, repo: String) -> Result<(), String> {
         // 2. Submit the two child workflows asynchronously.
         account_info_submit(&join_set_info, &login);
         get_settings_json_submit(&join_set_settings);
-        // 3. Await the results.
+        // 3. Await the results. `-await-next` returns the child result directly;
+        //    read `join_set.last_id()` if you also need the execution id.
         let info = account_info_await_next(&join_set_info)
-            .map_err(err_to_string)?
-            .1?;
+            .map_err(err_to_string)??;
         let settings_json = get_settings_json_await_next(&join_set_settings)
-            .map_err(err_to_string)?
-            .1?;
+            .map_err(err_to_string)??;
         // Generate the user's description - a blocking call.
         let description = llm::respond(&info, &settings_json)?;
         // Persist the generated description - a blocking call.
@@ -159,7 +158,7 @@ for _ in 0..9 {
 }
 // Await the responses as they arrive.
 for _ in 0..9 {
-    let (_execution_id, res) = account_info_await_next(&join_set).unwrap();
+    let res = account_info_await_next(&join_set).unwrap(); // res: Result<AccountInfo, E>
 }
 ```
 
@@ -168,8 +167,10 @@ for _ in 0..9 {
 When a join set contains child executions of multiple functions, or delay requests, it is called
 heterogenous. It is generally not safe to call `-await-next` extension as the resolved response
 might not belong to the awaited function. Therefore one must use the standalone `join-next` workflow
-{{ doc_link(title="support function", path="concepts/runtime-support.md") }} together with `-get`
-extension function based on the returned `response-id`.
+{{ doc_link(title="support function", path="concepts/runtime-support.md") }}, which returns the
+completed value directly. Read `join_set.last_id()` immediately afterwards to learn which response
+was processed (an `execution-id` for a child, a `delay-id` for a delay), then use the `-get`
+extension function to type the child value.
 
 ```rust
 let join_set = join_set_create();
@@ -177,12 +178,12 @@ let join_set = join_set_create();
 let execution_id_account = account_info_submit(&join_set, &login);
 let execution_id_settings = get_settings_json_submit(&join_set);
 let _delay_id = submit_delay(&join_set, ScheduleAt::In(Duration::Seconds(10)));
-// Use `join-next` to get the first response.
+// Use `join-next` to block for the first response; the value is returned directly.
 match join_next(&join_set) {
-    Ok((ResponseId::DelayId(_), _)) => println!("delay won"),
-    Ok((ResponseId::ExecutionId(execution_id), _)) => {
-        if execution_id.id == execution_id_account.id {
-            // use `-get` to obtain the response
+    Ok(_result) => match join_set.last_id() {
+        Some(ResponseId::DelayId(_)) => println!("delay won"),
+        Some(ResponseId::ExecutionId(execution_id)) if execution_id.id == execution_id_account.id => {
+            // use `-get` to obtain the typed response
             match account_info_get(execution_id) {
                 Ok(resp) => println!("account-info response won: {resp:?}"),
                 Err(GetExtensionError::FunctionMismatch(_)) => {
@@ -193,7 +194,8 @@ match join_next(&join_set) {
                 }
             }
         }
-    }
+        other => println!("settings or unexpected response won: {other:?}"),
+    },
     Err(JoinNextError::AllProcessed) => unreachable!("submitted 3 child requests"),
 }
 ```
@@ -205,7 +207,9 @@ The `join-next-try` function is a non-blocking variant of `join-next`. It return
 
 ```rust
 match join_next_try(&join_set) {
-    Ok((response_id, result)) => { /* process response */ },
+    Ok(result) => {
+        // `result` is the completed value; `join_set.last_id()` identifies the response.
+    }
     Err(JoinNextTryError::Pending) => { /* no response available yet, do other work */ },
     Err(JoinNextTryError::AllProcessed) => { /* all done */ },
 }
@@ -245,7 +249,7 @@ fn backfill_parallel(repo: String) -> Result<(), String> {
     {
         let mut join_set_batch = Vec::new();
         for login in &resp.logins {
-            let join_set = join_set_create(login)
+            let join_set = join_set_create_named(login)
                     .expect("github login does not contain illegal characters");
             // `-submit`-ting child executions without `-await`-ing results
             star_added_parallel_submit(

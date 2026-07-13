@@ -85,11 +85,11 @@ functions in a separate WIT package for each exported function:
 package stargazers:llm-obelisk-ext;
 
 interface llm {
-  use obelisk:types/execution@4.2.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
+  use obelisk:types/execution@5.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
 
   respond-submit: func(join-set: borrow<join-set>, user-prompt: string, settings-json: string) -> execution-id;
 
-  respond-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<string, string>>, await-next-extension-error>;
+  respond-await-next: func(join-set: borrow<join-set>) -> result<result<string, string>, await-next-extension-error>;
 
   respond-get: func(execution-id: execution-id) -> result<result<string, string>, get-extension-error>;
 
@@ -111,13 +111,16 @@ it simply submits the request.
 ## Awaiting next result with `-await-next`
 
 This function is used to block the workflow, waiting for the next result from a given `join-set`. It
-takes the `join-set` as input and returns a `result`. The result contains a tuple with two possible
-outcomes which must be handled:
+takes the `join-set` as input and returns the completed child's return value **directly**, wrapped
+in an outer `result` whose error arm is `await-next-extension-error`:
 
-1.  The workflow function has finished successfully. In this case, the tuple will hold the
-    `execution-id` that identifies the finished execution and the original return value.
+1.  On success, the outer result is `ok` and holds the original function's return value (itself a
+    `result<string, string>` in this example).
 2.  There was an error during the child execution of type `await-next-extension-error` as defined in
     {{ doc_link(title="`obelisk:types`", path="concepts/runtime-support.md#available-support-types") }}.
+
+The finished execution's ID is no longer part of the return value. Read it from `join-set.last-id()`
+immediately after `-await-next` when you need it.
 
 By repeatedly calling `yourfunction-await-next` after submitting multiple executions on a
 {{ doc_link(title="homogenous join set", path="concepts/workflows/join-sets.md#homogenous-join-sets") }},
@@ -183,8 +186,8 @@ following interface:
 package stargazers:llm-obelisk-schedule;
 
 interface llm {
-  use obelisk:types/execution@4.2.0.{execution-id};
-  use obelisk:types/time@4.2.0.{schedule-at};
+  use obelisk:types/execution@5.0.0.{execution-id};
+  use obelisk:types/time@5.0.0.{schedule-at};
 
   respond-schedule: func(schedule-at: schedule-at, user-prompt: string, settings-json: string) -> execution-id;
 }
@@ -220,7 +223,7 @@ following:
 package stargazers:llm-obelisk-stub;
 
 interface llm {
-  use obelisk:types/execution@4.2.0.{execution-id, stub-error};
+  use obelisk:types/execution@5.0.0.{execution-id, stub-error};
 
   respond-stub: func(execution-id: execution-id, execution-result: result<string, string>) -> result<_, stub-error>;
 }

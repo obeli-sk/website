@@ -58,7 +58,7 @@ world any {
     // Import the GitHub account activity.
     import stargazers:github/account;
     // Import the Obelisk workflow support functions.
-    import obelisk:workflow/workflow-support@5.1.0;
+    import obelisk:workflow/workflow-support@6.0.0;
 }
 ```
 

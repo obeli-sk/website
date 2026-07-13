@@ -36,8 +36,10 @@ it when scheduling or calling the workflow.
 
 The recommended way to call child executions is via ES module imports. Import the function by its
 WIT interface path, and call it directly — Obelisk resolves the import to a `call` that submits the
-child execution, blocks until it completes, and returns the ok payload (or throws the err payload if
-it permanently fails).
+child execution, blocks until it completes, and returns the ok payload. If the child permanently
+fails it throws `obelisk.ChildExecutionError` (see
+{{ doc_link(title="Handling child failures", path="js/js-workflows.md#handling-child-failures-with-obelisk-childexecutionerror") }});
+the decoded err payload is on `e.value`.
 
 ```javascript
 // myapp:demo/workflow.serial: func() -> result<string, string>
@@ -98,8 +100,8 @@ child executions concurrently and await their results individually.
 
 For join sets, use the extension imports with the `-obelisk-ext` suffix. These provide typed
 `submit` and `awaitNext` functions for each activity. `awaitNext` returns the ok value directly (or
-throws the err value), matching the semantics of direct calls. The execution ID of the child that
-completed is available via `js.lastId`:
+throws `obelisk.ChildExecutionError` on failure), matching the semantics of direct calls. The
+execution ID of the child that completed is available via `js.lastId`:
 
 ```javascript
 // myapp:demo/workflow.parallel: func() -> result<string, string>
@@ -127,16 +129,89 @@ runtime and cannot be imported statically:
 
 **Join set API:**
 
-| Call                               | Returns                                                                                          | Description                                                                                                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `let js = obelisk.createJoinSet()` | join set object                                                                                  | Create a new join set (optionally `{ name: "…" }`)                                                                                                               |
-| `js.submit(ffqn, argArray)`        | childExecId (string)                                                                             | Submit a child execution without blocking                                                                                                                        |
-| `js.submitDelay(duration)`         | `delayId` (string)                                                                               | Submit a timer (e.g. `{ milliseconds: 500 }`). Duration key is one of: milliseconds/seconds/minutes/hours/days                                                   |
-| `js.joinNext()`                    | `{ ok: bool, id: childExecId / delayId, type: "execution"/"delay" }`                             | Block until the next result in this join set                                                                                                                     |
-| `js.joinNextTry()`                 | ok value (throws err value), `undefined` if pending, throws `JoinSetExhaustedError` if exhausted | Non-blocking: attempt to get next result without waiting                                                                                                         |
-| `js.lastId`                        | string                                                                                           | ID (execution or delay) of the last child completed via `joinNext*` or `awaitNext`                                                                               |
-| `js.close()`                       | `undefined`                                                                                      | Cancel activities, delays, and `-cancellable` child workflows; await non-cancellable child workflows. Does not report close failures; repeated closes are no-ops |
-| `obelisk.getResult(childExecId)`   | ok value (throws err value)                                                                      | Fetch a result after child execution was submitted and consumed with `joinNext*`                                                                                 |
+| Call                               | Returns                                                                        | Description                                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `let js = obelisk.createJoinSet()` | join set object                                                                | Create a new join set (optionally `{ name: "…" }`)                                                                                                               |
+| `js.submit(ffqn, argArray)`        | childExecId (string)                                                           | Submit a child execution without blocking                                                                                                                        |
+| `js.submitDelay(duration)`         | `delayId` (string)                                                             | Submit a timer (e.g. `{ milliseconds: 500 }`). Duration key is one of: milliseconds/seconds/minutes/hours/days                                                   |
+| `js.joinNext()`                    | ok value directly; `null` for a completed delay (throws on failure, see below) | Block until the next result in this join set                                                                                                                     |
+| `js.joinNextTry()`                 | same as `joinNext()`, but returns `undefined` while requests are still pending | Non-blocking: attempt to get next result without waiting                                                                                                         |
+| `js.lastId`                        | string                                                                         | ID (execution or delay) of the last child completed via `joinNext*` or `awaitNext`                                                                               |
+| `js.close()`                       | `undefined`                                                                    | Cancel activities, delays, and `-cancellable` child workflows; await non-cancellable child workflows. Does not report close failures; repeated closes are no-ops |
+| `obelisk.getResult(childExecId)`   | ok value (throws on failure, see below)                                        | Fetch a result of a child already consumed with `joinNext*` / `awaitNext`                                                                                        |
+
+### Blocking join with `joinNext`
+
+`js.joinNext()` blocks until a join-set response is available, then returns the completed value
+**directly** (there is no winner object):
+
+- a completed child execution returns the child's decoded ok value;
+- a completed delay returns `null`;
+- a child err arm or platform failure throws `obelisk.ChildExecutionError` (see below);
+- a cancelled delay throws `obelisk.ChildExecutionError` with `cancelled === true`;
+- an exhausted join set (all requests already processed) throws `obelisk.JoinSetExhaustedError`.
+
+`js.lastId` is set to the consumed execution ID or delay ID before `joinNext` returns or throws, so
+compare it against the IDs you submitted to tell which response you got:
+
+```javascript
+const js = obelisk.createJoinSet();
+const execId = js.submit("myapp:demo/activity.step", [payload]);
+const delayId = js.submitDelay({ seconds: 30 });
+
+const result = js.joinNext();
+if (result === null && js.lastId === delayId) {
+  return "timed out";
+}
+if (js.lastId !== execId) {
+  throw `unexpected completed response: ${js.lastId}`;
+}
+return result;
+```
+
+`js.joinNextTry()` has the same completed-response behavior but returns `undefined` (instead of
+blocking) while requests are still pending and no response is ready.
+
+> **Migration note:** earlier releases returned a winner object and required a follow-up
+> `obelisk.getResult(response.id)`. Replace
+> `const r = js.joinNext(); const v = obelisk.getResult(r.id);` with
+> `const v = js.joinNext(); const completedId = js.lastId;`.
+
+### Handling child failures with `obelisk.ChildExecutionError`
+
+Any awaited child failure from `joinNext`, `joinNextTry`, generated `awaitNext` proxies,
+`obelisk.call`, or `obelisk.getResult` throws `obelisk.ChildExecutionError`. It carries:
+
+- `e.value`: the decoded business err payload; `undefined` for a unit err or a platform failure;
+- `e.childId`: the completed child execution ID, when known;
+- `e.cancelled`: `true` for a cancelled child or cancelled delay, otherwise `false`;
+- `e.failureKind`: the platform failure kind string (`timed-out`, `nondeterminism-detected`,
+  `out-of-fuel`, `cancelled`, `uncategorized`) or `undefined` for a business error;
+- `e.message`: a human-readable diagnostic; do not parse it.
+
+```javascript
+try {
+  const value = stepAwaitNext(js);
+  // handle success
+} catch (e) {
+  if (!(e instanceof obelisk.ChildExecutionError)) throw e; // host/setup error
+  if (e.failureKind !== undefined) {
+    // platform failure (timeout, cancellation, nondeterminism, …)
+  } else {
+    // business err payload in e.value
+  }
+}
+```
+
+Rethrowing a `ChildExecutionError` transparently reuses the original err payload as this workflow's
+err result (metadata like `failureKind` is not preserved):
+
+```javascript
+} catch (e) {
+  if (e instanceof obelisk.ChildExecutionError) throw e; // same payload as `throw e.value`
+  throw e;
+}
+```
 
 ## Random values and time
 
@@ -174,7 +249,9 @@ For FFQNs constructed at runtime, use `obelisk.schedule` directly:
 
 ```javascript
 const execId = obelisk.executionIdGenerate();
-obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
+obelisk.schedule(execId, "myapp:demo/activity.send-email", [
+  "user@example.com",
+]);
 // optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
 ```
 
@@ -185,7 +262,10 @@ the result is supplied externally (via the CLI, Web UI, or from workflow code). 
 imports to submit and await the stub activity, and the `-obelisk-stub` import to inject the result:
 
 ```javascript
-import { approveSubmit, approveAwaitNext } from "myapp:stubs-obelisk-ext/approval";
+import {
+  approveSubmit,
+  approveAwaitNext,
+} from "myapp:stubs-obelisk-ext/approval";
 import { approveStub } from "myapp:stubs-obelisk-stub/approval";
 
 const js = obelisk.createJoinSet();

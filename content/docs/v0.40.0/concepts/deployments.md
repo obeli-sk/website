@@ -69,10 +69,12 @@ Hot redeploy is triggered via:
 obelisk deployment apply <PATH|ID>           # CLI: submit + hot-redeploy
 ```
 
-or via the Web API:
+or via the Web API, after exporting `OBELISK_API_TOKEN` as described in
+{{ doc_link(title="Authentication", path="authentication.md") }}:
 
 ```sh
 curl "127.1:5005/v1/deployments/Dep_.../switch" \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN" \
   -H content-type:application/json -X PUT -d '{"hot_redeploy": true}'
 ```
 
@@ -86,10 +88,11 @@ If a workflow uses `by_component_digest`, existing in-flight executions continue
 old component digest. To migrate one to the new version, use the upgrade API:
 
 ```sh
-OLD=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json | jq .component_digest)
-NEW=$(curl '127.1:5005/v1/components?name=my_workflow' -H accept:application/json | jq .[0].component_id.input_digest)
+OLD=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json -H "Authorization: Bearer $OBELISK_API_TOKEN" | jq .component_digest)
+NEW=$(curl '127.1:5005/v1/components?name=my_workflow' -H accept:application/json -H "Authorization: Bearer $OBELISK_API_TOKEN" | jq .[0].component_id.input_digest)
 
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN" \
   -H content-type:application/json -X PUT \
   -d "{\"old\": $OLD, \"new\": $NEW}"
 ```

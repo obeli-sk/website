@@ -24,7 +24,7 @@ Used by other Obelisk WIT interfaces as well as the generated
 {{ doc_link(title="extension", path="concepts/extensions.md") }}, contains `time` and `execution`
 interfaces with types like `execution-id` and others.
 
-### {{ github(title="`obelisk:types/types@4.2.0`", path="wit/obelisk_types%404.2.0/types.wit") }}
+### {{ github(title="`obelisk:types/types@5.0.0`", path="wit/obelisk_types%405.0.0/obelisk_types%405.0.0.wit") }}
 
 ## Available Support Functions
 
@@ -49,7 +49,7 @@ log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
 
-### {{ github(title="`obelisk:workflow/workflow-support@5.1.0`", path="wit/obelisk_workflow%405.1.0/obelisk_workflow%405.1.0.wit") }}
+### {{ github(title="`obelisk:workflow/workflow-support@6.0.0`", path="wit/obelisk_workflow%406.0.0/obelisk_workflow%406.0.0.wit") }}
 
 Available to:
 
@@ -72,11 +72,12 @@ activity to obtain e.g. a random number. Other functions are related to
   alphanumeric string (containing uppercase and lowercase letters, and digits) with a length between
   min-length (inclusive) and max-length-exclusive (exclusive).
 
-- `sleep: func(schedule-at: schedule-at) -> result<datetime>`:
+- `sleep: func(schedule-at: schedule-at, name: option<string>) -> result<datetime>`:
   {{ doc_link(title="Persistently pauses", path="concepts/workflows/persistent-sleep.md") }} the
   workflow's execution for the specified duration. The sleep duration can be specified in
-  milliseconds, seconds, minutes, hours, or days. The successful returned value represents the time
-  when the durable sleep expires, error indicates the delay was cancelled.
+  milliseconds, seconds, minutes, hours, or days. The optional `name` names the one-off join set the
+  delay is submitted to. The successful returned value represents the time when the durable sleep
+  expires, error indicates the delay was cancelled.
 
 - `join-set-create: func() -> join-set`: Creates a new
   {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }} with an automatically
@@ -93,26 +94,48 @@ activity to obtain e.g. a random number. Other functions are related to
 - `submit-delay: func(join-set: borrow<join-set>, timeout: schedule-at) -> delay-id`: Submit a delay
   request to the join set. The delay can be later polled using `join-next`.
 
-- `join-next: func(join-set: borrow<join-set>) -> result<tuple<response-id, result>, join-next-error>`:
-  Block the workflow execution until next response associated with the join set arrives. The
-  response is marked as processed. Child execution result can be obtained using `-get` extension
-  function using the returned execution ID. Return `join-next-error::all-processed` if the join set
-  has all requests matched with responses already processed.
+- `join-next: func(join-set: borrow<join-set>) -> result<result<option<string>, option<string>>, join-next-error>`:
+  Block the workflow execution until the next response associated with the join set arrives. The
+  response is marked as processed and its value is returned **directly** as the **inner** result.
+  That inner result is the child's JSON-encoded ok/err response: the `option<string>` holds the
+  JSON-encoded value, or is `none` when that arm has no payload. So `ok(some(json))` / `ok(none)` is
+  an ok result (`ok(none)` also for an expired delay), and `err(some(json))` / `err(none)` is an err
+  result (`err(none)` also for a cancelled delay). Read `join-set.last-id` for the id of the
+  processed response and `get-execution-failure-kind` for a child's platform failure kind. The
+  **outer** result returns `join-next-error::all-processed` if the join set has all requests matched
+  with responses already processed.
 
-- `join-next-try: func(join-set: borrow<join-set>) -> result<tuple<response-id, result>, join-next-try-error>`:
-  Non-blocking variant of `join-next`. Attempts to process the next response without blocking.
-  Return `join-next-try-error::pending` if no response is available yet but there are pending
-  requests. Return `join-next-try-error::all-processed` if all requests have been matched with
+- `join-next-try: func(join-set: borrow<join-set>) -> result<result<option<string>, option<string>>, join-next-try-error>`:
+  Non-blocking variant of `join-next`. Attempts to process the next response without blocking. On
+  success the **inner** result is the same JSON-encoded ok/err response described above. The outer
+  result returns `join-next-try-error::pending` if no response is available yet but there are
+  pending requests, or `join-next-try-error::all-processed` if all requests have been matched with
   responses already processed.
 
-- `submit-json: func(join-set: borrow<join-set>, function: function, params: string, config: option<submit-config>) -> result<execution-id, submit-json-error>`:
+- `submit-json: func(join-set: borrow<join-set>, function: function, params: string) -> result<execution-id, submit-json-error>`:
   Submit a child execution request with its parameters serialized as a JSON array. This enables
-  dynamic function dispatch without compile-time bindings. The optional `submit-config` record can
-  override activity timeout.
+  dynamic function dispatch without compile-time bindings.
 
 - `get-result-json: func(execution-id: execution-id) -> result<result<option<string>, option<string>>, get-result-json-error>`:
   Obtain a child execution result as JSON after it has been awaited using `-await-next` extension or
   `join-next`.
+
+- `get-execution-failure-kind: func(execution-id: execution-id) -> result<option<execution-failure-kind>, get-result-json-error>`:
+  The platform-level failure kind (`timed-out`, `nondeterminism-detected`, `out-of-fuel`,
+  `cancelled`, or `uncategorized`) of an already-processed child response, or `none` if it finished
+  with an ok or business `err` result. This is additive to the err value, which keeps carrying the
+  failure sentinel.
+
+- `last-direct-call-id: func() -> option<execution-id>`: The execution ID of the last direct call
+  (`call-json`), or `none`. Unlike `last-oneoff-id`, it is never a delay and is not clobbered by an
+  intervening `sleep`. Pair with `get-execution-failure-kind` to resolve the last direct call's
+  failure kind.
+
+- `last-oneoff-id: func() -> option<response-id>`: The `response-id` of the last one-off operation
+  of any kind, including `sleep` (in which case it is a `delay-id`), or `none`.
+
+- `execution-id-current: func() -> execution-id`: The execution ID of the current workflow
+  invocation.
 
 ### Join set resource functions
 
@@ -122,9 +145,14 @@ activity to obtain e.g. a random number. Other functions are related to
   - `g:NAME` in case of a generated join set where `NAME` is generally an auto-incremented index,
   - `n:NAME` in case of a named join
 
-- `submit-delay: func(timeout: schedule-at) -> delay-id`: _Deprecated in 4.1.0, moved to a
-  standalone function in `workflow-support`._ Submit a delay request to the join set.
+- `last-id: func() -> option<response-id>`: The `response-id` of the last processed response of this
+  join set (the one returned by the most recent `join-next` / `-await-next`), or `none` if no
+  response has been processed yet. Must be read immediately after `join-next`, before the next one.
+  An `execution-id` marks a child response; a `delay-id` marks a delay.
 
-- `join-next: func() -> result<tuple<response-id, result>, join-next-error>`: _Deprecated in 4.1.0,
-  moved to a standalone function in `workflow-support`._ Block the workflow execution until next
-  response arrives.
+### Backtrace variants
+
+Native components import the plain `workflow-support` interface, whose functions take **no**
+`backtrace` parameter. The backtrace-carrying variants of the event-persisting functions live in a
+separate `workflow-support-backtrace` interface that only interpreted runtimes (the native JS
+runtime) import; native components never touch it.

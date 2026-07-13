@@ -17,9 +17,11 @@ See {{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#c
 how delay cancellation fits into structured concurrency:
 
 ```rs
-workflow_support::sleep(ScheduleAt::In(SchedulingDuration::Seconds(10)))
+workflow_support::sleep(ScheduleAt::In(SchedulingDuration::Seconds(10)), None)
     .map_err(|()| MyWorkflowError::Cancelled)?;
 ```
+
+The trailing `None` names the one-off join set (a name is optional).
 
 Another way to submit a persistent delay is to use
 {{ doc_link(title="Heterogenous Join Set", path="concepts/workflows/join-sets.md#heterogenous-join-sets") }}
@@ -31,13 +33,15 @@ fn two_delays_in_same_join_set() -> Result<(), ()> {
     let _long = submit_delay(&join_set, ScheduleAt::In(DurationEnum::Seconds(10)));
     let short = submit_delay(&join_set, ScheduleAt::In(DurationEnum::Milliseconds(10)));
     // child executions can be added to this join set using `-submit` extension.
-    // `join_next` returns `result<tuple<response-id, result>, join-next-error>`
-    let (ResponseId::DelayId(first), res) = join_next(&join_set)
-        .expect("submitted two delays, joining first, thus `join-next-error::all-processed` cannot happen")
-    else {
+    // `join_next` returns the completed value directly:
+    // `result<result<option<string>, option<string>>, join-next-error>`.
+    let res = join_next(&join_set)
+        .expect("submitted two delays, joining first, thus `join-next-error::all-processed` cannot happen");
+    assert!(res.is_ok()); // Ok(None) for an expired delay
+    // Read which response was processed from `join_set.last_id()`.
+    let Some(ResponseId::DelayId(first)) = join_set.last_id() else {
         unreachable!("only delays have been submitted");
     };
-    assert!(res.is_ok());
     assert_eq!(short.id, first.id);
     // long delay will be cancelled when the join set is closed.
     Ok(())

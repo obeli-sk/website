@@ -80,9 +80,9 @@ This will generate a directory with the following structure:
 │   └── lib.rs
 └── wit
     ├── deps
-    │   ├── obelisk_types@4.2.0
+    │   ├── obelisk_types@5.0.0
     │   │   └── types.wit
-    │   ├── obelisk_workflow@5.1.0
+    │   ├── obelisk_workflow@6.0.0
     │   │   └── workflow-support.wit
     │   ├── template-fibo_activity
     │   │   └── fibo-activity.wit                   # Imported activity
@@ -221,7 +221,7 @@ Obelisk can generate several helper functions for every exported activity or wor
 package template-fibo:activity-obelisk-ext;
 
 interface fibo-activity-ifc {
-  use obelisk:types/execution@4.2.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
+  use obelisk:types/execution@5.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
 
   fibo-submit: func(join-set: borrow<join-set>, n: u8) -> execution-id;
 
@@ -256,7 +256,7 @@ fn fiboa_concurrent(n: u8, iterations: u32) -> Result<u64, ()> {
     }
     let mut last = 0;
     for _ in 0..iterations {
-        last = fibo_await_next(&join_set).unwrap().1.unwrap();
+        last = fibo_await_next(&join_set).unwrap().unwrap();
     }
     Ok(last)
 }

@@ -312,11 +312,14 @@ Prompt: what-is-42
 Result: 42 is the answer
 ```
 
-List executions to see the full hierarchy:
+List executions to see the full hierarchy. The API port (`5005`) requires a bearer token printed to
+the console on startup; export it first (or start the server with `--allow-unauthenticated-api`).
+See {{ doc_link(title="Authentication", path="authentication.md") }}.
 
 ```bash
+export OBELISK_API_TOKEN=<token printed on server startup>
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent" \
-  -H 'Accept: text/plain'
+  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ```
@@ -350,7 +353,7 @@ Check the execution log to confirm:
 
 ```bash
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent" \
-  -H 'Accept: text/plain'
+  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ```

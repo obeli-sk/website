@@ -92,7 +92,7 @@ bindgen details.
 fn serial() -> Result<u64, ()> {
     let mut acc = 0;
     for i in 0..10 {
-        workflow_support::sleep(ScheduleAt::In(Duration::Seconds(1)))?;
+        workflow_support::sleep(ScheduleAt::In(Duration::Seconds(1)), None)?;
         let result = step(i, i * 200)?;
         acc += result;
         log::info(&format!("step({i})={result}"));
@@ -121,9 +121,9 @@ fn parallel() -> Result<u64, ()> {
     }
     let mut acc = 0;
     for (i, join_set) in handles {
-        let (_id, result) = step_await_next(&join_set).unwrap();
+        let result = step_await_next(&join_set).unwrap();  // returns the child result directly
         acc = 10 * acc + result?;
-        workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)))?;
+        workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)), None)?;
     }
     Ok(acc)
 }
@@ -238,22 +238,28 @@ Parallel workflow — all steps run concurrently:
 
 ![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
 
-Via the API:
+Via the API. The API port (`5005`) requires a bearer token, printed to the console on startup;
+export it first (or start the server with `--allow-unauthenticated-api` for a throwaway tutorial).
+See {{ doc_link(title="Authentication", path="authentication.md") }}.
 
 ```bash
+export OBELISK_API_TOKEN=<token printed on server startup>
+
 # List top-level executions
-curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain'
+curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain' \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN"
 
 # Include child executions (workflows + activities)
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial" \
-  -H 'Accept: text/plain'
+  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 Fetch logs for a specific execution:
 
 ```bash
 EXECUTION_ID=E_01...
-curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: text/plain'
+curl -s "http://localhost:5005/v1/executions/${EXECUTION_ID}/logs" -H 'Accept: text/plain' \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ## 7. Crash Recovery

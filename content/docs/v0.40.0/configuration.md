@@ -19,7 +19,7 @@ The `obelisk-version` field can be set in either file to ensure compatibility wi
 Obelisk version:
 
 ```toml
-obelisk-version = "0.39"
+obelisk-version = "0.40"
 ```
 
 ### Built-in Defaults
@@ -55,14 +55,53 @@ database's active/enqueued deployment is used.
 api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
 ```
 
+#### API Authentication
+
+The API port denies any request without a valid `Authorization: Bearer <token>` header. Persistent
+tokens are configured as SHA-256 hashes, which are not secrets, so `server.toml` stays safe to
+commit:
+
+```toml
+api.token_hashes = [
+  "sha256:...",   # agent
+  "sha256:...",   # laptop
+]
+```
+
+A plaintext token can also be injected through the environment as `OBELISK__API__TOKEN` (or the
+`api.token` key); do not write the plaintext into a committed `server.toml`. See
+{{ doc_link(title="Authentication", path="authentication.md") }} for the full model, generating
+tokens, and the `--allow-unauthenticated-api` recovery flag.
+
 ### Web UI
 
 ```toml
 webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 ```
 
-> **Warning**: Listening on all interfaces (`[::]:<port>`) is not recommended as authentication is
-> not yet implemented.
+> **Warning**: The external webhook HTTP server has no authentication. Listening on all interfaces
+> (`[::]:<port>`) is not recommended.
+
+### Exec Activity Gating
+
+{{ doc_link(title="Exec activities", path="configuration.md") }} run host processes outside the WASM
+sandbox, so they are **disabled by default**. A deployment that declares an `activity_exec` fails
+verification unless the operator opts in on the server.
+
+Allow any exec activity (this logs a warning):
+
+```toml
+allow_exec_activities = true   # or OBELISK__ALLOW_EXEC_ACTIVITIES=true
+```
+
+Or allowlist only reviewed scripts, pinned by the SHA-256 digest of the exact script text. A
+rejected deployment logs the digest line to copy here after review:
+
+```toml
+allow_exec_activities = [
+  "sha256:...",   # greet.sh, reviewed 2026-07-13
+]
+```
 
 ### Sqlite
 
@@ -356,6 +395,10 @@ Exec activities run a native executable (shell script, Python script, Docker com
 durable activity. The child process receives function parameters as JSON-encoded CLI arguments. The
 result is read from stdout — exit code 0 means success, non-zero means error. Both stdout and stderr
 are streamed and persisted, available via the CLI, REST API, and Web UI.
+
+> **Security**: exec activities run host processes outside the WASM sandbox and are disabled by
+> default. A deployment that declares one fails verification until the operator enables
+> [`allow_exec_activities`](#exec-activity-gating) in `server.toml`.
 
 ```toml
 [[activity_exec]]

@@ -74,7 +74,7 @@ world any {
     import tutorial:activity/activity-sleepy;             // activity to orchestrate
     import tutorial:activity-obelisk-ext/activity-sleepy; // generated — enables join sets
     import tutorial:workflow/other-workflow;              // child workflow (also submittable)
-    import obelisk:workflow/workflow-support@5.1.0;
+    import obelisk:workflow/workflow-support@6.0.0;
     import obelisk:log/log@1.0.0;
 }
 ```
@@ -142,7 +142,7 @@ impl Guest for Component {
     fn serial() -> Result<u64, ()> {
         let mut acc = 0;
         for i in 0..10 {
-            workflow_support::sleep(ScheduleAt::In(Duration::Seconds(1)))?;
+            workflow_support::sleep(ScheduleAt::In(Duration::Seconds(1)), None)?;
             let result = step(i, i * 200)?;  // calls the imported activity directly
             acc += result;
             log::info(&format!("step({i})={result}"));
@@ -159,9 +159,11 @@ impl Guest for Component {
         }
         let mut acc = 0;
         for (i, join_set) in handles {
-            let (_id, result) = step_await_next(&join_set).unwrap();
+            // `-await-next` returns the child result directly; read the id from
+            // `join_set.last_id()` if you need it.
+            let result = step_await_next(&join_set).unwrap();
             acc = 10 * acc + result?;
-            workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)))?;
+            workflow_support::sleep(ScheduleAt::In(Duration::Milliseconds(300)), None)?;
         }
         Ok(acc)
     }
