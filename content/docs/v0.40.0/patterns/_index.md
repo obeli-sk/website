@@ -14,3 +14,5 @@ interaction.
   independent work through join sets and poll external state with bounded durable sleeps.
 - {{ doc_link(title="Human-in-the-loop signals", path="concepts/activities/stub.md") }} — use stub
   activities for approvals, operator input, and external signals.
+- {{ doc_link(title="Stub RPC (typed oneshot channels)", path="patterns/stub-rpc.md") }} — pair two
+  stubs into request/response RPC that bridges a synchronous webhook onto a durable workflow.
