@@ -2,7 +2,7 @@
 
 {% block meta_description %}
 <meta name="description"
-    content="Obelisk is a fast open-source durable and deterministic workflow engine powered by WebAssembly. Single binary, SQLite or Postgres, crash resilient." />
+    content="Obelisk is a fast open-source durable and deterministic workflow runtime powered by WebAssembly. Single binary, SQLite or Postgres, crash resilient." />
 {% endblock meta_description %}
 
 {% block content %}
@@ -14,7 +14,7 @@
                 A <a href="{{ get_url(path='@/blog/2025-10-29-challenging-fastest-workflow-engine.md') }}">fast</a>
                 Open-Source Durable & Deterministic
                 <a href="{{ get_url(path='@/features/_index.md') }}">Workflow
-                    Engine</a>
+                    Runtime</a>
             </p>
             <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
             <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}" class="cta-button">Get Started</a>
@@ -152,9 +152,9 @@
         <h2 class="section-title">Frequently Asked Questions</h2>
         <div class="faq-list">
             <details class="faq-item">
-                <summary>Why are deterministic workflow engines awesome?</summary>
+                <summary>Why are deterministic workflow runtimes awesome?</summary>
                 <div class="faq-answer">
-                    <p>Workflows are long-running, crash-resilient functions. The engine persists every step — so a
+                    <p>Workflows are long-running, crash-resilient functions. The runtime persists every step — so a
                         workflow can pause for days or months, survive server restarts, and always resume exactly where
                         it left off.</p>
                 </div>
@@ -164,14 +164,14 @@
                 <div class="faq-answer">
                     <p>A <strong>workflow</strong> is pure orchestration logic — deterministic and side-effect-free. An
                         <strong>activity</strong> does real work: HTTP calls, file I/O, database writes. Activities must
-                        be idempotent so the engine can retry them safely on failure.
+                        be idempotent so the runtime can retry them safely on failure.
                     </p>
                 </div>
             </details>
             <details class="faq-item">
-                <summary>What does determinism mean in the context of a workflow engine?</summary>
+                <summary>What does determinism mean in the context of a workflow runtime?</summary>
                 <div class="faq-answer">
-                    <p>The engine records all non-deterministic calls — random values, timestamps, child results — to
+                    <p>The runtime records all non-deterministic calls — random values, timestamps, child results — to
                         the
                         execution log. On crash recovery, the workflow replays from the log, so the same inputs always
                         produce the same execution path.</p>
