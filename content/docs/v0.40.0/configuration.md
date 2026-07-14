@@ -366,7 +366,12 @@ supports `${VAR}` and `${VAR:-default}` interpolation; interpolated values are t
 syntax, so escape them when they should match literally.
 
 Secrets are injected via placeholder replacement in outgoing HTTP requests. WASM receives an opaque
-placeholder; the runtime substitutes real values only for requests to approved hosts.
+placeholder; the runtime substitutes real values only for requests to approved hosts. `replace_in`
+selects where substitution happens: `headers`, `params` (the URL query string), and/or `body`.
+Substitution is a literal replacement of the placeholder string wherever it appears in those
+locations, so the component itself decides placement (for example an
+`Authorization: Bearer <placeholder>` header that it sets). For `headers`, only header **values**
+are searched, not header names.
 
 ### JavaScript Activities
 
