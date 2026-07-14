@@ -249,9 +249,7 @@ For FFQNs constructed at runtime, use `obelisk.schedule` directly:
 
 ```javascript
 const execId = obelisk.executionIdGenerate();
-obelisk.schedule(execId, "myapp:demo/activity.send-email", [
-  "user@example.com",
-]);
+obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
 // optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
 ```
 
@@ -262,10 +260,7 @@ the result is supplied externally (via the CLI, Web UI, or from workflow code). 
 imports to submit and await the stub activity, and the `-obelisk-stub` import to inject the result:
 
 ```javascript
-import {
-  approveSubmit,
-  approveAwaitNext,
-} from "myapp:stubs-obelisk-ext/approval";
+import { approveSubmit, approveAwaitNext } from "myapp:stubs-obelisk-ext/approval";
 import { approveStub } from "myapp:stubs-obelisk-stub/approval";
 
 const js = obelisk.createJoinSet();

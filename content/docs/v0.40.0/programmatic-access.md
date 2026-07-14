@@ -609,9 +609,7 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace"
       {
         "module": "my_workflow",
         "func_name": "panic_handler",
-        "symbols": [
-          { "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }
-        ]
+        "symbols": [{ "func_name": "my_fn", "file": "src/lib.rs", "line": 42, "col": 5 }]
       }
     ]
   }

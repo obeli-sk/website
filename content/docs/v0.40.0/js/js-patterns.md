@@ -364,8 +364,8 @@ deployment starts. Use this dynamic join set API only when the FFQN is construct
 | `obelisk.getResult(childExecId)`   | ok value (throws `ChildExecutionError` on failure)                                        | Fetch a result of a child already consumed with `joinNext*` / `awaitNext`                                                                                        |
 
 `joinNext()` / `joinNextTry()` throw `obelisk.ChildExecutionError` on a child business err, platform
-failure, or cancelled delay (`cancelled === true`), and `obelisk.JoinSetExhaustedError` when the join
-set is exhausted. See
+failure, or cancelled delay (`cancelled === true`), and `obelisk.JoinSetExhaustedError` when the
+join set is exhausted. See
 {{ doc_link(title="Handling child failures", path="js/js-workflows.md") }}.
 
 ## Webhook import API (preferred)
@@ -472,8 +472,8 @@ value once the execution finishes.
 - **Component and cron names must use only `[a-zA-Z0-9_]`** — hyphens are not allowed. Use
   underscores instead (e.g. `daily_monitor`, not `daily-monitor`).
 - **Put tokens in `[allowed_host.secrets]`, not component `env_vars`.** The component receives only
-  an opaque placeholder through `process.env`; Obelisk replaces it in an allowed outbound header.
-  A secret key must not also appear in the component-level `env_vars`, or deployment verification
+  an opaque placeholder through `process.env`; Obelisk replaces it in an allowed outbound header. A
+  secret key must not also appear in the component-level `env_vars`, or deployment verification
   fails with a "collides with an `env_vars` entry" error.
 
 ```
