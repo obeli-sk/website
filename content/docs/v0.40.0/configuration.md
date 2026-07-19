@@ -354,9 +354,19 @@ env_vars = ["OPENAI_API_KEY"]
 replace_in = ["headers"]
 ```
 
-Pattern supports wildcards: `"*"` matches all HTTPS hosts on port 443, `"*://*"` matches any host on
-default ports, `"*.example.com"` matches subdomains. The `pattern` field supports `${VAR}` and
-`${VAR:-default}` env var interpolation.
+`pattern` matches the request origin: scheme, host, and port. It uses the limited wildcard syntax
+below, not regular expressions, and must not contain a URL path. A pattern without a scheme uses
+HTTPS; one without a port uses the scheme's default port (80 for HTTP, 443 for HTTPS). Supported
+patterns include:
+
+- `"*"` matches all HTTPS hosts on port 443.
+- `"*://*"` matches any HTTP or HTTPS host on its default port.
+- `"*://*:*"` matches any HTTP or HTTPS host on any port.
+- `"*.example.com"` matches subdomains of `example.com`.
+- `"http://192.168.1.*"` matches that IPv4 `/24` range over HTTP.
+- `"http://localhost:*"` matches localhost on any HTTP port.
+
+The `pattern` field supports `${VAR}` and `${VAR:-default}` environment variable interpolation.
 
 `request_url_regex` is an optional extra restriction on top of the required host `pattern` and
 `methods` allowlist entry. It is checked only after the host and method match, and omitting it
