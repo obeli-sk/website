@@ -93,6 +93,17 @@ const wakeTime = obelisk.sleep({ minutes: 5 }); // returns Date of wake-up
 console.log(`Resumed at ${wakeTime.toISOString()}`);
 ```
 
+If the durable sleep is cancelled it **throws**, so wrap it in `try`/`catch` when the sleep can be
+cancelled:
+
+```javascript
+try {
+  obelisk.sleep({ minutes: 5 }, "retry-timeout"); // optional second arg names the timer
+} catch (e) {
+  // sleep was cancelled; interpret as a cooperative cancellation request
+}
+```
+
 ## Join sets — parallel submission
 
 {{ doc_link(title="Join sets", path="concepts/workflows/join-sets.md") }} let you submit multiple
