@@ -16,3 +16,5 @@ interaction.
   activities for approvals, operator input, and external signals.
 - {{ doc_link(title="Stub RPC (typed oneshot channels)", path="patterns/stub-rpc.md") }} — pair two
   stubs into request/response RPC that bridges a synchronous webhook onto a durable workflow.
+- {{ doc_link(title="Self-fulfilled stub events", path="patterns/self-fulfilled-stub-events.md") }}
+  publishes structured intermediate workflow output by submitting and immediately fulfilling a stub.
