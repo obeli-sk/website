@@ -139,10 +139,12 @@ env_vars = [
 [[webhook_endpoint_js.allowed_host]]
 pattern = "${OBELISK_API_URL:-http://127.0.0.1:5005}"
 methods = ["PUT", "GET"]
-[webhook_endpoint_js.allowed_host.secrets]
-env_vars = ["OBELISK__API__TOKEN"]
+secrets = ["OBELISK__API__TOKEN"]
 replace_in = ["headers"]
 ```
+
+Register `OBELISK__API__TOKEN` in the server's `[secrets]` table and add a matching
+`[[outbound_http.allowed_host]]` entry to `server.toml`.
 
 ```javascript
 // example:session/webhook.handle
@@ -173,7 +175,7 @@ export default async function handle(request) {
   });
 
   // Outbound: block until the workflow self-fulfils the paired reply stub.
-  const reply = obelisk.get(turn.respId); // blocking; throws obelisk.ChildExecutionError on failure
+  const reply = obelisk.get(turn.respId); // blocking; throws obelisk.ChildError on failure
   return new Response(reply, { headers: { "content-type": "application/json" } });
 }
 

@@ -140,7 +140,7 @@ export default function supervisor(input) {
     const teardownId = teardownSignalSubmit(race);
 
     // `joinNext` returns the winner's ok value directly, or throws
-    // `obelisk.ChildExecutionError` if it failed or was cancelled.
+    // `obelisk.ChildError` if it failed or was cancelled.
     // `race.lastId` tells us which member of the race completed.
     try {
       const value = race.joinNext();
@@ -150,7 +150,7 @@ export default function supervisor(input) {
         childError = `Unexpected child completion: ${race.lastId}`;
       }
     } catch (error) {
-      if (!(error instanceof obelisk.ChildExecutionError)) throw error;
+      if (!(error instanceof obelisk.ChildError)) throw error;
       if (race.lastId === teardownId && error.cancelled) {
         tornDown = true; // operator cancelled the teardown stub
       } else {

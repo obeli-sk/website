@@ -25,10 +25,12 @@ env_vars = [{ key = "DB_URL", value = "..." }]
 [[webhook_endpoint_js.allowed_host]]
 pattern = "https://api.example.com"
 methods = ["GET"]
-[webhook_endpoint_js.allowed_host.secrets]
-env_vars = ["API_KEY"]
+secrets = ["API_KEY"]
 replace_in = ["headers"]
 ```
+
+The server must register `API_KEY` in `[secrets]` and allow the same destination, method, secret,
+and `replace_in` target in `[[outbound_http.allowed_host]]`.
 
 Route path segments starting with `:` are captured and exposed as `process.env` entries inside the
 handler — `process.env['segment-name']` returns the captured value as a string.
@@ -158,7 +160,7 @@ const status = obelisk.getStatus(execId);
 
 const result = obelisk.tryGet(execId);
 // undefined if not finished yet
-// returns ok value when done, or throws obelisk.ChildExecutionError on failure
+// returns ok value when done, or throws obelisk.ChildError on failure
 ```
 
 Get the execution ID of the current webhook invocation:
@@ -181,14 +183,14 @@ const myExecId = obelisk.executionIdCurrent();
 
 | Call                                              | Returns                                                                                                                              | Description                                            |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws `obelisk.ChildExecutionError` on failure                                                                    | Call and await a child execution                       |
+| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws `obelisk.ChildError` on failure                                                                    | Call and await a child execution                       |
 | `obelisk.executionIdGenerate()`                   | `executionId` (string)                                                                                                               | Generate a unique execution ID                         |
 | `obelisk.executionIdCurrent()`                    | `executionId` (string)                                                                                                               | Get the execution ID of the current webhook invocation |
 | `obelisk.schedule(execId, ffqn, argArray)`        | —                                                                                                                                    | Schedule a top-level execution immediately             |
-| `obelisk.schedule(execId, ffqn, argArray, delay)` | —                                                                                                                                    | Schedule at a delay (e.g. `{ seconds: 60 }`)           |
+| `obelisk.schedule(execId, ffqn, argArray, scheduleAt)` | —                                                                                                                               | Schedule with a relative duration or absolute `Date`   |
 | `obelisk.getStatus(execId)`                       | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"cancelling"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
-| `obelisk.get(execId)`                             | ok value (throws `obelisk.ChildExecutionError` on failure)                                                                           | Blocking: waits until execution finishes               |
-| `obelisk.tryGet(execId)`                          | ok value (throws `obelisk.ChildExecutionError` on failure), `undefined` if not finished yet                                          | Non-blocking result fetch                              |
+| `obelisk.get(execId)`                             | ok value (throws `obelisk.ChildError` on failure)                                                                           | Blocking: waits until execution finishes               |
+| `obelisk.tryGet(execId)`                          | ok value (throws `obelisk.ChildError` on failure), `undefined` if not finished yet                                          | Non-blocking result fetch                              |
 
 ## Available globals
 

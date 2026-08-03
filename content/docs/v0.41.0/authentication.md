@@ -43,20 +43,15 @@ API token (valid until shutdown): 6f1c...<token>
 ### Persistent tokens
 
 Persistent tokens are configured as SHA-256 hashes of the token text in `server.toml`. The hashes
-are **not** secrets, so the file stays safe to commit to version control. Generate a token together
-with its ready-to-paste hash entry:
+are **not** secrets, so the file stays safe to commit to version control. Generate a token and
+append its hash directly to the server configuration:
 
 ```sh
-obelisk generate token
+export OBELISK_API_TOKEN=$(obelisk generate token --server-config server.toml)
 ```
 
-```
-API token (shown only once, store it securely):
-<token>
-
-Add its hash to `api.token_hashes` in server.toml:
-api.token_hashes = ["sha256:..."]
-```
+Stdout contains only the token. Without `--server-config`, an interactive terminal also prints the
+ready-to-paste hash entry to stderr. Use `--json` when a program needs both values.
 
 Collect one hash per client and list them, with a comment identifying each:
 
@@ -107,7 +102,7 @@ obelisk --api-token <token> execution list    # or pass it explicitly
 >
 > ```sh
 > # .envrc
-> export OBELISK__API__TOKEN=$(obelisk generate token --json | jq -r .token)
+> export OBELISK__API__TOKEN=$(obelisk generate token)
 > ```
 
 ### REST / curl

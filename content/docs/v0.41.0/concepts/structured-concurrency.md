@@ -96,7 +96,7 @@ await barrier.
 A cancelled child cannot report its own cancellation — because its code is not run, it cannot return
 a sentinel value. A parent observes the outcome only externally. A cancelled child finishes as an
 {{ doc_link(title="execution failure", path="concepts/execution-states.md") }}, so
-`obelisk.getResult` (and an awaited `joinNext` / `awaitNext`) throws `obelisk.ChildExecutionError`,
+`obelisk.getResult` (and an awaited `joinNext` / `awaitNext`) throws `obelisk.ChildError`,
 and `obelisk.getStatus` reports `finishedStatus: "executionFailure"` — a coarse category it shares
 with nondeterminism and out-of-fuel failures. To distinguish a deliberate cancellation from a
 genuine fault inside the workflow, read `e.failureKind === "cancelled"` (equivalently `e.cancelled`)

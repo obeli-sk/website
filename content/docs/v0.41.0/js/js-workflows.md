@@ -18,9 +18,11 @@ params      = []
 return_type = "result<string, string>"
 ```
 
-Use `obelisk.sleep` for delays instead of `setTimeout`. `Date.now()` and `Math.random()` are safe to
-use — their values are recorded in the execution log on first call and replayed deterministically on
-recovery.
+Workflow exports may be synchronous or `async`. Awaiting ordinary JavaScript promises is supported,
+but durable child calls and sleeps still use the Obelisk APIs described below.
+
+Use `obelisk.sleep` for delays instead of `setTimeout`. `Date.now()` uses the deterministic Obelisk
+clock, and `Math.random()` values are recorded for deterministic replay.
 
 ## Configuration via parameters (no environment access)
 
@@ -37,8 +39,8 @@ it when scheduling or calling the workflow.
 The recommended way to call child executions is via ES module imports. Import the function by its
 WIT interface path, and call it directly — Obelisk resolves the import to a `call` that submits the
 child execution, blocks until it completes, and returns the ok payload. If the child permanently
-fails it throws `obelisk.ChildExecutionError` (see
-{{ doc_link(title="Handling child failures", path="js/js-workflows.md#handling-child-failures-with-obelisk-childexecutionerror") }});
+fails it throws `obelisk.ChildError` (see
+{{ doc_link(title="Handling child failures", path="js/js-workflows.md#handling-child-failures-with-obelisk-childerror") }});
 the decoded err payload is on `e.value`.
 
 ```javascript
@@ -89,6 +91,7 @@ representing the time at which the sleep expired.
 ```javascript
 obelisk.sleep({ milliseconds: 300 });
 obelisk.sleep({ seconds: 1 });
+obelisk.sleep(new Date(Date.now() + 30_000)); // absolute deterministic wake-up time
 const wakeTime = obelisk.sleep({ minutes: 5 }); // returns Date of wake-up
 console.log(`Resumed at ${wakeTime.toISOString()}`);
 ```
@@ -111,7 +114,7 @@ child executions concurrently and await their results individually.
 
 For join sets, use the extension imports with the `-obelisk-ext` suffix. These provide typed
 `submit` and `awaitNext` functions for each activity. `awaitNext` returns the ok value directly (or
-throws `obelisk.ChildExecutionError` on failure), matching the semantics of direct calls. The
+throws `obelisk.ChildError` on failure), matching the semantics of direct calls. The
 execution ID of the child that completed is available via `js.lastId`:
 
 ```javascript
@@ -144,7 +147,7 @@ runtime and cannot be imported statically:
 | ---------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `let js = obelisk.createJoinSet()` | join set object                                                                | Create a new join set (optionally `{ name: "…" }`)                                                                                                               |
 | `js.submit(ffqn, argArray)`        | childExecId (string)                                                           | Submit a child execution without blocking                                                                                                                        |
-| `js.submitDelay(duration)`         | `delayId` (string)                                                             | Submit a timer (e.g. `{ milliseconds: 500 }`). Duration key is one of: milliseconds/seconds/minutes/hours/days                                                   |
+| `js.submitDelay(scheduleAt)`       | `delayId` (string)                                                             | Submit a timer using a relative duration object or an absolute `Date`                                                                                            |
 | `js.joinNext()`                    | ok value directly; `null` for a completed delay (throws on failure, see below) | Block until the next result in this join set                                                                                                                     |
 | `js.joinNextTry()`                 | same as `joinNext()`, but returns `undefined` while requests are still pending | Non-blocking: attempt to get next result without waiting                                                                                                         |
 | `js.lastId`                        | string                                                                         | ID (execution or delay) of the last child completed via `joinNext*` or `awaitNext`                                                                               |
@@ -158,8 +161,8 @@ runtime and cannot be imported statically:
 
 - a completed child execution returns the child's decoded ok value;
 - a completed delay returns `null`;
-- a child err arm or platform failure throws `obelisk.ChildExecutionError` (see below);
-- a cancelled delay throws `obelisk.ChildExecutionError` with `cancelled === true`;
+- a child err arm or platform failure throws `obelisk.ChildError` (see below);
+- a cancelled delay throws `obelisk.ChildError` with `cancelled === true`;
 - an exhausted join set (all requests already processed) throws `obelisk.JoinSetExhaustedError`.
 
 `js.lastId` is set to the consumed execution ID or delay ID before `joinNext` returns or throws, so
@@ -188,10 +191,10 @@ blocking) while requests are still pending and no response is ready.
 > `const r = js.joinNext(); const v = obelisk.getResult(r.id);` with
 > `const v = js.joinNext(); const completedId = js.lastId;`.
 
-### Handling child failures with `obelisk.ChildExecutionError`
+### Handling child failures with `obelisk.ChildError`
 
 Any awaited child failure from `joinNext`, `joinNextTry`, generated `awaitNext` proxies,
-`obelisk.call`, or `obelisk.getResult` throws `obelisk.ChildExecutionError`. It carries:
+`obelisk.call`, or `obelisk.getResult` throws `obelisk.ChildError`. It carries:
 
 - `e.value`: the decoded business err payload; `undefined` for a unit err or a platform failure;
 - `e.childId`: the completed child execution ID, when known;
@@ -205,7 +208,7 @@ try {
   const value = stepAwaitNext(js);
   // handle success
 } catch (e) {
-  if (!(e instanceof obelisk.ChildExecutionError)) throw e; // host/setup error
+  if (!(e instanceof obelisk.ChildError)) throw e; // host/setup error
   if (e.failureKind !== undefined) {
     // platform failure (timeout, cancellation, nondeterminism, …)
   } else {
@@ -214,24 +217,26 @@ try {
 }
 ```
 
-Rethrowing a `ChildExecutionError` transparently reuses the original err payload as this workflow's
+Rethrowing a `ChildError` transparently reuses the original err payload as this workflow's
 err result (metadata like `failureKind` is not preserved):
 
 ```javascript
 } catch (e) {
-  if (e instanceof obelisk.ChildExecutionError) throw e; // same payload as `throw e.value`
+  if (e instanceof obelisk.ChildError) throw e; // same payload as `throw e.value`
   throw e;
 }
 ```
 
 ## Random values and time
 
-`Math.random()` and `Date.now()` are safe to use in workflow code. Their values are recorded in the
-execution log on first execution and replayed identically on crash-recovery, preserving determinism.
+`Math.random()`, `Date`, `Date()`, and `Date.now()` are safe to use in workflow code. Their values
+come from the deterministic Obelisk clock or are recorded in the execution log and replayed
+identically on crash-recovery.
 
 ```javascript
 const rand = Math.random(); // deterministic on replay
 const now = Date.now(); // deterministic on replay
+const timestamp = new Date(); // same deterministic clock
 ```
 
 Obelisk also provides explicit workflow-safe helpers:
@@ -252,9 +257,12 @@ import { sendEmailSchedule } from "myapp:demo-obelisk-schedule/activity";
 
 const execId = sendEmailSchedule(null, "user@example.com");
 // With a delay: sendEmailSchedule({ seconds: 60 }, "user@example.com");
+// At an absolute time: sendEmailSchedule(new Date(Date.now() + 60_000), "user@example.com");
 ```
 
-The first argument is the schedule timing: `null` for immediate, or a duration object.
+The first argument is the schedule timing: `null` for immediate, a duration object for a relative
+delay, or a `Date` for an absolute time. An object with no recognized scheduling key throws
+`TypeError`.
 
 For FFQNs constructed at runtime, use `obelisk.schedule` directly:
 
@@ -262,6 +270,7 @@ For FFQNs constructed at runtime, use `obelisk.schedule` directly:
 const execId = obelisk.executionIdGenerate();
 obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
 // optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
+// absolute schedule-at: obelisk.schedule(execId, ffqn, args, new Date(Date.now() + 60_000));
 ```
 
 ## Stub imports — inject a result for a stub activity

@@ -19,7 +19,7 @@ The `obelisk-version` field can be set in either file to ensure compatibility wi
 Obelisk version:
 
 ```toml
-obelisk-version = "0.40"
+obelisk-version = "0.41"
 ```
 
 ### Built-in Defaults
@@ -44,6 +44,12 @@ obelisk server verify --server-config server.toml --deployment deployment.toml
 
 If `--server-config` is omitted, built-in defaults are used. If `--deployment` is omitted, the
 database's active/enqueued deployment is used.
+
+To verify and optionally repair a local deployment without opening the database, use:
+
+```sh
+obelisk deployment verify --server-config server.toml --deployment deployment.toml --fix
+```
 
 ---
 
@@ -72,6 +78,38 @@ A plaintext token can also be injected through the environment as `OBELISK__API_
 `api.token` key); do not write the plaintext into a committed `server.toml`. See
 {{ doc_link(title="Authentication", path="authentication.md") }} for the full model, generating
 tokens, and the `--allow-unauthenticated-api` recovery flag.
+
+### Secret Registry
+
+Secrets are owned by the server operator. Map each logical secret name to its environment source in
+`server.toml`:
+
+```toml
+[secrets]
+OPENAI_KEY = { env = "OPENAI_API_KEY" }
+DB_PASSWORD = { env = "PRODUCTION_DB_PASSWORD" }
+```
+
+At startup, Obelisk reads each value into memory and removes its source variable from the process
+environment. Deployments request logical names in `activity_exec.secrets` and each allowed host's
+`secrets` field; they cannot interpolate registered secret values with `${...}`.
+
+### Server Outbound HTTP Policy
+
+Component-originated HTTP must match an allowlist entry in both `server.toml` and the component's
+deployment configuration. An empty server allowlist denies all component-originated HTTP.
+
+```toml
+[[outbound_http.allowed_host]]
+pattern = "api.openai.com"
+methods = ["POST"]
+request_url_regex = "^POST https://api\\.openai\\.com/v1/"
+secrets = ["OPENAI_KEY"]
+replace_in = ["headers"]
+```
+
+The server and deployment entries use the same syntax. The effective destination, method, path,
+secret, and replacement policy is their intersection, so neither side can widen the other.
 
 ### Web UI
 
@@ -154,7 +192,6 @@ tick_sleep.milliseconds = 100
 ```toml
 [wasm]
 cache_directory = "${CACHE_DIR}/wasm"          # WASM file cache location
-backtrace.persist = true                       # Persist backtraces on effect calls for all workflows and webhook endpoints.
 allocator_config = "auto"                      # One of "auto"|"on_demand"|"pooling"
 global_executor_instance_limiter = "unlimited" # If set to an integer, limits the number of concurrent workflow and activity executions.
 global_webhook_instance_limiter = "unlimited"  # If set to an integer, limits the number of concurrent webhook requests.
@@ -333,8 +370,9 @@ Activities returning a variant containing a case named `permanent` will skip ret
 
 #### Outbound HTTP Allowlist
 
-Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries. Without them,
-**all outbound HTTP is blocked**.
+Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the
+deployment and matching `[[outbound_http.allowed_host]]` entries in `server.toml`. Without both,
+the request is blocked.
 
 ```toml
 [[activity_wasm]]
@@ -348,11 +386,12 @@ pattern = "${API_BASE_URL:-https://api.openai.com}"
 methods = ["POST"]
 # Optional extra restriction after pattern and methods match.
 request_url_regex = "^POST https://api\\.openai\\.com/v1/"
-
-[activity_wasm.allowed_host.secrets]
-env_vars = ["OPENAI_API_KEY"]
+secrets = ["OPENAI_KEY"]
 replace_in = ["headers"]
 ```
+
+`OPENAI_KEY` is a logical name from the server's `[secrets]` registry. A matching server allowlist
+entry must also permit this host, method, secret, and replacement target.
 
 `pattern` matches the request origin: scheme, host, and port. It uses the limited wildcard syntax
 below, not regular expressions, and must not contain a URL path. A pattern without a scheme uses
@@ -377,11 +416,12 @@ syntax, so escape them when they should match literally.
 
 Secrets are injected via placeholder replacement in outgoing HTTP requests. WASM receives an opaque
 placeholder; the runtime substitutes real values only for requests to approved hosts. `replace_in`
-selects where substitution happens: `headers`, `params` (the URL query string), and/or `body`.
-Substitution is a literal replacement of the placeholder string wherever it appears in those
-locations, so the component itself decides placement (for example an
-`Authorization: Bearer <placeholder>` header that it sets). For `headers`, only header **values**
-are searched, not header names.
+selects where substitution happens: `headers`, `params` (URL query parameter values only), and/or
+`body`. Substitution is a literal replacement of the placeholder string wherever it appears in
+those locations, so the component itself decides placement (for example an
+`Authorization: Bearer <placeholder>` header that it sets). Header names, URL paths, and query
+parameter names are never searched. Body replacement requires valid UTF-8 and a textual content
+type: `text/*`, JSON, or `application/x-www-form-urlencoded`.
 
 ### JavaScript Activities
 
@@ -456,10 +496,11 @@ Exactly one of `location` or `content` must be set:
 # Only listed vars are exposed; host environment is cleared
 env_vars = ["PATH", {key = "MY_VAR", value = "my_value"}]
 
-# Secrets: resolved at startup and piped to stdin as JSON {"secrets":{"KEY":"value",...}}
-[activity_exec.secrets]
-env_vars = [{name = "MY_SECRET", value = "${HOST_SECRET_VAR}"}]
+# Registered secret names: piped to stdin as JSON {"secrets":{"KEY":"value",...}}
+secrets = ["MY_SECRET"]
 ```
+
+Declare `MY_SECRET = { env = "HOST_SECRET_VAR" }` in the server's `[secrets]` table.
 
 When both `params_via_stdin` and secrets are configured, stdin contains both top-level fields:
 `{"params":[...],"secrets":{"KEY":"value"}}`.
@@ -479,6 +520,9 @@ Both the ok and err values are read from **stdout**. stderr is only forwarded to
 `forward_stderr`) and is never captured into the result, so a non-zero exit with empty stdout fails
 to type-check a non-unit err arm and surfaces as an uncategorized execution failure instead of
 `err`.
+
+A platform failure projected into a `result<_, string>` error uses the string
+`"execution_failed"`.
 
 `T` can be `_` to indicate no ok value (e.g. `result<_, string>`). In this case `stdout` is ignored
 on exit 0.
@@ -607,6 +651,7 @@ env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inher
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
+backtrace_persist = true              # Persist call-site backtraces for this webhook. Default: false.
 ```
 
 ### JavaScript Webhook Endpoints
@@ -621,6 +666,7 @@ forward_stdout = "stderr"
 forward_stderr = "stderr"
 logs_store_min_level = "debug"
 env_vars = ["ENV1", "ENV2=value"]
+backtrace_persist = true              # Persist call-site backtraces for this webhook. Default: false.
 ```
 
 #### Route Syntax

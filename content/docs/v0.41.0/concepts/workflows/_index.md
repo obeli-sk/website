@@ -332,14 +332,13 @@ captured backtrace.
 backtrace.sources = {".../src/lib.rs" = "${OBELISK_TOML_DIR}/workflow/src/lib.rs"}
 ```
 
-Backtraces are captured automatically and stored in the database every time a child execution is
-submitted or awaited. The mapping is from frame source to local file system. Note that when `.../`
-is used, frame source path is matched based on the suffix, `src/lib.rs` in this example.
+The mapping is from frame source to local file system. When `.../` is used, the frame source path is
+matched based on the suffix, `src/lib.rs` in this example. Workflow backtraces are captured lazily
+during user-issued replay and advance operations. To replay an execution and persist its call-site
+backtraces, run:
 
-Persistent backtrace capture can be turned off globally using
-
-```toml
-workflows.backtrace.persist = false
+```sh
+obelisk execution persist-backtraces <execution-id>
 ```
 
 ### Join Next Blocking Strategy

@@ -77,14 +77,25 @@ exec.lock_expiry.seconds = 15
 [[activity_wasm.allowed_host]]
 pattern = "https://api.machines.dev"
 methods = "*"
-[activity_wasm.allowed_host.secrets]
-env_vars = ["FLY_API_TOKEN"]
+secrets = ["FLY_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Obelisk downloads and caches the component on first run. The `secrets` block tells Obelisk to inject
-`FLY_API_TOKEN` from the environment into the `Authorization` header of every outbound request — the
-token is never written to disk or logged and only a placeholder is passed to the WASM activity.
+Create `server.toml` beside the deployment, register `FLY_API_TOKEN`, and add a matching
+`[[outbound_http.allowed_host]]` entry. Obelisk downloads and caches the component on first run. The
+token is never written to disk or logged, and only a placeholder is passed to the WASM activity.
+
+```toml
+# server.toml
+[secrets]
+FLY_API_TOKEN = { env = "FLY_API_TOKEN" }
+
+[[outbound_http.allowed_host]]
+pattern = "https://api.machines.dev"
+methods = "*"
+secrets = ["FLY_API_TOKEN"]
+replace_in = ["headers"]
+```
 
 The activity exposes the full [Fly.io Machines API](https://docs.machines.dev/) as callable
 functions. Their FFQNs follow the WIT package structure:
@@ -294,7 +305,7 @@ reference and {{ doc_link(title="Configuration", path="configuration.md") }} for
 
 ```bash
 cd demo-tutorial/fly-agent
-obelisk server run --deployment deployment.toml
+obelisk server run --server-config server.toml --deployment deployment.toml
 ```
 
 Trigger the saga — pick a globally unique app name on fly.io:

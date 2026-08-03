@@ -710,11 +710,13 @@ child executions as paused before they execute.
 
 ```json
 {
-  "captured_writes": [...]
+  "captured_writes": [...],
+  "persist_backtrace": false
 }
 ```
 
-The `captured_writes` array should contain the writes returned by a previous `replay` call.
+The `captured_writes` array should contain the writes returned by a previous `replay` call. Set
+`persist_backtrace` to `true` to persist fresh call-site backtraces while applying the writes.
 
 **Responses:**
 
@@ -743,6 +745,27 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/advance" -
   -H content-type:application/json -H accept:application/json \
   -d "{\"captured_writes\": $(echo $REPLAY | jq .captured_writes)}"
 ```
+
+---
+
+### `PUT /v1/executions/{execution-id}/backtrace/persist`
+
+Replay a workflow and persist its call-site backtraces. The operation is idempotent and skips
+backtraces that are already stored.
+
+#### Example request
+
+```sh
+curl -H "$OBELISK_API_AUTH" \
+  "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/persist" \
+  -X PUT -H accept:application/json
+```
+
+```json
+{ "persisted_backtrace_count": 12 }
+```
+
+Returns `404` when the execution does not exist and `422` when replay fails.
 
 ---
 
@@ -910,9 +933,6 @@ deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activa
 | `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server, such as missing environment variables / secrets or server capabilities like exec activities (`false`) |
 | `deployment_id`                    | String  | Optional client-supplied deployment ID for idempotent submission                                                                                                |
 
-The field was renamed from `allow_missing_runtime_config`; the old name is still accepted as an
-alias so 0.39.x HTTP clients keep working for now.
-
 `POST /v1/deployments` also accepts `multipart/form-data`. Use text fields for `deployment_toml`,
 `description`, `allow_unavailable_runtime_config`, and `deployment_id`. Every other part is treated
 as a deployment-owned file blob; its `filename` is the deployment-relative path and the form-field
@@ -956,7 +976,7 @@ or enqueue (activate on next restart).
 | Field                              | Type    | Description                                                                                                                                                                            |
 | :--------------------------------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `hot_redeploy`                     | Boolean | If `true`, apply immediately without restarting (default: `false`)                                                                                                                     |
-| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server before switching (accepts the former `allow_missing_runtime_config` as an alias). Hot redeploy always requires strict config. |
+| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server before switching. Hot redeploy always requires strict config. |
 
 **Responses:**
 
@@ -1060,7 +1080,7 @@ The result object returned when an execution finishes (from `GET /v1/executions/
 
 - `{ "ok": ... }`: Function succeeded; contains the return value (or `null` for no-value results).
 - `{ "err": ... }`: Function returned an error variant.
-- `{ "execution_failure": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout,
+- `{ "execution_failed": { "kind": "...", "reason": "..." } }`: Execution failed (trap, timeout,
   etc.).
 
 The `result_kind` field in status/list responses summarises the outcome:

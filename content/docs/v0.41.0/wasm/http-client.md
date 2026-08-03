@@ -8,8 +8,9 @@ Rust activities and webhook endpoints can make outbound HTTP requests using the
 [WASI 0.2 HTTP client](https://github.com/WebAssembly/wasi-http). This HTTP client is controlled,
 with built-in tracing to enhance security and predictability. Disk I/O is currently not permitted.
 
-> **Note**: Components that make outbound HTTP calls require explicit `[[allowed_host]]` entries in
-> the deployment configuration. Without them, all outbound HTTP is blocked. See
+> **Note**: Components that make outbound HTTP calls require `[[allowed_host]]` entries in the
+> deployment and matching `[[outbound_http.allowed_host]]` entries in `server.toml`. Without both,
+> outbound HTTP is blocked. See
 > {{ doc_link(title="Configuration", path="configuration.md#outbound-http-allowlist") }} for
 > details.
 

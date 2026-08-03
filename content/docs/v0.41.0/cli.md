@@ -27,7 +27,7 @@ Options:
   execution history)
 - `--clean-cache` - Delete both the codegen cache and the OCI image cache before starting
 - `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
-- `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
+- `-s, --server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
   built-in defaults are used
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is
   inserted and activated on startup, overriding any existing Enqueued or Active deployment in the
@@ -63,16 +63,37 @@ Options:
   built-in defaults are used
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued
   deployment is used, falling back to the Active deployment
-- `-a, --allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this
+- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this
   server (missing environment variables / secrets, or server capabilities such as exec activities)
   while verifying
 - `--suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type
   checking against the deployment
 - `--skip-db` - Skip opening the database and validating its schema
+- `--fix` - Repair content digests and update the exec activity allowlist
 
 ## Obelisk Deployment
 
 Manage deployments (component configurations) stored in the database.
+
+### Verifying a local deployment
+
+Compile and verify a deployment without starting a server or accessing its database:
+
+```sh
+obelisk deployment verify --server-config server.toml --deployment deployment.toml
+```
+
+Options:
+
+- `-s, --server-config <FILE>` - Path to `server.toml`. If omitted, built-in defaults are used
+- `-d, --deployment <FILE>` - Path to the local deployment TOML file
+- `--allow-unavailable-runtime-config` - Tolerate unavailable environment variables, secrets, or
+  server capabilities
+- `--suppress-type-checking-errors` - Do not fail on component import/export type errors
+- `--fix` - Repair content digests, update the exec allowlist, and scaffold missing secret
+  declarations
+- `--clean-cache` - Delete both the codegen and OCI image caches before verifying
+- `--clean-codegen-cache` - Delete only the codegen cache before verifying
 
 ### Submitting a deployment
 
@@ -481,6 +502,14 @@ Options:
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 - `-j, --json` - Output as JSON instead of human-readable text
 
+### Persisting workflow backtraces
+
+Replay a workflow and persist its call-site backtraces:
+
+```sh
+obelisk execution persist-backtraces <EXECUTION_ID>
+```
+
 ### Advancing a paused execution
 
 Advance a paused workflow execution by replaying it and applying the next captured writes. This
@@ -698,9 +727,10 @@ Options:
 
 ### Generating an API token
 
-Generate a random API token plus the `sha256:` hash entry accepted in `server.toml`
-`api.token_hashes`. The plaintext token is printed once and never stored; revoke it by deleting its
-hash line and restarting the server. See
+Generate a random API token. Stdout contains only the token so the command can be used directly in
+environment injection. In an interactive terminal, the corresponding `api.token_hashes` entry is
+also printed to stderr. The plaintext token is printed once and never stored; revoke it by deleting
+its hash line and restarting the server. See
 {{ doc_link(title="Authentication", path="authentication.md") }}.
 
 ```sh
@@ -709,7 +739,8 @@ obelisk generate token
 
 Options:
 
-- `-j, --json` - Output as JSON instead of plain text
+- `-j, --json` - Output the token and its `sha256:` hash as JSON
+- `-s, --server-config <FILE>` - Append the token hash to `api.token_hashes` in the server config
 
 ### Generating a coding-agent prompt
 

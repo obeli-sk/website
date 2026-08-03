@@ -26,6 +26,9 @@ pattern = "https://api.example.com"
 methods = ["GET", "POST"]
 ```
 
+The server must permit the same destination and methods with a matching
+`[[outbound_http.allowed_host]]` entry. An empty server allowlist denies component-originated HTTP.
+
 ## Return values and errors
 
 The JS runtime maps `return` and `throw` to the `result` return type.
