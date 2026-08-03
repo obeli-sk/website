@@ -93,11 +93,6 @@ const wakeTime = obelisk.sleep({ minutes: 5 }); // returns Date of wake-up
 console.log(`Resumed at ${wakeTime.toISOString()}`);
 ```
 
-The argument must be a relative duration object (`{ milliseconds | seconds | minutes | hours | days:
-n }`) or an absolute `{ at: { seconds, nanoseconds } }`. A JS `Date` is **not** accepted as input
-(even though `sleep` returns one): a `Date` matches no recognized key and is silently treated as
-sleep-until-now.
-
 If the durable sleep is cancelled it **throws**, so wrap it in `try`/`catch` when the sleep can be
 cancelled:
 
