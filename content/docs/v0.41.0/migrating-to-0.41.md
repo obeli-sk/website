@@ -186,6 +186,21 @@ Two 0.40 compatibility paths have been removed:
 The CLI already uses `--allow-unavailable-runtime-config`. Update older REST and gRPC clients before
 switching the server to 0.41.
 
+## Update configuration generation commands
+
+`obelisk generate server-config` and `obelisk generate deployment` now print TOML to stdout when no
+output path is given. Pass the destination explicitly where scripts previously relied on the default
+filenames:
+
+```sh
+obelisk generate server-config server.toml
+obelisk generate deployment deployment.toml
+```
+
+For single-party installations, `obelisk generate server-config --trusted server.toml` creates a
+minimal configuration that allows all exec activities and component-originated outbound HTTP. Do not
+use this option when operators and deployment authors have different trust levels.
+
 ## Review JavaScript behavior changes
 
 ### Use `obelisk.ChildError`

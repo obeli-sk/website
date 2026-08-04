@@ -31,7 +31,7 @@ compile.
 Starting from an empty project instead? Generate the commented deployment reference first:
 
 ```bash
-obelisk generate deployment
+obelisk generate deployment deployment.toml
 ```
 
 Then add your activities, workflows, and webhook endpoints to `deployment.toml`. The rest of this

@@ -31,6 +31,28 @@ unless you need to change addresses, database settings, or other server-level op
 - **Web UI** at `127.0.0.1:8080`
 - **External webhook server** at `127.0.0.1:9090`
 
+### Generating Configuration Files
+
+Generate the commented configuration references by passing an output filename:
+
+```sh
+obelisk generate server-config server.toml
+obelisk generate deployment deployment.toml
+```
+
+Without an output filename, these commands print the configuration to stdout. For a single-party
+installation where the operator and every deployment author share the same trust level, the
+`--trusted` option generates a minimal server configuration that allows all exec activities and
+component-originated outbound HTTP:
+
+```sh
+obelisk generate server-config --trusted server.toml
+```
+
+Do not use the trusted configuration for multi-tenant or agent-driven deployments. It removes the
+operator policy boundary for exec activities and outbound HTTP. It does not register secrets, so
+exec secret inputs and outbound HTTP secret injection remain disabled until configured explicitly.
+
 ### Running the Server
 
 ```sh
@@ -371,8 +393,8 @@ Activities returning a variant containing a case named `permanent` will skip ret
 #### Outbound HTTP Allowlist
 
 Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the
-deployment and matching `[[outbound_http.allowed_host]]` entries in `server.toml`. Without both,
-the request is blocked.
+deployment and matching `[[outbound_http.allowed_host]]` entries in `server.toml`. Without both, the
+request is blocked.
 
 ```toml
 [[activity_wasm]]
@@ -417,8 +439,8 @@ syntax, so escape them when they should match literally.
 Secrets are injected via placeholder replacement in outgoing HTTP requests. WASM receives an opaque
 placeholder; the runtime substitutes real values only for requests to approved hosts. `replace_in`
 selects where substitution happens: `headers`, `params` (URL query parameter values only), and/or
-`body`. Substitution is a literal replacement of the placeholder string wherever it appears in
-those locations, so the component itself decides placement (for example an
+`body`. Substitution is a literal replacement of the placeholder string wherever it appears in those
+locations, so the component itself decides placement (for example an
 `Authorization: Bearer <placeholder>` header that it sets). Header names, URL paths, and query
 parameter names are never searched. Body replacement requires valid UTF-8 and a textual content
 type: `text/*`, JSON, or `application/x-www-form-urlencoded`.
@@ -521,8 +543,7 @@ Both the ok and err values are read from **stdout**. stderr is only forwarded to
 to type-check a non-unit err arm and surfaces as an uncategorized execution failure instead of
 `err`.
 
-A platform failure projected into a `result<_, string>` error uses the string
-`"execution_failed"`.
+A platform failure projected into a `result<_, string>` error uses the string `"execution_failed"`.
 
 `T` can be `_` to indicate no ok value (e.g. `result<_, string>`). In this case `stdout` is ignored
 on exit 0.

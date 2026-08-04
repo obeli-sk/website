@@ -63,9 +63,9 @@ Options:
   built-in defaults are used
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued
   deployment is used, falling back to the Active deployment
-- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this
-  server (missing environment variables / secrets, or server capabilities such as exec activities)
-  while verifying
+- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this server
+  (missing environment variables / secrets, or server capabilities such as exec activities) while
+  verifying
 - `--suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type
   checking against the deployment
 - `--skip-db` - Skip opening the database and validating its schema
@@ -669,7 +669,7 @@ Options:
 
 ### Generating server configuration
 
-Generate a default `server.toml` configuration file:
+Print a default server configuration to stdout, or write it to a file when `OUTPUT` is given:
 
 ```sh
 obelisk generate server-config [OPTIONS] [OUTPUT]
@@ -677,16 +677,18 @@ obelisk generate server-config [OPTIONS] [OUTPUT]
 
 Arguments:
 
-- `[OUTPUT]` - Filename to write the TOML to (default: `server.toml`)
+- `[OUTPUT]` - Filename to write the TOML to (default: stdout)
 
 Options:
 
 - `-j, --json` - Output as JSON instead of human-readable text
 - `-f, --force` - Overwrite existing file
+- `--trusted` - Generate a single-party configuration that allows all exec activities and outbound
+  HTTP. Do not use this configuration across an operator/deployment-author trust boundary
 
 ### Generating deployment configuration
 
-Generate a default `deployment.toml` configuration file:
+Print a default deployment configuration to stdout, or write it to a file when `OUTPUT` is given:
 
 ```sh
 obelisk generate deployment [OPTIONS] [OUTPUT]
@@ -694,7 +696,7 @@ obelisk generate deployment [OPTIONS] [OUTPUT]
 
 Arguments:
 
-- `[OUTPUT]` - Filename to write the TOML to (default: `deployment.toml`)
+- `[OUTPUT]` - Filename to write the TOML to (default: stdout)
 
 Options:
 
