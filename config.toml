@@ -13,7 +13,7 @@ paths = "safe"
 theme = "catppuccin-mocha"
 
 [extra]
-latest = "v0.40.0"
+latest = "v0.41.0"
 versions = [
     "v0.41.0",
     "v0.40.0",
