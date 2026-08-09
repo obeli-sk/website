@@ -113,8 +113,10 @@ activity to obtain e.g. a random number. Other functions are related to
   responses already processed.
 
 - `submit-json: func(join-set: borrow<join-set>, function: function, params: string) -> result<execution-id, submit-json-error>`:
-  Submit a child execution request with its parameters serialized as a JSON array. This enables
-  dynamic function dispatch without compile-time bindings.
+  Submit a child execution request with its parameters serialized as a JSON array. Prefer a static
+  WIT import, including a generated `-obelisk-ext` interface for asynchronous Rust calls, whenever
+  the FFQN is known. Static imports are type checked and verified when the deployment starts. Use
+  `submit-json` only for dynamic dispatch when the target FFQN is determined at runtime.
 
 - `get-result-json: func(execution-id: execution-id) -> result<result<option<string>, option<string>>, get-result-json-error>`:
   Obtain a child execution result as JSON after it has been awaited using `-await-next` extension or
