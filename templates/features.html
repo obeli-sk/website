@@ -13,17 +13,14 @@
         <h1 class="features-page-title">Features</h1>
 
         <div class="new-in-banner">
-            <span class="new-in-label">New in 0.38</span>
+            <span class="new-in-label">New in 0.41</span>
             <ul class="new-in-list">
-                <li><a href="{{ get_url(path='@/docs/latest/configuration.md') }}">Exec activities</a> –
-                    shell scripts, Python, Docker, or any executable as durable activities</li>
-                <li>Self-contained deployments – inline JS and shell scripts directly in
-                    <code>deployment.toml</code></li>
-                <li>Step-through debugging – Replay and Advance via the Web UI, CLI, and REST API</li>
-                <li>Idiomatic JS imports – call activities and workflows with <code>import</code> instead of
-                    FFQN strings</li>
+                <li>Safe deployments for agents – operator-owned secrets and outbound HTTP in
+                    <code>server.toml</code>; a deployment can only narrow what the operator granted</li>
+                <li>Offline deployment verify – compile and check a deployment with <code>--fix</code>, no
+                    server or database needed</li>
             </ul>
-            <a href="{{ get_url(path='@/blog/2026-05-29-announcing-obelisk-0-38.md') }}" class="new-in-link">Read the
+            <a href="{{ get_url(path='@/blog/2026-08-09-announcing-obelisk-0-41.md') }}" class="new-in-link">Read the
                 announcement →</a>
         </div>
 
@@ -111,10 +108,11 @@
                         recorded on first call and replayed identically on crash recovery.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Fine-grained sandbox</h3>
-                    <p>Outbound HTTP restricted to explicitly listed hosts and methods. Environment variables only
-                        expose declared keys. Token-based secrets injected without appearing in code, logs or database.
-                    </p>
+                    <h3>Operator security boundary</h3>
+                    <p>The operator owns secrets and the outbound HTTP allowlist in <code>server.toml</code>. Runtime
+                        access is the intersection of operator policy and each deployment's, so a deployment can only
+                        narrow it. Secrets are injected at the network edge and never reach the sandbox, its logs, or the
+                        database, which is what makes agent-authored deployments safe.</p>
                 </div>
             </div>
         </div>
@@ -144,6 +142,18 @@
                     <p>Push and pull JS or WASM components from any OCI registry. Config (allowed hosts, env vars,
                         secrets, WIT types) is embedded in the manifest so <code>component add</code> restores
                         everything automatically.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Offline verify &amp; repair</h3>
+                    <p><code>obelisk deployment verify</code> compiles and checks a deployment with no running server or
+                        database. <code>--fix</code> repairs content digests, updates the exec allowlist, and scaffolds
+                        missing secret declarations, the loop an author runs before submitting.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Reconstructable deployments</h3>
+                    <p>The submitted <code>deployment.toml</code> and its owned source files are the stored source of
+                        truth. Reconstruct any past deployment back to disk with <code>deployment get</code>, even after
+                        the active one has moved on.</p>
                 </div>
             </div>
         </div>
@@ -178,6 +188,17 @@
                     <h3><a href="{{ get_url(path='@/docs/latest/programmatic-access.md') }}">HTTP and gRPC API</a></h3>
                     <p>Full HTTP API with OpenAPI schema. Submit executions, inspect state, fetch logs, replay, pause,
                         cancel, all scriptable with plain <code>curl</code>.</p>
+                </div>
+                <div class="feature-card">
+                    <h3><a href="{{ get_url(path='@/docs/latest/authentication.md') }}">API authentication</a></h3>
+                    <p>The API port denies unauthenticated requests by default and accepts bearer tokens over REST,
+                        gRPC, and gRPC-web. Token hashes live in <code>server.toml</code>, so the config stays safe to
+                        commit. Webhook endpoints stay open.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Gated exec activities</h3>
+                    <p>Exec activities run host processes outside the WASM sandbox, so they are disabled by default and
+                        opt in globally or by allowlisting reviewed script digests in <code>server.toml</code>.</p>
                 </div>
                 <div class="feature-card">
                     <h3><a href="{{ get_url(path='@/docs/latest/cli.md') }}">CLI</a></h3>
