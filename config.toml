@@ -6,6 +6,28 @@ compile_sass = true
 build_search_index = false
 feed_filenames = ["rss.xml"]
 
+[link_checker]
+skip_prefixes = [
+    "http://localhost:",
+    "https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md#package-names",
+    "https://github.com/bytecodealliance/wit-bindgen/blob/main/README.md#supported-guest-languages",
+    "https://github.com/obeli-sk/demo-stargazers/blob/main/README.md#setting-up",
+    "https://github.com/obeli-sk/demo-stargazers/blob/main/activity/github/interface/github.wit",
+    "https://github.com/obeli-sk/demo-stargazers/blob/main/webhook/README.md",
+    "https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/graphql-sync",
+    "https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/http-simple-sync",
+    "https://github.com/obeli-sk/obelisk-templates/tree/main/graphql-github/activity",
+    "https://github.com/obeli-sk/obelisk-templates/tree/main/http-simple/activity",
+    "https://github.com/obeli-sk/obelisk/blob/main/crates/testing/test-programs/dir/activity/src/lib.rs",
+    "https://github.com/obeli-sk/obelisk/blob/main/crates/testing/test-programs/process/activity/src/lib.rs",
+    "https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_activity%401.0.0/process.wit",
+    "https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_log%401.0.0/log%401.0.0.wit",
+    "https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_log/log.wit",
+    "https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_types/types.wit",
+    "https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow%401.1.0/workflow-support%401.1.0.wit",
+    "https://github.com/obeli-sk/obelisk/blob/main/wit/obelisk_workflow/workflow-support.wit",
+]
+
 [slugify]
 paths = "safe"
 

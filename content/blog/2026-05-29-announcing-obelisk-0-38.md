@@ -19,7 +19,7 @@ goes further: any executable (a shell script, a Python script, a Docker command)
 durable activity with the same retry, timeout, and observability guarantees as WASM and JS
 components.
 
-The [demo-tutorial](https://github.com/obeli-sk/obelisk/tree/main/apps/demo-tutorial) app can be
+The [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) app can be
 extended with an exec activity that calls an external tool. Here is a greeting activity implemented
 as a Bash script:
 
@@ -103,7 +103,7 @@ With 0.37, JS components required separate `.js` files referenced via `location`
 JavaScript components and exec activities support inline `content`, so a complete application can
 live in a single `deployment.toml`.
 
-Here is the [demo-tutorial](https://github.com/obeli-sk/obelisk/tree/main/apps/demo-tutorial)
+Here is the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial)
 rewritten as a self-contained deployment: an activity, a workflow that calls it, and a webhook that
 triggers everything, all in one file:
 
