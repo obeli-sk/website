@@ -103,6 +103,9 @@ in `[secrets]`, and copy your existing deployment allowlist entries into `server
 point before narrowing them. Backtrace persistence is now on demand rather than global, and execution
 failure JSON consistently uses `execution_failed`.
 
-For the full model and every before/after snippet, see the updated
+The {{ doc_link(title="Migrating to 0.41", path="migrating-to-0.41.md", version="v0.41.0") }} guide
+walks through each step with before/after snippets.
+
+For the full model and reference material, see the updated
 {{ doc_link(title="Configuration", path="configuration.md") }} and
 {{ doc_link(title="CLI", path="cli.md") }} docs.
