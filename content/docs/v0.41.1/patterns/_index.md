@@ -14,6 +14,9 @@ interaction.
   independent work through join sets and poll external state with bounded durable sleeps.
 - {{ doc_link(title="Human-in-the-loop signals", path="concepts/activities/stub.md") }} — use stub
   activities for approvals, operator input, and external signals.
+- {{ doc_link(title="Durable mailbox and notification channel", path="patterns/stub-mailbox.md") }}
+  — keep an always-outstanding offer stub as an inbox and self-fulfil a second stub as a progress
+  outbox, sharing one WIT folder between the workflow and its stubs.
 - {{ doc_link(title="Stub RPC (typed oneshot channels)", path="patterns/stub-rpc.md") }} — pair two
   stubs into request/response RPC that bridges a synchronous webhook onto a durable workflow.
 - {{ doc_link(title="Self-fulfilled stub events", path="patterns/self-fulfilled-stub-events.md") }}
