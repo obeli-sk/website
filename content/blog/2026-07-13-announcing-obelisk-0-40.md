@@ -105,7 +105,7 @@ also covers server capabilities such as exec activities, not just environment va
 
 This is a breaking release for both operators and component authors: give the server a token (or opt
 out), enable exec activities if you use them, and rebuild every component against the new WIT
-packages. The {{ doc_link(title="Migrating to 0.40", path="migrating-to-0.40.md") }} guide walks
+packages. The {{ doc_link(title="Migrating to 0.40", path="migrating-to-0.40.md", version="v0.40.0") }} guide walks
 through each step with before/after snippets.
 
 For complete reference material, see the updated
