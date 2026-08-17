@@ -253,7 +253,14 @@ directory = "${CACHE_DIR}/codegen"   # Path to directory where AOT generated cod
 
 ```toml
 [workflows]
-lock_extension_leeway.milliseconds = 100         # Starts extending the lock a little before it expires, specifically at expires_at minus the configured leeway.
+subscription_interruption.seconds = 1  # Interrupts listening for notifications periodically. Needed for Postgres with a local-only subscription mechanism. Value can be "none" or a duration.
+max_events_per_run = 100               # Max history events a real workflow run writes before it yields and unlocks, improving fairness across concurrent workflows. Replay uses max_replay_captured_writes instead.
+max_replay_captured_writes = 100       # Max captured writes a single replay pass returns. On reaching it, replay stops and returns that many as an advanceable prefix (advance them, then replay again to resume), keeping a non-terminating join-next-try poll loop advanceable in bounded batches.
+response_refresh_interval = 32         # Reload responses from the database after this many newly written non-blocking events while a workflow keeps running. Usually set below max_events_per_run. Replay ignores it.
+
+# Deprecated, removed in 0.42: set lock_extension_leeway on each [[workflow_wasm]] / [[workflow_js]]
+# instead. While set here it overrides the per-workflow value for every workflow.
+lock_extension_leeway.milliseconds = 100
 ```
 
 ## HTTP Servers
@@ -618,6 +625,7 @@ stub_wasi = false                     # Default is false.
 
 ## Automatic lock extension can be disabled by setting the duration to zero.
 lock_extension.seconds = 1
+lock_extension_leeway.milliseconds = 100  # Starts extending the lock shortly before it expires, at expires_at minus this leeway.
 
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. Default: "debug"
 ```
@@ -639,6 +647,7 @@ params = [                             # Optional
 return_type = "result"
 retry_exp_backoff.milliseconds = 100
 lock_extension = true
+lock_extension_leeway.milliseconds = 100  # Starts extending the lock shortly before it expires, at expires_at minus this leeway.
 blocking_strategy = "await"
 logs_store_min_level = "debug"
 ```

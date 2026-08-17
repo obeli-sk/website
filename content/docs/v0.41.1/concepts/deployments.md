@@ -75,8 +75,10 @@ or via the Web API, after exporting `OBELISK_API_TOKEN` as described in
 ```sh
 curl "127.1:5005/v1/deployments/Dep_.../switch" \
   -H "Authorization: Bearer $OBELISK_API_TOKEN" \
-  -H content-type:application/json -X PUT -d '{"hot_redeploy": true}'
+  -H content-type:application/json -X PUT -d '{"apply": true}'
 ```
+
+The `apply` field replaces the former `hot_redeploy` field, which is still accepted as an alias.
 
 If a configuration change cannot be applied hot (e.g. a component that requires a full restart), the
 API returns `"restart_required"` and the deployment is enqueued for the next startup.

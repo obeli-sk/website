@@ -424,11 +424,12 @@ Retrieves responses associated with an execution (used for long-running interact
 
 **Query Parameters:**
 
-| Parameter          | Type    | Description                         | Default |
-| :----------------- | :------ | :---------------------------------- | :------ |
-| `cursor_from`      | Integer | Start from this cursor index.       | `0`     |
-| `length`           | Integer | Max number of responses.            | `20`    |
-| `including_cursor` | Boolean | Include the event at `cursor_from`. | `false` |
+| Parameter          | Type    | Description                                      | Default |
+| :----------------- | :------ | :----------------------------------------------- | :------ |
+| `cursor_from`      | Integer | Start from this cursor index.                    | `0`     |
+| `length`           | Integer | Max number of responses.                         | `20`    |
+| `including_cursor` | Boolean | Include the event at `cursor_from`.              | `false` |
+| `join_set`         | String  | Filter to responses of this exact join-set name. | all     |
 
 #### Example request
 
@@ -973,10 +974,10 @@ or enqueue (activate on next restart).
 
 **Request Body (JSON):**
 
-| Field                              | Type    | Description                                                                                                                                                                            |
-| :--------------------------------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hot_redeploy`                     | Boolean | If `true`, apply immediately without restarting (default: `false`)                                                                                                                     |
-| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server before switching. Hot redeploy always requires strict config. |
+| Field                              | Type    | Description                                                                                                                        |
+| :--------------------------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------- |
+| `apply`                            | Boolean | If `true`, apply immediately without restarting (default: `false`). The old key `hot_redeploy` is still accepted as an alias.      |
+| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server before switching. Applying without restart always requires strict config. |
 
 **Responses:**
 
@@ -990,11 +991,11 @@ or enqueue (activate on next restart).
 ```sh
 # Enqueue a deployment (activates on next restart)
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
-  -H content-type:application/json -X PUT -d '{"hot_redeploy": false}'
+  -H content-type:application/json -X PUT -d '{"apply": false}'
 
-# Hot-redeploy immediately
+# Apply immediately without restart
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
-  -H content-type:application/json -X PUT -d '{"hot_redeploy": true}'
+  -H content-type:application/json -X PUT -d '{"apply": true}'
 ```
 
 ```json

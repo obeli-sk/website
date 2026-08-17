@@ -207,7 +207,7 @@ Options:
 ### Retrieving a deployment
 
 Retrieve a deployment to disk as a re-submittable `deployment.toml` plus its deployment-owned source
-files.
+files. By default the exported TOML omits generated content digests and JavaScript module metadata.
 
 ```sh
 obelisk deployment get [OPTIONS] <ID>
@@ -222,6 +222,8 @@ Options:
 - `-o, --output <DIR>` - Directory to write `deployment.toml` and source files into (default:
   current directory)
 - `-f, --force` - Overwrite existing files in the output directory
+- `--include-generated-metadata` - Keep generated content digests and JavaScript module metadata in
+  `deployment.toml`, retaining the stored server view
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
 
 ### Garbage collecting deployment files

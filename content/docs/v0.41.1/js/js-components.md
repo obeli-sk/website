@@ -51,6 +51,35 @@ params = [
 return_type = "result<variant { found(string), not-found }>"
 ```
 
+## Multi-file modules
+
+A JS component can be split across several source files within a single module. The entry file
+referenced by `location` (or supplied via `content`) imports the rest using relative specifiers, and
+Obelisk resolves the closed import graph, storing every reachable file so the module is
+self-contained:
+
+```javascript
+// index.js: the entry file referenced from deployment.toml
+import { greet } from "./lib/greeter.js";
+
+export default function step(name) {
+  return greet(name);
+}
+```
+
+```javascript
+// lib/greeter.js
+export function greet(name) {
+  return `hello, ${name}`;
+}
+```
+
+```toml
+[[activity_js]]
+location = "index.js"   # Only the entry file is referenced; imported files are pulled in automatically
+ffqn = "tutorial:demo/activity.step"
+```
+
 ## OCI distribution
 
 JS components can be pushed to and pulled from OCI registries just like WASM components. Obelisk
