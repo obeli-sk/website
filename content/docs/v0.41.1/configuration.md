@@ -373,6 +373,37 @@ Activities support `by_ffqns` (default) and `by_component_digest`, but not `auto
 are restarted and not replayed, the default `by_ffqns` strategy lets pending executions use the new
 code after redeployment without an upgrade.
 
+### Function Signatures
+
+WASM activities and WASM workflows carry their function signatures inside the compiled component, so
+they never declare `params` or `return_type` in the TOML. Components whose source does not embed a
+WIT world — JavaScript activities and workflows, exec activities, and stub and external activities —
+declare the signature of their `ffqn` in one of two ways:
+
+- **Inline**, with `params` and `return_type` written directly in the component table:
+
+  ```toml
+  [[activity_stub]]
+  ffqn = "example:session/turn.request"
+  params = [{ name = "response-id", type = "string" }]
+  return_type = "result<string, string>"
+  ```
+
+- **From a WIT folder**, with a single `wit` field pointing at a deployment-local directory of WIT
+  files (a `deps/` subfolder for imported packages is supported). Obelisk resolves the component's
+  `ffqn` signature from that folder instead of the inline fields:
+
+  ```toml
+  [[activity_stub]]
+  ffqn = "example:session/turn.request"
+  wit = "wit"
+  ```
+
+The `wit` folder form lets several components — for example a workflow and the stub activities it
+awaits — share one WIT definition as a single source of truth, so their signatures and payload types
+cannot drift. See
+{{ doc_link(title="Durable Mailbox and Notification Channel", path="patterns/stub-mailbox.md") }}.
+
 ## Activities
 
 ### WASM Activities
