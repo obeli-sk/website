@@ -10,6 +10,9 @@ interaction.
 
 - {{ doc_link(title="Cleanup supervisor (saga)", path="patterns/cleanup-supervisor.md") }} — keep
   resource creation and cleanup in a small parent workflow while complex work runs in a child.
+- {{ doc_link(title="Generation reconciler for long-running workflows", path="patterns/generation-reconciler.md") }}:
+  periodically replace obsolete or duplicate cancellable workflows while preserving durable
+  execution history.
 - {{ doc_link(title="Parallel fan-out and durable polling", path="js/js-patterns.md") }} — submit
   independent work through join sets and poll external state with bounded durable sleeps.
 - {{ doc_link(title="Human-in-the-loop signals", path="concepts/activities/stub.md") }} — use stub
