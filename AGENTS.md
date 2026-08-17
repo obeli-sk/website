@@ -81,6 +81,34 @@ after each edit.
 This creates a symlink `content/docs/v0.36.0 -> v0.35.0`, updates the
 `latest` symlink, and updates `config.toml` (latest field + versions list).
 
+### Standard release bump
+
+When Obelisk cuts a release, read the new version's entry in `obelisk/CHANGELOG.md`
+(use `git show vX.Y.Z:CHANGELOG.md` or read the tag, never `git checkout` inside the
+obelisk repo) and decide whether any user-facing docs change:
+
+- **No doc changes** (release-engineering / internal only): make the new version a
+  symlink to the previous real docs dir via `bump-version.sh`, which also moves `latest`
+  and updates `config.toml`. One commit.
+- **Doc changes:**
+  1. First commit is a pure copy of the last real docs dir to the new version dir
+     (`cp -r content/docs/vX.Y.(Z-1) content/docs/vX.Y.Z`), so the following diff reviews
+     cleanly. Commit message e.g. `Copy vX.Y.Z from vX.Y.(Z-1)`.
+  2. Second commit is the doc edits themselves, in the new version dir only.
+  3. A final commit moves `latest` (symlink + `config.toml` latest field) and adds the
+     new version(s) to the `versions` list. A doc-neutral patch on top can be a symlink
+     to the doc-bearing version and become `latest`.
+
+Gotchas:
+
+- `fmt-md.sh` runs prettier over the whole `content/` tree, so it reformats pre-existing
+  drift in unrelated files (other versions, blog posts). After running it, `git restore`
+  the files you did not intend to edit so the bump stays focused.
+- Pin version-specific `doc_link` paths (e.g. a `migrating-to-X.Y.md` guide) with
+  `version="vX.Y.Z"`. Unpinned links resolve through `latest`, so advancing `latest`
+  breaks any that point at a file only present in the old version.
+- Run `zola build` after moving `latest`; it fails on broken links (0 orphans expected).
+
 ## Styling
 
 All CSS is in `sass/style.scss`. Key design tokens are CSS custom properties:
