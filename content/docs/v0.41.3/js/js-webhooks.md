@@ -181,21 +181,21 @@ const myExecId = obelisk.executionIdCurrent();
 
 **Dynamic calls (when FFQN isn't known statically):**
 
-| Call                                              | Returns                                                                                                                              | Description                                            |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| `obelisk.call(ffqn, argArray)`                    | returns ok value, throws `obelisk.ChildError` on failure                                                                    | Call and await a child execution                       |
-| `obelisk.executionIdGenerate()`                   | `executionId` (string)                                                                                                               | Generate a unique execution ID                         |
-| `obelisk.executionIdCurrent()`                    | `executionId` (string)                                                                                                               | Get the execution ID of the current webhook invocation |
-| `obelisk.schedule(execId, ffqn, argArray)`        | —                                                                                                                                    | Schedule a top-level execution immediately             |
-| `obelisk.schedule(execId, ffqn, argArray, scheduleAt)` | —                                                                                                                               | Schedule with a relative duration or absolute `Date`   |
-| `obelisk.getStatus(execId)`                       | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"cancelling"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
-| `obelisk.get(execId)`                             | ok value (throws `obelisk.ChildError` on failure)                                                                           | Blocking: waits until execution finishes               |
-| `obelisk.tryGet(execId)`                          | ok value (throws `obelisk.ChildError` on failure), `undefined` if not finished yet                                          | Non-blocking result fetch                              |
+| Call                                                   | Returns                                                                                                                              | Description                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `obelisk.call(ffqn, argArray)`                         | returns ok value, throws `obelisk.ChildError` on failure                                                                             | Call and await a child execution                       |
+| `obelisk.executionIdGenerate()`                        | `executionId` (string)                                                                                                               | Generate a unique execution ID                         |
+| `obelisk.executionIdCurrent()`                         | `executionId` (string)                                                                                                               | Get the execution ID of the current webhook invocation |
+| `obelisk.schedule(execId, ffqn, argArray)`             | —                                                                                                                                    | Schedule a top-level execution immediately             |
+| `obelisk.schedule(execId, ffqn, argArray, scheduleAt)` | —                                                                                                                                    | Schedule with a relative duration or absolute `Date`   |
+| `obelisk.getStatus(execId)`                            | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"cancelling"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
+| `obelisk.get(execId)`                                  | ok value (throws `obelisk.ChildError` on failure)                                                                                    | Blocking: waits until execution finishes               |
+| `obelisk.tryGet(execId)`                               | ok value (throws `obelisk.ChildError` on failure), `undefined` if not finished yet                                                   | Non-blocking result fetch                              |
 
 ## Available globals
 
 Same as {{ doc_link(title="JS activities", path="js/js-activities.md") }}: `process.env`, `fetch`,
-`crypto.subtle`, `console`, `TextEncoder`/`TextDecoder`.
+`crypto.subtle`, `console`, `TextEncoder`/`TextDecoder`, `URL`/`URLSearchParams`.
 
 ## Fetch example
 

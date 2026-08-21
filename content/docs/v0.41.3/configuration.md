@@ -765,8 +765,8 @@ params = '["arg1", 42]'                  # JSON array; defaults to []
 schedule = "@daily"                      # cron expression or named shorthand
 ```
 
-The `schedule` field accepts standard five-field cron expressions (`"0 3 * * *"`) or one of the
-named shorthands:
+The `schedule` field accepts standard five-field cron expressions (`"0 3 * * *"`), six-field
+expressions whose leading field adds seconds (`"30 0 3 * * *"`), or one of the named shorthands:
 
 | Shorthand  | Meaning                                             |
 | ---------- | --------------------------------------------------- |

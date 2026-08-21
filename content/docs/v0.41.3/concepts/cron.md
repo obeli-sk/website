@@ -29,7 +29,8 @@ schedule = "@daily"
 
 ## Schedule syntax
 
-The `schedule` field accepts standard five-field cron expressions or one of the named shorthands:
+The `schedule` field accepts standard five-field cron expressions, six-field expressions whose
+leading field adds seconds, or one of the named shorthands:
 
 | Value           | Equivalent / Meaning                               |
 | --------------- | -------------------------------------------------- |
@@ -41,7 +42,8 @@ The `schedule` field accepts standard five-field cron expressions or one of the 
 | `@yearly`       | `0 0 1 1 *` — at midnight on 1 January             |
 | `"*/5 * * * *"` | Every 5 minutes (custom expression)                |
 
-Fields in a cron expression are: `minute hour day-of-month month day-of-week`.
+Fields in a five-field cron expression are: `minute hour day-of-month month day-of-week`. A
+six-field expression prepends a `second` field: `second minute hour day-of-month month day-of-week`.
 
 ## How it works
 

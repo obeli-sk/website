@@ -85,6 +85,7 @@ throws.
 | `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                       |
 | `console.log/info/warn/error` | Structured log entries stored in the execution log                                                |
 | `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                    |
+| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                      |
 
 ## Examples
 
