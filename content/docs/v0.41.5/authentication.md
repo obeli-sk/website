@@ -25,8 +25,8 @@ endpoints stay open so they can serve public HTTP traffic. Do not expose it on a
 without your own protection in front of it.
 
 > **Recovery / development:** start the server with `--no-auth` to accept unauthenticated requests
-> on the API port, restoring the pre-0.40 behavior. Use it only for local development or to recover
-> access. (`--allow-unauthenticated-api` is a deprecated alias.)
+> on the API port. Use it only for local development or to recover access.
+> (`--allow-unauthenticated-api` is a deprecated alias.)
 
 ## Tokens
 

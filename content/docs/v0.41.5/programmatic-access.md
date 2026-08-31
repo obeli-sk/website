@@ -39,8 +39,8 @@ curl -H "$OBELISK_API_AUTH" http://127.0.0.1:5005/v1/components
 
 An ephemeral startup token is printed to the console on every server start; persistent tokens are
 configured as SHA-256 hashes. See {{ doc_link(title="Authentication", path="authentication.md") }}
-for how to generate and configure tokens. The `--no-auth` server flag restores the old open behavior
-for development or recovery.
+for how to generate and configure tokens. The `--no-auth` server flag accepts unauthenticated
+requests on the API port, for development or recovery.
 
 All `curl` examples below use `$OBELISK_API_AUTH` defined above.
 
