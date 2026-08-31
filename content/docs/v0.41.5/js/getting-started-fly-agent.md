@@ -324,8 +324,8 @@ Result: 42 is the answer
 ```
 
 List executions to see the full hierarchy. The API port (`5005`) requires a bearer token printed to
-the console on startup; export it first (or start the server with `--allow-unauthenticated-api`).
-See {{ doc_link(title="Authentication", path="authentication.md") }}.
+the console on startup; export it first (or start the server with `--no-auth`). See
+{{ doc_link(title="Authentication", path="authentication.md") }}.
 
 ```bash
 export OBELISK_API_TOKEN=<token printed on server startup>

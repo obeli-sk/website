@@ -239,8 +239,8 @@ Parallel workflow — all steps run concurrently:
 ![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
 
 Via the API. The API port (`5005`) requires a bearer token, printed to the console on startup;
-export it first (or start the server with `--allow-unauthenticated-api` for a throwaway tutorial).
-See {{ doc_link(title="Authentication", path="authentication.md") }}.
+export it first (or start the server with `--no-auth` for a throwaway tutorial). See
+{{ doc_link(title="Authentication", path="authentication.md") }}.
 
 ```bash
 export OBELISK_API_TOKEN=<token printed on server startup>

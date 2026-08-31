@@ -39,8 +39,8 @@ curl -H "$OBELISK_API_AUTH" http://127.0.0.1:5005/v1/components
 
 An ephemeral startup token is printed to the console on every server start; persistent tokens are
 configured as SHA-256 hashes. See {{ doc_link(title="Authentication", path="authentication.md") }}
-for how to generate and configure tokens. The `--allow-unauthenticated-api` server flag restores the
-old open behavior for development or recovery.
+for how to generate and configure tokens. The `--no-auth` server flag restores the old open behavior
+for development or recovery.
 
 All `curl` examples below use `$OBELISK_API_AUTH` defined above.
 
@@ -57,6 +57,11 @@ and `/v1/executions/{execution-id}/backtrace/source`.
 
 Send an explicit `Accept` header to override an endpoint's default where both representations are
 supported.
+
+> **Deprecated:** `text/plain` representations of structured resources and actions are deprecated
+> and will be removed after 0.43; use `application/json`. Plaintext remains supported (not
+> deprecated) for WIT documents, backtrace source files, and the execution and deployment ID
+> endpoints.
 
 ---
 

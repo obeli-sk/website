@@ -9,8 +9,8 @@ weight = 50
 These flags are accepted by any subcommand:
 
 - `--api-token <TOKEN>` - API token presented to the server as `Authorization: Bearer <token>` by
-  subcommands that talk to the API. Falls back to `$OBELISK_API_TOKEN`, then `$OBELISK__API__TOKEN`.
-  See {{ doc_link(title="Authentication", path="authentication.md") }}
+  subcommands that talk to the API. Falls back to `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is
+  deprecated. See {{ doc_link(title="Authentication", path="authentication.md") }}
 - `-v, --version` - Print version
 
 ## Obelisk Server
@@ -36,8 +36,12 @@ Options:
   database
 - `--suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail
   type checking against the current deployment
-- `--allow-unauthenticated-api` - Accept unauthenticated requests on the API port. Development /
-  recovery override; see {{ doc_link(title="Authentication", path="authentication.md") }}
+- `--no-auth` - Accept unauthenticated requests on the API port. Development / recovery override;
+  conflicts with `--api-token`. See
+  {{ doc_link(title="Authentication", path="authentication.md") }}. (`--allow-unauthenticated-api`
+  is a deprecated alias.)
+- `--api-token <TOKEN>` - API token required to access the API server. Falls back to
+  `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. Conflicts with `--no-auth`
 
 If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
 
@@ -115,7 +119,8 @@ Options:
   verifying the deployment before persisting it
 - `--description <DESCRIPTION>` - Optional human-readable description
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Enqueueing a deployment
 
@@ -139,7 +144,8 @@ Options:
   deployment
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
   submitting a file or empty deployment
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Applying a deployment
 
@@ -161,7 +167,8 @@ Options:
   deployment
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
   submitting a file or empty deployment
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Listing deployments
 
@@ -171,7 +178,8 @@ obelisk deployment list [OPTIONS]
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Showing the active deployment ID
 
@@ -182,7 +190,8 @@ obelisk deployment active [OPTIONS]
 Options:
 
 - `--json` - Output as JSON instead of plain text
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Showing a deployment
 
@@ -202,7 +211,8 @@ Arguments:
 Options:
 
 - `--json` - Print the stored TOML manifest as JSON instead of TOML
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Retrieving a deployment
 
@@ -224,7 +234,8 @@ Options:
 - `-f, --force` - Overwrite existing files in the output directory
 - `--include-generated-metadata` - Keep generated content digests and JavaScript module metadata in
   `deployment.toml`, retaining the stored server view
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Garbage collecting deployment files
 
@@ -236,7 +247,8 @@ obelisk deployment gc [OPTIONS]
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ## Obelisk Execution
 
@@ -259,7 +271,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `-e, --execution-id <ID>` - Use this explicit execution ID instead of having the server assign one
   (useful for idempotency — see `obelisk generate execution-id`)
 - `-f, --follow` - Follow the status stream until the execution finishes
@@ -276,7 +289,8 @@ obelisk execution list [OPTIONS]
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `--ffqn <FFQN_PREFIX>` - Filter by function FFQN prefix (any prefix of a fully-qualified name,
   e.g. `namespace:`; short `.../ifc.fn` form not supported)
 - `-e, --execution_id <EXECUTION_ID_PREFIX>` - Filter by execution ID or its prefix (useful with
@@ -311,7 +325,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `-f, --follow` - Follow the status stream until the execution finishes
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -328,7 +343,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `-f, --follow` - Follow until the execution finishes and the final result is available
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -345,7 +361,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `--show-derived` - Include logs from child (derived) executions
 - `--level <LEVEL>` - Minimum log level: `trace`, `debug`, `info`, `warn`, `error`, `off` (default:
   `debug`)
@@ -369,7 +386,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `--from <VERSION>` - Start from this event version (inclusive)
 - `--limit <LIMIT>` - Number of events to return (default: `20`)
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -400,7 +418,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `--from <CURSOR>` - Start from this response cursor (inclusive)
 - `--limit <LIMIT>` - Number of responses to return (default: `20`)
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -430,7 +449,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 Workflow cancellation is accepted only for workflows whose exported function name ends in
 `-cancellable`. This lets an operator release a workflow that is stuck on a long-lived stub, blocked
@@ -452,7 +472,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Pausing an execution or delay
 
@@ -470,7 +491,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Resuming a paused execution or delay
 
@@ -484,7 +506,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Replaying an execution
 
@@ -501,7 +524,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `-j, --json` - Output as JSON instead of human-readable text
 
 ### Persisting workflow backtraces
@@ -529,7 +553,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `-j, --json` - Output as JSON instead of human-readable text
 - `--trim <TRIM>` - Send only the first N captured writes from replay to advance
 - `-p, --pause-all` (alias: `--pause`) - Pause both replayed child executions and delay requests
@@ -556,7 +581,8 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `--skip-determinism-check` - Skip the determinism check during upgrade
 
 ## Obelisk Component
@@ -569,7 +595,8 @@ obelisk component list [OPTIONS]
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`)
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 - `-i, --imports` - Show component imports
 - `-e, --extensions` - Show auto-generated export extensions
 

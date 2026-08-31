@@ -24,9 +24,9 @@ The **external webhook HTTP server** (`127.0.0.1:9090` by default) is **not** au
 endpoints stay open so they can serve public HTTP traffic. Do not expose it on a public interface
 without your own protection in front of it.
 
-> **Recovery / development:** start the server with `--allow-unauthenticated-api` to accept
-> unauthenticated requests on the API port, restoring the pre-0.40 behavior. Use it only for local
-> development or to recover access.
+> **Recovery / development:** start the server with `--no-auth` to accept unauthenticated requests
+> on the API port, restoring the pre-0.40 behavior. Use it only for local development or to recover
+> access. (`--allow-unauthenticated-api` is a deprecated alias.)
 
 ## Tokens
 
@@ -67,27 +67,28 @@ and restarting the server.
 
 ### Plaintext token from the environment
 
-A single plaintext token can be injected into the **server** through the environment as
-`OBELISK__API__TOKEN` (the double-underscore config-env form, equivalent to the `api.token` key).
-This is intended for secret-manager injection at deploy time; do not write the plaintext into a
-committed `server.toml`.
+A single plaintext token can be injected into the **server** through `--api-token` or the
+environment variable `OBELISK_API_TOKEN` — the same variable the CLI client uses (see below). This
+is intended for secret-manager injection at deploy time; do not write the plaintext into a committed
+`server.toml`.
 
 ```sh
-export OBELISK__API__TOKEN=<token>
+export OBELISK_API_TOKEN=<token>
 obelisk server run --deployment deployment.toml
 ```
 
-> **Note:** the server only reads `OBELISK__API__TOKEN` (double underscore). It does **not** accept
-> `OBELISK_API_TOKEN` (single underscore), which is a client-side variable (see below).
+> **Deprecated:** the legacy double-underscore config-env form `OBELISK__API__TOKEN` is still
+> accepted by the server but prints a deprecation warning; switch to `OBELISK_API_TOKEN`. There is
+> no plaintext `api.token` key in `server.toml` — persistent tokens are configured as hashes via
+> `api.token_hashes` (above).
 
 ## Authenticating each client
 
 ### CLI
 
 Subcommands that talk to the API present the token via the global `--api-token` flag, which falls
-back to `$OBELISK_API_TOKEN` and then `$OBELISK__API__TOKEN`. Note the asymmetry: the client accepts
-either `OBELISK_API_TOKEN` or `OBELISK__API__TOKEN`, but the server reads only `OBELISK__API__TOKEN`
-for its accepted plaintext token.
+back to `$OBELISK_API_TOKEN`, then the deprecated `$OBELISK__API__TOKEN`. The server accepts the
+same `$OBELISK_API_TOKEN` variable, so client and server now share one canonical variable.
 
 ```sh
 export OBELISK_API_TOKEN=<token>
@@ -95,14 +96,14 @@ obelisk deployment submit deployment.toml     # picks up $OBELISK_API_TOKEN
 obelisk --api-token <token> execution list    # or pass it explicitly
 ```
 
-> **Tip (local development):** because the server accepts `OBELISK__API__TOKEN` and the CLI falls
-> back to it, a single generated token can authenticate both sides. With
-> [direnv](https://direnv.net/), mint a fresh token per shell in `.envrc` so the server you start
-> and the CLI you run share it automatically, with no copy-paste of the startup token:
+> **Tip (local development):** because the server and the CLI both accept `OBELISK_API_TOKEN`, a
+> single generated token can authenticate both sides. With [direnv](https://direnv.net/), mint a
+> fresh token per shell in `.envrc` so the server you start and the CLI you run share it
+> automatically, with no copy-paste of the startup token:
 >
 > ```sh
 > # .envrc
-> export OBELISK__API__TOKEN=$(obelisk generate token)
+> export OBELISK_API_TOKEN=$(obelisk generate token)
 > ```
 
 ### REST / curl

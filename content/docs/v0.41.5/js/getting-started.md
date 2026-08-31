@@ -232,9 +232,8 @@ needs no token):
 export OBELISK_API_TOKEN=<token printed on server startup>
 ```
 
-For a throwaway tutorial you can instead start the server with `--allow-unauthenticated-api` and
-drop the `Authorization` header. See
-{{ doc_link(title="Authentication", path="authentication.md") }}.
+For a throwaway tutorial you can instead start the server with `--no-auth` and drop the
+`Authorization` header. See {{ doc_link(title="Authentication", path="authentication.md") }}.
 
 List top-level executions — one per webhook call:
 
