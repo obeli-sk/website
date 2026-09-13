@@ -19,7 +19,7 @@ The `obelisk-version` field can be set in either file to ensure compatibility wi
 Obelisk version:
 
 ```toml
-obelisk-version = "0.41"
+obelisk-version = "0.42"
 ```
 
 ### Built-in Defaults
@@ -67,11 +67,16 @@ obelisk server verify --server-config server.toml --deployment deployment.toml
 If `--server-config` is omitted, built-in defaults are used. If `--deployment` is omitted, the
 database's active/enqueued deployment is used.
 
-To verify and optionally repair a local deployment without opening the database, use:
+To verify a local deployment without opening the database, use:
 
 ```sh
-obelisk deployment verify --server-config server.toml --deployment deployment.toml --fix
+obelisk deployment verify --server-config server.toml --deployment deployment.toml
 ```
+
+Missing public environment variables and secrets are reported together with a sorted, pasteable
+`server.toml` snippet. Add `--fix` to update `[public_env].allowed` and scaffold missing `[secrets]`
+entries automatically, then review the generated policy and provide each secret source before
+starting the server. `obelisk server verify --fix` provides the same repair behavior.
 
 ---
 
@@ -117,6 +122,21 @@ At startup, Obelisk reads each value into memory and removes its source variable
 environment. Deployments request logical names in `activity_exec.secrets` and each allowed host's
 `secrets` field; they cannot interpolate registered secret values with `${...}`.
 
+### Public Deployment Environment
+
+Deployments can only read process environment variables named in the operator-owned allowlist. The
+allowlist applies both to `env_vars` forwarded into components and `${...}` interpolation anywhere
+in `deployment.toml`:
+
+```toml
+[public_env]
+allowed = ["API_BASE_URL", "REGION"]
+```
+
+Keep credentials in the secret registry instead. A variable registered as a secret cannot also be
+read through the public environment allowlist. Missing allowed variables do not affect server
+startup unless the active deployment requires them.
+
 ### Server Outbound HTTP Policy
 
 Component-originated HTTP must match an allowlist entry in both `server.toml` and the component's
@@ -159,10 +179,19 @@ Or allowlist only reviewed scripts, pinned by the SHA-256 digest of the exact sc
 rejected deployment logs the digest line to copy here after review:
 
 ```toml
-allow_exec_activities = [
-  "sha256:...",   # greet.sh, reviewed 2026-07-13
-]
+[allow_exec_activities]
+greet = "sha256:..." # reviewed 2026-07-13
 ```
+
+### Server Limits
+
+```toml
+[limits]
+max_deployment_file_bytes = 20971520 # 20 MiB default
+```
+
+`max_deployment_file_bytes` limits an individual file submitted as part of a deployment. In 0.42
+this setting lives under `[limits]`, not at the top level of `server.toml`.
 
 ### Sqlite
 
@@ -259,9 +288,6 @@ max_events_per_run = 100               # Max history events a real workflow run 
 max_replay_captured_writes = 100       # Max captured writes a single replay pass returns. On reaching it, replay stops and returns that many as an advanceable prefix (advance them, then replay again to resume), keeping a non-terminating join-next-try poll loop advanceable in bounded batches.
 response_refresh_interval = 32         # Reload responses from the database after this many newly written non-blocking events while a workflow keeps running. Usually set below max_events_per_run. Replay ignores it.
 
-# Deprecated, removed in 0.42: set lock_extension_leeway on each [[workflow_wasm]] / [[workflow_js]]
-# instead. While set here it overrides the per-workflow value for every workflow.
-lock_extension_leeway.milliseconds = 100
 ```
 
 ## HTTP Servers
