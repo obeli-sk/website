@@ -115,6 +115,12 @@ the component or requested secret set changes. Use this mechanism for credential
 code must read, such as inbound webhook HMAC keys. Do not put credentials in `[public_env]` or
 ordinary `env_vars`.
 
+Deployment generators that synthesize both `deployment.toml` and operator `server.toml` must apply
+the same binding. Materialize the final component configuration first, generate its digest, and
+carry that digest alongside the exposed-secret request or recompute it before writing the operator
+grant. Reject an exposed-secret request when the matching digest is absent; never fall back to an
+ordinary environment variable.
+
 Outbound HTTP placeholder replacement still uses `allowed_host.secrets` and does not require
 plaintext exposure or an `exposed_to` grant.
 
