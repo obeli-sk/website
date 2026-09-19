@@ -30,6 +30,7 @@ routes   = [
     { methods = ["POST"], route = "/items/:id" },
 ]
 env_vars = [{ key = "DB_URL", value = "..." }]
+exposed_secrets = ["WEBHOOK_SIGNING_SECRET"]
 [[webhook_endpoint_js.allowed_host]]
 pattern = "https://api.example.com"
 methods = ["GET"]
@@ -39,6 +40,13 @@ replace_in = ["headers"]
 
 The server must register `API_KEY` in `[secrets]` and allow the same destination, method, secret,
 and `replace_in` target in `[[outbound_http.allowed_host]]`.
+
+`WEBHOOK_SIGNING_SECRET` is different: the handler must read its plaintext to validate inbound
+signatures. Register it under `[secrets]`, generate a digest with
+`obelisk generate secret-config-digest --deployment deployment.toml`, and authorize the resulting
+component-and-secret-set digest under `[secrets.WEBHOOK_SIGNING_SECRET.exposed_to]`. The handler can
+then read `process.env.WEBHOOK_SIGNING_SECRET`. Regenerate the grant whenever the component or its
+complete `exposed_secrets` list changes.
 
 Route path segments starting with `:` are captured and exposed as `process.env` entries inside the
 handler — `process.env['segment-name']` returns the captured value as a string.

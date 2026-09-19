@@ -61,17 +61,22 @@ authorized request, after both the deployment and server policies match the dest
 optional URL regex, secret name, and replacement location. This limits the opportunity for generated
 or compromised code to exfiltrate a credential.
 
-Expose plaintext only when placeholder substitution cannot support the operation. Exec activities
-receive exposed secrets through stdin, and VM activities receive them as guest environment
-variables. Code with plaintext access can attempt to copy the credential through any capability it
-also holds. Both component types therefore require a `SecretExposureDigest` grant under
-`[secrets.<name>.exposed_to]`; exec activities additionally require the same reviewed digest under
+Expose plaintext only when placeholder substitution cannot support the operation. Starting with
+0.42.0-rc.3, WASM and JavaScript activities and webhook endpoints can request registered secrets
+with `exposed_secrets`; Obelisk injects them as environment variables when executing the activity or
+handling the request. This supports operations such as validating an inbound webhook HMAC, where
+component code must read the key.
+
+Exec activities receive exposed secrets through stdin, and VM activities receive them as guest
+environment variables. Code with plaintext access can attempt to copy the credential through any
+capability it also holds. Every plaintext exposure therefore requires a `SecretExposureDigest` grant
+under `[secrets.<name>.exposed_to]`, bound to the component digest and its complete requested secret
+set. Exec activities additionally require the same reviewed digest under
 `[allowed_exec_activities]`.
 
-In 0.42.0-rc.2, registered-secret plaintext exposure is not available to JS or WASM webhook code.
-That means an RC2 webhook cannot securely read a shared secret to validate an inbound HMAC
-signature. Outbound placeholder substitution still works for webhook HTTP clients. Do not work
-around the inbound limitation by placing the credential in `public_env` or ordinary `env_vars`.
+Do not put credentials in `public_env` or ordinary component `env_vars`. Do not use
+`exposed_secrets` merely to construct an outbound authorization header: outbound placeholder
+substitution keeps the plaintext hidden from component code and should remain the default.
 
 ## Network boundaries
 

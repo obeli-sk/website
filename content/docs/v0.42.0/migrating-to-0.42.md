@@ -90,10 +90,33 @@ Register each logical name in the server's `[secrets]` table and add a matching
 `[[outbound_http.allowed_host]]` policy. The source environment variable belongs only in the server
 secret registry, not in `[public_env].allowed` or the component's `env_vars`.
 
-In 0.42.0-rc.2, registered secrets cannot be exposed as plaintext to JS or WASM webhook code for
-inbound HMAC validation. Outbound HTTP placeholder replacement still works. Do not migrate an
-inbound webhook credential into `public_env` or ordinary `env_vars`; keep that application on its
-previous release until a release with secure webhook secret injection is available.
+### Authorize plaintext secrets for activities and webhooks
+
+Starting with 0.42.0-rc.3, JS and WASM activities and webhook endpoints can request registered
+secrets as environment variables with `exposed_secrets`:
+
+```toml
+[[webhook_endpoint_js]]
+name = "signed-webhook"
+location = "webhook.js"
+routes = ["/*"]
+exposed_secrets = ["WEBHOOK_SIGNING_SECRET"]
+```
+
+Plaintext exposure also requires an operator grant under `[secrets.<name>.exposed_to]`. Generate the
+digest after migrating the deployment, then review and copy the relevant entries into `server.toml`:
+
+```sh
+obelisk generate secret-config-digest --deployment deployment.toml
+```
+
+The grant is bound to the component digest and its complete exposed-secret set. Regenerate it when
+the component or requested secret set changes. Use this mechanism for credentials that component
+code must read, such as inbound webhook HMAC keys. Do not put credentials in `[public_env]` or
+ordinary `env_vars`.
+
+Outbound HTTP placeholder replacement still uses `allowed_host.secrets` and does not require
+plaintext exposure or an `exposed_to` grant.
 
 ## Import JavaScript runtime APIs
 
@@ -261,6 +284,7 @@ equivalent REST request bodies.
 6. Update REST and gRPC clients that use removed aliases, request fields, or cursor formats.
 7. Review the new 30-day retention and 1 MiB persisted-value defaults.
 8. Run `obelisk deployment verify` for every server/deployment pair.
-9. Confirm that no JS/WASM webhook depends on unavailable RC2 plaintext secret exposure.
+9. Add reviewed `exposed_to` grants for every JS/WASM activity or webhook that requests plaintext
+   secrets, and keep outbound-only secrets on placeholder replacement.
 10. Back up the database, upgrade the server, and smoke-test workflow calls, webhook schedules,
     outbound HTTP, and log pagination.

@@ -20,7 +20,8 @@ return_type  = "result<string>"
 exec.lock_expiry.seconds = 10   # executor lease duration; if the activity runs longer,
                                 # Obelisk considers it lost and reschedules it
 max_retries  = 5
-env_vars     = [{ key = "API_KEY", value = "secret" }]
+env_vars     = [{ key = "API_BASE_URL", value = "https://api.example.com" }]
+exposed_secrets = ["SIGNING_KEY"]
 [[activity_js.allowed_host]]
 pattern = "https://api.example.com"
 methods = ["GET", "POST"]
@@ -28,6 +29,9 @@ methods = ["GET", "POST"]
 
 The server must permit the same destination and methods with a matching
 `[[outbound_http.allowed_host]]` entry. An empty server allowlist denies component-originated HTTP.
+`SIGNING_KEY` must be registered under `[secrets]` and authorized for this component under
+`[secrets.SIGNING_KEY.exposed_to]`; it is then available as `process.env.SIGNING_KEY`. Prefer an
+outbound HTTP secret placeholder instead when the activity does not need to read the plaintext.
 
 ## Return values and errors
 
@@ -79,7 +83,7 @@ throws.
 
 | Global                        | Description                                                                                       |
 | ----------------------------- | ------------------------------------------------------------------------------------------------- |
-| `process.env`                 | Access environment variables configured via `env_vars`                                            |
+| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                     |
 | `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                    |
 | `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) (HMAC, AES, RSA, …) |
 | `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                       |

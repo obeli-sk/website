@@ -130,14 +130,20 @@ migration = "sha256:..."
 ```
 
 The inline form is convenient for secrets used only in HTTP placeholders. Use the regular table form
-when adding an `exposed_to` authorization for plaintext exec or VM exposure; TOML does not allow a
+when adding an `exposed_to` authorization for plaintext component exposure; TOML does not allow a
 nested table to extend an inline table.
 
 At startup, Obelisk reads each value into memory and removes its source variable from the process
-environment. Deployments request logical names in `activity_exec.exposed_secrets`,
-`activity_vm.exposed_secrets`, and each allowed host's `secrets` field; they cannot interpolate
-registered secret values with `${...}`. Plaintext exposure to an exec or VM activity also requires
-an `exposed_to` grant generated with `obelisk generate secret-config-digest`.
+environment. Deployments request logical names in a component's `exposed_secrets` or an allowed
+host's `secrets` field; they cannot interpolate registered secret values with `${...}`. The former
+gives component code the plaintext value and requires an `exposed_to` grant generated with
+`obelisk generate secret-config-digest`. The latter substitutes opaque placeholders only in an
+authorized outbound request and does not require a plaintext-exposure grant.
+
+In 0.42.0-rc.3, `exposed_secrets` is supported by WASM and JavaScript activities and webhook
+endpoints, native exec activities, and experimental VM activities. WASM, JavaScript, and VM
+components receive each value under its logical name as an environment variable. Exec activities
+receive the values in the `secrets` object on stdin.
 
 ### Public Deployment Environment
 
@@ -502,8 +508,13 @@ retry_exp_backoff.milliseconds = 100 # Initial retry delay (doubles each attempt
 forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
+exposed_secrets = ["ACTIVITY_SECRET"] # Registered secrets injected as environment variables. Requires exposed_to grants.
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. One of "off"|"trace"|"debug"|"info"|"warn"|"error". Default: "debug"
 ```
+
+Use `exposed_secrets` only when the activity must read the plaintext. Register every name under
+`[secrets]`, then generate and review its `[secrets.<name>.exposed_to]` grant. For credentials used
+only in outbound HTTP, prefer the `allowed_host.secrets` placeholder mechanism below.
 
 RC2 also has experimental WASIp3 component support for WASM activities and webhook endpoints. The
 component model is detected from the binary; the existing deployment component sections and operator
@@ -587,9 +598,13 @@ retry_exp_backoff.milliseconds = 100
 forward_stdout = "db"
 forward_stderr = "db"
 logs_store_min_level = "debug"
+exposed_secrets = ["ACTIVITY_SECRET"] # Injected into process.env. Requires exposed_to grants.
 ```
 
-Outbound HTTP allowlist: same `[[activity_js.allowed_host]]` syntax as `activity_wasm`.
+Outbound HTTP allowlist: same `[[activity_js.allowed_host]]` syntax as `activity_wasm`. JavaScript
+activities receive exposed values as `process.env.ACTIVITY_SECRET`. Register the logical name in the
+server secret registry and authorize the generated digest under
+`[secrets.ACTIVITY_SECRET.exposed_to]`.
 
 ### Experimental VM Activities
 
@@ -834,6 +849,7 @@ routes = [                           # Route configurations
 forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
+exposed_secrets = ["WEBHOOK_SIGNING_SECRET"] # Injected as environment variables. Requires exposed_to grants.
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
@@ -852,8 +868,15 @@ forward_stdout = "stderr"
 forward_stderr = "stderr"
 logs_store_min_level = "debug"
 env_vars = ["ENV1", "ENV2=value"]
+exposed_secrets = ["WEBHOOK_SIGNING_SECRET"] # Available through process.env. Requires exposed_to grants.
 backtrace_persist = true              # Persist call-site backtraces for this webhook. Default: false.
 ```
+
+Plaintext webhook secrets are intended for operations such as validating an inbound HMAC signature.
+Register every logical name under `[secrets]`, generate grants with
+`obelisk generate secret-config-digest --deployment deployment.toml`, and copy the reviewed
+`[secrets.<name>.exposed_to]` entries into `server.toml`. The grant is bound to the component digest
+and complete exposed-secret set, so regenerate it when either changes.
 
 #### Route Syntax
 
