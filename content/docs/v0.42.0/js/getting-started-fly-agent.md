@@ -107,6 +107,7 @@ functions. Their FFQNs follow the WIT package structure:
 // demo:fly-agent/workflow.agent: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
 import * as machines from "obelisk-flyio:activity-fly-http/machines@1.0.0-beta";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function agent(app_name, org_slug, prompt) {
   // Step 1: Create the fly.io app.

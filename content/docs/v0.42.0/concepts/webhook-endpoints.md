@@ -17,8 +17,8 @@ webhook handlers. URL path parameters are exposed as environment variables insid
 
 For language-specific implementation details, see:
 
-- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — JavaScript handler,
-  `obelisk.call`, `obelisk.schedule`, fetch, path parameters
+- {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} — JavaScript handler, `dynamic.call`
+  and `dynamic.schedule` from `obelisk:webhook-dynamic@1.0.0`, fetch, path parameters
 - {{ doc_link(title="Rust Components", path="wasm/rust-components.md") }} — Rust/WASM handler using
   `wstd`, WIT imports, `cargo generate` templates
 - {{ doc_link(title="HTTP Client (Rust)", path="wasm/http-client.md") }} — Making outbound HTTP
@@ -28,9 +28,15 @@ For language-specific implementation details, see:
 
 The webhook endpoint in the
 [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/webhook) shows a
-real-world integration with GitHub, covering:
+real-world integration with GitHub. Its inbound webhook secret setup requires a release newer than
+0.42.0-rc.2. RC2 registered secrets support outbound HTTP placeholder replacement and authorized
+exec/VM plaintext exposure, but cannot securely expose a registered secret to JS or WASM webhook
+code for validating an inbound HMAC signature. Do not put such a credential in `public_env` or a
+regular component `env_vars` entry.
 
-- Setting a shared secret and passing it as an environment variable
+The demo covers:
+
+- Registering a shared webhook secret
 - Verifying the request signature using HMAC
 - Creating a tunnel to expose the local HTTP server
 - Testing

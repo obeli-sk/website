@@ -21,6 +21,14 @@ return_type = "result<string, string>"
 Workflow exports may be synchronous or `async`. Awaiting ordinary JavaScript promises is supported,
 but durable child calls and sleeps still use the Obelisk APIs described below.
 
+Import the base runtime module for sleeps, join sets, IDs, random values, stubs, and error classes.
+Import the dynamic module only when calling or scheduling an FFQN selected at runtime:
+
+```javascript
+import * as obelisk from "obelisk:workflow@1.0.0";
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
+```
+
 Use `obelisk.sleep` for delays instead of `setTimeout`. `Date.now()` uses the deterministic Obelisk
 clock, and `Math.random()` values are recorded for deterministic replay.
 
@@ -46,6 +54,7 @@ the decoded err payload is on `e.value`.
 ```javascript
 // myapp:demo/workflow.serial: func() -> result<string, string>
 import { step } from "myapp:demo/activity";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function serial() {
   let acc = 0;
@@ -75,12 +84,45 @@ Function names are converted from kebab-case (WIT) to camelCase (JS) automatical
 `get-temperature` becomes `getTemperature` in the import.
 
 Imports are verified when the deployment starts, so prefer them whenever the target function is
-known statically. Only use `obelisk.call(ffqn, argArray)` when the function name is constructed at
+known statically. Only use `dynamic.call(ffqn, argArray)` when the function name is constructed at
 runtime and cannot be imported statically:
 
 ```javascript
-const result = obelisk.call("myapp:demo/activity.step", [i, i * 200]);
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
+
+const result = dynamic.call("myapp:demo/activity.step", [i, i * 200]);
 ```
+
+## WIT results become JavaScript values and exceptions
+
+The runtime support interfaces use WIT `result` types internally, but workflow JavaScript does not
+receive those raw results. Obelisk's typed-import and dynamic-API adapters return the useful value
+on success and throw on error. Do not inspect `{ tag, val }`, `{ ok, err }`, or otherwise manually
+unwrap the underlying WIT result. Operations such as `submit-json`, `schedule-json`, and `stub-json`
+are internal WIT bindings used to implement the public JavaScript APIs, not JavaScript functions to
+call directly.
+
+| JavaScript API                       | Underlying WIT result                                 | JavaScript behavior                                                      |
+| ------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| Typed `fooSubmit(joinSet, ...)`      | `result<execution-id, child-execution-request-error>` | Returns execution ID string; throws `Error` on error                     |
+| `joinSet.submit(ffqn, params)`       | `submit-json` result                                  | Returns execution ID string; throws `Error` on error                     |
+| Typed `fooSchedule(at, ...)`         | `schedule-json` result                                | Returns execution ID string; throws `Error` on error                     |
+| `dynamic.schedule(...)`              | `schedule-json` result                                | Returns `undefined`; throws `Error` on error                             |
+| Typed `fooStub(id, result)`          | `stub-json` result                                    | Returns `undefined`; throws `Error` on error                             |
+| `obelisk.stub(...)`                  | `stub-json` result                                    | Returns `undefined`; throws `Error` on error                             |
+| Typed `fooGet(id)`                   | Nested WIT result                                     | Returns child value; throws on retrieval or child error                  |
+| Typed `fooAwaitNext(joinSet)`        | Nested WIT result                                     | Returns child value; throws on child or platform error                   |
+| `joinSet.joinNext()`                 | Nested WIT result                                     | Returns value; throws `ChildError` or `JoinSetExhaustedError`            |
+| `joinSet.joinNextTry()`              | Nested WIT result                                     | Returns value or `undefined`; throws other errors                        |
+| `obelisk.getResult(id)`              | Nested WIT result                                     | Returns value; throws on errors                                          |
+| `dynamic.call(...)`                  | Nested WIT result                                     | Returns value; throws `ChildError` or a host `Error`                     |
+| `obelisk.sleep(...)`                 | WIT result                                            | Returns `Date`; throws `ChildError` when cancelled                       |
+| Named `obelisk.createJoinSet({...})` | WIT result                                            | Returns join set; throws `Error` if the named join set cannot be created |
+
+The thrown error class depends on the operation. Child business errors, child platform failures, and
+cancellation use `obelisk.ChildError`; an exhausted join set uses `obelisk.JoinSetExhaustedError`;
+request validation, submission, scheduling, stubbing, and other host/setup failures throw `Error`
+subclasses.
 
 ## `obelisk.sleep` — persistent sleep
 
@@ -113,13 +155,19 @@ try {
 child executions concurrently and await their results individually.
 
 For join sets, use the extension imports with the `-obelisk-ext` suffix. These provide typed
-`submit` and `awaitNext` functions for each activity. `awaitNext` returns the ok value directly (or
-throws `obelisk.ChildError` on failure), matching the semantics of direct calls. The
-execution ID of the child that completed is available via `js.lastId`:
+`submit` and `awaitNext` functions for each activity. `submit` returns the execution ID string and
+throws `Error` if submission fails. `awaitNext` returns the ok value directly (or throws
+`obelisk.ChildError` on failure), matching the semantics of direct calls. The execution ID of the
+child that completed is available via `js.lastId`:
+
+Typed `awaitNext` also records the requested function through `join-next-for`. Its execution history
+therefore matches a native workflow's history, so an in-flight workflow can switch between
+compatible JavaScript and Rust implementations.
 
 ```javascript
 // myapp:demo/workflow.parallel: func() -> result<string, string>
 import { stepSubmit, stepAwaitNext } from "myapp:demo-obelisk-ext/activity";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function parallel() {
   const handles = [];
@@ -145,11 +193,11 @@ runtime and cannot be imported statically:
 
 | Call                               | Returns                                                                        | Description                                                                                                                                                      |
 | ---------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `let js = obelisk.createJoinSet()` | join set object                                                                | Create a new join set (optionally `{ name: "…" }`)                                                                                                               |
-| `js.submit(ffqn, argArray)`        | childExecId (string)                                                           | Submit a child execution without blocking                                                                                                                        |
+| `let js = obelisk.createJoinSet()` | join set object                                                                | Create a new join set; a named set (`{ name: "…" }`) throws `Error` if creation fails                                                                            |
+| `js.submit(ffqn, argArray)`        | childExecId (string)                                                           | Submit without blocking; throws `Error` if submission fails                                                                                                      |
 | `js.submitDelay(scheduleAt)`       | `delayId` (string)                                                             | Submit a timer using a relative duration object or an absolute `Date`                                                                                            |
 | `js.joinNext()`                    | ok value directly; `null` for a completed delay (throws on failure, see below) | Block until the next result in this join set                                                                                                                     |
-| `js.joinNextTry()`                 | same as `joinNext()`, but returns `undefined` while requests are still pending | Non-blocking: attempt to get next result without waiting                                                                                                         |
+| `js.joinNextTry()`                 | same as `joinNext()`, but returns `undefined` while requests are still pending | Non-blocking: attempt to get next result without waiting; other errors still throw                                                                               |
 | `js.lastId`                        | string                                                                         | ID (execution or delay) of the last child completed via `joinNext*` or `awaitNext`                                                                               |
 | `js.close()`                       | `undefined`                                                                    | Cancel activities, delays, and `-cancellable` child workflows; await non-cancellable child workflows. Does not report close failures; repeated closes are no-ops |
 | `obelisk.getResult(childExecId)`   | ok value (throws on failure, see below)                                        | Fetch a result of a child already consumed with `joinNext*` / `awaitNext`                                                                                        |
@@ -194,13 +242,14 @@ blocking) while requests are still pending and no response is ready.
 ### Handling child failures with `obelisk.ChildError`
 
 Any awaited child failure from `joinNext`, `joinNextTry`, generated `awaitNext` proxies,
-`obelisk.call`, or `obelisk.getResult` throws `obelisk.ChildError`. It carries:
+`dynamic.call`, or `obelisk.getResult` throws `obelisk.ChildError`. It carries:
 
 - `e.value`: the decoded business err payload; `undefined` for a unit err or a platform failure;
 - `e.childId`: the completed child execution ID, when known;
 - `e.cancelled`: `true` for a cancelled child or cancelled delay, otherwise `false`;
 - `e.failureKind`: the platform failure kind string (`timed-out`, `nondeterminism-detected`,
-  `out-of-fuel`, `cancelled`, `uncategorized`) or `undefined` for a business error;
+  `out-of-fuel`, `cancelled`, `value-too-large`, `uncategorized`) or `undefined` for a business
+  error;
 - `e.message`: a human-readable diagnostic; do not parse it.
 
 ```javascript
@@ -217,8 +266,8 @@ try {
 }
 ```
 
-Rethrowing a `ChildError` transparently reuses the original err payload as this workflow's
-err result (metadata like `failureKind` is not preserved):
+Rethrowing a `ChildError` transparently reuses the original err payload as this workflow's err
+result (metadata like `failureKind` is not preserved):
 
 ```javascript
 } catch (e) {
@@ -262,15 +311,19 @@ const execId = sendEmailSchedule(null, "user@example.com");
 
 The first argument is the schedule timing: `null` for immediate, a duration object for a relative
 delay, or a `Date` for an absolute time. An object with no recognized scheduling key throws
-`TypeError`.
+`TypeError`. The typed schedule returns the execution ID string and throws `Error` if scheduling
+fails.
 
-For FFQNs constructed at runtime, use `obelisk.schedule` directly:
+For FFQNs constructed at runtime, use `dynamic.schedule` directly:
 
 ```javascript
+import * as obelisk from "obelisk:workflow@1.0.0";
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
+
 const execId = obelisk.executionIdGenerate();
-obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
-// optional schedule-at: obelisk.schedule(execId, ffqn, args, { seconds: 60 });
-// absolute schedule-at: obelisk.schedule(execId, ffqn, args, new Date(Date.now() + 60_000));
+dynamic.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
+// optional schedule-at: dynamic.schedule(execId, ffqn, args, { seconds: 60 });
+// absolute schedule-at: dynamic.schedule(execId, ffqn, args, new Date(Date.now() + 60_000));
 ```
 
 ## Stub imports — inject a result for a stub activity
@@ -294,6 +347,13 @@ For FFQNs constructed at runtime, use `obelisk.stub` directly:
 ```javascript
 obelisk.stub(execId, { ok: "approved" });
 ```
+
+Both typed and dynamic stub APIs return `undefined` and throw `Error` if the result cannot be
+stored.
+
+Stub results are hashed after type checking, consistently with native Rust stubs. Compatible
+JavaScript and Rust workflow implementations can therefore replay and self-fulfil the same stub
+without representation-dependent history hashes.
 
 ## `obelisk.executionIdCurrent` — get the current execution ID
 

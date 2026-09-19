@@ -38,6 +38,7 @@ injected message can interrupt or steer an in-flight step rather than waiting fo
 
 ```javascript
 import { injectionSubmit } from "example:session-obelisk-ext/session";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 const user = obelisk.createJoinSet({ name: "user" });
 let offerId = injectionSubmit(user); // one outstanding offer

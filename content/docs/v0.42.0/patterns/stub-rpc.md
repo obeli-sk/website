@@ -87,6 +87,7 @@ server restart.
 // example:session/workflow.loop
 import { requestSubmit, responseSubmit } from "example:session-obelisk-ext/turn";
 import { responseStub } from "example:session-obelisk-stub/turn";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function loop() {
   while (true) {
@@ -139,23 +140,25 @@ env_vars = [
 [[webhook_endpoint_js.allowed_host]]
 pattern = "${OBELISK_API_URL:-http://127.0.0.1:5005}"
 methods = ["PUT", "GET"]
-secrets = ["OBELISK__API__TOKEN"]
+secrets = ["OBELISK_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Register `OBELISK__API__TOKEN` in the server's `[secrets]` table and add a matching
+Register `OBELISK_API_TOKEN` in the server's `[secrets]` table and add a matching
 `[[outbound_http.allowed_host]]` entry to `server.toml`.
 
 ```javascript
 // example:session/webhook.handle
+import * as obelisk from "obelisk:webhook@1.0.0";
+
 const REQUEST_FFQN = "example:session/turn.request";
 const WINDOW = 50; // how many trailing log events to scan
 const apiBase = process.env["OBELISK_API_URL"];
-const tokenPlaceholder = process.env["OBELISK__API__TOKEN"]; // placeholder; Obelisk substitutes the real token
+const tokenPlaceholder = process.env["OBELISK_API_TOKEN"]; // placeholder; Obelisk substitutes the real token
 const authHeaders = { accept: "application/json", authorization: `Bearer ${tokenPlaceholder}` };
 
 export default async function handle(request) {
-  if (!tokenPlaceholder) throw new Error("OBELISK__API__TOKEN is required");
+  if (!tokenPlaceholder) throw new Error("OBELISK_API_TOKEN is required");
   const body = await request.json();
 
   // (1) Locate the session workflow. Simplest form: the client echoes its id.
@@ -206,10 +209,10 @@ async function apiGetJson(path) {
 }
 ```
 
-On first contact there is no session yet: schedule the workflow with
-`obelisk.schedule(sessionId, "example:session/workflow.loop", [])`, return `sessionId` to the client
-(it becomes the `x-obelisk-session` header), and poll `latestPendingRequest` until the loop has
-submitted its first `turn.request`.
+On first contact there is no session yet: import `obelisk:webhook-dynamic@1.0.0`, schedule the
+workflow with `dynamic.schedule(sessionId, "example:session/workflow.loop", [])`, return `sessionId`
+to the client (it becomes the `x-obelisk-session` header), and poll `latestPendingRequest` until the
+loop has submitted its first `turn.request`.
 
 `obelisk.get(stub.respId)` is an in-runtime host call, so it needs no manual `authorization` header;
 only the raw `fetch` calls to the API port do. The REST equivalent of the blocking read for a non-JS

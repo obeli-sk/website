@@ -126,6 +126,7 @@ return_type = "result<string, string>"
 import * as resource from "example:infra/resource";
 import { teardownSignalSubmit } from "example:app-obelisk-ext/control";
 import { runChildSubmit } from "example:app-obelisk-ext/workflow";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function supervisor(input) {
   const resourceId = resource.create(input);

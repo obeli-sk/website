@@ -144,7 +144,9 @@ return_type = "result<variant { found(string), not-found }>"
 
 ## JSON encoding
 
-Arguments to `obelisk.call` and results are JSON-encoded. The mapping between WIT types and JSON:
+Arguments to JavaScript `dynamic.call` from `obelisk:workflow-dynamic@1.0.0` or
+`obelisk:webhook-dynamic@1.0.0` and results are JSON-encoded. The mapping between WIT types and
+JSON:
 
 | WIT type                            | JSON encoding                                                         |
 | ----------------------------------- | --------------------------------------------------------------------- |

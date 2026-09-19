@@ -80,9 +80,9 @@ This will generate a directory with the following structure:
 │   └── lib.rs
 └── wit
     ├── deps
-    │   ├── obelisk_types@5.0.0
+    │   ├── obelisk_types@6.0.0
     │   │   └── types.wit
-    │   ├── obelisk_workflow@6.0.0
+    │   ├── obelisk_workflow@7.0.0
     │   │   └── workflow-support.wit
     │   ├── template-fibo_activity
     │   │   └── fibo-activity.wit                   # Imported activity
@@ -160,7 +160,7 @@ name = "activity_myfibo"
 
 [[workflow]]
 name = "myworkflow"
-location = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/myworkflow.wasm"
+location = "target/wasm32-unknown-unknown/release/myworkflow.wasm"
 ```
 
 Let's build the WASM Component and run Obelisk.
@@ -221,15 +221,14 @@ Obelisk can generate several helper functions for every exported activity or wor
 package template-fibo:activity-obelisk-ext;
 
 interface fibo-activity-ifc {
-  use obelisk:types/execution@5.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
+  use obelisk:types/execution@6.0.0.{execution-id, await-next-extension-error, get-extension-error, child-execution-request-error};
+  use obelisk:types/join-set@6.0.0.{join-set};
 
-  fibo-submit: func(join-set: borrow<join-set>, n: u8) -> execution-id;
+  fibo-submit: func(join-set: borrow<join-set>, n: u8) -> result<execution-id, child-execution-request-error>;
 
   fibo-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<u64>>, await-next-extension-error>;
 
   fibo-get: func(execution-id: execution-id) -> result<result<u64>, get-extension-error>;
-
-  fibo-invoke: func(label: string, n: u8) -> result<result<u64>, invoke-extension-error>;
 }
 ```
 
@@ -329,7 +328,7 @@ captured backtrace.
 
 ```toml
 [[workflow]]
-backtrace.sources = {".../src/lib.rs" = "${OBELISK_TOML_DIR}/workflow/src/lib.rs"}
+backtrace.sources = {".../src/lib.rs" = "workflow/src/lib.rs"}
 ```
 
 The mapping is from frame source to local file system. When `.../` is used, the frame source path is
@@ -354,7 +353,7 @@ For example, having the following configuration:
 ```toml
 [[workflow]]
 name = "myworkflow"
-location = "${OBELISK_TOML_DIR}/target/wasm32-unknown-unknown/release/workflow.wasm"
+location = "target/wasm32-unknown-unknown/release/workflow.wasm"
 exec.lock_expiry.seconds = 1
 join_next_blocking_strategy = "await"
 ```

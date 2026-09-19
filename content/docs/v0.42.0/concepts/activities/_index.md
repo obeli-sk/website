@@ -180,7 +180,7 @@ The configuration file `obelisk.toml` already includes the activity:
 ```toml
 [[activity_wasm]]
 name = "myactivity"
-location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/myactivity.wasm"
+location = "target/wasm32-wasip2/release/myactivity.wasm"
 ```
 
 Let's build the WASM Component and run Obelisk.

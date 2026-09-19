@@ -50,6 +50,8 @@ the managed workflow's creation parameters.
 
 ```javascript
 import { listDesiredKeys, reconcileWorkers } from "example:control/workers";
+import * as obelisk from "obelisk:workflow@1.0.0";
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
 
 const WORKER_FFQN = "example:service/worker.run-cancellable";
 
@@ -59,7 +61,7 @@ export default function reconcile() {
 
   for (const key of listDesiredKeys()) {
     if (!Object.hasOwn(current, key)) {
-      obelisk.schedule(obelisk.executionIdGenerate(), WORKER_FFQN, [key]);
+      dynamic.schedule(obelisk.executionIdGenerate(), WORKER_FFQN, [key]);
       started += 1;
     }
   }

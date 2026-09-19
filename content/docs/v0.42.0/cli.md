@@ -266,6 +266,7 @@ Arguments:
 - `[parameters]...` - One of:
   - JSON array string, e.g. `'["first", "second", null, 1]'`
   - File reference prefixed with `@`, e.g. `@file.json` (file must contain a valid JSON array)
+  - A lone `-` to read a JSON parameter array from stdin
   - Multiple arguments after `--`, e.g. `-- '"first"' @secondparam.json null 1`
   - For functions with no parameters: `[]` or omit entirely
 
@@ -276,6 +277,7 @@ Options:
 - `-e, --execution-id <ID>` - Use this explicit execution ID instead of having the server assign one
   (useful for idempotency — see `obelisk generate execution-id`)
 - `-f, --follow` - Follow the status stream until the execution finishes
+- `--follow-logs` - Stream execution logs until completion, then print the result
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
 - `--paused` - Create the execution in paused state so it won't run until explicitly unpaused or
   advanced
@@ -585,6 +587,32 @@ Options:
   `OBELISK_API_URL`)
 - `--skip-determinism-check` - Skip the determinism check during upgrade
 
+## Obelisk Admin
+
+The `obelisk admin` commands expose operator-only maintenance and persisted system events through
+the authenticated API:
+
+```sh
+obelisk admin node-run-id
+obelisk admin events list --level warning
+obelisk admin events get <event-id>
+obelisk admin storage show
+```
+
+Retain execution trees, inactive deployments, or system events by age or count. Use `--dry-run`
+before destructive retention operations:
+
+```sh
+obelisk admin executions retain --max-age 30d --dry-run
+obelisk admin deployments retain --count 20 --dry-run
+obelisk admin events retain --max-age 30d
+```
+
+Delete explicit execution trees or inactive deployments with `admin executions delete` and
+`admin deployments delete`. Non-terminal execution trees require `--force`; an execution root that
+belongs to the active deployment cannot be force-deleted. Deployment retention always keeps active
+and enqueued deployments. Add `--json` for machine-readable output.
+
 ## Obelisk Component
 
 ### Listing available components and functions
@@ -714,8 +742,9 @@ Options:
 
 - `-j, --json` - Output as JSON instead of human-readable text
 - `-f, --force` - Overwrite existing file
-- `--trusted` - Generate a single-party configuration that allows all exec activities and outbound
-  HTTP. Do not use this configuration across an operator/deployment-author trust boundary
+- `--trusted` - Generate a single-party configuration that allows unrestricted outbound HTTP. Exec
+  activities and registered secrets still require explicit configuration. Do not use this
+  configuration across an operator/deployment-author trust boundary
 
 ### Generating deployment configuration
 

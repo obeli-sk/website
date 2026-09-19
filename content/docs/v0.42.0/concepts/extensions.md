@@ -59,8 +59,8 @@ This interface simplifies submitting and awaiting child executions from a parent
 streamline common tasks associated with workflow execution and are a key part of Obelisk's
 {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }} model.
 
-The types used in the extension functions (`execution-id`, `join-set`, `schedule-at`,
-`execution-error`) are defined in the
+The types used in the extension functions (`execution-id`, `join-set`, `schedule-at`, and request
+errors) are defined in the
 {{ doc_link(title="`obelisk:types`", path="concepts/runtime-support.md#available-support-types") }}
 WIT package.
 
@@ -85,15 +85,14 @@ functions in a separate WIT package for each exported function:
 package stargazers:llm-obelisk-ext;
 
 interface llm {
-  use obelisk:types/execution@5.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
+  use obelisk:types/execution@6.0.0.{execution-id, await-next-extension-error, get-extension-error, child-execution-request-error};
+  use obelisk:types/join-set@6.0.0.{join-set};
 
-  respond-submit: func(join-set: borrow<join-set>, user-prompt: string, settings-json: string) -> execution-id;
+  respond-submit: func(join-set: borrow<join-set>, user-prompt: string, settings-json: string) -> result<execution-id, child-execution-request-error>;
 
   respond-await-next: func(join-set: borrow<join-set>) -> result<result<string, string>, await-next-extension-error>;
 
   respond-get: func(execution-id: execution-id) -> result<result<string, string>, get-extension-error>;
-
-  respond-invoke: func(label: string, user-prompt: string, settings-json: string) -> result<result<string, string>, invoke-extension-error>;
 }
 ```
 
@@ -103,10 +102,11 @@ Let's break down each generated function:
 
 This function is used to _submit_ a request for the original function to be executed. It takes the
 `join-set` and the original parameters as input. It returns an `execution-id`, which uniquely
-identifies this particular execution request. The `join-set` associates this execution with a
-specific {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, allowing you to
-manage multiple concurrent executions. This function does _not_ wait for the execution to complete;
-it simply submits the request.
+identifies this particular execution request. Submission can return `child-execution-request-error`,
+including `value-too-large`. The `join-set` associates this execution with a specific
+{{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}, allowing you to manage
+multiple concurrent executions. This function does _not_ wait for the execution to complete; it
+simply submits the request.
 
 ## Awaiting next result with `-await-next`
 
@@ -160,22 +160,6 @@ variant get-extension-error {
 }
 ```
 
-## Submitting and awaiting in one step using `-invoke`
-
-Instead of creating a {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }},
-calling `-submit` and `-await-next` separately, it is possible to use `-invoke` to merge the three
-steps and avoid handling broader `await-next-extension-error`. The first parameter of `-invoke` is a
-string label. The underlying one-off join set will use this label as a part of its name. Since there
-are restrictions on naming join sets, the `-invoke` function can fail with:
-
-```wit
-/// Error variants that may occur when calling `-invoke` extension functions.
-@since(version = 3.0.0)
-variant invoke-extension-error {
-    invalid-name(string),
-}
-```
-
 # `-obelisk-schedule` interface
 
 Given the same export interface `llm` with a single function `respond`, Obelisk will generate the
@@ -186,10 +170,10 @@ following interface:
 package stargazers:llm-obelisk-schedule;
 
 interface llm {
-  use obelisk:types/execution@5.0.0.{execution-id};
-  use obelisk:types/time@5.0.0.{schedule-at};
+  use obelisk:types/execution@6.0.0.{execution-id, schedule-json-error};
+  use obelisk:types/time@6.0.0.{schedule-at};
 
-  respond-schedule: func(schedule-at: schedule-at, user-prompt: string, settings-json: string) -> execution-id;
+  respond-schedule: func(schedule-at: schedule-at, user-prompt: string, settings-json: string) -> result<execution-id, schedule-json-error>;
 }
 ```
 
@@ -223,7 +207,7 @@ following:
 package stargazers:llm-obelisk-stub;
 
 interface llm {
-  use obelisk:types/execution@5.0.0.{execution-id, stub-error};
+  use obelisk:types/execution@6.0.0.{execution-id, stub-error};
 
   respond-stub: func(execution-id: execution-id, execution-result: result<string, string>) -> result<_, stub-error>;
 }

@@ -74,7 +74,7 @@ world any {
     import tutorial:activity/activity-sleepy;             // activity to orchestrate
     import tutorial:activity-obelisk-ext/activity-sleepy; // generated — enables join sets
     import tutorial:workflow/other-workflow;              // child workflow (also submittable)
-    import obelisk:workflow/workflow-support@6.0.0;
+    import obelisk:workflow/workflow-support@7.0.0;
     import obelisk:log/log@1.0.0;
 }
 ```

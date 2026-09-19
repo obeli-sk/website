@@ -65,6 +65,7 @@ by replaying the execution log.
 ```javascript
 // tutorial:demo/workflow.serial: func() -> result<u32, string>
 import { step } from "tutorial:demo/activity";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function serial() {
   let acc = 0;
@@ -95,6 +96,7 @@ Key concepts:
 ```javascript
 // tutorial:demo/workflow.parallel: func() -> result<u32, string>
 import { stepSubmit, stepAwaitNext } from "tutorial:demo-obelisk-ext/activity";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function parallel() {
   const handles = [];
@@ -147,9 +149,9 @@ export default function handle(request) {
 {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} (`package:namespace/interface.function`) and
 {{ doc_link(title="WIT types", path="concepts/wit-reference.md") }} to the JS function — Obelisk
 synthesizes the interface at startup, so no WIT files are needed. The FFQN is the address used in ES
-module imports and `obelisk.call`; the JS function name maps to the function part of it. See
-{{ doc_link(title="JS components", path="js/js-components.md") }} for links to the per-type pages
-(activities, workflows, webhooks) and JSON encoding.
+module imports and `dynamic.call` from `obelisk:workflow-dynamic@1.0.0`; the JS function name maps
+to the function part of it. See {{ doc_link(title="JS components", path="js/js-components.md") }}
+for links to the per-type pages (activities, workflows, webhooks) and JSON encoding.
 
 Prefer imports when the target function is known statically. Imports are verified when the
 deployment starts; use dynamic FFQN calls only when the target is constructed at runtime.

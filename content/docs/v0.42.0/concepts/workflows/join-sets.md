@@ -52,7 +52,7 @@ See {{ doc_link(title="Join Set ID", path="concepts/identifiers.md#join-set-id")
 ## API
 
 The API for join sets is as defined in
-{{ github(title="`obelisk_workflow@6.0.0.wit`", path="wit/obelisk_workflow%406.0.0/obelisk_workflow%406.0.0.wit") }}.
+{{ github(title="`obelisk_workflow@7.0.0.wit`", path="wit/obelisk_workflow%407.0.0/obelisk_workflow%407.0.0.wit") }}.
 
 To create a join set in Rust, use
 

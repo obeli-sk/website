@@ -8,6 +8,10 @@ Starting with 0.40.0, the Obelisk **API port denies any request that does not pr
 token**. This page explains what is protected, how tokens are issued and configured, and how each
 client (CLI, REST, Web UI) authenticates.
 
+Authentication is one part of the broader operator/deployment boundary. See
+{{ doc_link(title="Security model", path="security.md") }} for public environment variables,
+registered secrets, native execution approval, and outbound HTTP policy.
+
 ## What is protected
 
 Authentication guards the **API port** only (`127.0.0.1:5005` by default). A single host-level check

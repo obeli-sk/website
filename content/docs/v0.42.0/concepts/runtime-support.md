@@ -24,7 +24,10 @@ Used by other Obelisk WIT interfaces as well as the generated
 {{ doc_link(title="extension", path="concepts/extensions.md") }}, contains `time` and `execution`
 interfaces with types like `execution-id` and others.
 
-### {{ github(title="`obelisk:types/types@5.0.0`", path="wit/obelisk_types%405.0.0/obelisk_types%405.0.0.wit") }}
+### {{ github(title="`obelisk:types@6.0.0`", path="wit/obelisk_types%406.0.0/obelisk_types%406.0.0.wit") }}
+
+The `function` record is in the dedicated `obelisk:types/function@6.0.0` interface. It is no longer
+defined by the `execution` interface.
 
 ## Available Support Functions
 
@@ -49,7 +52,7 @@ log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
 
-### {{ github(title="`obelisk:workflow/workflow-support@6.0.0`", path="wit/obelisk_workflow%406.0.0/obelisk_workflow%406.0.0.wit") }}
+### {{ github(title="`obelisk:workflow/workflow-support@7.0.0`", path="wit/obelisk_workflow%407.0.0/obelisk_workflow%407.0.0.wit") }}
 
 Available to:
 
@@ -112,19 +115,15 @@ activity to obtain e.g. a random number. Other functions are related to
   pending requests, or `join-next-try-error::all-processed` if all requests have been matched with
   responses already processed.
 
-- `submit-json: func(join-set: borrow<join-set>, function: function, params: string) -> result<execution-id, submit-json-error>`:
-  Submit a child execution request with its parameters serialized as a JSON array. This enables
-  dynamic function dispatch without compile-time bindings.
-
 - `get-result-json: func(execution-id: execution-id) -> result<result<option<string>, option<string>>, get-result-json-error>`:
   Obtain a child execution result as JSON after it has been awaited using `-await-next` extension or
   `join-next`.
 
 - `get-execution-failure-kind: func(execution-id: execution-id) -> result<option<execution-failure-kind>, get-result-json-error>`:
   The platform-level failure kind (`timed-out`, `nondeterminism-detected`, `out-of-fuel`,
-  `cancelled`, or `uncategorized`) of an already-processed child response, or `none` if it finished
-  with an ok or business `err` result. This is additive to the err value, which keeps carrying the
-  failure sentinel.
+  `cancelled`, `value-too-large`, or `uncategorized`) of an already-processed child response, or
+  `none` if it finished with an ok or business `err` result. This is additive to the err value,
+  which keeps carrying the failure sentinel.
 
 - `last-direct-call-id: func() -> option<execution-id>`: The execution ID of the last direct call
   (`call-json`), or `none`. Unlike `last-oneoff-id`, it is never a delay and is not clobbered by an
@@ -136,6 +135,16 @@ activity to obtain e.g. a random number. Other functions are related to
 
 - `execution-id-current: func() -> execution-id`: The execution ID of the current workflow
   invocation.
+
+### Dynamic workflow support
+
+Runtime-selected dispatch is isolated in `obelisk:workflow/workflow-dynamic-support@7.0.0`. Import
+it only when a native workflow constructs FFQNs at runtime. It provides `submit-json`,
+`schedule-json`, and `call-json`; submission and scheduling can return `value-too-large` in addition
+to parsing, lookup, and type-check errors.
+
+Webhook components use `obelisk:webhook/webhook-support@7.0.0` for execution lookup and ID helpers,
+and `obelisk:webhook/webhook-dynamic-support@7.0.0` for runtime-selected calls and schedules.
 
 ### Join set resource functions
 

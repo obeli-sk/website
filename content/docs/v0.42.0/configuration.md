@@ -13,6 +13,11 @@ The configuration is split into two files:
 - **`deployment.toml`** — component arrays: activities, workflows, webhook endpoints, and cron
   tasks.
 
+This separation contains deployment code that the operator does not fully trust, including
+LLM-generated code. The deployment requests capabilities; the operator limits them in `server.toml`.
+See {{ doc_link(title="Security model", path="security.md") }} before configuring secrets, native
+execution, or outbound HTTP.
+
 ### Version Compatibility
 
 The `obelisk-version` field can be set in either file to ensure compatibility with the running
@@ -42,7 +47,7 @@ obelisk generate deployment deployment.toml
 
 Without an output filename, these commands print the configuration to stdout. For a single-party
 installation where the operator and every deployment author share the same trust level, the
-`--trusted` option generates a minimal server configuration that allows all exec activities and
+`--trusted` option generates a minimal server configuration that allows unrestricted
 component-originated outbound HTTP:
 
 ```sh
@@ -50,8 +55,9 @@ obelisk generate server-config --trusted server.toml
 ```
 
 Do not use the trusted configuration for multi-tenant or agent-driven deployments. It removes the
-operator policy boundary for exec activities and outbound HTTP. It does not register secrets, so
-exec secret inputs and outbound HTTP secret injection remain disabled until configured explicitly.
+operator destination boundary for outbound HTTP. It does not register secrets or approve exec
+activities; verification with `--fix` can add reviewed exec configuration digests and scaffold
+referenced secrets.
 
 ### Running the Server
 
@@ -115,12 +121,23 @@ Secrets are owned by the server operator. Map each logical secret name to its en
 ```toml
 [secrets]
 OPENAI_KEY = { env = "OPENAI_API_KEY" }
-DB_PASSWORD = { env = "PRODUCTION_DB_PASSWORD" }
+
+[secrets.DB_PASSWORD]
+env = "PRODUCTION_DB_PASSWORD"
+
+[secrets.DB_PASSWORD.exposed_to]
+migration = "sha256:..."
 ```
 
+The inline form is convenient for secrets used only in HTTP placeholders. Use the regular table form
+when adding an `exposed_to` authorization for plaintext exec or VM exposure; TOML does not allow a
+nested table to extend an inline table.
+
 At startup, Obelisk reads each value into memory and removes its source variable from the process
-environment. Deployments request logical names in `activity_exec.secrets` and each allowed host's
-`secrets` field; they cannot interpolate registered secret values with `${...}`.
+environment. Deployments request logical names in `activity_exec.exposed_secrets`,
+`activity_vm.exposed_secrets`, and each allowed host's `secrets` field; they cannot interpolate
+registered secret values with `${...}`. Plaintext exposure to an exec or VM activity also requires
+an `exposed_to` grant generated with `obelisk generate secret-config-digest`.
 
 ### Public Deployment Environment
 
@@ -169,29 +186,67 @@ webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 sandbox, so they are **disabled by default**. A deployment that declares an `activity_exec` fails
 verification unless the operator opts in on the server.
 
-Allow any exec activity (this logs a warning):
+Generate reviewable grants from the deployment configuration:
 
-```toml
-allow_exec_activities = true   # or OBELISK__ALLOW_EXEC_ACTIVITIES=true
+```sh
+obelisk generate secret-config-digest --deployment deployment.toml
 ```
 
-Or allowlist only reviewed scripts, pinned by the SHA-256 digest of the exact script text. A
-rejected deployment logs the digest line to copy here after review:
+Allow reviewed executable and exposed-secret configurations by component name. The generated
+secret-exposure digest binds the executable content and the complete exposed-secret set:
 
 ```toml
-[allow_exec_activities]
-greet = "sha256:..." # reviewed 2026-07-13
+[allowed_exec_activities]
+greet = "sha256:..."
 ```
+
+Use an array of digests when overlapping deployment revisions must be authorized. If the activity
+receives plaintext secrets, copy the generated `[secrets.<name>.exposed_to]` grants too.
 
 ### Server Limits
 
 ```toml
 [limits]
+max_persisted_value_size_bytes = 1048576 # 1 MiB default
 max_deployment_file_bytes = 20971520 # 20 MiB default
+max_transport_message_size_bytes = 536870912 # 512 MiB default
 ```
 
 `max_deployment_file_bytes` limits an individual file submitted as part of a deployment. In 0.42
 this setting lives under `[limits]`, not at the top level of `server.toml`.
+`max_persisted_value_size_bytes` is snapshotted by each new execution tree and bounds persisted
+parameters and results. `max_transport_message_size_bytes` independently bounds gRPC messages and
+equivalent REST request bodies.
+
+### Automatic Maintenance and Retention
+
+Obelisk removes tombstoned execution trees and unreferenced shared data in bounded background
+batches. Automatic maintenance is enabled by default. Completed execution trees, inactive
+deployments, and system events each default to a maximum age of 30 days:
+
+```toml
+[maintenance.gc]
+enabled = true
+interval.seconds = 30
+batch_size = 1000
+batch_delay.milliseconds = 25
+
+[maintenance.gc.retention.executions]
+enabled = true
+max_age.hours = 720
+
+[maintenance.gc.retention.deployments]
+enabled = true
+max_age.hours = 720
+
+[maintenance.gc.retention.system_events]
+enabled = true
+max_age.hours = 720
+```
+
+Disable a specific retention policy when that class must be retained indefinitely. Disable
+`maintenance.gc` only when maintenance is managed externally. Operator-triggered deletion and
+retention operations are also available through `obelisk admin` and `/v1/admin`.
 
 ### Sqlite
 
@@ -376,7 +431,7 @@ registries — see `obelisk component push` to publish them.
 
 ```toml
 exec.batch_size = 5                            # Executions per event loop tick
-exec.lock_expiry.seconds = 1                   # Execution lock duration
+exec.lock_expiry.seconds = 30                  # Execution lock duration (default: 30 seconds)
 exec.tick_sleep.milliseconds = 200             # Executor sleeps the specified duration when polling for pending executions
 exec.locking_strategy = "auto"                 # Workflow default. See supported strategies below.
 exec.instance_limiter = "unlimited"            # If set to an integer, limits concurrent executions for this executor. Default: "unlimited"
@@ -449,6 +504,11 @@ forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"
 env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. One of "off"|"trace"|"debug"|"info"|"warn"|"error". Default: "debug"
 ```
+
+RC2 also has experimental WASIp3 component support for WASM activities and webhook endpoints. The
+component model is detected from the binary; the existing deployment component sections and operator
+HTTP policy still apply. Treat WASIp3 support as experimental when choosing production compatibility
+guarantees.
 
 #### Permanent Error Handling
 
@@ -531,6 +591,42 @@ logs_store_min_level = "debug"
 
 Outbound HTTP allowlist: same `[[activity_js.allowed_host]]` syntax as `activity_wasm`.
 
+### Experimental VM Activities
+
+`activity_vm` runs a Nix-packaged Linux executable inside an experimental container2wasm appliance
+hosted by Wasmtime. Its configuration, guest ABI, cache layout, and runtime behavior may change or
+be removed in a later release.
+
+```toml
+[[activity_vm]]
+name = "vm-curl"
+ffqn = "example:vm/curl.run"
+content = '''#!/usr/bin/env bash
+curl -fsS https://api.example.com/v1/items
+'''
+params = []
+return_type = "result<string, string>"
+store_paths = [
+  "/nix/store/...-bash-interactive-5.3p15",
+  "/nix/store/...-curl-8.22.0-bin",
+]
+exec.lock_expiry.seconds = 120
+
+[[activity_vm.allowed_host]]
+pattern = "https://api.example.com"
+methods = ["GET"]
+```
+
+The pinned appliance and verified Nix closures are cached and exposed read-only to the guest.
+`cache.nixos.org` is enabled by default; add `[[activity_vm.nix_cache]]` entries with trusted public
+keys for other caches. Each declared store path's `bin` directory is added to the guest `PATH`.
+
+Guest HTTP(S) uses the same intersection of deployment and server policy as WASM and JS components.
+Inside the guest, `obelisk-host` addresses the Obelisk host; configure its allowlist as the
+corresponding `http://localhost:PORT` destination. Prefer outbound secret placeholders. Secrets in
+`activity_vm.exposed_secrets` become guest environment variables readable by every guest process and
+require a matching `[secrets.<name>.exposed_to]` digest grant.
+
 ### Exec Activities
 
 Exec activities run a native executable (shell script, Python script, Docker command, etc.) as a
@@ -540,7 +636,7 @@ are streamed and persisted, available via the CLI, REST API, and Web UI.
 
 > **Security**: exec activities run host processes outside the WASM sandbox and are disabled by
 > default. A deployment that declares one fails verification until the operator enables
-> [`allow_exec_activities`](#exec-activity-gating) in `server.toml`.
+> [`allowed_exec_activities`](#exec-activity-gating) in `server.toml`.
 
 ```toml
 [[activity_exec]]
@@ -584,13 +680,15 @@ Exactly one of `location` or `content` must be set:
 env_vars = ["PATH", {key = "MY_VAR", value = "my_value"}]
 
 # Registered secret names: piped to stdin as JSON {"secrets":{"KEY":"value",...}}
-secrets = ["MY_SECRET"]
+exposed_secrets = ["MY_SECRET"]
 ```
 
-Declare `MY_SECRET = { env = "HOST_SECRET_VAR" }` in the server's `[secrets]` table.
+Declare `MY_SECRET = { env = "HOST_SECRET_VAR" }` in the server's `[secrets]` table, then copy the
+activity's grants from `obelisk generate secret-config-digest --deployment deployment.toml` into
+`[allowed_exec_activities]` and `[secrets.MY_SECRET.exposed_to]`.
 
-When both `params_via_stdin` and secrets are configured, stdin contains both top-level fields:
-`{"params":[...],"secrets":{"KEY":"value"}}`.
+When both `params_via_stdin` and exposed secrets are configured, stdin contains both top-level
+fields: `{"params":[...],"secrets":{"KEY":"value"}}`.
 
 #### Return type conventions
 
@@ -681,9 +779,9 @@ backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 # Stub WASI CLI world imports. Only needed for workflows authored in TinyGo.
 stub_wasi = false                     # Default is false.
 
-## Automatic lock extension can be disabled by setting the duration to zero.
-lock_extension.seconds = 1
-lock_extension_leeway.milliseconds = 100  # Starts extending the lock shortly before it expires, at expires_at minus this leeway.
+## Automatic lock extension is enabled by default.
+lock_extension = true
+lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this leeway.
 
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. Default: "debug"
 ```
@@ -705,7 +803,7 @@ params = [                             # Optional
 return_type = "result"
 retry_exp_backoff.milliseconds = 100
 lock_extension = true
-lock_extension_leeway.milliseconds = 100  # Starts extending the lock shortly before it expires, at expires_at minus this leeway.
+lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this leeway.
 blocking_strategy = "await"
 logs_store_min_level = "debug"
 ```

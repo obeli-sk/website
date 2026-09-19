@@ -19,6 +19,8 @@ return_type = "result<string, string>"
 ```
 
 ```javascript
+import * as obelisk from "obelisk:workflow@1.0.0";
+
 export default function session() {
   const events = obelisk.createJoinSet({ name: "events" });
 

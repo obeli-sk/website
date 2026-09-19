@@ -78,7 +78,7 @@ curl "127.1:5005/v1/deployments/Dep_.../switch" \
   -H content-type:application/json -X PUT -d '{"apply": true}'
 ```
 
-The `apply` field replaces the former `hot_redeploy` field, which is still accepted as an alias.
+Use the `apply` field. The former `hot_redeploy` alias was removed in 0.42.
 
 If a configuration change cannot be applied hot (e.g. a component that requires a full restart), the
 API returns `"restart_required"` and the deployment is enqueued for the next startup.

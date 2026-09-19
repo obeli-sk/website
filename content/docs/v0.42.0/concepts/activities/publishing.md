@@ -18,7 +18,7 @@ file location in `obelisk.toml`:
 ```diff
  [[activity_wasm]]
  name = "myactivity"
--location = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/myactivity.wasm"
+-location = "target/wasm32-wasip2/release/myactivity.wasm"
 +location = "oci://docker.io/getobelisk/example_activity_fibo_template:2025-01-30@sha256:f67904dd6d30bc4ca9bf844d41b6c11b146ebf66adaf05a2088e2a5f7fa46d29"
 ```
 

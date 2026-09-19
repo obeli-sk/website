@@ -5,13 +5,21 @@ weight = 25
 +++
 
 Webhook endpoints serve HTTP requests. The handler receives a `Request` object and must return a
-`Response`. Webhooks can call activities and workflows via imports or `obelisk.call` and make
+`Response`. Webhooks can call activities and workflows via imports or `dynamic.call` and make
 outbound HTTP requests via `fetch`. See
 {{ doc_link(title="Webhook Endpoints", path="concepts/webhook-endpoints.md") }} for the general
 model.
 
 Prefer imports when the target function is known statically. Imports are verified when the
 deployment starts; use dynamic FFQN calls only when the target is constructed at runtime.
+
+Import `obelisk:webhook@1.0.0` for execution IDs and result lookup. Runtime-selected calls and
+schedules come from the separate `obelisk:webhook-dynamic@1.0.0` module.
+
+```javascript
+import * as obelisk from "obelisk:webhook@1.0.0";
+import * as dynamic from "obelisk:webhook-dynamic@1.0.0";
+```
 
 ```toml
 [[webhook_endpoint_js]]
@@ -40,7 +48,10 @@ handler — `process.env['segment-name']` returns the captured value as a string
 ```javascript
 export default function handle(request) {
   // sync or async
-  return new Response("body", { status: 200, headers: { "content-type": "text/plain" } });
+  return new Response("body", {
+    status: 200,
+    headers: { "content-type": "text/plain" },
+  });
 }
 ```
 
@@ -78,7 +89,10 @@ export default async function handle(request) {
 
 ```javascript
 // Text response
-return new Response("Hello!", { status: 200, headers: { "content-type": "text/plain" } });
+return new Response("Hello!", {
+  status: 200,
+  headers: { "content-type": "text/plain" },
+});
 
 // JSON response (sets content-type: application/json automatically)
 return Response.json({ key: "value" });
@@ -108,7 +122,30 @@ export default function handle(request) {
 }
 ```
 
-For FFQNs constructed at runtime, use `obelisk.call(ffqn, argArray)` directly.
+For FFQNs constructed at runtime, use `dynamic.call(ffqn, argArray)`:
+
+```javascript
+import * as dynamic from "obelisk:webhook-dynamic@1.0.0";
+
+const result = dynamic.call(ffqn, argArray);
+```
+
+## WIT results become JavaScript values and exceptions
+
+Webhook JavaScript APIs do not expose raw WIT `result` values. The adapter returns the useful value
+and throws on error:
+
+| JavaScript API                      | Underlying WIT result  | JavaScript behavior                                      |
+| ----------------------------------- | ---------------------- | -------------------------------------------------------- |
+| Typed `fooSchedule(at, ...)`        | `schedule-json` result | Returns execution ID string; throws `Error` on error     |
+| `dynamic.schedule(...)`             | `schedule-json` result | Returns `undefined`; throws `Error` on error             |
+| Typed call                          | Nested WIT result      | Returns child value; throws on child or platform error   |
+| `dynamic.call(...)`                 | Nested WIT result      | Returns child value; throws `ChildError` or host `Error` |
+| `obelisk.getStatus/get/tryGet(...)` | Various WIT results    | Returns translated values; errors throw                  |
+
+Do not manually unwrap `{ tag, val }` or another raw WIT representation. In particular, use the
+execution ID returned by a typed schedule, while generating and passing the ID yourself for
+`dynamic.schedule`, whose successful return value is `undefined`.
 
 ## Path parameters
 
@@ -145,12 +182,18 @@ export default function handle(request) {
 }
 ```
 
-For FFQNs constructed at runtime, use `obelisk.schedule` directly:
+For FFQNs constructed at runtime, use `dynamic.schedule` directly:
 
 ```javascript
+import * as obelisk from "obelisk:webhook@1.0.0";
+import * as dynamic from "obelisk:webhook-dynamic@1.0.0";
+
 const execId = obelisk.executionIdGenerate();
-obelisk.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
+dynamic.schedule(execId, "myapp:demo/activity.send-email", ["user@example.com"]);
 ```
+
+The typed schedule returns the execution ID string. `dynamic.schedule` returns `undefined`; it uses
+the execution ID supplied by the caller. Both throw `Error` if scheduling fails.
 
 Check or retrieve a previously scheduled or running execution:
 
@@ -183,11 +226,11 @@ const myExecId = obelisk.executionIdCurrent();
 
 | Call                                                   | Returns                                                                                                                              | Description                                            |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| `obelisk.call(ffqn, argArray)`                         | returns ok value, throws `obelisk.ChildError` on failure                                                                             | Call and await a child execution                       |
+| `dynamic.call(ffqn, argArray)`                         | returns ok value, throws `obelisk.ChildError` on failure                                                                             | Call and await a child execution                       |
 | `obelisk.executionIdGenerate()`                        | `executionId` (string)                                                                                                               | Generate a unique execution ID                         |
 | `obelisk.executionIdCurrent()`                         | `executionId` (string)                                                                                                               | Get the execution ID of the current webhook invocation |
-| `obelisk.schedule(execId, ffqn, argArray)`             | —                                                                                                                                    | Schedule a top-level execution immediately             |
-| `obelisk.schedule(execId, ffqn, argArray, scheduleAt)` | —                                                                                                                                    | Schedule with a relative duration or absolute `Date`   |
+| `dynamic.schedule(execId, ffqn, argArray)`             | `undefined` (throws `Error` on failure)                                                                                              | Schedule a top-level execution immediately             |
+| `dynamic.schedule(execId, ffqn, argArray, scheduleAt)` | `undefined` (throws `Error` on failure)                                                                                              | Schedule with a relative duration or absolute `Date`   |
 | `obelisk.getStatus(execId)`                            | `{ status: "pendingAt"/"locked"/"paused"/"blockedByJoinSet"/"cancelling"/"finished", finishedStatus:"ok"/"err"/"executionFailure" }` |
 | `obelisk.get(execId)`                                  | ok value (throws `obelisk.ChildError` on failure)                                                                                    | Blocking: waits until execution finishes               |
 | `obelisk.tryGet(execId)`                               | ok value (throws `obelisk.ChildError` on failure), `undefined` if not finished yet                                                   | Non-blocking result fetch                              |
