@@ -42,6 +42,7 @@ Generate the commented configuration references by passing an output filename:
 
 ```sh
 obelisk generate server-config server.toml
+obelisk generate app-config app.toml
 obelisk generate deployment deployment.toml
 ```
 

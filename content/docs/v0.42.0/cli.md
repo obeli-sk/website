@@ -740,11 +740,27 @@ Arguments:
 
 Options:
 
-- `-j, --json` - Output as JSON instead of human-readable text
 - `-f, --force` - Overwrite existing file
 - `--trusted` - Generate a single-party configuration that allows unrestricted outbound HTTP. Exec
   activities and registered secrets still require explicit configuration. Do not use this
   configuration across an operator/deployment-author trust boundary
+
+### Generating app configuration
+
+Print a default app configuration to stdout, or write it to a file when `OUTPUT` is given:
+
+```sh
+obelisk generate app-config [OPTIONS] [OUTPUT]
+```
+
+Arguments:
+
+- `[OUTPUT]` - Filename to write the TOML to (default: stdout)
+
+Options:
+
+- `-f, --force` - Overwrite existing file
+- `--trusted` - Allow outbound HTTP from any component with a matching deployment rule
 
 ### Generating deployment configuration
 
@@ -760,7 +776,6 @@ Arguments:
 
 Options:
 
-- `-j, --json` - Output as JSON instead of human-readable text
 - `-f, --force` - Overwrite existing file
 
 ### Generating a deployment ID
