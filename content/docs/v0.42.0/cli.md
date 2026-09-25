@@ -728,14 +728,15 @@ Options:
 
 ### Starting a new app
 
-Create `app.toml` and `deployment.toml` in the current directory:
+Create a JavaScript starter app in the current directory:
 
 ```sh
 obelisk generate new [NAME]
 ```
 
 `NAME` must be a valid app DNS label. If omitted, Obelisk derives a lowercase slug from the current
-directory name. Existing config files are preserved.
+directory name. The starter contains `app.toml`, `deployment.toml`, a webhook, a workflow, and an
+HTTP activity. Existing files are preserved. See the generated `README.md` to run it.
 
 ### Generating server configuration
 
