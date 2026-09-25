@@ -85,9 +85,9 @@ obelisk deployment verify --server-config server.toml --deployment deployment.to
 ```
 
 Missing public environment variables and secrets are reported together with a sorted, pasteable
-`server.toml` snippet. Add `--fix` to update `[public_env].allowed` and scaffold missing `[secrets]`
-entries automatically, then review the generated policy and provide each secret source before
-starting the server. `obelisk server verify --fix` provides the same repair behavior.
+`server.toml` snippet. Add `--fix` to update `[public_env]` and scaffold missing `[secrets]` entries
+automatically, then review the generated policy and provide each secret source before starting the
+server. `obelisk server verify --fix` provides the same repair behavior.
 
 ---
 
@@ -152,18 +152,21 @@ receive the values in the `secrets` object on stdin.
 
 ### Public Deployment Environment
 
-Deployments can only read process environment variables named in the operator-owned allowlist. The
-allowlist applies both to `env_vars` forwarded into components and `${...}` interpolation anywhere
+Deployments can only read process environment variables declared by the app administrator. The
+declarations apply both to `env_vars` forwarded into components and `${...}` interpolation anywhere
 in `deployment.toml`:
 
 ```toml
 [public_env]
-allowed = ["API_BASE_URL", "REGION"]
+API_BASE_URL = {}
+REGION = {}
+TRACE_ID = { optional = true }
 ```
 
-Keep credentials in the secret registry instead. A variable registered as a secret cannot also be
-read through the public environment allowlist. Missing allowed variables do not affect server
-startup unless the active deployment requires them.
+Entries are required at startup unless marked `optional = true`. A deployment may reference an
+optional variable only through an optional forwarded reference or an interpolation fallback. Keep
+credentials in the secret registry instead. A variable registered as a secret cannot also be read
+through the public environment table.
 
 ### Server Outbound HTTP Policy
 

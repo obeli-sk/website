@@ -25,7 +25,7 @@ placeholders that cannot be read or redirected by component code.
 | Concern               | Application deployment (`deployment.toml`)                                | Server operator (`server.toml`)                                                                   |
 | --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Components and routes | Declares code, FFQNs, parameters, routes, and execution settings          | Chooses whether to accept and activate the deployment                                             |
-| Public configuration  | Requests named environment variables and interpolation                    | Allows non-secret names through `[public_env].allowed`                                            |
+| Public configuration  | Requests named environment variables and interpolation                    | Declares non-secret names through `[public_env]`                                                  |
 | Secrets               | Refers only to logical secret names                                       | Registers sources in `[secrets]` and controls plaintext exposure                                  |
 | Outbound HTTP         | Requests destinations, methods, paths, and placeholder locations          | Sets the maximum permitted HTTP policy in `[[outbound_http.allowed_host]]`                        |
 | Native execution      | Declares exec code and requested plaintext secrets                        | Approves the generated digest in `[allowed_exec_activities]` and each secret's `exposed_to` table |
@@ -49,9 +49,9 @@ reviewed, and separated from workflows that do not need them.
 ## Environment variables and secrets
 
 The server process environment is not a general-purpose deployment configuration channel.
-Deployments can reference only non-secret variables named in `[public_env].allowed`. Register
-credentials under logical names in `[secrets]`; do not add their source variables to `public_env` or
-ordinary component `env_vars`.
+Deployments can reference only non-secret variables named in `[public_env]`. Register credentials
+under logical names in `[secrets]`; do not add their source variables to `public_env` or ordinary
+component `env_vars`.
 
 At startup, Obelisk reads env-backed secrets into memory and removes their source variables from the
 process environment before deployment code runs. Prefer opaque placeholders for outbound HTTP
