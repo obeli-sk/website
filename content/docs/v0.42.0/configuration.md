@@ -40,9 +40,9 @@ unless you need to change addresses, database settings, or other server-level op
 
 Generate the commented configuration references by passing an output filename:
 
-`obelisk generate new [NAME]` creates `app.toml`, `deployment.toml`, and a JavaScript app with a
-webhook, workflow, and HTTP activity in the current directory. If `NAME` is omitted, the current
-directory name is converted to an app slug.
+`obelisk generate new NAME` creates a directory named `NAME` with `app.toml`, `deployment.toml`, and
+a JavaScript webhook, workflow, and HTTP activity. Without `NAME`, it writes into the current
+directory and converts that directory's name to an app slug.
 
 ```sh
 obelisk generate server-config server.toml
