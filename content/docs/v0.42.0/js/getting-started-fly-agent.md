@@ -8,8 +8,8 @@ This tutorial extends the {{ doc_link(title="Getting Started", path="js/getting-
 guide with two advanced topics:
 
 - **The saga pattern** — guarantee cleanup even when a workflow fails or the server crashes.
-- **Pre-built WASM activities** — call a compiled Rust activity (fly.io API) from a JS workflow with
-  no build step.
+- **App-local JS activities:** call only the Fly.io API operations this example needs, with no build
+  step.
 
 You will build a two-workflow system that creates a fly.io app, runs a short-lived VM acting as an
 AI agent, and destroys the app afterwards — whether the agent succeeded or not.
@@ -34,8 +34,8 @@ In Obelisk the saga guarantee is strong: even a server crash mid-workflow cannot
 compensation, because the execution log is replayed on restart. The workflow continues from the last
 completed step.
 
-Any abnormal activity failure — OOM panic, WASM trap, or an endless loop exhausting the retry budget
-— propagates as a regular `err` variant and is catchable.
+An abnormal activity failure, such as OOM, a JS trap, or exhausted retries, propagates as a
+catchable `err` variant.
 
 A programming error in workflow code itself can also cause an execution failure. The outer saga
 workflow should therefore be kept minimal: only the action and its compensation. Move all complex
@@ -61,52 +61,60 @@ recorded in the execution log, so replay always follows the same path.
 cd demo-tutorial/fly-agent
 ```
 
-The directory contains four files and a `deployment.toml` — nothing to compile.
+The directory contains JS workflows, a webhook, five Fly API activities, and configuration files.
+There is nothing to compile.
 
 ## The Components
 
-### Fly.io Activity (pre-built WASM)
+### Fly.io Activities
 
-`deployment.toml` references a compiled Rust activity from the Obelisk component registry:
+`deployment.toml` declares five local JS activities for app creation and deletion, and machine
+creation, inspection, and command execution. For example:
 
 ```toml
-[[activity_wasm]]
-name = "activity_fly_http"
-location = "oci://docker.io/getobelisk/components_fly_activity_fly_http:..."
+[[activity_js]]
+name = "apps_put"
+location = "activity/apps-put.js"
+ffqn = "demo:fly-agent/apps.put"
+params = [{ name = "org-slug", type = "string" }, { name = "app-name", type = "string" }]
+return_type = "result<record { name: string, id: string }, string>"
 exec.lock_expiry.seconds = 15
-[[activity_wasm.allowed_host]]
+[[activity_js.allowed_host]]
 pattern = "https://api.machines.dev"
-methods = "*"
+methods = ["GET", "POST"]
 secrets = ["FLY_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Create `server.toml` beside the deployment, register `FLY_API_TOKEN`, and add a matching
-`[[outbound_http.allowed_host]]` entry. Obelisk downloads and caches the component on first run. The
-token is never written to disk or logged, and only a placeholder is passed to the WASM activity.
+Create `app.toml` beside the deployment, name the app, register `FLY_API_TOKEN`, and add a matching
+`[[outbound_http.allowed_host]]` entry. The activities receive only an opaque token placeholder;
+Obelisk substitutes the token in the Authorization header for allowed Fly API requests.
 
 ```toml
-# server.toml
+# app.toml
+app_name = "demo-tutorial-fly-agent"
+
 [secrets]
-FLY_API_TOKEN = { env = "FLY_API_TOKEN" }
+FLY_API_TOKEN = {}
 
 [[outbound_http.allowed_host]]
 pattern = "https://api.machines.dev"
-methods = "*"
+methods = ["GET", "POST", "DELETE"]
 secrets = ["FLY_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-The activity exposes the full [Fly.io Machines API](https://docs.machines.dev/) as callable
-functions. Their FFQNs follow the WIT package structure:
-`obelisk-flyio:activity-fly-http/<interface>@1.0.0-beta.<function>`.
+The [activity files](https://github.com/obeli-sk/demo-tutorial/tree/main/fly-agent/activity)
+implement only the Fly operations used below. `apps.put` checks that an existing app belongs to the
+requested organization, `machines.create` reuses a machine ID on a name conflict, and `apps.delete`
+accepts an already deleted app. These cases make activity retries safe after uncertain API results.
 
 ### Inner Workflow — `workflow/agent.js`
 
 ```javascript
 // demo:fly-agent/workflow.agent: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
-import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
-import * as machines from "obelisk-flyio:activity-fly-http/machines@1.0.0-beta";
+import * as apps from "demo:fly-agent/apps";
+import * as machines from "demo:fly-agent/machines";
 import * as obelisk from "obelisk:workflow@1.0.0";
 
 export default function agent(app_name, org_slug, prompt) {
@@ -120,7 +128,7 @@ export default function agent(app_name, org_slug, prompt) {
   const machine_id = machines.create(
     app_name,
     "agent-vm",
-    {
+    JSON.stringify({
       image: "alpine:3.21",
       guest: { cpu_kind: "shared", cpus: 1, memory_mb: 256, kernel_args: null },
       auto_destroy: null,
@@ -142,7 +150,7 @@ export default function agent(app_name, org_slug, prompt) {
       mounts: null,
       services: null,
       files: null,
-    },
+    }),
     "ams",
   );
 
@@ -163,10 +171,7 @@ export default function agent(app_name, org_slug, prompt) {
   // Throws if the VM becomes unreachable (e.g. stopped externally).
   let output = null;
   for (let i = 0; i < 30; i++) {
-    const cat = machines.exec(app_name, machine_id, ["cat", "/result.txt"], {
-      timeout_secs: 10,
-      stdin: null,
-    });
+    const cat = machines.exec(app_name, machine_id, ["cat", "/result.txt"], 10);
     if (cat.exit_code === 0) {
       output = (cat.stdout || "").trim();
       break;
@@ -184,24 +189,13 @@ Key points:
   polling loop is recovered on restart without re-creating the VM or re-running work.
 - **Imported activity calls** block until the activity completes (with auto-retry on transient
   failures). The result is recorded; on replay the activity is not re-executed.
-- **`exec` vs `exec-check-success`:** `exec` returns the exit code without throwing, which lets the
-  workflow distinguish "file not ready yet" (exit 1) from "VM unreachable" (error variant → throws).
-  A long exec inside `exec-check-success` would hit fly.io's exec timeout; the file-polling approach
-  avoids this entirely.
+- **Machine `exec` result:** `exec` returns the exit code without throwing, which lets the workflow
+  distinguish "file not ready yet" (exit 1) from "VM unreachable" (error variant → throws). Short
+  `cat` calls avoid Fly.io's command timeout.
 - The workflow does **not** delete the app. That is the outer workflow's job.
 
-#### JSON encoding for WASM activities
-
-Arguments are JSON-encoded using the WIT type schema. Key rules (see
-{{ doc_link(title="JS components", path="js/js-components.md") }} for the full table):
-
-| WIT type         | JS value                                   |
-| ---------------- | ------------------------------------------ |
-| `record { ... }` | Plain object; kebab-case → snake_case keys |
-| `option<T>` some | The value                                  |
-| `option<T>` none | `null`                                     |
-| `enum { ... }`   | Snake_case string, e.g. `"shared"`         |
-| `tuple<A, B>`    | Array `[a, b]`                             |
+The machine configuration is passed to the JS activity as a JSON string. The activity converts its
+`env` pairs into the object expected by Fly.io before sending the request.
 
 In `deployment.toml`:
 
@@ -223,7 +217,7 @@ return_type = "result<string, string>"
 ```javascript
 // demo:fly-agent/workflow.run: func(app-name: string, org-slug: string, prompt: string) -> result<string, string>
 import { agent } from "demo:fly-agent/workflow";
-import * as apps from "obelisk-flyio:activity-fly-http/apps@1.0.0-beta";
+import * as apps from "demo:fly-agent/apps";
 
 export default function run(app_name, org_slug, prompt) {
   let result = null;
@@ -306,14 +300,15 @@ reference and {{ doc_link(title="Configuration", path="configuration.md") }} for
 
 ```bash
 cd demo-tutorial/fly-agent
-obelisk server run --server-config server.toml --deployment deployment.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
-Trigger the saga — pick a globally unique app name on fly.io:
+Trigger the saga with a globally unique app name and your actual Fly organization slug:
 
 ```bash
 APP=my-fly-agent-$(date +%s)
-curl "http://localhost:9090/run/personal/${APP}/what-is-42"
+ORG_SLUG=your-organization-slug
+curl "http://localhost:9090/run/${ORG_SLUG}/${APP}/what-is-42"
 ```
 
 After ~75 seconds (VM creation + ~60 s background job + app deletion):
@@ -335,8 +330,8 @@ curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:
 ```
 
 ```
-E_01KN...  Finished(ok)  demo:fly-agent/workflow.run    ...
-E_01KN...  Finished(ok)  demo:fly-agent/workflow.agent  ...
+E_01KN... `Finished: OK` demo:fly-agent/workflow.run ...
+E_01KN... `Finished: OK` demo:fly-agent/workflow.agent ...
 ```
 
 The **Web UI** at [http://localhost:8080](http://localhost:8080) shows the full trace. Enable
@@ -351,7 +346,8 @@ saga, then stop the VM while the background job is still sleeping:
 ```bash
 # terminal 1
 APP=my-fly-agent-$(date +%s)
-curl "http://localhost:9090/run/personal/${APP}/what-is-42"
+ORG_SLUG=your-organization-slug
+curl "http://localhost:9090/run/${ORG_SLUG}/${APP}/what-is-42"
 
 # terminal 2 — stop the VM before /result.txt is written
 fly machine stop agent-vm --app ${APP}
@@ -369,11 +365,12 @@ curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:
 ```
 
 ```
-E_01KN...  Finished(err)  demo:fly-agent/workflow.agent  ...
-E_01KN...  Finished(ok)   demo:fly-agent/workflow.run    ...
+E_01KN... `Finished: Error` demo:fly-agent/workflow.agent ...
+E_01KN... `Finished: Error` demo:fly-agent/workflow.run ...
 ```
 
-The outer `run` finishes with `ok` because the compensation succeeded — the app is gone.
+The outer `run` reports the inner failure after compensation. The app is gone even though the
+execution failed.
 
 You can also test server-crash recovery: kill Obelisk while the result-polling loop is running and
 restart with `obelisk server run`. The workflow replays from the last completed step and continues
