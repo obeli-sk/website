@@ -78,7 +78,7 @@ is intended for secret-manager injection at deploy time; do not write the plaint
 
 ```sh
 export OBELISK_API_TOKEN=<token>
-obelisk server run --deployment deployment.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
 > **Deprecated:** the legacy double-underscore config-env form `OBELISK__API__TOKEN` is still
@@ -90,14 +90,14 @@ obelisk server run --deployment deployment.toml
 
 ### CLI
 
-Subcommands that talk to the API present the token via the global `--api-token` flag, which falls
-back to `$OBELISK_API_TOKEN`, then the deprecated `$OBELISK__API__TOKEN`. The server accepts the
-same `$OBELISK_API_TOKEN` variable, so client and server now share one canonical variable.
+Subcommands that talk to the API present the token via their `--api-token` flag, which falls back to
+`$OBELISK_API_TOKEN`, then the deprecated `$OBELISK__API__TOKEN`. The server accepts the same
+`$OBELISK_API_TOKEN` variable, so client and server now share one canonical variable.
 
 ```sh
 export OBELISK_API_TOKEN=<token>
 obelisk deployment submit deployment.toml     # picks up $OBELISK_API_TOKEN
-obelisk --api-token <token> execution list    # or pass it explicitly
+obelisk execution list --api-token <token>    # or pass it explicitly, after the subcommand
 ```
 
 > **Tip (local development):** because the server and the CLI both accept `OBELISK_API_TOKEN`, a

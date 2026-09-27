@@ -6,12 +6,12 @@ weight = 50
 
 ## Global Options
 
-These flags are accepted by any subcommand:
-
 - `--api-token <TOKEN>` - API token presented to the server as `Authorization: Bearer <token>` by
-  subcommands that talk to the API. Falls back to `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is
-  deprecated. See {{ doc_link(title="Authentication", path="authentication.md") }}
-- `-v, --version` - Print version
+  subcommands that talk to the API. Pass it after the subcommand, for example
+  `obelisk execution list --api-token <TOKEN>`; `obelisk --api-token <TOKEN> execution list` is
+  rejected. Falls back to `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. See
+  {{ doc_link(title="Authentication", path="authentication.md") }}
+- `-v, --version` - Print version. Accepted only directly after `obelisk`, as in `obelisk --version`
 
 ## Obelisk Server
 
@@ -29,11 +29,15 @@ Options:
 - `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
 - `-s, --server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
   built-in defaults are used
+- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, built-in defaults are
+  used and `OBELISK_APP_NAME` must be set
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is
   inserted and activated on startup, overriding any existing Enqueued or Active deployment in the
   database
 - `--empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the
   database
+- `--description <DESCRIPTION>` - Optional human-readable description for the deployment created by
+  `--deployment` or `--empty`
 - `--suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail
   type checking against the current deployment
 - `--no-auth` - Accept unauthenticated requests on the API port. Development / recovery override;
@@ -45,6 +49,10 @@ Options:
 
 If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
 
+The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`. The name
+selects the default SQLite directory, `${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
+{{ doc_link(title="Configuration", path="configuration.md") }}.
+
 ### Verifying the Server Configuration
 
 Instead of running the server one might wish just to verify the TOML configuration. This includes:
@@ -53,7 +61,7 @@ Instead of running the server one might wish just to verify the TOML configurati
 - compiling WASM into the `codegen_cache` directory
 - verifying that all imports are satisfied
 - verifying that environment variables required by activities are present (can be disabled)
-- checking database schema (can be disabled)
+- opening the database and applying any pending schema migrations (can be disabled with `--skip-db`)
 
 ```sh
 obelisk server verify [OPTIONS]
@@ -63,17 +71,26 @@ Options:
 
 - `--clean-cache` - Delete both the codegen cache and the OCI image cache before verifying
 - `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
-- `--server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
+- `-s, --server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
   built-in defaults are used
+- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, built-in defaults are
+  used and `OBELISK_APP_NAME` must be set
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued
   deployment is used, falling back to the Active deployment
-- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this server
-  (missing environment variables / secrets, or server capabilities such as exec activities) while
-  verifying
+- `--allow-unavailable-runtime-config` - Verify while runtime values or app and platform approvals
+  are pending
 - `--suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type
   checking against the deployment
-- `--skip-db` - Skip opening the database and validating its schema
-- `--fix` - Repair content digests and update the exec activity allowlist
+- `--skip-db` - Skip opening the database, which otherwise upgrades its schema to the running
+  version. Requires `--deployment`
+- `--fix` - Clean generated deployment metadata and, when `--app-config` is passed, scaffold missing
+  public environment names, secrets, outbound HTTP destinations, and exec grants in `app.toml` for
+  review
+
+The availability flag allows a developer to verify a deployment before an app or platform admin has
+supplied required values or approved public environment names, secrets, outbound HTTP destinations,
+or exec activities. These gaps produce warnings. Invalid manifests, missing files, compile errors,
+and link errors still fail. Activation always checks the actual configuration strictly.
 
 ## Obelisk Deployment
 
@@ -84,18 +101,21 @@ Manage deployments (component configurations) stored in the database.
 Compile and verify a deployment without starting a server or accessing its database:
 
 ```sh
-obelisk deployment verify --server-config server.toml --deployment deployment.toml
+obelisk deployment verify --server-config server.toml --app-config app.toml --deployment deployment.toml
 ```
 
 Options:
 
 - `-s, --server-config <FILE>` - Path to `server.toml`. If omitted, built-in defaults are used
+- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, built-in defaults are
+  used and `OBELISK_APP_NAME` must be set
 - `-d, --deployment <FILE>` - Path to the local deployment TOML file
-- `--allow-unavailable-runtime-config` - Tolerate unavailable environment variables, secrets, or
-  server capabilities
+- `--allow-unavailable-runtime-config` - Verify while runtime values or app and platform approvals
+  are pending; activation still checks strictly
 - `--suppress-type-checking-errors` - Do not fail on component import/export type errors
-- `--fix` - Repair content digests, update the exec allowlist, and scaffold missing secret
-  declarations
+- `--fix` - Clean generated deployment metadata and, when `--app-config` is passed, scaffold missing
+  public environment names, secrets, outbound HTTP destinations, and exec grants in `app.toml` for
+  review
 - `--clean-cache` - Delete both the codegen and OCI image caches before verifying
 - `--clean-codegen-cache` - Delete only the codegen cache before verifying
 
@@ -114,9 +134,8 @@ Arguments:
 Options:
 
 - `--empty` - Submit an empty deployment with no components (mutually exclusive with `PATH`)
-- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this server
-  (missing environment variables / secrets, or server capabilities such as exec activities) while
-  verifying the deployment before persisting it
+- `--allow-unavailable-runtime-config` - Store a verified deployment while runtime values or app and
+  platform approvals are pending; activation still checks strictly
 - `--description <DESCRIPTION>` - Optional human-readable description
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
@@ -137,9 +156,8 @@ Arguments:
 Options:
 
 - `--empty` - Enqueue an empty deployment with no components
-- `--allow-unavailable-runtime-config` - Tolerate runtime requirements unavailable on this server
-  (missing environment variables / secrets, or server capabilities such as exec activities) while
-  verifying the deployment before enqueuing it
+- `--allow-unavailable-runtime-config` - Submit and enqueue while runtime values or app and platform
+  approvals are pending; activation on restart still checks strictly
 - `--description <DESCRIPTION>` - Optional human-readable description for a newly submitted
   deployment
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
@@ -220,7 +238,7 @@ Retrieve a deployment to disk as a re-submittable `deployment.toml` plus its dep
 files. By default the exported TOML omits generated content digests and JavaScript module metadata.
 
 ```sh
-obelisk deployment get [OPTIONS] <ID>
+obelisk deployment pull [OPTIONS] <ID>
 ```
 
 Arguments:
@@ -234,19 +252,6 @@ Options:
 - `-f, --force` - Overwrite existing files in the output directory
 - `--include-generated-metadata` - Keep generated content digests and JavaScript module metadata in
   `deployment.toml`, retaining the stored server view
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
-
-### Garbage collecting deployment files
-
-Delete content-addressed file blobs that are not referenced by any stored deployment.
-
-```sh
-obelisk deployment gc [OPTIONS]
-```
-
-Options:
-
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
   `OBELISK_API_URL`)
 
@@ -295,7 +300,7 @@ Options:
   `OBELISK_API_URL`)
 - `--ffqn <FFQN_PREFIX>` - Filter by function FFQN prefix (any prefix of a fully-qualified name,
   e.g. `namespace:`; short `.../ifc.fn` form not supported)
-- `-e, --execution_id <EXECUTION_ID_PREFIX>` - Filter by execution ID or its prefix (useful with
+- `-e, --execution-id <EXECUTION_ID_PREFIX>` - Filter by execution ID or its prefix (useful with
   `--show-derived` to find all child executions)
 - `--show-derived` - Include child (derived) executions spawned by workflows
 - `--hide-finished` - Hide finished executions
@@ -309,10 +314,10 @@ obelisk execution list -e E_01KPFKGAGSH91DRVBJZ3AK0T8A --show-derived
 ```
 
 ```
-E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:3-fibo_1 `Finished(ok)` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.391616296 UTC`
-E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:2-fibo_1 `Finished(ok)` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.390617507 UTC`
-E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:1-fibo_1 `Finished(ok)` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.388883844 UTC`
-E_01KPFKGAGSH91DRVBJZ3AK0T8A `Finished(ok)` benchmark-fibo:workflow/fibow.fiboa `2026-04-18 06:12:31.386857278 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:3-fibo_1 `Finished: OK` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.391616296 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:2-fibo_1 `Finished: OK` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.390617507 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A.o:1-fibo_1 `Finished: OK` benchmark-fibo:activity/fiboa.fibo `2026-04-18 06:12:31.388883844 UTC`
+E_01KPFKGAGSH91DRVBJZ3AK0T8A `Finished: OK` benchmark-fibo:workflow/fibow.fiboa `2026-04-18 06:12:31.386857278 UTC`
 ```
 
 ### Getting the current execution state
@@ -535,8 +540,13 @@ Options:
 Replay a workflow and persist its call-site backtraces:
 
 ```sh
-obelisk execution persist-backtraces <EXECUTION_ID>
+obelisk execution persist-backtraces [OPTIONS] <EXECUTION_ID>
 ```
+
+Options:
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
 
 ### Advancing a paused execution
 
@@ -755,9 +765,8 @@ Arguments:
 Options:
 
 - `-f, --force` - Overwrite existing file
-- `--trusted` - Generate a single-party configuration that allows unrestricted outbound HTTP. Exec
-  activities and registered secrets still require explicit configuration. Do not use this
-  configuration across an operator/deployment-author trust boundary
+- `--trusted` - Generate a single-party platform configuration that enables exec activities
+  (`allowed_exec_activities = "*"`). Each exec activity still needs app approval in `app.toml`
 
 ### Generating app configuration
 
@@ -774,7 +783,25 @@ Arguments:
 Options:
 
 - `-f, --force` - Overwrite existing file
-- `--trusted` - Allow outbound HTTP from any component with a matching deployment rule
+- `--trusted` - Allow outbound HTTP from any component with a matching deployment rule. Do not use
+  this configuration across an app-admin/deployment-author trust boundary
+
+### Splitting a 0.41 server configuration
+
+Move app-owned policy (`[secrets]`, `[public_env]`, `[[outbound_http.allowed_host]]`, and
+`[allowed_exec_activities]`) from an existing `server.toml` into `app.toml`:
+
+```sh
+obelisk generate split-config [OPTIONS] --server-config <SERVER_CONFIG>
+```
+
+Options:
+
+- `--server-config <FILE>` - Existing `server.toml` to update _(required)_
+- `-a, --app-config <FILE>` - Output `app.toml` (default: a sibling of `server.toml`)
+
+See
+{{ doc_link(title="Migrating from 0.41 to 0.42", path="migrating-to-0.42.md", version="v0.42.0") }}.
 
 ### Generating deployment configuration
 
@@ -791,6 +818,25 @@ Arguments:
 Options:
 
 - `-f, --force` - Overwrite existing file
+
+### Generating secret-exposure digests
+
+Calculate the reviewed configuration digests for exec activities and for components that request
+plaintext secrets through `exposed_secrets`. The output is pasteable `app.toml` configuration:
+`[allowed_exec_activities]` entries for exec activities and `[secrets.<name>.exposed_to]` grants.
+
+```sh
+obelisk generate secret-config-digest [OPTIONS] --deployment <DEPLOYMENT> [COMPONENT_NAME]
+```
+
+Arguments:
+
+- `[COMPONENT_NAME]` - Limit output to this resolved component name
+
+Options:
+
+- `-d, --deployment <FILE>` - Path to the deployment TOML file _(required)_
+- `-j, --json` - Output structured JSON
 
 ### Generating a deployment ID
 

@@ -28,11 +28,10 @@ For language-specific implementation details, see:
 
 The webhook endpoint in the
 [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/webhook) shows a
-real-world integration with GitHub. Starting with 0.42.0-rc.3, JS and WASM webhooks can request a
-registered signing key through `exposed_secrets` and receive it as an environment variable. The
-server operator must authorize the generated component-and-secret-set digest under
-`[secrets.<name>.exposed_to]`. Do not put such a credential in `public_env` or a regular component
-`env_vars` entry.
+real-world integration with GitHub. JS and WASM webhooks can request a registered signing key
+through `exposed_secrets` and receive it as an environment variable. The app admin must authorize
+the generated component-and-secret-set digest under `[secrets.<name>.exposed_to]` in `app.toml`. Do
+not put such a credential in `public_env` or a regular component `env_vars` entry.
 
 The demo covers:
 

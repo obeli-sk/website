@@ -18,7 +18,8 @@ same demo-tutorial but with JS files that run directly without compilation.
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
 ```
 
-See the [Installation page](@/install/_index.md) for Docker, Nix, cargo-binstall, and other options.
+See the [Installation page](@/install/_index.md) for Docker, Nix, prebuilt binaries, and other
+options.
 
 ## 2. Install Rust
 
@@ -193,7 +194,7 @@ Build all three components:
 Start the server:
 
 ```bash
-obelisk server run --deployment deployment.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
 Three endpoints start automatically:
@@ -277,7 +278,7 @@ kill $(pgrep obelisk)
 The curl request fails — but the workflow state is safely persisted. Restart the server:
 
 ```bash
-obelisk server run
+obelisk server run --app-config app.toml
 ```
 
 No `--deployment` flag needed on restart: Obelisk persists the full deployment configuration in the
@@ -305,11 +306,9 @@ losing progress or duplicating work.
   {{ doc_link(title="Extensions", path="concepts/extensions.md") }},
   {{ doc_link(title="Activities", path="concepts/activities/_index.md") }}
 
-- **Start a new project from a template:**
-
-  ```bash
-  cargo generate obeli-sk/obelisk-templates
-  ```
+- **Start a new project:** Adapt the Rust implementation in
+  [demo-tutorial](https://github.com/obeli-sk/demo-tutorial/tree/main/rust), or ask a coding agent
+  to generate the WIT and Cargo setup for your component.
 
 - **Explore a real-world example:** The
   [Stargazers demo](https://github.com/obeli-sk/demo-stargazers) uses a GitHub webhook, OpenAI, and

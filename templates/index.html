@@ -42,13 +42,12 @@
                         <pre class="qs-code"><code>obelisk generate prompt 'Create a workflow that fans out weather
     lookups for a list of cities in parallel' | claude</code></pre>
                         <p class="qs-note">The agent writes JavaScript activities, workflows, webhook endpoints,
-                            and a deployment file.</p>
+                            an app policy, and a deployment file.</p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-rust">
-                        <pre class="qs-code"><code>cargo generate obeli-sk/obelisk-templates</code></pre>
-                        <p class="qs-note">Use <a href="https://github.com/obeli-sk/obelisk-templates/"
-                                target="_blank">Rust starter templates</a>
-                            or any <a
+                        <pre class="qs-code"><code>Ask your coding agent to build a Rust WASM component</code></pre>
+                        <p class="qs-note">See the <a href="{{ get_url(path='@/docs/latest/wasm/rust-components.md') }}">Rust component guide</a>
+                            or use any <a
                                 href="https://github.com/yoshuawuyts/awesome-wasm-components/tree/main#programming-language-support"
                                 target="_blank">WASM Component Model</a>-compatible language.</p>
                     </div>
@@ -56,7 +55,7 @@
             </div>
             <div class="qs-step">
                 <div class="qs-step-label">Run</div>
-                <pre class="qs-code"><code>obelisk server run --deployment deployment.toml</code></pre>
+                <pre class="qs-code"><code>obelisk server run --app-config app.toml --deployment deployment.toml</code></pre>
                 <p class="qs-note">Use Web UI at <strong>:8080</strong>, Webhooks at <strong>:9090</strong>,
                     API at <strong>:5005</strong> or
                     <a href="{{ get_url(path='@/docs/latest/cli.md') }}">CLI</a> to interact with the deployed

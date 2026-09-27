@@ -144,8 +144,8 @@ secrets = ["OBELISK_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Register `OBELISK_API_TOKEN` in the server's `[secrets]` table and add a matching
-`[[outbound_http.allowed_host]]` entry to `server.toml`.
+Register `OBELISK_API_TOKEN` in the app's `[secrets]` table and add a matching
+`[[outbound_http.allowed_host]]` entry to `app.toml`.
 
 ```javascript
 // example:session/webhook.handle

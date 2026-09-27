@@ -16,7 +16,8 @@ No build step or toolchain required — just install Obelisk and run.
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
 ```
 
-See the [Installation page](@/install/_index.md) for Docker, Nix, cargo-binstall, and other options.
+See the [Installation page](@/install/_index.md) for Docker, Nix, prebuilt binaries, and other
+options.
 
 ## 2. Clone the Tutorial
 
@@ -25,17 +26,18 @@ git clone https://github.com/obeli-sk/demo-tutorial.git
 cd demo-tutorial
 ```
 
-The repository contains four JavaScript files and a `deployment.toml` — nothing else to install or
-compile.
+The repository contains four JavaScript files, an `app.toml` naming the app, and a
+`deployment.toml`. There is nothing else to install or compile.
 
-Starting from an empty project instead? Generate the commented deployment reference first:
+Starting from an empty project instead? Generate a runnable starter app:
 
 ```bash
-obelisk generate deployment deployment.toml
+obelisk generate new my-app
+cd my-app
 ```
 
-Then add your activities, workflows, and webhook endpoints to `deployment.toml`. The rest of this
-guide explains the same pieces using the tutorial repository.
+It contains `app.toml`, `deployment.toml`, and a JavaScript webhook, workflow, and HTTP activity.
+The rest of this guide explains the same pieces using the tutorial repository.
 
 ## 3. The Components
 
@@ -193,7 +195,7 @@ See {{ doc_link(title="Configuration", path="configuration.md") }} for all optio
 ## 4. Run
 
 ```bash
-obelisk server run --deployment deployment.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
 Three endpoints start automatically:
@@ -300,7 +302,7 @@ kill $(pgrep obelisk)
 The curl request fails — but the workflow state is safely persisted. Restart the server:
 
 ```bash
-obelisk server run
+obelisk server run --app-config app.toml
 ```
 
 No `--deployment` flag needed: Obelisk persists the full deployment configuration — including the
@@ -330,21 +332,13 @@ losing progress or duplicating work.
 
 - **Build your own Rust project:** See
   {{ doc_link(title="Rust components", path="wasm/rust-components.md") }} for the WIT world,
-  `bindgen!`, and Cargo setup, or scaffold a new project with:
-
-  ```bash
-  cargo generate obeli-sk/obelisk-templates
-  ```
+  `bindgen!`, and Cargo setup.
 
   The `rust/` directory in the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) contains a
   Rust implementation of the same activity, workflow, and webhook.
 
-- **Explore example apps:** [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) is the app
-  from this guide, [demo-stargazers](https://github.com/obeli-sk/demo-stargazers) uses a GitHub
-  webhook, OpenAI, and a database,
-  [obelisk-deploy-flyio](https://github.com/obeli-sk/obelisk-deploy-flyio) deploys Obelisk apps to
-  Fly.io, and [obelisk-templates](https://github.com/obeli-sk/obelisk-templates) contains starter
-  templates.
+- **Explore example apps:** {{ doc_link(title="Example applications", path="apps.md") }} introduces
+  the agent template, browser automation demo, tutorial, and other apps.
 
 - **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli.md") }} covers submitting
   executions, inspecting state, and managing components.

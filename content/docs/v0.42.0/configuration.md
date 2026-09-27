@@ -6,22 +6,25 @@ weight = 20
 
 ## Overview
 
-The configuration is split into two files:
+The configuration is split into three files, each owned by a different role:
 
-- **`server.toml`** — server-level settings: API, Web UI, database, WASM, logging, HTTP servers,
-  etc.
-- **`deployment.toml`** — component arrays: activities, workflows, webhook endpoints, and cron
-  tasks.
+- **`server.toml`** (platform admin): listeners, API authentication, database, resource limits, WASM
+  and V8 runtimes, logging, HTTP servers, and the platform exec gate.
+- **`app.toml`** (app admin): the app name and the reviewed maximum privileges of every deployment:
+  secrets and their exposure, public environment variables, outbound HTTP, and exec activities.
+- **`deployment.toml`** (app developer): component arrays: activities, workflows, webhook endpoints,
+  and cron tasks.
 
-This separation contains deployment code that the operator does not fully trust, including
-LLM-generated code. The deployment requests capabilities; the operator limits them in `server.toml`.
-See {{ doc_link(title="Security model", path="security.md") }} before configuring secrets, native
+This separation contains deployment code that the app admin does not fully trust, including
+LLM-generated code. The deployment requests capabilities; the app policy limits them in `app.toml`,
+and the platform limits resources in `server.toml`. See
+{{ doc_link(title="Security model", path="security.md") }} before configuring secrets, native
 execution, or outbound HTTP.
 
 ### Version Compatibility
 
-The `obelisk-version` field can be set in either file to ensure compatibility with the running
-Obelisk version:
+The `obelisk-version` field can be set in `server.toml` or `deployment.toml` to ensure compatibility
+with the running Obelisk version:
 
 ```toml
 obelisk-version = "0.42"
@@ -29,20 +32,24 @@ obelisk-version = "0.42"
 
 ### Built-in Defaults
 
-All three servers start automatically with built-in defaults — **no `server.toml` is required**
-unless you need to change addresses, database settings, or other server-level options:
+All three servers start automatically with built-in defaults. **No `server.toml` is required**
+unless you need to change addresses, database settings, limits, or other platform options:
 
 - **API server** at `127.0.0.1:5005`
 - **Web UI** at `127.0.0.1:8080`
 - **External webhook server** at `127.0.0.1:9090`
 
-### Generating Configuration Files
+The server does require an app name, set as `app_name` in `app.toml` or through the
+`OBELISK_APP_NAME` environment variable. Without an `app.toml`, the default app policy grants no
+secrets, public environment variables, outbound HTTP, or exec activities.
 
-Generate the commented configuration references by passing an output filename:
+### Generating Configuration Files
 
 `obelisk generate new NAME` creates a directory named `NAME` with `app.toml`, `deployment.toml`, and
 a JavaScript webhook, workflow, and HTTP activity. Without `NAME`, it writes into the current
 directory and converts that directory's name to an app slug.
+
+Generate the commented configuration references by passing an output filename:
 
 ```sh
 obelisk generate server-config server.toml
@@ -50,44 +57,53 @@ obelisk generate app-config app.toml
 obelisk generate deployment deployment.toml
 ```
 
-Without an output filename, these commands print the configuration to stdout. For a single-party
-installation where the operator and every deployment author share the same trust level, the
-`--trusted` option generates a minimal server configuration that allows unrestricted
-component-originated outbound HTTP:
+Without an output filename, these commands print the configuration to stdout. Every setting in the
+references is commented out; set at least `app_name` in `app.toml` before starting the server. For a
+single-party installation where the admins and every deployment author share the same trust level,
+the `--trusted` option generates permissive policies:
 
 ```sh
-obelisk generate server-config --trusted server.toml
+obelisk generate app-config --trusted app.toml       # outbound HTTP to any deployment-requested host
+obelisk generate server-config --trusted server.toml # platform exec gate set to "*"
 ```
 
-Do not use the trusted configuration for multi-tenant or agent-driven deployments. It removes the
-operator destination boundary for outbound HTTP. It does not register secrets or approve exec
-activities; verification with `--fix` can add reviewed exec configuration digests and scaffold
-referenced secrets.
+Do not use the trusted configurations for multi-tenant or agent-driven deployments. The trusted app
+policy removes the destination boundary for outbound HTTP. Neither registers secrets or approves
+individual exec activities; verification with `--fix` can add reviewed exec configuration digests
+and scaffold referenced secrets in `app.toml`.
+
+To split a 0.41 `server.toml` that still contains app policy, run
+`obelisk generate split-config --server-config server.toml`. See
+{{ doc_link(title="Migrating from 0.41 to 0.42", path="migrating-to-0.42.md", version="v0.42.0") }}.
 
 ### Running the Server
 
 ```sh
-obelisk server run --deployment deployment.toml
-obelisk server verify --deployment deployment.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
+obelisk server verify --app-config app.toml --deployment deployment.toml
 
 # With explicit server config:
-obelisk server run --server-config server.toml --deployment deployment.toml
-obelisk server verify --server-config server.toml --deployment deployment.toml
+obelisk server run --server-config server.toml --app-config app.toml --deployment deployment.toml
 ```
 
-If `--server-config` is omitted, built-in defaults are used. If `--deployment` is omitted, the
+If `--server-config` is omitted, built-in platform defaults are used. If `--app-config` is omitted,
+the default app policy is used and `OBELISK_APP_NAME` must be set. If `--deployment` is omitted, the
 database's active/enqueued deployment is used.
 
 To verify a local deployment without opening the database, use:
 
 ```sh
-obelisk deployment verify --server-config server.toml --deployment deployment.toml
+obelisk deployment verify --server-config server.toml --app-config app.toml --deployment deployment.toml
 ```
 
 Missing public environment variables and secrets are reported together with a sorted, pasteable
-`server.toml` snippet. Add `--fix` to update `[public_env]` and scaffold missing `[secrets]` entries
-automatically, then review the generated policy and provide each secret source before starting the
-server. `obelisk server verify --fix` provides the same repair behavior.
+`app.toml` snippet. Add `--fix` to add missing `[public_env]` entries, scaffold missing `[secrets]`
+entries, and write the reviewed exec allowlist and secret-exposure grants into `app.toml`. Review
+the generated policy and set each secret's environment variable before starting the server.
+`obelisk server verify --fix` provides the same repair behavior. Outbound HTTP rules are not added
+automatically; verification prints the missing `app.toml` entries instead. A stale exec digest is
+kept and the current one appended as an array; remove the old digest when no running revision needs
+it, and update the platform exec gate in `server.toml`, which `--fix` does not change.
 
 ---
 
@@ -118,73 +134,6 @@ plaintext `api.token` key in `server.toml`. See
 {{ doc_link(title="Authentication", path="authentication.md") }} for the full model, generating
 tokens, and the `--no-auth` recovery flag.
 
-### Secret Registry
-
-Secrets are owned by the server operator. Map each logical secret name to its environment source in
-`server.toml`:
-
-```toml
-[secrets]
-OPENAI_KEY = { env = "OPENAI_API_KEY" }
-
-[secrets.DB_PASSWORD]
-env = "PRODUCTION_DB_PASSWORD"
-
-[secrets.DB_PASSWORD.exposed_to]
-migration = "sha256:..."
-```
-
-The inline form is convenient for secrets used only in HTTP placeholders. Use the regular table form
-when adding an `exposed_to` authorization for plaintext component exposure; TOML does not allow a
-nested table to extend an inline table.
-
-At startup, Obelisk reads each value into memory and removes its source variable from the process
-environment. Deployments request logical names in a component's `exposed_secrets` or an allowed
-host's `secrets` field; they cannot interpolate registered secret values with `${...}`. The former
-gives component code the plaintext value and requires an `exposed_to` grant generated with
-`obelisk generate secret-config-digest`. The latter substitutes opaque placeholders only in an
-authorized outbound request and does not require a plaintext-exposure grant.
-
-In 0.42.0-rc.3, `exposed_secrets` is supported by WASM and JavaScript activities and webhook
-endpoints, native exec activities, and experimental VM activities. WASM, JavaScript, and VM
-components receive each value under its logical name as an environment variable. Exec activities
-receive the values in the `secrets` object on stdin.
-
-### Public Deployment Environment
-
-Deployments can only read process environment variables declared by the app administrator. The
-declarations apply both to `env_vars` forwarded into components and `${...}` interpolation anywhere
-in `deployment.toml`:
-
-```toml
-[public_env]
-API_BASE_URL = {}
-REGION = {}
-TRACE_ID = { optional = true }
-```
-
-Entries are required at startup unless marked `optional = true`. A deployment may reference an
-optional variable only through an optional forwarded reference or an interpolation fallback. Keep
-credentials in the secret registry instead. A variable registered as a secret cannot also be read
-through the public environment table.
-
-### Server Outbound HTTP Policy
-
-Component-originated HTTP must match an allowlist entry in both `server.toml` and the component's
-deployment configuration. An empty server allowlist denies all component-originated HTTP.
-
-```toml
-[[outbound_http.allowed_host]]
-pattern = "api.openai.com"
-methods = ["POST"]
-request_url_regex = "^POST https://api\\.openai\\.com/v1/"
-secrets = ["OPENAI_KEY"]
-replace_in = ["headers"]
-```
-
-The server and deployment entries use the same syntax. The effective destination, method, path,
-secret, and replacement policy is their intersection, so neither side can widen the other.
-
 ### Web UI
 
 ```toml
@@ -194,28 +143,23 @@ webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 > **Warning**: The external webhook HTTP server has no authentication. Listening on all interfaces
 > (`[::]:<port>`) is not recommended.
 
-### Exec Activity Gating
+### Platform Exec Gate
 
-{{ doc_link(title="Exec activities", path="configuration.md") }} run host processes outside the WASM
-sandbox, so they are **disabled by default**. A deployment that declares an `activity_exec` fails
-verification unless the operator opts in on the server.
-
-Generate reviewable grants from the deployment configuration:
-
-```sh
-obelisk generate secret-config-digest --deployment deployment.toml
-```
-
-Allow reviewed executable and exposed-secret configurations by component name. The generated
-secret-exposure digest binds the executable content and the complete exposed-secret set:
+[Exec activities](#exec-activities) run host processes outside the WASM sandbox, so they are
+**disabled by default**. They need approval from both the platform admin in `server.toml` and the
+app admin in `app.toml` (see [App Exec Approval](#app-exec-approval)).
 
 ```toml
-[allowed_exec_activities]
-greet = "sha256:..."
+allowed_exec_activities = "*"   # Allow any app-approved exec activity; startup warns.
+
+# Or limit the platform grant to reviewed component digests:
+# [allowed_exec_activities]
+# worker = "sha256:..."
 ```
 
-Use an array of digests when overlapping deployment revisions must be authorized. If the activity
-receives plaintext secrets, copy the generated `[secrets.<name>.exposed_to]` grants too.
+Omitting the field or setting it to `false` disables exec activities. Every digest in `app.toml`
+must be covered by the platform grant. Both files accept an array of digests when overlapping
+deployment revisions must be authorized.
 
 ### Server Limits
 
@@ -226,11 +170,52 @@ max_deployment_file_bytes = 20971520 # 20 MiB default
 max_transport_message_size_bytes = 536870912 # 512 MiB default
 ```
 
-`max_deployment_file_bytes` limits an individual file submitted as part of a deployment. In 0.42
-this setting lives under `[limits]`, not at the top level of `server.toml`.
+`max_deployment_file_bytes` limits an individual file submitted as part of a deployment.
 `max_persisted_value_size_bytes` is snapshotted by each new execution tree and bounds persisted
 parameters and results. `max_transport_message_size_bytes` independently bounds gRPC messages and
 equivalent REST request bodies.
+
+#### Execution Slots
+
+Every execution slot in the process is charged to exactly one (workload, runtime) cell. `count` is
+how many slots the cell grants, and `memory` is how much linear memory (for a V8 cell, isolate heap)
+one slot may hold. Both accept `"unlimited"`. Byte sizes require a unit key: `memory.mib`,
+`memory.gib`, or `memory.bytes`. The defaults are:
+
+```toml
+[limits.activities.wasm]       # Includes Boa JavaScript activities.
+count = 500
+memory.gib = 1
+[limits.activities.v8]
+count = 16
+memory.mib = 256
+[limits.activities.process]    # activity_exec: an operating system process, so no `memory`.
+count = 32
+[limits.activities.vm_bochs]   # activity_vm
+count = 8
+memory.gib = 1
+[limits.workflows.wasm]        # Includes Boa JavaScript workflows.
+count = 500
+memory.mib = 512
+[limits.workflows.v8]
+count = 100
+memory.mib = 256
+[limits.webhooks.wasm]         # Includes Boa JavaScript webhook endpoints.
+count = 500
+memory.mib = 512
+[limits.webhooks.v8]
+count = 16
+memory.mib = 256
+```
+
+The cells are independent reservations, so no workload or runtime can starve another, and their sum
+is the process bound. Executors acquire a slot before locking an execution, so work beyond the limit
+stays pending in the database. A webhook request that cannot acquire a slot receives
+`503 Service Unavailable`; capacity is acquired only after a route matches.
+
+The `v8` cells apply to JavaScript components, which run on native V8 by default. When the server is
+started with `OBELISK_JS_RUNTIME=boawasm`, JavaScript components run on Boa compiled to WASM and use
+the `wasm` cells.
 
 ### Automatic Maintenance and Retention
 
@@ -264,13 +249,15 @@ retention operations are also available through `obelisk admin` and `/v1/admin`.
 
 ### Sqlite
 
-Set SQLite database directory.
+The SQLite database directory defaults to a per-app path:
 
 ```toml
-database.sqlite.directory = "${DATA_DIR}/obelisk-sqlite"
+database.sqlite.directory = "${DATA_DIR}/apps/${APP_NAME}/sqlite"
 ```
 
-See [Path Prefixes](#path-prefixes) for how `${DATA_DIR}` is translated.
+`${APP_NAME}` is the configured app name. Releases before 0.42 used `${DATA_DIR}/obelisk-sqlite`;
+set that value explicitly to keep using an existing database. See [Path Prefixes](#path-prefixes)
+for how `${DATA_DIR}` is translated.
 
 Customize PRAGMA statements. Defaults are in
 {{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs") }}
@@ -314,11 +301,14 @@ tick_sleep.milliseconds = 100
 [wasm]
 cache_directory = "${CACHE_DIR}/wasm"          # WASM file cache location
 allocator_config = "auto"                      # One of "auto"|"on_demand"|"pooling"
-global_executor_instance_limiter = "unlimited" # If set to an integer, limits the number of concurrent workflow and activity executions.
-global_webhook_instance_limiter = "unlimited"  # If set to an integer, limits the number of concurrent webhook requests.
 fuel = "unlimited"                             # If set to an integer, WASM instances consume fuel, details: https://docs.wasmtime.dev/api/wasmtime/struct.Store.html#method.set_fuel
+build_semaphore = "unlimited"                  # If set to an integer, limits the number of AOT compilations that can run in parallel.
 parallel_compilation = true                    # Enable (default) or disable parallel AOT compilation of each WASM component.
+debug = false                                  # Emit DWARF debug info and disable Cranelift optimizations.
 ```
+
+Concurrency and per-instance memory are configured by the [execution slot](#execution-slots) cells
+of `[limits]`.
 
 See [Path Prefixes](#path-prefixes) for how `${CACHE_DIR}` is translated.
 
@@ -348,6 +338,26 @@ enabled = true
 directory = "${CACHE_DIR}/codegen"   # Path to directory where AOT generated code is cached. Supports path prefixes.
 ```
 
+### Native V8 Configuration
+
+```toml
+[v8]
+thread_stack_size.mib = 4   # Stack size for each native V8 isolate thread.
+```
+
+Each V8 isolate runs on its own OS thread. The number of isolates and their heap size are the `v8`
+cells of [`[limits]`](#execution-slots).
+
+### Global Webhook Configuration
+
+```toml
+[webhooks]
+request_timeout.seconds = 30   # Deadline for a webhook handler to return its HTTP response.
+```
+
+The deadline applies to WASM and V8 webhook handlers. It does not limit a streaming response body
+after the response has been returned.
+
 ### Global Workflow Configuration
 
 ```toml
@@ -359,6 +369,119 @@ response_refresh_interval = 32         # Reload responses from the database afte
 
 ```
 
+---
+
+## App Configuration (`app.toml`)
+
+The app policy is reviewed by the app admin and passed with `--app-config`. It declares the app's
+required inputs and the maximum privileges any deployment may use. Missing required inputs fail at
+startup, so executions do not discover them at runtime. Environment overrides such as `OBELISK__...`
+apply only to `server.toml`, not to `app.toml`.
+
+### App Name
+
+```toml
+app_name = "my-app"
+```
+
+The app name is required, either here or through `OBELISK_APP_NAME`. It selects the default SQLite
+directory.
+
+### Secret Registry
+
+Map each logical secret name to the environment variable of the same name:
+
+```toml
+[secrets]
+OPENAI_KEY = {}
+GITHUB_TOKEN = { optional = true }
+
+[secrets.DB_PASSWORD.exposed_to]
+migration = "sha256:..."
+```
+
+At startup, Obelisk reads each value into memory and removes the variable from the process
+environment before workers start. A required secret whose variable is unset prevents startup. An
+`optional = true` secret may be absent; deployments must then reference it as optional, for example
+`{ name = "GITHUB_TOKEN", optional = true }`, and an absent value is omitted from the component
+environment or stdin.
+
+Deployments request logical names in a component's `exposed_secrets` or an allowed host's `secrets`
+field; they cannot interpolate registered secret values with `${...}`. The former gives component
+code the plaintext value and requires an `exposed_to` grant generated with
+`obelisk generate secret-config-digest`. The latter substitutes opaque placeholders only in an
+authorized outbound request and does not require a plaintext-exposure grant.
+
+`exposed_secrets` is supported by WASM and JavaScript activities and webhook endpoints, native exec
+activities, and experimental VM activities. WASM, JavaScript, and VM components receive each value
+under its logical name as an environment variable. Exec activities receive the values in the
+`secrets` object on stdin.
+
+### Public Deployment Environment
+
+Deployments can only read process environment variables declared by the app admin. The declarations
+apply both to `env_vars` forwarded into components and `${...}` interpolation anywhere in
+`deployment.toml`:
+
+```toml
+[public_env]
+API_BASE_URL = {}
+REGION = {}
+TRACE_ID = { optional = true }
+```
+
+Entries are required at startup unless marked `optional = true`. A deployment may reference an
+optional variable only through an optional forwarded reference, such as
+`{ key = "TRACE_ID", optional = true }`, or an interpolation fallback, such as `${TRACE_ID:-none}`.
+Keep credentials in the secret registry instead. A variable registered as a secret cannot also be
+read through the public environment table.
+
+### App Outbound HTTP Policy
+
+Component-originated HTTP must match an allowlist entry in both `app.toml` and the component's
+deployment configuration. An empty app allowlist denies all component-originated HTTP.
+
+```toml
+[[outbound_http.allowed_host]]
+pattern = "api.openai.com"
+methods = ["POST"]
+request_url_regex = "^POST https://api\\.openai\\.com/v1/"
+secrets = ["OPENAI_KEY"]
+replace_in = ["headers"]
+```
+
+The app and deployment entries use the same syntax. Both apply to every request: a request must
+match both destinations and methods, and both `request_url_regex` values, which need not be
+identical. A secret is substituted only when matching entries on both sides list the same secret and
+replacement location. Activation rejects a deployment whose destinations or methods are not covered
+by the app policy.
+
+### App Exec Approval
+
+Generate reviewable grants from the deployment configuration:
+
+```sh
+obelisk generate secret-config-digest --deployment deployment.toml
+```
+
+Approve reviewed executable and exposed-secret configurations by component name. The generated
+secret-exposure digest binds the executable content and the complete exposed-secret set:
+
+```toml
+[allowed_exec_activities]
+greet = "sha256:..."
+```
+
+Use an array of digests when overlapping deployment revisions must be authorized. If the activity
+receives plaintext secrets, copy the generated `[secrets.<name>.exposed_to]` grants too. The
+platform must also allow the digest through its [exec gate](#platform-exec-gate).
+
+### App Policy Digest
+
+Obelisk computes a canonical `app_config_digest` of the app policy. Deployments record the digest
+used at activation, system events carry the current digest, and the running policy is available
+through `GET /v1/app-config`.
+
 ## HTTP Servers
 
 The built-in `"external"` HTTP server is always available at `127.0.0.1:9090` and does not need to
@@ -368,7 +491,6 @@ be declared. Define additional named servers in `server.toml` when you need non-
 [[http_server]]
 name = "server_name"                  # Server identifier
 listening_addr = "0.0.0.0:9000"       # Listen address and port
-max_inflight_requests = "unlimited"   # Concurrent request limit
 ```
 
 Named servers defined here can be referenced from `webhook_endpoint_wasm` entries in
@@ -422,8 +544,8 @@ prefix = "obelisk_server_daily" # File name prefix
 
 ## Deployment Configuration (`deployment.toml`)
 
-The deployment file contains only component arrays. All server-level settings must go in
-`server.toml`.
+The deployment file contains only component arrays. Platform settings go in `server.toml`, and app
+policy goes in `app.toml`.
 
 ### Common Component Settings
 
@@ -448,7 +570,6 @@ exec.batch_size = 5                            # Executions per event loop tick
 exec.lock_expiry.seconds = 30                  # Execution lock duration (default: 30 seconds)
 exec.tick_sleep.milliseconds = 200             # Executor sleeps the specified duration when polling for pending executions
 exec.locking_strategy = "auto"                 # Workflow default. See supported strategies below.
-exec.instance_limiter = "unlimited"            # If set to an integer, limits concurrent executions for this executor. Default: "unlimited"
 ```
 
 Workflows support all three locking strategies:
@@ -515,7 +636,7 @@ max_retries = 5                      # Maximum retry attempts
 retry_exp_backoff.milliseconds = 100 # Initial retry delay (doubles each attempt)
 forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
 forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
-env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
+env_vars = ["ENV1", { key = "ENV2", value = "value" }, { key = "OPT", optional = true }] # Forwarded names must be declared in app.toml [public_env].
 exposed_secrets = ["ACTIVITY_SECRET"] # Registered secrets injected as environment variables. Requires exposed_to grants.
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. One of "off"|"trace"|"debug"|"info"|"warn"|"error". Default: "debug"
 ```
@@ -524,10 +645,10 @@ Use `exposed_secrets` only when the activity must read the plaintext. Register e
 `[secrets]`, then generate and review its `[secrets.<name>.exposed_to]` grant. For credentials used
 only in outbound HTTP, prefer the `allowed_host.secrets` placeholder mechanism below.
 
-RC2 also has experimental WASIp3 component support for WASM activities and webhook endpoints. The
-component model is detected from the binary; the existing deployment component sections and operator
-HTTP policy still apply. Treat WASIp3 support as experimental when choosing production compatibility
-guarantees.
+Obelisk 0.42 also has experimental WASIp3 component support for WASM activities and webhook
+endpoints. The component model is detected from the binary; the existing deployment component
+sections and app HTTP policy still apply. Treat WASIp3 support as experimental when choosing
+production compatibility guarantees.
 
 #### Permanent Error Handling
 
@@ -537,7 +658,7 @@ Activities returning a variant containing a case named `permanent` will skip ret
 #### Outbound HTTP Allowlist
 
 Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the
-deployment and matching `[[outbound_http.allowed_host]]` entries in `server.toml`. Without both, the
+deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both, the
 request is blocked.
 
 ```toml
@@ -556,8 +677,9 @@ secrets = ["OPENAI_KEY"]
 replace_in = ["headers"]
 ```
 
-`OPENAI_KEY` is a logical name from the server's `[secrets]` registry. A matching server allowlist
-entry must also permit this host, method, secret, and replacement target.
+`OPENAI_KEY` is a logical name from the app's `[secrets]` registry. A matching app allowlist entry
+must also permit this host, method, secret, and replacement target. An allowlist entry can list a
+secret the component can run without as `{ name = "GITHUB_TOKEN", optional = true }`.
 
 `pattern` matches the request origin: scheme, host, and port. It uses the limited wildcard syntax
 below, not regular expressions, and must not contain a URL path. A pattern without a scheme uses
@@ -611,14 +733,16 @@ exposed_secrets = ["ACTIVITY_SECRET"] # Injected into process.env. Requires expo
 
 Outbound HTTP allowlist: same `[[activity_js.allowed_host]]` syntax as `activity_wasm`. JavaScript
 activities receive exposed values as `process.env.ACTIVITY_SECRET`. Register the logical name in the
-server secret registry and authorize the generated digest under
-`[secrets.ACTIVITY_SECRET.exposed_to]`.
+app secret registry and authorize the generated digest under `[secrets.ACTIVITY_SECRET.exposed_to]`.
 
 ### Experimental VM Activities
 
-`activity_vm` runs a Nix-packaged Linux executable inside an experimental container2wasm appliance
-hosted by Wasmtime. Its configuration, guest ABI, cache layout, and runtime behavior may change or
-be removed in a later release.
+`activity_vm` runs a Nix-packaged Linux executable inside an experimental Linux VM: a
+[Bochs](https://github.com/obeli-sk/activity-vm-bochs) x86 emulator compiled to WASM and hosted by
+Wasmtime. The minimal guest (Linux kernel, BusyBox, and an HTTP proxy) is built by
+[activity-vm-bochs-runtime](https://github.com/obeli-sk/activity-vm-bochs-runtime) and distributed
+as the `getobelisk/activity-vm-runtime` OCI artifact. Its configuration, guest ABI, cache layout,
+and runtime behavior may change or be removed in a later release.
 
 ```toml
 [[activity_vm]]
@@ -640,11 +764,11 @@ pattern = "https://api.example.com"
 methods = ["GET"]
 ```
 
-The pinned appliance and verified Nix closures are cached and exposed read-only to the guest.
+The pinned VM runtime and verified Nix closures are cached and exposed read-only to the guest.
 `cache.nixos.org` is enabled by default; add `[[activity_vm.nix_cache]]` entries with trusted public
 keys for other caches. Each declared store path's `bin` directory is added to the guest `PATH`.
 
-Guest HTTP(S) uses the same intersection of deployment and server policy as WASM and JS components.
+Guest HTTP(S) uses the same intersection of deployment and app policy as WASM and JS components.
 Inside the guest, `obelisk-host` addresses the Obelisk host; configure its allowlist as the
 corresponding `http://localhost:PORT` destination. Prefer outbound secret placeholders. Secrets in
 `activity_vm.exposed_secrets` become guest environment variables readable by every guest process and
@@ -658,8 +782,9 @@ result is read from stdout — exit code 0 means success, non-zero means error. 
 are streamed and persisted, available via the CLI, REST API, and Web UI.
 
 > **Security**: exec activities run host processes outside the WASM sandbox and are disabled by
-> default. A deployment that declares one fails verification until the operator enables
-> [`allowed_exec_activities`](#exec-activity-gating) in `server.toml`.
+> default. A deployment that declares one fails verification until both the app admin approves it in
+> [`app.toml`](#app-exec-approval) and the platform admin enables the
+> [exec gate](#platform-exec-gate) in `server.toml`.
 
 ```toml
 [[activity_exec]]
@@ -706,8 +831,9 @@ env_vars = ["PATH", {key = "MY_VAR", value = "my_value"}]
 exposed_secrets = ["MY_SECRET"]
 ```
 
-Declare `MY_SECRET = { env = "HOST_SECRET_VAR" }` in the server's `[secrets]` table, then copy the
-activity's grants from `obelisk generate secret-config-digest --deployment deployment.toml` into
+Declare `MY_SECRET = {}` in the app's `[secrets]` table and set the `MY_SECRET` environment variable
+for the server. Then copy the activity's grants from
+`obelisk generate secret-config-digest --deployment deployment.toml` into the app's
 `[allowed_exec_activities]` and `[secrets.MY_SECRET.exposed_to]`.
 
 When both `params_via_stdin` and exposed secrets are configured, stdin contains both top-level
@@ -737,8 +863,9 @@ on exit 0.
 #### Retry and timeout
 
 Exec activities follow the same retry semantics as WASM and JS activities. The `exec.lock_expiry`
-setting controls how long the child process is allowed to run before being killed — the execution is
-then retried or marked as permanently timed out.
+setting controls how long the child process is allowed to run. When the lock expires or the executor
+shuts down, the child's process group is killed and reaped, and the execution is then retried or
+marked as permanently timed out.
 
 ### Stub Activities
 
@@ -883,7 +1010,7 @@ backtrace_persist = true              # Persist call-site backtraces for this we
 Plaintext webhook secrets are intended for operations such as validating an inbound HMAC signature.
 Register every logical name under `[secrets]`, generate grants with
 `obelisk generate secret-config-digest --deployment deployment.toml`, and copy the reviewed
-`[secrets.<name>.exposed_to]` entries into `server.toml`. The grant is bound to the component digest
+`[secrets.<name>.exposed_to]` entries into `app.toml`. The grant is bound to the component digest
 and complete exposed-secret set, so regenerate it when either changes.
 
 #### Route Syntax

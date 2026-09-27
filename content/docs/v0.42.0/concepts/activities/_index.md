@@ -110,15 +110,10 @@ return type must be one of following:
 ## Developing an Activity in Rust
 
 In this contrived example we will create an activity that does not communicate with an external
-system. Its purpose is to show all the basic steps needed to execute an activity. Install
-[Rust](https://rustup.rs/), [cargo-generate](https://crates.io/crates/cargo-generate) and run:
-
-```sh
-cargo generate obeli-sk/obelisk-templates fibo/activity --name myactivity
-cd myactivity
-```
-
-This will generate a directory with the following structure:
+system. Its purpose is to show the WIT and Rust code needed for an activity. Install
+[Rust](https://rustup.rs/) and use the
+[demo-tutorial Rust activity](https://github.com/obeli-sk/demo-tutorial/tree/main/rust/activity-sleepy)
+as a complete project example. A project with the following structure can host this example:
 
 ```sh
 .
@@ -175,7 +170,7 @@ impl Guest for Component {
 }
 ```
 
-The configuration file `obelisk.toml` already includes the activity:
+Add the activity to `deployment.toml`:
 
 ```toml
 [[activity_wasm]]
@@ -187,7 +182,7 @@ Let's build the WASM Component and run Obelisk.
 
 ```sh
 cargo build --release
-obelisk server run --config ./obelisk.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
 In order to execute the activity, we can use the CLI or the Web UI. In either case, we need the
@@ -198,6 +193,5 @@ obelisk execution submit --follow \
     template-fibo:activity/fibo-activity-ifc.fibo [10]
 ```
 
-Follow the template's
-[README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/activity/README.md) for more
-details.
+For a complete build and deployment, follow
+{{ doc_link(title="Getting Started (Rust / WASM)", path="wasm/getting-started.md") }}.

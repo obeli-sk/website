@@ -56,19 +56,13 @@ following:
 
 ## Developing a Workflow in Rust
 
-### Creating a workflow from a template
+### Creating a workflow
 
 Continuing the fibonacci example from
 {{ doc_link(title="activities", path="concepts/activities/_index.md") }} page, let's generate the
-workflow from [this template](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow)
-using [cargo-generate](https://crates.io/crates/cargo-generate):
-
-```sh
-cargo generate obeli-sk/obelisk-templates fibo/workflow --name myworkflow
-cd myworkflow
-```
-
-This will generate a directory with the following structure:
+workflow in Rust. The
+[demo-tutorial Rust workflow](https://github.com/obeli-sk/demo-tutorial/tree/main/rust/workflow-tutorial)
+is a complete buildable example. This fibonacci example uses the following layout:
 
 ```sh
 .
@@ -151,14 +145,14 @@ impl Guest for Component {
 }
 ```
 
-The configuration file `obelisk.toml` already includes the fibo activity and the workflow:
+The generated `deployment.toml` already includes the fibo activity and the workflow:
 
 ```toml
 [[activity_wasm]]
 name = "activity_myfibo"
 # ...
 
-[[workflow]]
+[[workflow_wasm]]
 name = "myworkflow"
 location = "target/wasm32-unknown-unknown/release/myworkflow.wasm"
 ```
@@ -167,7 +161,7 @@ Let's build the WASM Component and run Obelisk.
 
 ```sh
 cargo build --release
-obelisk server run --config ./obelisk.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
 In another terminal, let's list all the exported functions:
@@ -202,9 +196,8 @@ shows that `fibo` activities were indeed executed sequentially: <img
 src="{{ get_url(path="fiboa-trace.png") }}" alt="View the result" style="max-width: 100%; height:
 auto; display: block;border: 2px dotted #efeded;" />
 
-Follow the template's
-[README](https://github.com/obeli-sk/obelisk-templates/blob/main/fibo/workflow/README.md) to learn
-how to publish the WASM Component into an OCI registry and more.
+See {{ doc_link(title="Getting Started (Rust / WASM)", path="wasm/getting-started.md") }} for
+building and deploying a Rust workflow.
 
 ## Concurrently submitting multiple child executions
 
@@ -351,7 +344,7 @@ example above, when `fibo_activity()` is executed).
 For example, having the following configuration:
 
 ```toml
-[[workflow]]
+[[workflow_wasm]]
 name = "myworkflow"
 location = "target/wasm32-unknown-unknown/release/workflow.wasm"
 exec.lock_expiry.seconds = 1

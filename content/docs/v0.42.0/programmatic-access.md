@@ -13,6 +13,9 @@ The Web API has an auto-generated OpenAPI schema available at
 
 See {{ github(title="obelisk.proto", path="proto/obelisk.proto") }} schema for details.
 
+> **Deprecated:** gRPC and gRPC-web are deprecated in 0.42. The web API below covers the same
+> feature set; new clients should use `/v1`.
+
 ## WebAPI
 
 This document describes the REST-like API for managing components, deployments, and executions.
@@ -99,6 +102,16 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/components?exports=true&imports=false
       "name": "test_programs_fibo_activity",
       "component_digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0"
     },
+    "files": [
+      {
+        "file": {
+          "path": "target/wasm-cache/test_programs_fibo_activity.wasm",
+          "digest": "sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0",
+          "size": 331911
+        },
+        "role": "wasm_component"
+      }
+    ],
     "exports": [
       {
         "ffqn": "testing:fibo/fibo.fibo",
@@ -169,6 +182,19 @@ world root {
 
 ---
 
+### `GET /v1/components/{digest}/source`
+
+Retrieves a source file of a component, such as a JavaScript module or a file referenced by
+backtrace source mappings.
+
+**Query Parameters:**
+
+| Parameter | Type   | Description                                                  | Default  |
+| :-------- | :----- | :----------------------------------------------------------- | :------- |
+| `file`    | String | File path to retrieve. Suffix matching is used if not exact. | Required |
+
+---
+
 ## Executions
 
 ### `GET /v1/execution-id`
@@ -191,6 +217,10 @@ Lists executions with support for filtering and pagination.
 | Parameter             | Type    | Description                                                         | Default        |
 | :-------------------- | :------ | :------------------------------------------------------------------ | :------------- |
 | `ffqn_prefix`         | String  | Filter by Function Fully Qualified Name or its prefix.              | `None`         |
+| `package`             | String  | Exact package scope, for example `ns:pkg`.                          | `None`         |
+| `interface`           | String  | Exact interface scope, for example `ns:pkg/ifc`.                    | `None`         |
+| `function`            | String  | Exact Function Fully Qualified Name, for example `ns:pkg/ifc.fn`.   | `None`         |
+| `state`               | String  | Match any of the given states. Repeat the parameter for several.    | `None`         |
 | `show_derived`        | Boolean | If `true`, includes child executions.                               | `false`        |
 | `hide_finished`       | Boolean | Show only unfinished executions.                                    | `false`        |
 | `execution_id_prefix` | String  | Filter by Execution ID or its prefix.                               | `None`         |
@@ -200,6 +230,10 @@ Lists executions with support for filtering and pagination.
 | `length`              | Integer | Number of items to return.                                          | System Default |
 | `direction`           | String  | `older` or `newer`.                                                 | `older`        |
 | `including_cursor`    | Boolean | Include the cursor item in the result.                              | `false`        |
+
+`state` accepts `locked`, `pending`, `scheduled`, `blocked`, `paused`, `cancelling`, `finished`,
+`finished_ok`, `finished_error`, and `finished_execution_failure`, e.g.
+`?state=pending&state=blocked`.
 
 #### Example request
 
@@ -236,7 +270,8 @@ Submits a new execution. The system will automatically generate an Execution ID.
 
 **Query Parameters:**
 
-- `follow`: (Boolean) If `true`, the request blocks and streams the result once finished.
+- `follow`: (Boolean) If `true`, the response is a [server-sent event stream](#following-results)
+  that delivers the result once the execution finishes.
 
 **Request Body:**
 
@@ -263,8 +298,10 @@ curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/executions?follow=true' -H content-ty
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 
-```json
-{ "ok": 5 }
+```
+event: result
+id: 1
+data: {"ok":5}
 ```
 
 ---
@@ -280,7 +317,8 @@ with the same parameters, it returns `200 OK`.
 
 **Query Parameters:**
 
-- `follow`: (Boolean) Block and stream the result.
+- `follow`: (Boolean) Return a [server-sent event stream](#following-results) that delivers the
+  result once the execution finishes.
 
 #### Example request
 
@@ -297,12 +335,14 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H conten
 Getting the result with `follow` set to `true`:
 
 ```sh
-curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}?follow=true" -H content-type:application/json -H accept:application/json -X PUT -d \
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}?follow=true" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
 
-```json
-{ "ok": 5 }
+```
+event: result
+id: 1
+data: {"ok":5}
 ```
 
 ---
@@ -313,8 +353,8 @@ Retrieves the result of an execution.
 
 **Query Parameters:**
 
-- `follow`: (Boolean) If the execution is not finished, the connection stays open and streams the
-  result as soon as it completes.
+- `follow`: (Boolean) Return a [server-sent event stream](#following-results) that delivers the
+  result as soon as the execution completes.
 
 **Responses:**
 
@@ -331,12 +371,28 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}"
 { "ok": 5 }
 ```
 
+#### Following results
+
+With `follow=true`, the submit and result endpoints respond with `Content-Type: text/event-stream`.
+The stream carries a single `result` event with ID `1` whose data is the
+[Execution Result](#execution-result) JSON, then closes. While waiting, the server sends periodic
+comment lines as heartbeats. A client that reconnects with `Last-Event-ID: 1` receives an empty
+stream, because the result was already delivered.
+
 ---
 
 ### `GET /v1/executions/{execution-id}/status`
 
 Returns the current lifecycle status (e.g., `pending`, `finished`). Unlike the root GET endpoint,
 this returns the internal state rather than the function return value.
+
+**Query Parameters:**
+
+- `follow`: (Boolean) Return a server-sent event stream. Each change emits a `status` event with the
+  status JSON below; the stream closes once the execution finishes. Event IDs are content digests,
+  so a reconnecting client can send `Last-Event-ID` to skip a status it already received.
+- `send_finished_status`: (Boolean) With `follow`, emit a final `finished_status` event carrying
+  `created_at`, `scheduled_at`, `finished_at`, and the result `value`.
 
 #### Example request
 
@@ -361,6 +417,15 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H
   "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599"
 }
 ```
+
+---
+
+### `GET /v1/executions/{execution-id}/events-and-responses`
+
+Returns a consistent snapshot of an execution's events and join-set responses in one request. It
+accepts the query parameters of the `events` endpoint (`version_from`, `events_length`,
+`include_backtrace_id`) and of the `responses` endpoint (`responses_cursor_from`,
+`responses_length`, `responses_including_cursor`).
 
 ---
 
@@ -429,12 +494,16 @@ Retrieves responses associated with an execution (used for long-running interact
 
 **Query Parameters:**
 
-| Parameter          | Type    | Description                                      | Default |
-| :----------------- | :------ | :----------------------------------------------- | :------ |
-| `cursor_from`      | Integer | Start from this cursor index.                    | `0`     |
-| `length`           | Integer | Max number of responses.                         | `20`    |
-| `including_cursor` | Boolean | Include the event at `cursor_from`.              | `false` |
-| `join_set`         | String  | Filter to responses of this exact join-set name. | all     |
+| Parameter          | Type    | Description                              | Default |
+| :----------------- | :------ | :--------------------------------------- | :------ |
+| `cursor_from`      | Integer | Start from this cursor index.            | `0`     |
+| `length`           | Integer | Max number of responses.                 | `20`    |
+| `including_cursor` | Boolean | Include the event at `cursor_from`.      | `false` |
+| `join_set`         | String  | Filter to responses of this join-set ID. | all     |
+
+`join_set` takes a canonical join-set ID as shown in `join_set_id`, for example `o:1-fibo` or
+`n:session-events` (URL-encode the colon as `%3A` if needed). A bare join-set name is rejected with
+`400 Bad Request`.
 
 #### Example request
 
@@ -455,19 +524,23 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/responses"
         "event": {
           "join_set_id": "o:1-fibo",
           "event": {
-            "type": "ChildExecutionFinished",
+            "type": "child_execution_finished",
             "child_execution_id": "E_01KDN9VJ2TJ396ZARNEMRBNBHP.o:1-fibo_1",
             "finished_version": 2,
             "result": {
-              "ok": 5
+              "ok": {
+                "type": "u64",
+                "value": 5
+              }
             }
           }
         }
       },
-      "cursor": 67
+      "cursor": 1
     }
   ],
-  "max_cursor": 67
+  "max_cursor": 5,
+  "scan_cursor": 1
 }
 ```
 
@@ -538,14 +611,14 @@ exec.locking_strategy = "by_component_digest"
 #### Example request
 
 ```sh
-obelisk server run --deployment obelisk.toml # start with components downloaded from Docker Hub.
+obelisk server run -a app-testing-wasm.toml --deployment deployment-testing-wasm-oci.toml # components from Docker Hub
 EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
 # Submit a workflow
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep-workflow/workflow.sleep-host-activity", "params": [{"seconds":10}] }'
 
 # Shutdown the server before the execution finishes.
-obelisk server run --deployment obelisk-local.toml # Start with components built locally.
+obelisk server run -a app-testing-wasm.toml --deployment deployment-testing-wasm-local.toml # components built locally
 # Find the old and new sha256 digest
 OLD=$(curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/status"  -H accept:application/json | jq .component_digest)
 NEW=$(curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'accept:application/json' | jq .[0].component_id.input_digest)
@@ -589,8 +662,11 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/logs?show_
 
 ### `GET /v1/executions/{execution-id}/backtrace`
 
-Returns the WASM backtrace for a trapped or failed execution, including call frames and optional
-source symbol information.
+Returns a persisted call-site backtrace of a workflow execution, including WASM call frames and
+source symbol information. Backtraces are stored when a webhook or workflow is configured with
+`backtrace_persist`, when `advance` is called with `persist_backtrace`, or on demand with
+[`PUT /v1/executions/{execution-id}/backtrace/persist`](#put-v1-executions-execution-id-backtrace-persist).
+Otherwise the endpoint returns `404 Not Found`.
 
 **Query Parameters:**
 
@@ -607,7 +683,11 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace"
 ```json
 {
   "execution_id": "E_01KDQR2TGJR2XWEDM4CS6E4TF1",
-  "component_id": "workflow:my_workflow:sha256:abc123...",
+  "component_id": {
+    "component_type": "workflow",
+    "name": "my_workflow",
+    "component_digest": "sha256:abc123..."
+  },
   "version_min_including": 1,
   "version_max_excluding": 3,
   "wasm_backtrace": {
@@ -626,14 +706,15 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace"
 
 ### `GET /v1/executions/{execution-id}/backtrace/source`
 
-Retrieves the source file content referenced by a backtrace frame. Requires the WASM component to
-have been compiled with embedded DWARF debug info.
+Retrieves the source file content referenced by a backtrace frame. The component must be compiled
+with debug info so frames carry file symbols, and the deployment must map those files to local
+sources with `backtrace.sources`.
 
 **Query Parameters:**
 
 | Parameter | Type   | Description                                                              | Default  |
 | :-------- | :----- | :----------------------------------------------------------------------- | :------- |
-| `file`    | String | File path to retrieve (suffix matching supported)                        | required |
+| `file`    | String | Frame `file` path; a unique trailing path suffix is also accepted        | required |
 | `version` | String | Backtrace version for component lookup: `"first"`, `"last"`, or a number | `"last"` |
 
 **Responses:**
@@ -644,7 +725,7 @@ have been compiled with embedded DWARF debug info.
 #### Example request
 
 ```sh
-curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=src/lib.rs"
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/backtrace/source?file=workflow/src/lib.rs"
 ```
 
 ---
@@ -870,6 +951,9 @@ Lists deployment states.
 | `including_cursor`          | Boolean | Include the cursor item in the result           | `false`        |
 | `include_derived`           | Boolean | Include child executions in execution summaries | `false`        |
 | `include_component_summary` | Boolean | Include component counts by manifest section    | `false`        |
+| `direction`                 | String  | `older` or `newer`                              | `older`        |
+| `include_deployment_toml`   | Boolean | Include each deployment's TOML                  | `false`        |
+| `include_execution_counts`  | Boolean | Include execution state counts                  | `true`         |
 
 #### Example request
 
@@ -886,6 +970,7 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments" -H accept:application/js
     "status": "active",
     "created_at": "2026-03-31T10:04:01.736281506Z",
     "last_active_at": "2026-03-31T10:04:01.736491095Z",
+    "last_active_app_config_digest": "app-config:v1:sha256:...",
     "locked": 0,
     "pending": 0,
     "scheduled": 0,
@@ -929,7 +1014,9 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
   "status": "active",
   "created_at": "2026-03-31T10:04:01.736281506Z",
   "last_active_at": "2026-03-31T10:04:01.736491095Z",
-  "deployment_toml": "..."
+  "last_active_app_config_digest": "app-config:v1:sha256:...",
+  "deployment_toml": "...",
+  "files": [...]
 }
 ```
 
@@ -947,21 +1034,32 @@ conflict. The deployment is not yet activated; use `PUT /v1/deployments/{id}/swi
 
 **Request Body (JSON):**
 
-| Field                              | Type    | Description                                                                                                                                                     |
-| :--------------------------------- | :------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deployment_toml`                  | String  | Verbatim deployment manifest                                                                                                                                    |
-| `description`                      | String  | Optional human-readable description                                                                                                                             |
-| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server, such as missing environment variables / secrets or server capabilities like exec activities (`false`) |
+| Field                              | Type    | Description                                                                       |
+| :--------------------------------- | :------ | :-------------------------------------------------------------------------------- |
+| `deployment_toml`                  | String  | Verbatim deployment manifest                                                      |
+| `description`                      | String  | Optional human-readable description                                               |
+| `allow_unavailable_runtime_config` | Boolean | Store before runtime values or app and platform approvals are available (`false`) |
+
+Set `allow_unavailable_runtime_config` to `true` when a developer submits a deployment for later
+admin approval. Missing values, public environment declarations, secret registrations, outbound HTTP
+allowances, and exec approvals are tolerated during submission. Invalid manifests, missing files,
+compile errors, and link errors still fail. Submission alone does not activate the deployment;
+activation requires strict verification.
 
 The endpoint also accepts `multipart/form-data`. Use text fields for `deployment_toml`,
 `description`, and `allow_unavailable_runtime_config`. Every other part is treated as a
 deployment-owned file blob; its `filename` is the deployment-relative path and the form-field name
 is either the claimed `sha256:...` digest or `file`.
 
+Every deployment-owned file referenced by `location` must carry its `content_digest` in the
+submitted manifest, for example `content_digest = "sha256:..."` next to `location`. The Obelisk CLI
+adds these digests automatically; raw REST clients compute the SHA-256 of each file. Files already
+present in the server's content store need not be attached again.
+
 **Responses:**
 
-- `200 OK`: Deployment submitted; returns the new deployment ID string.
-- `400 Bad Request`: Invalid configuration.
+- `204 No Content`: Deployment stored (also returned when retrying the same ID and content).
+- `400 Bad Request`: Invalid configuration, including a missing `content_digest`.
 - `409 Conflict`: Incomplete or invalid package. The JSON body lists missing digest fields, missing
   files, unexpected files, digest mismatches, and oversized files. No deployment is stored.
 
@@ -982,6 +1080,16 @@ curl -H "$OBELISK_API_AUTH" \
   -F 'file=@scripts/run.sh;filename=scripts/run.sh'
 ```
 
+where `deployment.toml` declares the script with its digest:
+
+```toml
+[[activity_exec]]
+ffqn = "example:scripts/run.run"
+location = "scripts/run.sh"
+content_digest = "sha256:..." # sha256sum scripts/run.sh
+return_type = "result"
+```
+
 ---
 
 ### `PUT /v1/deployments/{deployment-id}/switch`
@@ -995,15 +1103,19 @@ or enqueue (activate on next restart).
 
 **Request Body (JSON):**
 
-| Field                              | Type    | Description                                                                                                                        |
-| :--------------------------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------- |
-| `apply`                            | Boolean | If `true`, apply immediately without restarting (default: `false`).                                                                |
-| `allow_unavailable_runtime_config` | Boolean | Tolerate runtime requirements unavailable on this server before switching. Applying without restart always requires strict config. |
+| Field                              | Type    | Description                                                                                                                   |
+| :--------------------------------- | :------ | :---------------------------------------------------------------------------------------------------------------------------- |
+| `apply`                            | Boolean | If `true`, apply immediately without restarting (default: `false`).                                                           |
+| `allow_unavailable_runtime_config` | Boolean | Enqueue before runtime values or app and platform approvals are available (`false`). Applying without restart rejects `true`. |
+
+An enqueue request with this field set to `true` can queue a deployment that does not yet fit the
+app or platform policy. Startup checks the configuration strictly before activation, so supply the
+values and approvals before restarting. Hot apply always requires strict verification.
 
 **Responses:**
 
-- `200 OK`: Returns `"switched"` (hot-redeployed) or `"restart_required"` (enqueued for next
-  restart).
+- `200 OK`: Returns `{ "ok": "switched" }` (hot-redeployed) or `{ "ok": "restart_required" }`
+  (enqueued for next restart).
 - `404 Not Found`: Deployment not found.
 - `400 Bad Request`: Switch or validation failed.
 
@@ -1020,8 +1132,35 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 ```
 
 ```json
-"switched"
+{ "ok": "switched" }
 ```
+
+---
+
+## App Configuration
+
+### `GET /v1/app-config`
+
+Returns the running app policy (secrets without values, public environment names, exec approvals,
+and outbound HTTP rules) together with its canonical `app_config_digest`. Deployments record the
+digest that was in effect when they were activated, and system events carry the current digest.
+
+```json
+{
+  "app_config_digest": "app-config:v1:sha256:03f0...",
+  "policy": {
+    "format": "obelisk-app-config-v1",
+    "secrets": {},
+    "public_env": [],
+    "allowed_exec_activities": {},
+    "outbound_http": [{ "pattern": "https://example.com", "methods": ["GET"], "...": "..." }]
+  }
+}
+```
+
+### `GET /v1/app-config-digest`
+
+Returns only the current `app_config_digest`, as plain text by default.
 
 ---
 
@@ -1031,17 +1170,17 @@ The authenticated `/v1/admin` API exposes operator-only maintenance and diagnost
 `obelisk admin` CLI for interactive use; use the OpenAPI schema for complete request and response
 types.
 
-| Endpoint                                       | Purpose                                                                 |
-| ---------------------------------------------- | ----------------------------------------------------------------------- |
-| `GET /v1/admin/node-run-id`                    | Identify the current server process run                                 |
-| `GET /v1/admin/system-events`                  | List persisted operator-visible events, filtered by run, level, or code |
-| `GET /v1/admin/system-events/{event-id}`       | Retrieve one system event                                               |
-| `POST /v1/admin/system-events/retain`          | Remove system events older than the requested age                       |
-| `GET /v1/admin/storage`                        | Show persistent storage usage and record counts                         |
-| `DELETE /v1/admin/executions/{execution-id}`   | Delete a top-level execution tree                                       |
-| `POST /v1/admin/executions/retain`             | Retain execution trees by count or age in bounded batches               |
-| `DELETE /v1/admin/deployments/{deployment-id}` | Delete an inactive deployment                                           |
-| `POST /v1/admin/deployments/retain`            | Retain inactive deployments by count or age                             |
+| Endpoint                                       | Purpose                                                               |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| `GET /v1/admin/node-run-id`                    | Identify the current server process run                               |
+| `GET /v1/admin/system-events`                  | List persisted events, filtered by run, level, code, or creation time |
+| `GET /v1/admin/system-events/{event-id}`       | Retrieve one system event                                             |
+| `POST /v1/admin/system-events/retain`          | Remove system events older than the requested age                     |
+| `GET /v1/admin/storage`                        | Show persistent storage usage and record counts                       |
+| `DELETE /v1/admin/executions/{execution-id}`   | Delete a top-level execution tree                                     |
+| `POST /v1/admin/executions/retain`             | Retain execution trees by count or age in bounded batches             |
+| `DELETE /v1/admin/deployments/{deployment-id}` | Delete an inactive deployment                                         |
+| `POST /v1/admin/deployments/retain`            | Retain inactive deployments by count or age                           |
 
 Deletion tombstones execution roots synchronously; automatic maintenance removes their trees and
 unreferenced shared metadata and CAS blobs in bounded batches. Forced deletion can remove a
@@ -1072,8 +1211,11 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/cancel" -X
 ```
 
 ```json
-{ "ok": "cancelled" }
+{ "ok": "cancellation requested" }
 ```
+
+Cancellation is asynchronous; poll the status or result endpoint to observe the `cancelled` outcome.
+`409 Conflict` is returned with `already finished` or `already cancelling`.
 
 ---
 

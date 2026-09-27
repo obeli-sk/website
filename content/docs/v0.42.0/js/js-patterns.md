@@ -10,12 +10,11 @@ reference see {{ doc_link(title="JS Activities", path="js/js-activities.md") }},
 {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }}. For WIT types and JSON encoding see
 {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}.
 
-## Ready made activities
+## Example activities
 
-Repository [obeli-sk/components](https://github.com/obeli-sk/components/) contains ready-made
-components that are published to Docker Hub. They can be added to a `deployment.toml` either by
-copying `obelisk-oci.toml` from their respective folder or by using `obelisk component add`
-{{ doc_link(title="CLI", path="cli.md#adding-a-component-to-the-deployment-configuration") }}.
+{{ doc_link(title="Example applications", path="apps.md") }} links to maintained deployments with
+JavaScript HTTP and exec activities. Copy the activity source and adapt its WIT signature and
+permissions to your app.
 
 ## Activities: Variant errors — permanent vs retryable
 
@@ -435,20 +434,20 @@ Check that the deployment configuration is valid — compiles all JS components 
 — without requiring real credentials:
 
 ```sh
-obelisk server verify --allow-unavailable-runtime-config -d deployment.toml
+obelisk server verify --allow-unavailable-runtime-config -a app.toml -d deployment.toml
 ```
 
 ### Start the server
 
 ```sh
-obelisk server run --deployment deployment.toml
+obelisk server run --app-config app.toml --deployment deployment.toml
 ```
 
 After the first run the deployment is persisted to the database; subsequent restarts (e.g. after a
 crash) can omit `--deployment`:
 
 ```sh
-obelisk server run
+obelisk server run --app-config app.toml
 ```
 
 ### Submit a one-off execution and follow it

@@ -4,35 +4,39 @@ template = "docs.html"
 weight = 19
 +++
 
-Obelisk is designed to contain deployment code that the server operator does not fully trust,
-including code produced by an LLM. A deployment author or coding agent can provide workflow,
-activity, and webhook code, but that code does not automatically inherit the server process's
-credentials or authority. The deployment requests capabilities in `deployment.toml`; the operator
-sets the maximum authority granted through a separate policy layer in `server.toml`.
+Obelisk is designed to contain deployment code that the app admin does not fully trust, including
+code produced by an LLM. A deployment author or coding agent can provide workflow, activity, and
+webhook code, but that code does not automatically inherit the server process's credentials or
+authority. The deployment requests capabilities in `deployment.toml`; the app admin sets the maximum
+authority granted to the app in `app.toml`; and the platform admin sets listeners, resource limits,
+and the exec gate in `server.toml`.
 
 This is a defense-in-depth boundary, not a claim that arbitrary hostile native code is safe. WASM
 components run inside the Wasmtime sandbox. Native exec activities deliberately cross that sandbox
-and therefore require explicit, digest-bound operator approval. Experimental VM activities isolate
-Linux programs inside a container2wasm appliance, but still require operator policy for secrets and
-network access.
+and therefore require explicit, digest-bound approval from both admins. Experimental VM activities
+isolate Linux programs inside a Bochs x86 emulator compiled to WASM, but still require app policy
+for secrets and network access.
 
 The operating principle is least privilege: choose the least powerful component type that can do the
 job, grant only the public configuration and network destinations it needs, and prefer secret
 placeholders that cannot be read or redirected by component code.
 
-## Operator and deployment responsibilities
+## Platform, app, and deployment responsibilities
 
-| Concern               | Application deployment (`deployment.toml`)                                | Server operator (`server.toml`)                                                                   |
-| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Components and routes | Declares code, FFQNs, parameters, routes, and execution settings          | Chooses whether to accept and activate the deployment                                             |
-| Public configuration  | Requests named environment variables and interpolation                    | Declares non-secret names through `[public_env]`                                                  |
-| Secrets               | Refers only to logical secret names                                       | Registers sources in `[secrets]` and controls plaintext exposure                                  |
-| Outbound HTTP         | Requests destinations, methods, paths, and placeholder locations          | Sets the maximum permitted HTTP policy in `[[outbound_http.allowed_host]]`                        |
-| Native execution      | Declares exec code and requested plaintext secrets                        | Approves the generated digest in `[allowed_exec_activities]` and each secret's `exposed_to` table |
-| API access            | A webhook may call the API only through explicitly configured HTTP policy | Protects the API port with bearer tokens and decides which token may be injected                  |
+| Concern               | Deployment (`deployment.toml`)                                   | App admin (`app.toml`)                                                               | Platform admin (`server.toml`)                              |
+| --------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Components and routes | Declares code, FFQNs, parameters, routes, and execution settings | Chooses whether to accept and activate the deployment                                | Bounds concurrency and memory with `[limits]`               |
+| Public configuration  | Requests named environment variables and interpolation           | Declares required and optional non-secret names in `[public_env]`                    |                                                             |
+| Secrets               | Refers only to logical secret names                              | Registers secrets in `[secrets]` and grants plaintext exposure with `exposed_to`     |                                                             |
+| Outbound HTTP         | Requests destinations, methods, paths, and placeholder locations | Sets the maximum permitted HTTP policy in `[[outbound_http.allowed_host]]`           |                                                             |
+| Native execution      | Declares exec code and requested plaintext secrets               | Approves the generated digest in `[allowed_exec_activities]` and each secret's grant | Enables exec through its own `allowed_exec_activities` gate |
+| API access            | A webhook may call the API only through configured HTTP policy   | Decides whether an API token secret may be used by a component                       | Protects the API port with bearer tokens                    |
 
-The effective permission is the intersection of both files. A deployment cannot widen the operator's
-policy, and an operator allowlist does not grant a capability that the deployment did not request.
+The effective permission is the intersection of the files. A deployment cannot widen the app policy,
+and an app allowlist does not grant a capability that the deployment did not request. Exec
+activities additionally need the platform gate. The running app policy and its canonical digest are
+available through `GET /v1/app-config`, and each deployment records the digest it was activated
+under.
 
 ## Choose the least powerful tool
 
@@ -49,30 +53,32 @@ reviewed, and separated from workflows that do not need them.
 ## Environment variables and secrets
 
 The server process environment is not a general-purpose deployment configuration channel.
-Deployments can reference only non-secret variables named in `[public_env]`. Register credentials
-under logical names in `[secrets]`; do not add their source variables to `public_env` or ordinary
-component `env_vars`.
+Deployments can reference only non-secret variables declared in the app's `[public_env]`. Register
+credentials under logical names in the app's `[secrets]`; do not add them to `public_env` or
+ordinary component `env_vars`.
 
-At startup, Obelisk reads env-backed secrets into memory and removes their source variables from the
-process environment before deployment code runs. Prefer opaque placeholders for outbound HTTP
-credentials. Component code can place a placeholder in an approved request but cannot read its
-plaintext or use it in another context. Obelisk substitutes the plaintext only while sending an
-authorized request, after both the deployment and server policies match the destination, method,
-optional URL regex, secret name, and replacement location. This limits the opportunity for generated
-or compromised code to exfiltrate a credential.
+At startup, Obelisk reads each secret from the environment variable of the same name into memory and
+removes the variable from the process environment before deployment code runs. Required secrets and
+public variables that are missing prevent startup, so a misconfiguration is not discovered by a
+running execution. Prefer opaque placeholders for outbound HTTP credentials. Component code can
+place a placeholder in an approved request but cannot read its plaintext or use it in another
+context. Obelisk substitutes the plaintext only while sending an authorized request, after both the
+deployment and app policies match the destination, method, optional URL regex, secret name, and
+replacement location. This limits the opportunity for generated or compromised code to exfiltrate a
+credential.
 
-Expose plaintext only when placeholder substitution cannot support the operation. Starting with
-0.42.0-rc.3, WASM and JavaScript activities and webhook endpoints can request registered secrets
-with `exposed_secrets`; Obelisk injects them as environment variables when executing the activity or
-handling the request. This supports operations such as validating an inbound webhook HMAC, where
-component code must read the key.
+Expose plaintext only when placeholder substitution cannot support the operation. WASM and
+JavaScript activities and webhook endpoints can request registered secrets with `exposed_secrets`;
+Obelisk injects them as environment variables when executing the activity or handling the request.
+This supports operations such as validating an inbound webhook HMAC, where component code must read
+the key.
 
 Exec activities receive exposed secrets through stdin, and VM activities receive them as guest
 environment variables. Code with plaintext access can attempt to copy the credential through any
 capability it also holds. Every plaintext exposure therefore requires a `SecretExposureDigest` grant
-under `[secrets.<name>.exposed_to]`, bound to the component digest and its complete requested secret
-set. Exec activities additionally require the same reviewed digest under
-`[allowed_exec_activities]`.
+under `[secrets.<name>.exposed_to]` in `app.toml`, bound to the component digest and its complete
+requested secret set. Exec activities additionally require the same reviewed digest under the app's
+`[allowed_exec_activities]`, and the platform's exec gate in `server.toml`.
 
 Do not put credentials in `public_env` or ordinary component `env_vars`. Do not use
 `exposed_secrets` merely to construct an outbound authorization header: outbound placeholder
@@ -80,10 +86,11 @@ substitution keeps the plaintext hidden from component code and should remain th
 
 ## Network boundaries
 
-Component-originated HTTP is denied unless an entry matches in both configuration files. Keep the
-server policy narrower than or equal to the deployment request. Restrict methods and paths with
-`request_url_regex` when a component needs only part of an API. Secret replacement never occurs for
-an unapproved request.
+Component-originated HTTP is denied unless an entry matches in both `app.toml` and
+`deployment.toml`, and activation rejects a deployment that requests destinations the app policy
+does not cover. Keep the app policy narrower than or equal to the deployment request. Restrict
+methods and paths with `request_url_regex` when a component needs only part of an API. Secret
+replacement never occurs for an unapproved request.
 
 The API port is authenticated. The external webhook server is not, because its endpoints are
 intended to receive application traffic. Put public webhook listeners behind your own TLS,
@@ -92,22 +99,23 @@ activity scheduled by a webhook as input from an untrusted caller.
 
 ## Verification and deployment review
 
-Verify every server/deployment pair before activation:
+Verify every deployment against its app and server policy before activation:
 
 ```sh
-obelisk deployment verify --server-config server.toml --deployment deployment.toml
+obelisk deployment verify --server-config server.toml --app-config app.toml --deployment deployment.toml
 ```
 
 Verification reports missing public variables, secret registrations, execution grants, and HTTP
-policy. `--fix` can scaffold missing names, but the operator must review the generated policy and
-provide real secret sources. Generate digest-bound exec and secret-exposure grants with:
+policy. `--fix` can scaffold missing names and grants in `app.toml`, but the app admin must review
+the generated policy and provide real secret values. Generate digest-bound exec and secret-exposure
+grants with:
 
 ```sh
 obelisk generate secret-config-digest --deployment deployment.toml
 ```
 
 Regenerate and review those grants whenever executable content or the complete exposed-secret set
-changes. Use `obelisk generate server-config --trusted` only when the operator and every deployment
+changes. Use `obelisk generate app-config --trusted` only when the app admin and every deployment
 author share one trust boundary; it intentionally permits unrestricted outbound HTTP. Exec
 activities and registered secrets still require explicit configuration.
 

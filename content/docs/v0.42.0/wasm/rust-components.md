@@ -211,8 +211,6 @@ Activities and webhooks target `wasm32-wasip2`; workflows target `wasm32-unknown
 
 ## Starting a new project
 
-Use the official templates to scaffold a new project:
-
-```bash
-cargo generate obeli-sk/obelisk-templates
-```
+Use the
+[demo-tutorial Rust implementation](https://github.com/obeli-sk/demo-tutorial/tree/main/rust) as a
+working example. A coding agent can generate the WIT and Cargo setup for your component.

@@ -114,11 +114,14 @@ workflow code is not replay-compatible — unless `skip_determinism_check` is se
 | `obelisk deployment list`               | List recent deployments and their status      |
 | `obelisk deployment active`             | Print the active deployment ID                |
 | `obelisk deployment show <ID> [FILE]`   | Show stored TOML or a stored file             |
-| `obelisk deployment get <ID>`           | Recreate deployment TOML and source files     |
-| `obelisk deployment gc`                 | Delete unreferenced deployment file blobs     |
+| `obelisk deployment pull <ID>`          | Recreate deployment TOML and source files     |
+| `obelisk deployment verify`             | Verify a local deployment without a server    |
 
 **Web API:** see
 {{ doc_link(title="Programmatic Access — Deployments", path="programmatic-access.md") }}.
 
-**gRPC:** see the `DeploymentRepository` service in
+**gRPC (deprecated):** see the `DeploymentRepository` service in
 {{ github(title="proto/obelisk.proto", path="proto/obelisk.proto") }}.
+
+Unreferenced deployment file blobs are removed by automatic maintenance; see
+{{ doc_link(title="Configuration", path="configuration.md") }}.

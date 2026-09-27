@@ -9,41 +9,13 @@ Rust activities and webhook endpoints can make outbound HTTP requests using the
 with built-in tracing to enhance security and predictability. Disk I/O is currently not permitted.
 
 > **Note**: Components that make outbound HTTP calls require `[[allowed_host]]` entries in the
-> deployment and matching `[[outbound_http.allowed_host]]` entries in `server.toml`. Without both,
+> deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both,
 > outbound HTTP is blocked. See
 > {{ doc_link(title="Configuration", path="configuration.md#outbound-http-allowlist") }} for
 > details.
 
-Let's generate a simple HTTP Client from a template:
-
-```sh
-cargo generate obeli-sk/obelisk-templates activity-rs/http-simple-async --name myhttp_activity
-cd myhttp_activity
-```
-
-This will generate a directory with the following structure:
-
-```
-.
-├── .cargo
-│   └── config.toml
-├── .envrc-example
-├── build.rs
-├── Cargo.lock
-├── Cargo.toml
-├── flake.nix
-├── Justfile
-├── obelisk.toml
-├── README.md
-├── rust-toolchain.toml
-├── src
-│   └── lib.rs
-└── wit
-    ├── deps
-    │   └── template-http_activity
-    │       └── http-client.wit
-    └── impl.wit
-```
+The following WIT and code show the client pattern. See
+{{ doc_link(title="Rust components", path="wasm/rust-components.md") }} for project setup.
 
 The WIT interface is stored in `http-client.wit`:
 
@@ -153,9 +125,7 @@ just serve
 just submit
 ```
 
-See the
-[async http template](https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/http-simple-async)
-for full details including how to push the component to an OCI registry.
+See {{ doc_link(title="Rust components", path="wasm/rust-components.md") }} for WIT and build setup.
 
 If you need to use GraphQL, check out the [cynic](https://crates.io/crates/cynic) crate and the
-[graphql template](https://github.com/obeli-sk/obelisk-templates/tree/main/activity-rs/graphql-async).
+[cynic documentation](https://cynic-rs.dev/).

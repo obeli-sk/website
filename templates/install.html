@@ -2,7 +2,7 @@
 
 {% block meta_description %}
 <meta name="description"
-    content="Install the Obelisk workflow runtime: pre-built binaries, Docker, cargo, Nix, or build from source." />
+    content="Install the Obelisk workflow runtime: pre-built binaries, Docker, Nix, or build from source." />
 {% endblock meta_description %}
 {% block content %}
 <div class="container install-page">
@@ -15,12 +15,12 @@
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
 # Optionally place the binary on PATH
 
-# Ask a coding agent to create JavaScript components and deployment.toml
+# Ask a coding agent to create JavaScript components, app.toml and deployment.toml
 obelisk generate prompt 'Create a workflow that fans out weather
   lookups for a list of cities in parallel' | claude
 
-# Start the server with the generated deployment
-obelisk server run --deployment deployment.toml</code></pre>
+# Start the server with the generated app policy and deployment
+obelisk server run --app-config app.toml --deployment deployment.toml</code></pre>
         </div>
         <p>
             The prompt includes the matching Obelisk docs context for your installed version.
@@ -36,7 +36,8 @@ obelisk server run --deployment deployment.toml</code></pre>
             <pre><code class="language-bash"># Start Obelisk in a container (pick any token for the demo)
 docker run --rm --name obelisk \
   -p 8080:8080 -p 5005:5005 -p 9090:9090 \
-  -e OBELISK__API__TOKEN=demo-token \
+  -e OBELISK_APP_NAME=demo-tutorial \
+  -e OBELISK_API_TOKEN=demo-token \
   getobelisk/obelisk
 
 # In another terminal, use the same Docker image to deploy an app
@@ -57,26 +58,13 @@ curl http://127.0.0.1:9090/parallel</code></pre>
         </p>
         <p>
             The API port requires a bearer token, so the same value is passed to the server
-            (<code>OBELISK__API__TOKEN</code>) and the deploy client (<code>OBELISK_API_TOKEN</code>). The
+            and the deploy client through <code>OBELISK_API_TOKEN</code>. <code>OBELISK_APP_NAME</code> names
+            the app, which is required to start the server. The
             Web UI at <code>http://127.0.0.1:8080</code> prompts for a token on first use, paste
             <code>demo-token</code>. See
             <a href="{{ get_url(path='@/docs/latest/authentication.md') }}">Authentication</a> for details.
         </p>
     </section>
-
-    <section class="install-section">
-        <h2>cargo (b)install</h2>
-        <div class="code-container">
-            <pre><code class="language-bash"># Download and install binary from GitHub:
-cargo binstall obelisk
-# or, if cargo-binstall is not available, build the latest release from crates.io
-cargo install --locked obelisk</code></pre>
-        </div>
-        Building requires <code>protoc</code>, see project's
-        <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">README</a>
-        for details.
-    </section>
-
 
     <section class="install-section">
         <h2>Download latest release from GitHub</h2>
