@@ -22,7 +22,7 @@ workflow's state to be precisely reconstructed and resumed after any interruptio
 reliably continue from where it left off without duplicating or skipping steps.
 
 A direct consequence of determinism is that a workflow must not read anything that could differ
-between the original run and a replay. In particular, workflows — in any language — cannot read
+between the original run and a replay. In particular, JavaScript and Rust workflows cannot read
 environment variables or other ambient host state. Supply runtime configuration as workflow
 **parameters** instead: a component that can read the environment (a webhook, an activity, or a
 parent execution) reads the value and passes it in when it schedules or calls the workflow, so the

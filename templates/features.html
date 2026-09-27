@@ -4,7 +4,7 @@
 
 {% block meta_description %}
 <meta name="description"
-    content="Full list of Obelisk features: JavaScript & WASM components, durable workflows, crash recovery, hot redeploy, cron, Web UI debugger, and more." />
+    content="Obelisk features: JavaScript in V8, Rust components in Wasmtime, durable workflows, crash recovery, hot redeploy, cron, and Web UI debugging." />
 {% endblock meta_description %}
 
 {% block content %}
@@ -79,11 +79,11 @@
         </div>
 
         <div class="features-section">
-            <h2>JavaScript &amp; Exec Activities</h2>
+            <h2>JavaScript in V8 and Rust in Wasmtime</h2>
             <div class="feature-grid">
                 <div class="feature-card">
                     <h3>No build step</h3>
-                    <p>Plain <code>.js</code> files. No bundler, no compiler, no toolchain. Point
+                    <p>Plain <code>.js</code> files run in V8. No bundler, no compiler, no toolchain. Point
                         <code>deployment.toml</code> at the file and run.
                     </p>
                 </div>
@@ -98,8 +98,8 @@
                 </div>
                 <div class="feature-card">
                     <h3>Exec activities</h3>
-                    <p>Any executable (shell script, Python, Docker command) can be a durable activity with the same
-                        retry, timeout, and observability guarantees as WASM and JS components. Parameters arrive as
+                    <p>Use an approved executable when an activity needs a host process. It has the same
+                        retry, timeout, and observability guarantees as Rust and JavaScript activities. Parameters arrive as
                         JSON arguments, results go to stdout.</p>
                 </div>
                 <div class="feature-card">
@@ -215,7 +215,7 @@
                 <div class="feature-card">
                     <h3>WASM &amp; WIT</h3>
                     <p>Built on the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM
-                            Component Model</a>. Components are interoperable, sandboxed, and language-agnostic. Schema
+                            Component Model</a>. Rust components run in Wasmtime and interoperate with JavaScript. Schema
                         defined in <a href="{{ get_url(path='@/docs/latest/concepts/wit-reference.md') }}">WIT IDL</a>.
                     </p>
                 </div>

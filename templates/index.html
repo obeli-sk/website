@@ -16,6 +16,7 @@
                 <a href="{{ get_url(path='@/features/_index.md') }}">Workflow
                     Runtime</a>
             </p>
+            <p>Build in JavaScript on V8, or use Rust components in Wasmtime.</p>
             <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
             <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}" class="cta-button">Get Started</a>
         </div>
@@ -35,8 +36,8 @@
                     <input type="radio" name="qs-tab" id="qs-tab-ai" class="qs-tab-input" checked>
                     <input type="radio" name="qs-tab" id="qs-tab-rust" class="qs-tab-input">
                     <div class="qs-tab-labels">
-                        <label for="qs-tab-ai" class="qs-tab-label-btn">Use a Coding agent</label>
-                        <label for="qs-tab-rust" class="qs-tab-label-btn">Write components in Rust</label>
+                        <label for="qs-tab-ai" class="qs-tab-label-btn">JavaScript in V8</label>
+                        <label for="qs-tab-rust" class="qs-tab-label-btn">Rust in Wasmtime</label>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-ai">
                         <pre class="qs-code"><code>obelisk generate prompt 'Create a workflow that fans out weather
@@ -46,10 +47,8 @@
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-rust">
                         <pre class="qs-code"><code>Ask your coding agent to build a Rust WASM component</code></pre>
-                        <p class="qs-note">See the <a href="{{ get_url(path='@/docs/latest/wasm/rust-components.md') }}">Rust component guide</a>
-                            or use any <a
-                                href="https://github.com/yoshuawuyts/awesome-wasm-components/tree/main#programming-language-support"
-                                target="_blank">WASM Component Model</a>-compatible language.</p>
+                        <p class="qs-note">See the <a href="{{ get_url(path='@/docs/v0.42.0/wasm/rust-components.md') }}">Rust component guide</a>
+                            for WIT, Cargo, and Wasmtime setup.</p>
                     </div>
                 </div>
             </div>

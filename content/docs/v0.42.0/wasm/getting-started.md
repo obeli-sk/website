@@ -5,8 +5,8 @@ weight = 0
 +++
 
 This guide walks you through building a durable application with Obelisk using Rust compiled to
-WebAssembly. You'll implement an activity, serial and parallel workflows, and a webhook endpoint in
-Rust, then see crash recovery in action.
+WebAssembly and run in Wasmtime. You'll implement an activity, serial and parallel workflows, and a
+webhook endpoint in Rust, then see crash recovery in action.
 
 If you prefer to skip the build step, see
 {{ doc_link(title="Getting Started (JavaScript)", path="js/getting-started.md") }} — it uses the

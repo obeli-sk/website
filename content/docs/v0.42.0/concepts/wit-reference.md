@@ -10,10 +10,9 @@ signatures that components export and import.
 
 Declaring accurate types matters for two reasons:
 
-- **Interoperability.** WIT is language-neutral — a JS workflow can call a Rust activity and vice
-  versa without any glue code. The synthesized interface is the shared contract regardless of
-  implementation language. This is the common pattern: download a pre-built Rust (or any WASM)
-  activity and wire it from a JS workflow or webhook.
+- **Interoperability.** A JavaScript workflow in V8 can call a Rust activity in Wasmtime and vice
+  versa without glue code. The synthesized interface is their shared contract. A common pattern is
+  to wire a prebuilt Rust activity from a JavaScript workflow or webhook.
 - **Runtime behaviour.** Obelisk uses the declared return type to interpret results and drive
   execution. For example, when an activity returns the `err` variant of a `result` type, Obelisk
   treats it as a failure and schedules a retry; an `ok` variant marks the execution as finished.

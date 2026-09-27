@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 23
 +++
 
-Rust components are compiled to WebAssembly and loaded by Obelisk at startup. Each component defines
-its interface in a WIT file and uses the `wit-bindgen` crate to generate Rust bindings.
+Rust components are compiled to WebAssembly and run in Wasmtime. Each component defines its
+interface in a WIT file and uses the `wit-bindgen` crate to generate Rust bindings.
 
 The `rust/` directory in the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) repository
 contains a complete Rust implementation of the same activity, workflow, and webhook as the JS

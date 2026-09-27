@@ -45,11 +45,10 @@ executed at least once for resiliency.
 
 Obelisk supports three kinds of activities:
 
-- **WASM Activities** (`activity_wasm`) — compiled WebAssembly components (Rust, TinyGo, etc.)
-- **JavaScript Activities** (`activity_js`) — JavaScript functions executed in the built-in JS
-  runtime
-- **Exec Activities** (`activity_exec`) — native executables (shell scripts, Python scripts, Docker
-  commands, etc.) run as child processes
+- **Rust Activities** (`activity_wasm`) — Rust components compiled to WebAssembly and run in
+  Wasmtime
+- **JavaScript Activities** (`activity_js`) — JavaScript functions executed in V8
+- **Exec Activities** (`activity_exec`) — approved host processes used by JavaScript or Rust apps
 
 All three types share the same retry, durability, and observability guarantees. The choice depends
 on your toolchain and use case.

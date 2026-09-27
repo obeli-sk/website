@@ -776,10 +776,10 @@ require a matching `[secrets.<name>.exposed_to]` digest grant.
 
 ### Exec Activities
 
-Exec activities run a native executable (shell script, Python script, Docker command, etc.) as a
-durable activity. The child process receives function parameters as JSON-encoded CLI arguments. The
-result is read from stdout — exit code 0 means success, non-zero means error. Both stdout and stderr
-are streamed and persisted, available via the CLI, REST API, and Web UI.
+Exec activities run an approved host executable as a durable activity. The child process receives
+function parameters as JSON-encoded CLI arguments. The result is read from stdout — exit code 0
+means success, non-zero means error. Both stdout and stderr are streamed and persisted, available
+via the CLI, REST API, and Web UI.
 
 > **Security**: exec activities run host processes outside the WASM sandbox and are disabled by
 > default. A deployment that declares one fails verification until both the app admin approves it in
@@ -925,9 +925,6 @@ blocking_strategy = "await"           # One of ("await"|"interrupt"|{"kind"=...}
 # Map from frame symbol file names to corresponding file paths on local filesystem.
 # Both sides can use path prefixes.
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
-
-# Stub WASI CLI world imports. Only needed for workflows authored in TinyGo.
-stub_wasi = false                     # Default is false.
 
 ## Automatic lock extension is enabled by default.
 lock_extension = true
