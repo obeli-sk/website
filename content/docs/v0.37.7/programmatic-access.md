@@ -412,7 +412,7 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/responses" -H accept:application/
         "event": {
           "join_set_id": "o:1-fibo",
           "event": {
-            "type": "ChildExecutionFinished",
+            "type": "child_execution_finished",
             "child_execution_id": "E_01KDN9VJ2TJ396ZARNEMRBNBHP.o:1-fibo_1",
             "finished_version": 2,
             "result": {
