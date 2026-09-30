@@ -15,11 +15,11 @@ relate.
 
 ## Common Component Settings
 
-All WASM components (Activities, Workflows, Webhooks) share these configuration options:
+All components (activities, workflows, webhook endpoints) share these configuration options:
 
 ```toml
 name = "component_name"                         # Required: Component identifier
-location = "path/to/wasm"                       # File path location
+location = "path/to/file"                       # File path location (.js or .wasm)
 location = "oci://docker.io/repo/image:tag"     # OCI registry location (note the oci:// prefix)
 ```
 
@@ -89,9 +89,40 @@ cannot drift. See
 
 ## Activities
 
+### JavaScript Activities
+
+A JavaScript activity is a single function in a `.js` file. Because the source carries no types, the
+table declares the function's `ffqn` and its signature, see
+[Function Signatures](#function-signatures):
+
+```toml
+[[activity_js]]
+name = "name"
+location = "path/to/source.js"          # Local path or oci://registry/image:tag
+ffqn = "namespace:package/interface@version.function"  # Required
+params = [                               # Optional, defaults to no parameters
+  { name = "param1", type = "string" },
+  { name = "count", type = "u32" },
+]
+return_type = "result"                   # Defaults to "result". Must be result, result<T>, result<T, string>, or result<T, variant{...}>
+max_retries = 5
+retry_exp_backoff.milliseconds = 100
+forward_stdout = "db"
+forward_stderr = "db"
+logs_store_min_level = "debug"
+env_vars = ["ENV1", { key = "ENV2", value = "value" }] # Forwarded names must be declared in app.toml [public_env].
+exposed_secrets = ["ACTIVITY_SECRET"] # Injected into process.env. Requires exposed_to grants.
+```
+
+Outbound HTTP requires an allowlist, see [Outbound HTTP Allowlist](#outbound-http-allowlist).
+JavaScript activities receive exposed values as `process.env.ACTIVITY_SECRET`. Register the logical
+name in the app secret registry and authorize the generated digest under
+`[secrets.ACTIVITY_SECRET.exposed_to]`.
+
 ### WASM Activities
 
-Configure each WASM activity component using the `activity_wasm` section:
+Activities compiled to WebAssembly components, for example from Rust, use the `activity_wasm`
+section. Their function signatures come from the compiled component:
 
 ```toml
 [[activity_wasm]]
@@ -116,25 +147,26 @@ endpoints. The component model is detected from the binary; the existing deploym
 sections and app HTTP policy still apply. Treat WASIp3 support as experimental when choosing
 production compatibility guarantees.
 
-#### Permanent Error Handling
+### Permanent Error Handling
 
 Activities returning a variant containing a case named `permanent` will skip retries, regardless of
 `max_retries`.
 
-#### Outbound HTTP Allowlist
+### Outbound HTTP Allowlist
 
 Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the
 deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both, the
-request is blocked.
+request is blocked. The same `allowed_host` syntax applies to `[[activity_js]]`,
+`[[activity_wasm]]`, and `[[activity_vm]]`.
 
 ```toml
-[[activity_wasm]]
+[[activity_js]]
 name = "activity_llm"
-location = "..."
+location = "activity/llm.js"
 exec.lock_expiry.seconds = 10
 env_vars = [{key = "API_BASE_URL", value = "${API_BASE_URL:-https://api.openai.com}"}]
 
-[[activity_wasm.allowed_host]]
+[[activity_js.allowed_host]]
 pattern = "${API_BASE_URL:-https://api.openai.com}"
 methods = ["POST"]
 # Optional extra restriction after pattern and methods match.
@@ -168,38 +200,14 @@ with query parameters removed, for example `GET https://api.example.com/v1/items
 supports `${VAR}` and `${VAR:-default}` interpolation; interpolated values are treated as regex
 syntax, so escape them when they should match literally.
 
-Secrets are injected via placeholder replacement in outgoing HTTP requests. WASM receives an opaque
-placeholder; the runtime substitutes real values only for requests to approved hosts. `replace_in`
-selects where substitution happens: `headers`, `params` (URL query parameter values only), and/or
-`body`. Substitution is a literal replacement of the placeholder string wherever it appears in those
-locations, so the component itself decides placement (for example an
+Secrets are injected via placeholder replacement in outgoing HTTP requests. The component receives
+an opaque placeholder; the runtime substitutes real values only for requests to approved hosts.
+`replace_in` selects where substitution happens: `headers`, `params` (URL query parameter values
+only), and/or `body`. Substitution is a literal replacement of the placeholder string wherever it
+appears in those locations, so the component itself decides placement (for example an
 `Authorization: Bearer <placeholder>` header that it sets). Header names, URL paths, and query
 parameter names are never searched. Body replacement requires valid UTF-8 and a textual content
 type: `text/*`, JSON, or `application/x-www-form-urlencoded`.
-
-### JavaScript Activities
-
-```toml
-[[activity_js]]
-name = "name"
-location = "path/to/source.js"          # Local path or oci://registry/image:tag
-ffqn = "namespace:package/interface@version.function"  # Required
-params = [                               # Optional, defaults to no parameters
-  { name = "param1", type = "string" },
-  { name = "count", type = "u32" },
-]
-return_type = "result"                   # Defaults to "result". Must be result, result<T>, result<T, string>, or result<T, variant{...}>
-max_retries = 5
-retry_exp_backoff.milliseconds = 100
-forward_stdout = "db"
-forward_stderr = "db"
-logs_store_min_level = "debug"
-exposed_secrets = ["ACTIVITY_SECRET"] # Injected into process.env. Requires exposed_to grants.
-```
-
-Outbound HTTP allowlist: same `[[activity_js.allowed_host]]` syntax as `activity_wasm`. JavaScript
-activities receive exposed values as `process.env.ACTIVITY_SECRET`. Register the logical name in the
-app secret registry and authorize the generated digest under `[secrets.ACTIVITY_SECRET.exposed_to]`.
 
 ### Experimental VM Activities
 
@@ -388,9 +396,32 @@ return_type = "result<string, string>"
 
 ## Workflows
 
+### JavaScript Workflows
+
+```toml
+[[workflow_js]]
+name = "name"
+location = "path/to/workflow.js"       # Local path or oci://registry/image:tag
+ffqn = "namespace:package/interface@version.function"  # Required
+params = [                             # Optional
+  { name = "param1", type = "string" },
+]
+return_type = "result"
+retry_exp_backoff.milliseconds = 100
+lock_extension = true
+lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this leeway.
+blocking_strategy = "await"          # "await" (default) or "interrupt"
+logs_store_min_level = "debug"
+```
+
+The blocking strategy controls whether an execution should `await` the child execution response or
+be `interrupt`ed and later replayed. Note that the `await` strategy will only wait until
+`lock_expiry` duration expires.
+
 ### WASM Workflows
 
-Configure each workflow component using the `workflow_wasm` section:
+Workflows compiled to WebAssembly components, for example from Rust, use the `workflow_wasm`
+section:
 
 ```toml
 [[workflow_wasm]]
@@ -416,28 +447,6 @@ lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this 
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. Default: "debug"
 ```
 
-The blocking strategy controls whether an execution should `await` the child execution response or
-be `interrupt`ed and later replayed. Note that the `await` strategy will only wait until
-`lock_expiry` duration expires.
-
-### JavaScript Workflows
-
-```toml
-[[workflow_js]]
-name = "name"
-location = "path/to/workflow.js"       # Local path or oci://registry/image:tag
-ffqn = "namespace:package/interface@version.function"  # Required
-params = [                             # Optional
-  { name = "param1", type = "string" },
-]
-return_type = "result"
-retry_exp_backoff.milliseconds = 100
-lock_extension = true
-lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this leeway.
-blocking_strategy = "await"
-logs_store_min_level = "debug"
-```
-
 ## Webhook Endpoints
 
 A Webhook Endpoint must be associated with a HTTP Server and must define one or more routes to
@@ -447,29 +456,6 @@ webhook will receive it.
 
 The built-in `"external"` HTTP server (at `127.0.0.1:9090` by default) is always available and used
 when `http_server` is omitted. Additional named servers are defined in `server.toml`.
-
-### WASM Webhook Endpoints
-
-```toml
-[[webhook_endpoint_wasm]]
-name = "..."
-location = "oci://..."
-# Common component settings apply
-http_server = "server_name"          # Optional: reference to a named HTTP server in server.toml. Defaults to built-in "external" server.
-routes = [                           # Route configurations
-    { methods = ["GET"], route = "/path" },
-    "/other/*",
-    "/status/:param1/:param2"
-]
-forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
-forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
-env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
-exposed_secrets = ["WEBHOOK_SIGNING_SECRET"] # Injected as environment variables. Requires exposed_to grants.
-# Map from frame symbol file names to corresponding file paths on local filesystem.
-# Both sides can use path prefixes.
-backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
-backtrace_persist = true              # Persist call-site backtraces for this webhook. Default: false.
-```
 
 ### JavaScript Webhook Endpoints
 
@@ -493,25 +479,50 @@ Register every logical name under `[secrets]`, generate grants with
 `[secrets.<name>.exposed_to]` entries into `app.toml`. The grant is bound to the component digest
 and complete exposed-secret set, so regenerate it when either changes.
 
-#### Route Syntax
+### WASM Webhook Endpoints
+
+Webhook endpoints compiled to WebAssembly components use the `webhook_endpoint_wasm` section:
+
+```toml
+[[webhook_endpoint_wasm]]
+name = "..."
+location = "oci://..."
+# Common component settings apply
+http_server = "server_name"          # Optional: reference to a named HTTP server in server.toml. Defaults to built-in "external" server.
+routes = [                           # Route configurations
+    { methods = ["GET"], route = "/path" },
+    "/other/*",
+    "/status/:param1/:param2"
+]
+forward_stdout = "db"                # stdout forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
+forward_stderr = "db"                # stderr forwarding ("db"|"stdout"|"stderr"|"none"). Default: "db"
+env_vars = ["ENV1", "ENV2=value"]    # Environment variable configuration. Inherit from system if value is not provided.
+exposed_secrets = ["WEBHOOK_SIGNING_SECRET"] # Injected as environment variables. Requires exposed_to grants.
+# Map from frame symbol file names to corresponding file paths on local filesystem.
+# Both sides can use path prefixes.
+backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
+backtrace_persist = true              # Persist call-site backtraces for this webhook. Default: false.
+```
+
+### Route Syntax
 
 Routes: Define URL paths (only the path is matched):
 
-##### Static paths
+#### Static paths
 
 - `"/"` - Root path only
 - `"/path"` - Exact path match
 
-##### Wildcards
+#### Wildcards
 
 - `"/path/*"` - Path prefix match
 - `"{ methods = ["GET"], route = "/path" }"` - Method-specific (priority) match
 
-##### Parameterized
+#### Parameterized
 
 - `"/status/:param1/:param2"` - Path parameters (exposed as env vars)
 
-##### All paths
+#### All paths
 
 - `""` or `"/*"` - Match all paths
 

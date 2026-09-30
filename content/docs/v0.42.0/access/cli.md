@@ -307,8 +307,8 @@ obelisk execution submit [OPTIONS] <function> [parameters]...
 Arguments:
 
 - `<function>` - Function to invoke, as a
-  {{ doc_link(title="fully qualified name", path="concepts/ffqn.md") }}
-  (`ns:pkg/ifc.fn`) or shortened to `.../ifc.fn` when the interface name is unambiguous
+  {{ doc_link(title="fully qualified name", path="concepts/ffqn.md") }} (`ns:pkg/ifc.fn`) or
+  shortened to `.../ifc.fn` when the interface name is unambiguous
 - `[parameters]...` - One of:
   - JSON array string, e.g. `'["first", "second", null, 1]'`
   - File reference prefixed with `@`, e.g. `@file.json` (file must contain a valid JSON array)

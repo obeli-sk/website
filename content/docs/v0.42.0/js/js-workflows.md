@@ -45,9 +45,9 @@ it when scheduling or calling the workflow.
 ## Calling activities and workflows
 
 The recommended way to call child executions is via ES module imports. Import the function by its
-WIT interface path, and call it directly — Obelisk resolves the import to a `call` that submits the
-child execution, blocks until it completes, and returns the ok payload. If the child permanently
-fails it throws `obelisk.ChildError` (see
+interface name (the FFQN without the function), and call it directly — Obelisk resolves the import
+to a `call` that submits the child execution, blocks until it completes, and returns the ok payload.
+If the child permanently fails it throws `obelisk.ChildError` (see
 {{ doc_link(title="Handling child failures", path="js/js-workflows.md#handling-child-failures-with-obelisk-childerror") }});
 the decoded err payload is on `e.value`.
 
@@ -80,7 +80,7 @@ export default function serial() {
 }
 ```
 
-Function names are converted from kebab-case (WIT) to camelCase (JS) automatically: a WIT function
+Function names are converted from kebab-case to camelCase automatically: a function
 `get-temperature` becomes `getTemperature` in the import.
 
 Imports are verified when the deployment starts, so prefer them whenever the target function is
@@ -93,31 +93,27 @@ import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
 const result = dynamic.call("myapp:demo/activity.step", [i, i * 200]);
 ```
 
-## WIT results become JavaScript values and exceptions
+## Return values and errors
 
-The runtime support interfaces use WIT `result` types internally, but workflow JavaScript does not
-receive those raw results. Obelisk's typed-import and dynamic-API adapters return the useful value
-on success and throw on error. Do not inspect `{ tag, val }`, `{ ok, err }`, or otherwise manually
-unwrap the underlying WIT result. Operations such as `submit-json`, `schedule-json`, and `stub-json`
-are internal WIT bindings used to implement the public JavaScript APIs, not JavaScript functions to
-call directly.
+Every Obelisk API returns the useful value on success and throws on error. There are no
+`{ ok, err }` or `{ tag, val }` wrappers to unwrap.
 
-| JavaScript API                       | Underlying WIT result                                 | JavaScript behavior                                                      |
-| ------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| Typed `fooSubmit(joinSet, ...)`      | `result<execution-id, child-execution-request-error>` | Returns execution ID string; throws `Error` on error                     |
-| `joinSet.submit(ffqn, params)`       | `submit-json` result                                  | Returns execution ID string; throws `Error` on error                     |
-| Typed `fooSchedule(at, ...)`         | `schedule-json` result                                | Returns execution ID string; throws `Error` on error                     |
-| `dynamic.schedule(...)`              | `schedule-json` result                                | Returns `undefined`; throws `Error` on error                             |
-| Typed `fooStub(id, result)`          | `stub-json` result                                    | Returns `undefined`; throws `Error` on error                             |
-| `obelisk.stub(...)`                  | `stub-json` result                                    | Returns `undefined`; throws `Error` on error                             |
-| Typed `fooGet(id)`                   | Nested WIT result                                     | Returns child value; throws on retrieval or child error                  |
-| Typed `fooAwaitNext(joinSet)`        | Nested WIT result                                     | Returns child value; throws on child or platform error                   |
-| `joinSet.joinNext()`                 | Nested WIT result                                     | Returns value; throws `ChildError` or `JoinSetExhaustedError`            |
-| `joinSet.joinNextTry()`              | Nested WIT result                                     | Returns value or `undefined`; throws other errors                        |
-| `obelisk.getResult(id)`              | Nested WIT result                                     | Returns value; throws on errors                                          |
-| `dynamic.call(...)`                  | Nested WIT result                                     | Returns value; throws `ChildError` or a host `Error`                     |
-| `obelisk.sleep(...)`                 | WIT result                                            | Returns `Date`; throws `ChildError` when cancelled                       |
-| Named `obelisk.createJoinSet({...})` | WIT result                                            | Returns join set; throws `Error` if the named join set cannot be created |
+| JavaScript API                       | Returns                    | Throws                                          |
+| ------------------------------------ | -------------------------- | ----------------------------------------------- |
+| Typed `fooSubmit(joinSet, ...)`      | Execution ID string        | `Error`                                         |
+| `joinSet.submit(ffqn, params)`       | Execution ID string        | `Error`                                         |
+| Typed `fooSchedule(at, ...)`         | Execution ID string        | `Error`                                         |
+| `dynamic.schedule(...)`              | `undefined`                | `Error`                                         |
+| Typed `fooStub(id, result)`          | `undefined`                | `Error`                                         |
+| `obelisk.stub(...)`                  | `undefined`                | `Error`                                         |
+| Typed `fooGet(id)`                   | Child value                | On retrieval or child error                     |
+| Typed `fooAwaitNext(joinSet)`        | Child value                | On child or platform error                      |
+| `joinSet.joinNext()`                 | Child value                | `ChildError` or `JoinSetExhaustedError`         |
+| `joinSet.joinNextTry()`              | Child value or `undefined` | Other errors                                    |
+| `obelisk.getResult(id)`              | Child value                | On errors                                       |
+| `dynamic.call(...)`                  | Child value                | `ChildError` or a host `Error`                  |
+| `obelisk.sleep(...)`                 | `Date`                     | `ChildError` when cancelled                     |
+| Named `obelisk.createJoinSet({...})` | Join set                   | `Error` if the named join set cannot be created |
 
 The thrown error class depends on the operation. Child business errors, child platform failures, and
 cancellation use `obelisk.ChildError`; an exhausted join set uses `obelisk.JoinSetExhaustedError`;

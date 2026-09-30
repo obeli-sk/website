@@ -86,10 +86,10 @@ export default function serial() {
 Key concepts:
 
 - **ES module imports** — `import { step } from "tutorial:demo/activity"` imports the activity by
-  its WIT interface path. Obelisk resolves the import at startup: calling `step(...)` submits the
+  its interface name. Obelisk resolves the import at startup: calling `step(...)` submits the
   activity, blocks until it completes, and returns the ok payload. The call and its result are
   recorded in the execution log, so on replay the activity is not re-executed. Function names are
-  converted from kebab-case (WIT) to camelCase (JS) automatically.
+  converted from kebab-case to camelCase automatically.
 - **`obelisk.sleep`** is a _persistent_ sleep — its position is saved to the execution log. If the
   server crashes mid-sleep and restarts, the sleep resumes where it left off.
 

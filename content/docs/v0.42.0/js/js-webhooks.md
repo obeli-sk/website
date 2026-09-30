@@ -113,8 +113,8 @@ return resp;
 
 ## Calling activities and workflows
 
-Import functions by their WIT interface path. The call blocks until the child execution completes,
-so the HTTP response is only sent after the child finishes.
+Import functions by their interface name (the FFQN without the function). The call blocks until the
+child execution completes, so the HTTP response is only sent after the child finishes.
 
 ```javascript
 import { serial } from "myapp:demo/workflow";
@@ -138,22 +138,20 @@ import * as dynamic from "obelisk:webhook-dynamic@1.0.0";
 const result = dynamic.call(ffqn, argArray);
 ```
 
-## WIT results become JavaScript values and exceptions
+## Return values and errors
 
-Webhook JavaScript APIs do not expose raw WIT `result` values. The adapter returns the useful value
-and throws on error:
+Obelisk APIs return the useful value on success and throw on error:
 
-| JavaScript API                      | Underlying WIT result  | JavaScript behavior                                      |
-| ----------------------------------- | ---------------------- | -------------------------------------------------------- |
-| Typed `fooSchedule(at, ...)`        | `schedule-json` result | Returns execution ID string; throws `Error` on error     |
-| `dynamic.schedule(...)`             | `schedule-json` result | Returns `undefined`; throws `Error` on error             |
-| Typed call                          | Nested WIT result      | Returns child value; throws on child or platform error   |
-| `dynamic.call(...)`                 | Nested WIT result      | Returns child value; throws `ChildError` or host `Error` |
-| `obelisk.getStatus/get/tryGet(...)` | Various WIT results    | Returns translated values; errors throw                  |
+| JavaScript API                      | Returns               | Throws                         |
+| ----------------------------------- | --------------------- | ------------------------------ |
+| Typed `fooSchedule(at, ...)`        | Execution ID string   | `Error`                        |
+| `dynamic.schedule(...)`             | `undefined`           | `Error`                        |
+| Typed call                          | Child value           | On child or platform error     |
+| `dynamic.call(...)`                 | Child value           | `ChildError` or a host `Error` |
+| `obelisk.getStatus/get/tryGet(...)` | Status or child value | On errors                      |
 
-Do not manually unwrap `{ tag, val }` or another raw WIT representation. In particular, use the
-execution ID returned by a typed schedule, while generating and passing the ID yourself for
-`dynamic.schedule`, whose successful return value is `undefined`.
+Use the execution ID returned by a typed schedule. `dynamic.schedule` returns `undefined`, so
+generate the ID yourself and pass it in.
 
 ## Path parameters
 
