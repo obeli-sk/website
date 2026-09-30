@@ -17,9 +17,8 @@ registered secrets, native execution approval, and outbound HTTP policy.
 Authentication guards the **API port** only (`127.0.0.1:5005` by default). A single host-level check
 runs before any routing, so all three surfaces on that port are covered uniformly:
 
-- the REST web API,
-- gRPC,
-- gRPC-web (used by the Web UI).
+- the REST web API (used by the CLI and the Web UI),
+- gRPC and gRPC-web (deprecated).
 
 A request without an accepted token is rejected with HTTP `401 Unauthorized` (gRPC
 `UNAUTHENTICATED`, numeric status `16`).
@@ -124,7 +123,7 @@ See {{ doc_link(title="API access", path="access/api.md") }} for the full REST r
 
 ### Web UI
 
-The Web UI (`127.0.0.1:8080` by default) makes gRPC-web calls to the API port, so it needs a token
+The Web UI (`127.0.0.1:8080` by default) calls the REST web API on the API port, so it needs a token
 too. On the first call that requires authentication it shows an **"Authentication required"**
 dialog. Paste any accepted token (the ephemeral startup token, or a persistent one) and continue.
 The token is kept in the browser tab's session storage, so it persists across reloads but is cleared
@@ -135,6 +134,6 @@ when the tab closes; if the token stops being accepted you are prompted again.
 | Surface                      | Port (default)   | Authenticated             |
 | ---------------------------- | ---------------- | ------------------------- |
 | REST web API                 | `127.0.0.1:5005` | Yes                       |
-| gRPC / gRPC-web              | `127.0.0.1:5005` | Yes                       |
+| gRPC / gRPC-web (deprecated) | `127.0.0.1:5005` | Yes                       |
 | Web UI                       | `127.0.0.1:8080` | Yes (prompts for a token) |
 | External webhook HTTP server | `127.0.0.1:9090` | No                        |
