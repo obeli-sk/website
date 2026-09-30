@@ -557,16 +557,16 @@ div.logo {
     }
 }
 
-.docs-layout {
+.page-layout {
     display: flex;
     flex-direction: column;
 
-    .docs-page {
+    > article {
         min-width: 0;
     }
 }
 
-.docs-otp {
+.page-toc {
     order: -1;
     margin: 1rem 0;
     padding: 0.75rem 1rem;
@@ -610,18 +610,18 @@ div.logo {
 }
 
 @media (min-width: 1100px) {
-    .docs-layout {
+    .page-layout {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 16rem;
         gap: 3rem;
         align-items: start;
     }
 
-    .docs-otp {
+    .page-toc {
         order: 0;
         position: sticky;
-        top: 5.5rem;
-        max-height: calc(100vh - 7rem);
+        top: calc(var(--nav-h, 5.75rem) + 1rem);
+        max-height: calc(100vh - var(--nav-h, 5.75rem) - 2rem);
         overflow-y: auto;
         margin-top: 2rem;
         background: none;

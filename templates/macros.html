@@ -47,3 +47,32 @@
 </div>
 
 {% endmacro doc_breadcrumb %}
+
+{# "On this page" navigation. Wide screens show it as a sticky sidebar next to the
+   article, narrow screens as a collapsed box above it. See .page-layout in style.scss. #}
+{% macro page_toc(toc) %}
+{% if toc | length >= 3 %}
+<details class="page-toc" id="page-toc" open>
+    <summary>On this page</summary>
+    <ul>
+        {% for h2 in toc %}
+        <li>
+            <a href="#{{ h2.id }}">{{ h2.title }}</a>
+            {% if h2.children %}
+            <ul>
+                {% for h3 in h2.children %}
+                <li><a href="#{{ h3.id }}">{{ h3.title }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</details>
+<script>
+    if (window.matchMedia("(max-width: 1099px)").matches) {
+        document.getElementById("page-toc").open = false;
+    }
+</script>
+{% endif %}
+{% endmacro page_toc %}
