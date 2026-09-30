@@ -72,6 +72,8 @@ nav {
 
 .nav-content {
     display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
     justify-content: space-between;
     align-items: center;
 }
@@ -92,18 +94,25 @@ div.logo {
         font-weight: bold;
         color: var(--primary);
         text-decoration: none;
+        gap: 0.5rem;
 
         img {
-            width: 7%;
-            height: 7%;
+            width: 2.2rem;
+            height: auto;
         }
     }
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
 }
 
 .nav-links a {
     color: var(--text);
     text-decoration: none;
-    margin-left: 2rem;
+    white-space: nowrap;
     transition: color 0.3s;
 
     &:hover {
