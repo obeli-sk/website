@@ -147,7 +147,7 @@ Workflows are retried forever — they do not have a `max_retries` limit.
 ## Inspecting Execution State
 
 The current pending state is returned by the REST API. Export `OBELISK_API_TOKEN` as described in
-{{ doc_link(title="Authentication", path="authentication.md") }} first:
+{{ doc_link(title="Authentication", path="access/authentication.md") }} first:
 
 ```sh
 # List executions with their pending states

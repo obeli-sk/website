@@ -239,7 +239,7 @@ export OBELISK_API_TOKEN=<token printed on server startup>
 ```
 
 For a throwaway tutorial you can instead start the server with `--no-auth` and drop the
-`Authorization` header. See {{ doc_link(title="Authentication", path="authentication.md") }}.
+`Authorization` header. See {{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 List top-level executions — one per webhook call:
 
@@ -342,8 +342,8 @@ losing progress or duplicating work.
 - **Explore example apps:** {{ doc_link(title="Example applications", path="apps.md") }} introduces
   the agent template, browser automation demo, tutorial, and other apps.
 
-- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli-and-api/cli.md") }} covers
-  submitting executions, inspecting state, and managing components.
+- **Learn the CLI:** {{ doc_link(title="CLI reference", path="access/cli.md") }} covers submitting
+  executions, inspecting state, and managing components.
 
 - **Read the blog:** [Comparing Obelisk with DBOS](@/blog/2025-11-26-comparing-dbos-part-1.md) walks
   through this same tutorial code in depth, comparing the approach with DBOS Java.

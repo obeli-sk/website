@@ -1,7 +1,7 @@
 +++
 title = "Authentication"
 template = "docs.html"
-weight = 25
+weight = 3
 +++
 
 Starting with 0.40.0, the Obelisk **API port denies any request that does not present a valid
@@ -120,7 +120,7 @@ curl -s "http://127.0.0.1:5005/v1/executions" \
   -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
-See {{ doc_link(title="API access", path="cli-and-api/api.md") }} for the full REST reference.
+See {{ doc_link(title="API access", path="access/api.md") }} for the full REST reference.
 
 ### Web UI
 

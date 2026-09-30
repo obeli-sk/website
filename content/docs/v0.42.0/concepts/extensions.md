@@ -10,7 +10,7 @@ functions to access advanced features like scheduling and asynchronous execution
 # Generating extension interfaces
 
 The WIT extension exports can be generated using `obelisk generate`
-{{ doc_link(title="CLI command", path="cli-and-api/cli.md#obelisk-generate") }}:
+{{ doc_link(title="CLI command", path="access/cli.md#obelisk-generate") }}:
 
 ```sh
 obelisk generate wit-extensions (activity|workflow|activity_stub) wit/ wit/gen/

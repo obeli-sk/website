@@ -164,7 +164,7 @@ it may continue directly without an additional Locked event.
 ### REST API
 
 Export `OBELISK_API_TOKEN` as described in
-{{ doc_link(title="Authentication", path="authentication.md") }} first:
+{{ doc_link(title="Authentication", path="access/authentication.md") }} first:
 
 ```sh
 # Get execution events

@@ -10,7 +10,7 @@ weight = 1
   subcommands that talk to the API. Pass it after the subcommand, for example
   `obelisk execution list --api-token <TOKEN>`; `obelisk --api-token <TOKEN> execution list` is
   rejected. Falls back to `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. See
-  {{ doc_link(title="Authentication", path="authentication.md") }}
+  {{ doc_link(title="Authentication", path="access/authentication.md") }}
 - `-v, --version` - Print version. Accepted only directly after `obelisk`, as in `obelisk --version`
 
 ## Obelisk Server
@@ -42,8 +42,8 @@ Options:
   type checking against the current deployment
 - `--no-auth` - Accept unauthenticated requests on the API port. Development / recovery override;
   conflicts with `--api-token`. See
-  {{ doc_link(title="Authentication", path="authentication.md") }}. (`--allow-unauthenticated-api`
-  is a deprecated alias.)
+  {{ doc_link(title="Authentication", path="access/authentication.md") }}.
+  (`--allow-unauthenticated-api` is a deprecated alias.)
 - `--api-token <TOKEN>` - API token required to access the API server. Falls back to
   `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. Conflicts with `--no-auth`
 
@@ -868,7 +868,7 @@ Generate a random API token. Stdout contains only the token so the command can b
 environment injection. In an interactive terminal, the corresponding `api.token_hashes` entry is
 also printed to stderr. The plaintext token is printed once and never stored; revoke it by deleting
 its hash line and restarting the server. See
-{{ doc_link(title="Authentication", path="authentication.md") }}.
+{{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 ```sh
 obelisk generate token

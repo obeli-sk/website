@@ -458,7 +458,7 @@ equivalent REST request bodies.
 - REST requests with `follow=true` (`POST /v1/executions`, `PUT /v1/executions/{id}`, and
   `GET /v1/executions/{id}`) now return a `text/event-stream` response. Read the `data` field of the
   `result` event instead of parsing the response body as JSON. See
-  {{ doc_link(title="API access", path="cli-and-api/api.md", version="v0.42.0") }}.
+  {{ doc_link(title="API access", path="access/api.md", version="v0.42.0") }}.
 - gRPC and gRPC-web are deprecated. Move clients to the `/v1` REST API, which now covers the gRPC
   feature set, including status streams, exact function and state filters, and app policy lookup.
 

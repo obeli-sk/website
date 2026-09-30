@@ -122,4 +122,4 @@ activities and registered secrets still require explicit configuration.
 
 For concrete syntax, see {{ doc_link(title="Configuration", path="configuration/_index.md") }}. For
 API credentials and exposed surfaces, see
-{{ doc_link(title="Authentication", path="authentication.md") }}.
+{{ doc_link(title="Authentication", path="access/authentication.md") }}.

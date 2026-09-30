@@ -322,7 +322,7 @@ Result: 42 is the answer
 
 List executions to see the full hierarchy. The API port (`5005`) requires a bearer token printed to
 the console on startup; export it first (or start the server with `--no-auth`). See
-{{ doc_link(title="Authentication", path="authentication.md") }}.
+{{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 ```bash
 export OBELISK_API_TOKEN=<token printed on server startup>
@@ -393,7 +393,7 @@ polling; when the VM is eventually stopped, `apps.delete` still runs.
   in parallel and collect results.
 - **Concepts:** {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }},
   {{ doc_link(title="JS Activities", path="js/js-activities.md") }}
-- **REST API:** {{ doc_link(title="API access", path="cli-and-api/api.md") }} — submit executions
-  and query state without the webhook.
+- **REST API:** {{ doc_link(title="API access", path="access/api.md") }} — submit executions and
+  query state without the webhook.
 - **Rust components:** {{ doc_link(title="Rust components", path="wasm/rust-components.md") }} —
   build your own compiled activity like the fly.io one used here.

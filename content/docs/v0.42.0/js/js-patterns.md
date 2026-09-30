@@ -242,10 +242,10 @@ timeout error so the workflow terminates rather than looping forever.
 A webhook can query the Obelisk Web API directly via `fetch` to render the result of a previously
 completed workflow run. The API is on `:5005` by default; inject the URL via `env_vars` so it is
 configurable. The API port also requires a bearer token (see
-{{ doc_link(title="Authentication", path="authentication.md") }}). Declare the token under the
-allowed host's `secrets` instead of exposing its plaintext value through the component's `env_vars`.
-The webhook sees only an opaque placeholder; Obelisk replaces it with the real token in the outgoing
-header after the request matches the host and method allowlist:
+{{ doc_link(title="Authentication", path="access/authentication.md") }}). Declare the token under
+the allowed host's `secrets` instead of exposing its plaintext value through the component's
+`env_vars`. The webhook sees only an opaque placeholder; Obelisk replaces it with the real token in
+the outgoing header after the request matches the host and method allowlist:
 
 ```toml
 [[webhook_endpoint_js]]
@@ -322,8 +322,8 @@ export default async function handle(_request) {
 
 `pending_state.status` values: `locked`, `pending_at`, `blocked_by_join_set`, `paused`,
 `cancelling`, `finished`. Pass `?follow=true` to `GET /v1/executions/{id}` instead of
-`425 Too Early` while still running. See
-{{ doc_link(title="API access", path="cli-and-api/api.md") }} for the full API.
+`425 Too Early` while still running. See {{ doc_link(title="API access", path="access/api.md") }}
+for the full API.
 
 ## Workflow import API (preferred)
 

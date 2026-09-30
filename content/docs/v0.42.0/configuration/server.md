@@ -34,8 +34,8 @@ api.token_hashes = [
 A plaintext token can also be injected through `--api-token` or the environment variable
 `OBELISK_API_TOKEN`; do not write the plaintext into a committed `server.toml`. There is no
 plaintext `api.token` key in `server.toml`. See
-{{ doc_link(title="Authentication", path="authentication.md") }} for the full model, generating
-tokens, and the `--no-auth` recovery flag.
+{{ doc_link(title="Authentication", path="access/authentication.md") }} for the full model,
+generating tokens, and the `--no-auth` recovery flag.
 
 ## Web UI
 

@@ -70,7 +70,7 @@ obelisk deployment apply <PATH|ID>           # CLI: submit + hot-redeploy
 ```
 
 or via the Web API, after exporting `OBELISK_API_TOKEN` as described in
-{{ doc_link(title="Authentication", path="authentication.md") }}:
+{{ doc_link(title="Authentication", path="access/authentication.md") }}:
 
 ```sh
 curl "127.1:5005/v1/deployments/Dep_.../switch" \
@@ -117,7 +117,7 @@ workflow code is not replay-compatible — unless `skip_determinism_check` is se
 | `obelisk deployment pull <ID>`          | Recreate deployment TOML and source files     |
 | `obelisk deployment verify`             | Verify a local deployment without a server    |
 
-**Web API:** see {{ doc_link(title="API access", path="cli-and-api/api.md") }}.
+**Web API:** see {{ doc_link(title="API access", path="access/api.md") }}.
 
 **gRPC (deprecated):** see the `DeploymentRepository` service in
 {{ github(title="proto/obelisk.proto", path="proto/obelisk.proto") }}.

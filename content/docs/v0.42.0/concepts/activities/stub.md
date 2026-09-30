@@ -51,7 +51,7 @@ interface activity {
 ```
 
 The return value can also be injected using Web UI or
-{{ doc_link(title="CLI", path="cli-and-api/cli.md#providing-the-result-of-a-stubbed-activity") }}.
+{{ doc_link(title="CLI", path="access/cli.md#providing-the-result-of-a-stubbed-activity") }}.
 
 The stubbed response call is idempotent, meaning it can be executed multiple times as long as the
 response remains the same. Otherwise an `stub-error` is returned:

@@ -93,7 +93,7 @@ obelisk execution submit --follow myapp:tasks/jobs@1.0.0.daily-cleanup '["archiv
 ```
 
 You can also list all executions for a cron function after exporting `OBELISK_API_TOKEN` as
-described in {{ doc_link(title="Authentication", path="authentication.md") }}:
+described in {{ doc_link(title="Authentication", path="access/authentication.md") }}:
 
 ```sh
 curl "127.1:5005/v1/executions?ffqn_prefix=obelisk:schedule/" -H accept:application/json \

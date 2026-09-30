@@ -242,7 +242,7 @@ Parallel workflow — all steps run concurrently:
 
 Via the API. The API port (`5005`) requires a bearer token, printed to the console on startup;
 export it first (or start the server with `--no-auth` for a throwaway tutorial). See
-{{ doc_link(title="Authentication", path="authentication.md") }}.
+{{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 ```bash
 export OBELISK_API_TOKEN=<token printed on server startup>
@@ -315,5 +315,5 @@ losing progress or duplicating work.
   [Stargazers demo](https://github.com/obeli-sk/demo-stargazers) uses a GitHub webhook, OpenAI, and
   a database to process GitHub star events with a multi-step workflow.
 
-- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli-and-api/cli.md") }} covers
-  submitting executions, inspecting state, and managing components.
+- **Learn the CLI:** {{ doc_link(title="CLI reference", path="access/cli.md") }} covers submitting
+  executions, inspecting state, and managing components.

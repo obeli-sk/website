@@ -125,7 +125,7 @@ scanning the log **from the end** finds the current turn: the newest `turn.reque
 the request stub's id, and its first param is the paired `response-id`.
 
 These are raw `fetch` calls to the API port, so they need a bearer token (see
-{{ doc_link(title="Authentication", path="authentication.md") }}). Declare the token as an
+{{ doc_link(title="Authentication", path="access/authentication.md") }}). Declare the token as an
 allowed-host secret so Obelisk swaps the opaque placeholder into the outgoing `authorization`
 header; never put the plaintext token in the component's `env_vars`:
 
