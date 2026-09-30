@@ -10,9 +10,16 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        screenshotFonts = pkgs.makeFontsConf {
-          fontDirectories = [ pkgs.dejavu_fonts ];
-        };
+        # Include fontconfig's default rules so generic families (sans-serif, monospace)
+        # resolve to DejaVu Sans and Sans Mono instead of the first font found.
+        screenshotFonts = pkgs.writeText "fonts.conf" ''
+          <?xml version="1.0"?>
+          <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+          <fontconfig>
+            <dir>${pkgs.dejavu_fonts}</dir>
+            <include ignore_missing="yes">${pkgs.fontconfig.out}/etc/fonts/conf.d</include>
+          </fontconfig>
+        '';
       in
       {
         devShells.default = pkgs.mkShell {
