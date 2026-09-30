@@ -1,10 +1,12 @@
 +++
-title = "Publishing the WASM Component"
+title = "Publishing Components"
 template = "docs.html"
 weight = 90
 +++
 
-After a WASM file is built, it can be pushed into an OCI registry with this command:
+After a WASM file is built, it can be pushed into an OCI registry with this command. JavaScript
+components can be published the same way, see
+{{ doc_link(title="JS Components", path="js/js-components.md#oci-distribution") }}.
 
 ```sh
 obelisk component push \
@@ -13,7 +15,7 @@ obelisk component push \
 ```
 
 Obelisk will output the OCI location together with its SHA digest. This can be used instead of the
-file location in `obelisk.toml`:
+file location in `deployment.toml`:
 
 ```diff
  [[activity_wasm]]

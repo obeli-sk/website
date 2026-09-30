@@ -264,13 +264,13 @@ after the response has been returned.
 
 ## Global Workflow Configuration
 
-````toml
+```toml
 [workflows]
 subscription_interruption.seconds = 1  # Interrupts listening for notifications periodically. Needed for Postgres with a local-only subscription mechanism. Value can be "none" or a duration.
 max_events_per_run = 100               # Max history events a real workflow run writes before it yields and unlocks, improving fairness across concurrent workflows. Replay uses max_replay_captured_writes instead.
 max_replay_captured_writes = 100       # Max captured writes a single replay pass returns. On reaching it, replay stops and returns that many as an advanceable prefix (advance them, then replay again to resume), keeping a non-terminating join-next-try poll loop advanceable in bounded batches.
 response_refresh_interval = 32         # Reload responses from the database after this many newly written non-blocking events while a workflow keeps running. Usually set below max_events_per_run. Replay ignores it.
-
+```
 
 ## HTTP Servers
 
@@ -281,10 +281,10 @@ be declared. Define additional named servers in `server.toml` when you need non-
 [[http_server]]
 name = "server_name"                  # Server identifier
 listening_addr = "0.0.0.0:9000"       # Listen address and port
-````
+```
 
-Named servers defined here can be referenced from `webhook_endpoint_wasm` entries in
-`deployment.toml` via `http_server = "server_name"`.
+Named servers defined here can be referenced from `webhook_endpoint_js` and `webhook_endpoint_wasm`
+entries in `deployment.toml` via `http_server = "server_name"`.
 
 ## Observability
 

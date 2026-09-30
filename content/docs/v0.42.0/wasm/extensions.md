@@ -1,11 +1,16 @@
 +++
-title = "Extensions"
+title = "Extension Interfaces"
 template = "docs.html"
 weight = 30
 +++
 
 Workflows can call child executions directly using a regular function call or they can use extension
 functions to access advanced features like scheduling and asynchronous execution.
+
+This page describes the generated WIT interfaces that Rust components import. JavaScript components
+get the same functions through import suffixes (`-obelisk-ext`, `-obelisk-schedule`,
+`-obelisk-stub`) without generating any files, see
+{{ doc_link(title="JS Workflows", path="js/js-workflows.md") }}.
 
 # Generating extension interfaces
 
@@ -61,8 +66,8 @@ streamline common tasks associated with workflow execution and are a key part of
 
 The types used in the extension functions (`execution-id`, `join-set`, `schedule-at`, and request
 errors) are defined in the
-{{ doc_link(title="`obelisk:types`", path="concepts/runtime-support.md#available-support-types") }}
-WIT package.
+{{ doc_link(title="`obelisk:types`", path="wasm/runtime-support.md#available-support-types") }} WIT
+package.
 
 Functions `submit` and `await-next` enable asynchronous execution. You can submit multiple requests
 without blocking, and then process results as they become available.
@@ -117,7 +122,7 @@ in an outer `result` whose error arm is `await-next-extension-error`:
 1.  On success, the outer result is `ok` and holds the original function's return value (itself a
     `result<string, string>` in this example).
 2.  There was an error during the child execution of type `await-next-extension-error` as defined in
-    {{ doc_link(title="`obelisk:types`", path="concepts/runtime-support.md#available-support-types") }}.
+    {{ doc_link(title="`obelisk:types`", path="wasm/runtime-support.md#available-support-types") }}.
 
 The finished execution's ID is no longer part of the return value. Read it from `join-set.last-id()`
 immediately after `-await-next` when you need it.
@@ -181,7 +186,7 @@ The `-obelisk-schedule` interface can be imported by both workflows and webhooks
 
 The `-schedule` allows to schedule the execution of the original function at a specific time in the
 future. It takes a `schedule-at` (defined in
-{{ doc_link(title="`obelisk:types/time`", path="concepts/runtime-support.md#available-support-types") }}
+{{ doc_link(title="`obelisk:types/time`", path="wasm/runtime-support.md#available-support-types") }}
 interface and the original parameters as input. It returns an `execution-id`. The Obelisk runtime
 will ensure the function is executed at (or as close as possible to) the specified time. It's
 important to note that scheduled executions do not use join sets. This is because scheduling

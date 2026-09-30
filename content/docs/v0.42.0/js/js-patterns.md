@@ -8,7 +8,7 @@ Practical patterns for building JS components — activities, workflows, and web
 reference see {{ doc_link(title="JS Activities", path="js/js-activities.md") }},
 {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }}, and
 {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }}. For WIT types and JSON encoding see
-{{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}.
+{{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }}.
 
 ## Example activities
 

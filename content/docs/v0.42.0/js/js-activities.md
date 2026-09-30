@@ -7,8 +7,8 @@ weight = 23
 Activities are the units of side-effectful work. JavaScript activities run in V8 by default, are
 retried automatically on failure or timeout, and must be **idempotent**, since Obelisk may execute
 them more than once. See {{ doc_link(title="Activities", path="concepts/activities/_index.md") }}
-for the general model and {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}
-for the full type and JSON encoding reference.
+for the general model and {{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }} for
+the full type and JSON encoding reference.
 
 ```toml
 [[activity_js]]

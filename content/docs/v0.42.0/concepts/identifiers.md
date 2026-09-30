@@ -9,14 +9,10 @@ weight = 20
 As discussed in {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}, there are
 three kinds of Join Sets:
 
-- **One-off** - Join set is created implicitly when calling `sleep`
-  {{ doc_link(title="support function", path="concepts/runtime-support.md") }} or calling the child
-  import directly, without an
-  {{ doc_link(title="extension function", path="concepts/extensions.md") }}. Example: `o:1`
-- **Generated** - Created using `join_set_create`
-  {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Example: `g:1`
-- **Named** - Created using `join_set_create_named`
-  {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Example: `n:foo`
+- **One-off** - Join set is created implicitly when calling `obelisk.sleep` or calling a child
+  import directly. Example: `o:1`
+- **Generated** - Created using `obelisk.createJoinSet()`. Example: `g:1`
+- **Named** - Created using `obelisk.createJoinSet({ name: "foo" })`. Example: `n:foo`
 
 Each group consist of a prefix (`o`,`g`,`n`) and a suffix. The suffix for first two groups is an
 auto-incremented integer. Named accept arbitrary string set by the workflow. The charset is limited

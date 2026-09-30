@@ -1,8 +1,13 @@
 +++
-title = "Runtime Suppport"
+title = "Runtime Support Interfaces"
 template = "docs.html"
-weight = 20  #  Lower weights appear first
+weight = 35
 +++
+
+This page is the WIT reference of the host functions that Rust components import. JavaScript
+components use the `obelisk:workflow@1.0.0` and `obelisk:webhook@1.0.0` modules instead, see
+{{ doc_link(title="JS Workflows", path="js/js-workflows.md") }} and
+{{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }}.
 
 Obelisk provides built-in runtime support functions that can be accessed by
 {{ doc_link(title="workflows", path="concepts/workflows/_index.md") }} and
@@ -21,7 +26,7 @@ files.
 ## Available Support Types
 
 Used by other Obelisk WIT interfaces as well as the generated
-{{ doc_link(title="extension", path="concepts/extensions.md") }}, contains `time` and `execution`
+{{ doc_link(title="extension", path="wasm/extensions.md") }}, contains `time` and `execution`
 interfaces with types like `execution-id` and others.
 
 ### {{ github(title="`obelisk:types@6.0.0`", path="wit/obelisk_types%406.0.0/obelisk_types%406.0.0.wit") }}

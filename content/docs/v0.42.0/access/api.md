@@ -87,7 +87,7 @@ Lists all registered components in the system.
 | `exports`       | Boolean | Include exported functions in the response.                                                                                      | `false`            |
 | `imports`       | Boolean | Include imported functions in the response.                                                                                      | `false`            |
 | `submittable`   | Boolean | If set, filters the `exports` list to only include functions that can be submitted.                                              | `None` (Shows all) |
-| `extensions`    | Boolean | Include {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} exports (e.g. `-schedule` variant).           | `false`            |
+| `extensions`    | Boolean | Include {{ doc_link(title="Extension Functions", path="wasm/extensions.md") }} exports (e.g. `-schedule` variant).               | `false`            |
 
 #### Example request
 

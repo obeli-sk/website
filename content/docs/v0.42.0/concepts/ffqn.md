@@ -4,92 +4,56 @@ template = "docs.html"
 weight = 20  #  Lower weights appear first
 +++
 
-In the following sections, we describe the structure of a WIT package name, interface fully
-qualified name (IFQN), and function fully qualified name (FFQN). We use the GitHub account activity
-from
-[stargazers](https://github.com/obeli-sk/demo-stargazers/blob/main/activity/github/wit-interface/stargazers_github/github.wit)
-repository as an example.
-
-# Package Name
-
-As per the
-[WIT Specification](https://component-model.bytecodealliance.org/design/wit.html#packages) each WIT
-package consits of a namespace field and a package field separated by a colon. Optionally a WIT
-package can contain a version.
-
-Package names are specified at the top of a WIT file via a package declaration:
+Every function in Obelisk (an activity, a workflow, or a stub) has a globally unique name, the
+function fully qualified name or FFQN. It is the address used everywhere: in `deployment.toml`, in
+JavaScript imports, on the CLI, in the REST API, and in the execution log.
 
 ```
-package stargazers:github;
+namespace:package/interface.function
 ```
 
-or
+For example `stargazers:github/account.account-info` consists of:
 
-```
-package stargazers:github@1.2.0;
-```
+| Part                  | Example                     |
+| --------------------- | --------------------------- |
+| Namespace             | `stargazers`                |
+| Package               | `github`                    |
+| Interface             | `account`                   |
+| Function              | `account-info`              |
+| Package name          | `stargazers:github`         |
+| Interface name (IFQN) | `stargazers:github/account` |
 
-# Interface Fully Qualified Name (IFQN)
+All parts use lowercase kebab-case. A package can optionally carry a version, which is written at
+the end of the interface name: `stargazers:github/account@1.2.0.account-info`.
 
-An interface fully qualified name is a unique identifier for an interface that includes the package
-and the interface name separated by a slash. For example, if the interface name is `account`, the
-IFQN is:
+The naming comes from [WIT](https://component-model.bytecodealliance.org/design/wit.html) packages
+and interfaces, see {{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }}.
 
-```
-stargazers:github/account
-```
+## Using the FFQN
 
-or
+A JavaScript component declares its FFQN in `deployment.toml`:
 
-```
-stargazers:github/account@1.2.0
-```
-
-Note that the version appears at the end of IFQN although it is part of the package name.
-
-To import an interface in a WIT file, use the IFQN:
-
-```wit
-package stargazers:workflow-impl;
-
-world any {
-    // Export workflow functions in the `workflow` interface.
-    export stargazers:workflow/workflow;
-    // Import the GitHub account activity.
-    import stargazers:github/account;
-    // Import the Obelisk workflow support functions.
-    import obelisk:workflow/workflow-support@7.0.0;
-}
+```toml
+[[activity_js]]
+name = "account_info"
+location = "activity/account-info.js"
+ffqn = "stargazers:github/account.account-info"
+params = [{ name = "login", type = "string" }]
+return_type = "result<string, string>"
 ```
 
-# Function Fully Qualified Name (FFQN)
+A workflow or webhook imports the function by its interface name. The function name is converted
+from kebab-case to camelCase:
 
-A function fully qualified name is a unique identifier for a function that includes the interface
-path and the function name. The FFQN is used to reference functions in Obelisk workflows and the
-execution log. The FFQN is a string that has the following format:
-
-```
-interface-fqn.function-name
+```javascript
+import { accountInfo } from "stargazers:github/account";
 ```
 
-For the following WIT file:
+The CLI and the REST API take the full FFQN:
 
-```wit
-package stargazers:github;
-
-interface account {
-    account-info: func(login: string) -> result<string, string>;
-}
-```
-
-the FFQN for the `account-info` function is
-
-```
-stargazers:github/account.account-info
-```
-
-To run the function using CLI, use
-
-```
+```sh
 obelisk execution submit --follow stargazers:github/account.account-info '["your-github-login"]'
 ```
+
+Functions in the same interface share the part before the dot, so group related functions (for
+example all GitHub activities) into one interface.

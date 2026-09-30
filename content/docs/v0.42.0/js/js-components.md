@@ -34,9 +34,9 @@ params  = [
 return_type = "result<u32>"
 ```
 
-See {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }} for the full type
-reference and JSON encoding, and {{ doc_link(title="JS activities", path="js/js-activities.md") }}
-for how `return` and `throw` map to the `result` variants.
+See {{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }} for the full type reference
+and JSON encoding, and {{ doc_link(title="JS activities", path="js/js-activities.md") }} for how
+`return` and `throw` map to the `result` variants.
 
 ## Inline WIT types
 

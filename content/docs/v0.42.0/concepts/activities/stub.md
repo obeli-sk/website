@@ -4,68 +4,59 @@ template = "docs.html"
 weight = 90
 +++
 
-Activities with no real implementation except for their WIT exports and configured in
-`[[activity_stub]]` table are called Stub Activities.
+Activities with no implementation, only a signature, configured in an `[[activity_stub]]` table are
+called Stub Activities. They represent a result that arrives from the outside world: a human
+approval, a callback from another system, or a message from another workflow.
 
 Stub activity functions are not executed by the Obelisk runtime. Instead, the following steps are
 executed:
 
-1. The parent workflow calls the stub function. Both direct calls (e.g. `myactivity()`) and async
-   counterparts (e.g. `myactivity_submit`) are supported.
+1. The parent workflow calls or submits the stub function like any other activity.
 2. An external process or workflow injects the execution result by supplying a return value or an
    execution error for the given
    {{ doc_link(title="Execution ID", path="concepts/identifiers.md#execution-id") }}.
 3. The parent execution obtains the return value and continues its logic.
 
-The parent execution is agnostic of whether the child activity is a regular WASM activity or a stub
+The parent execution is agnostic of whether the child activity is a regular activity or a stub
 activity.
 
-Consider two activity functions defined in WIT like this:
-
-```wit
-package testing:stub-activity;
-
-interface activity {
-    foo: func(arg: string) -> string;
-
-    noret: func();
-}
+```toml
+[[activity_stub]]
+ffqn = "myapp:stubs/approval.approve"
+params = [{ name = "request-id", type = "string" }]
+return_type = "result<string, string>"
 ```
 
-Obelisk automatically generates `-obelisk-stub`
-{{ doc_link(title="extension interface", path="concepts/extensions.md") }} for each WIT export. The
-`-stub` function takes the Execution ID and the return value an execution error. The `-obelisk-stub`
-interface can only be imported by workflows.
+A workflow submits the stub and awaits it like any activity:
 
-```wit
-package testing:stub-activity-obelisk-stub;
+```javascript
+import { approveSubmit, approveAwaitNext } from "myapp:stubs-obelisk-ext/approval";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
-interface activity {
-    use obelisk:types/execution@6.0.0.{execution-id, stub-error};
-
-    foo-stub: func(execution-id: execution-id, return-value: string) -> result<_, stub-error>;
-
-    noret-stub: func(execution-id: execution-id) -> result<_, stub-error>;
-
-}
+const js = obelisk.createJoinSet();
+const execId = approveSubmit(js, requestId);
+// Hand execId to whoever approves, e.g. by calling a notification activity.
+const decision = approveAwaitNext(js); // blocks until the result is supplied
 ```
 
-The return value can also be injected using Web UI or
-{{ doc_link(title="CLI", path="access/cli.md#providing-the-result-of-a-stubbed-activity") }}.
+The result can be injected using the Web UI, the
+{{ doc_link(title="CLI", path="access/cli.md#providing-the-result-of-a-stubbed-activity") }}, the
+{{ doc_link(title="REST API", path="access/api.md") }}, or from a workflow using the `-obelisk-stub`
+import:
 
-The stubbed response call is idempotent, meaning it can be executed multiple times as long as the
-response remains the same. Otherwise an `stub-error` is returned:
+```javascript
+import { approveStub } from "myapp:stubs-obelisk-stub/approval";
 
-```wit
-variant stub-error {
-    /// Conflict can happen when a second writer attempts to stub a value, while the
-    /// value is not equal to the already stubbed value.
-    conflict,
-}
+approveStub(execId, { ok: "approved" });
 ```
+
+Supplying a result is idempotent: it can be repeated as long as the value stays the same. Supplying
+a different value for the same execution fails with a conflict error.
 
 An {{ github(title="example stub workflow", path="crates/testing/test-programs/stub/workflow") }} is
-available in the repository.
+available in the repository. See {{ doc_link(title="Stub RPC", path="patterns/stub-rpc.md") }} and
+{{ doc_link(title="Durable Mailbox", path="patterns/stub-mailbox.md") }} for patterns built on
+stubs.
 
 ## Cancellation and pending stubs
 

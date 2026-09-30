@@ -13,354 +13,156 @@ interruptions like server restarts.
 ## Determinism and Replayability
 
 This reliability is fundamentally enabled by ensuring **deterministic execution** and thus
-**replayability**. Rust workflows run in Wasmtime, while JavaScript workflows run in V8 by default.
-Both runtimes restrict nondeterministic access so the same inputs and event history produce the same
+**replayability**. JavaScript workflows run in V8 by default, Rust workflows run in Wasmtime. Both
+runtimes restrict nondeterministic access so the same inputs and event history produce the same
 outputs and sequence of operations. To support this, Obelisk persistently records every child
 execution submission and its eventual result, forming a **durable
 {{ doc_link(title="execution log", path="concepts/execution-log.md") }}**. This log allows a
 workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can
 reliably continue from where it left off without duplicating or skipping steps.
 
+In JavaScript, `Date.now()`, `new Date()`, and `Math.random()` are safe to use: their values come
+from the execution log and replay identically.
+
 A direct consequence of determinism is that a workflow must not read anything that could differ
-between the original run and a replay. In particular, JavaScript and Rust workflows cannot read
-environment variables or other ambient host state. Supply runtime configuration as workflow
-**parameters** instead: a component that can read the environment (a webhook, an activity, or a
-parent execution) reads the value and passes it in when it schedules or calls the workflow, so the
-value is recorded in the execution log and replays identically.
+between the original run and a replay. In particular, workflows cannot read environment variables
+(`process.env`), make HTTP requests, or access other ambient host state. Supply runtime
+configuration as workflow **parameters** instead: a component that can read the environment (a
+webhook, an activity, or a parent execution) reads the value and passes it in when it schedules or
+calls the workflow, so the value is recorded in the execution log and replays identically.
 
 ## How Workflows Are Executed in Obelisk
 
-1. The Obelisk runtime starts the WASM component or V8 isolate and calls the requested workflow
-   function.
-1. When the workflow needs to start a child execution, it makes a request to store its
-   {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and parameters.
-1. The Obelisk runtime schedules the activity or a child workflow for execution in the background.
+1. The Obelisk runtime starts the workflow and calls the requested function.
+1. When the workflow calls an activity or a child workflow, Obelisk persists the request: the
+   {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and the parameters.
+1. The Obelisk runtime schedules the child execution in the background.
 1. The child execution runs, performs its work, and returns a result to the workflow. Obelisk
    handles retries on errors and timeouts for activities.
-1. The workflow continues processing. This may involve replaying the state form its execution log.
+1. The workflow continues processing. This may involve replaying its state from the execution log.
 1. **Completion/Failure:** The workflow continues until it either completes successfully or
    encounters an unrecoverable error. The final state of the workflow is recorded.
 
-## Defining workflow functions in WIT
+## Calling an activity
 
-As with all components in Obelisk, the
-[WIT](https://component-model.bytecodealliance.org/design/wit.html) interface definition language is
-used to describe each workflow function. Since workflows can fail when the function invocation
-`trap`s (panics), each function must be fallible. This means that the return type must be one of
-following:
+A workflow calls an activity like a regular function. The import path is the activity's interface,
+and the function name is converted from kebab-case to camelCase:
 
-- `result`
-- `result<T>` where `T` represents any successful variant like `string` or `list<u32>` or even a
-  none type (`_`)
-- `result<T, string>`
-- `result<T, E>` where `E` is a `variant` type that contains `execution-failed` variant.
+```javascript
+// myapp:demo/workflow.serial: func() -> result<string, string>
+import { step } from "myapp:demo/activity";
 
-## Developing a Workflow in Rust
-
-### Creating a workflow
-
-Continuing the fibonacci example from
-{{ doc_link(title="activities", path="concepts/activities/_index.md") }} page, let's generate the
-workflow in Rust. The
-[demo-tutorial Rust workflow](https://github.com/obeli-sk/demo-tutorial/tree/main/rust/workflow-tutorial)
-is a complete buildable example. This fibonacci example uses the following layout:
-
-```sh
-.
-├── Cargo.toml
-├── obelisk.toml
-├── README.md
-├── rust-toolchain.toml
-├── src
-│   └── lib.rs
-└── wit
-    ├── deps
-    │   ├── obelisk_types@6.0.0
-    │   │   └── types.wit
-    │   ├── obelisk_workflow@7.0.0
-    │   │   └── workflow-support.wit
-    │   ├── template-fibo_activity
-    │   │   └── fibo-activity.wit                   # Imported activity
-    │   ├── template-fibo_activity-obelisk-ext
-    │   │   └── activity-obelisk-ext.wit            # Generated -ext import
-    │   └── template-fibo_workflow
-    │       └── fibo-workflow.wit                   # Exported interface
-    ├── impl.wit                                    # World (imports and exports)
-    ├── template-fibo_workflow-obelisk-ext
-    │   └── workflow-obelisk-ext.wit                # Generated -ext interface of exports
-    └── template-fibo_workflow-obelisk-schedule
-        └── workflow-obelisk-schedule.wit           # Generated -schedule interface of exports
-```
-
-### Synchronously Calling an Activity
-
-First we need to define and export the workflow interface with the function signature in WIT format.
-We also need to import the activity interface.
-
-`fibo-activity.wit`:
-
-```fibo-activity.wit
-package template-fibo:activity;
-
-interface fibo-activity-ifc {
-    fibo-activity: func(n: u8) -> result<u64>;
+export default function serial() {
+  let acc = 0;
+  for (let i = 0; i < 10; i++) {
+    // Pauses the workflow, submits the activity and waits for its result.
+    acc += Number(step(i, 200));
+  }
+  return String(acc);
 }
 ```
-
-`fibo-workflow.wit` (simplified):
-
-```wit
-package template-fibo:workflow;
-
-interface fibo-workflow-ifc {
-    fiboa: func(n: u8, iterations: u32) -> result<u64>;
-}
-```
-
-`impl.wit` (simplified):
-
-```wit
-package any:any;
-
-world any {
-    export template-fibo:workflow/fibo-workflow-ifc;
-    import template-fibo:activity/fibo-activity-ifc;
-}
-```
-
-Implementing the workflow is straight forward. In Rust, the interface will be turned into `Guest`
-trait by [wit-bindgen](https://crates.io/crates/wit-bindgen). Bindings for the imported interfaces
-will be generated as well.
-
-```rust
-impl Guest for Component {
-    fn fiboa(n: u8, iterations: u32) -> Result<u64, ()> {
-        let mut last = 0;
-        for _ in 0..iterations {
-            // This line will pause the workflow,
-            // submit new activity execution and wait for the result.
-            last = fibo_activity(n).unwrap();
-        }
-        Ok(last)
-    }
-}
-```
-
-The generated `deployment.toml` already includes the fibo activity and the workflow:
 
 ```toml
-[[activity_wasm]]
-name = "activity_myfibo"
-# ...
-
-[[workflow_wasm]]
-name = "myworkflow"
-location = "target/wasm32-unknown-unknown/release/myworkflow.wasm"
+[[workflow_js]]
+name = "serial"
+location = "workflow/serial.js"
+ffqn = "myapp:demo/workflow.serial"
+params = []
+return_type = "result<string, string>"
 ```
 
-Let's build the WASM Component and run Obelisk.
+Like every exported function in Obelisk, a workflow's `return_type` must be a `result`: returning a
+value produces `ok`, throwing produces `err`. See
+{{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }}.
 
-```sh
-cargo build --release
-obelisk server run --app-config app.toml --deployment deployment.toml
-```
+Each call is persisted before the activity runs. If the server crashes in the middle of the loop,
+the workflow is replayed: finished steps return their recorded results immediately and the loop
+continues with the first unfinished one.
 
-In another terminal, let's list all the exported functions:
+## Concurrent child executions
 
-```sh
-obelisk component list
-```
+To run several children at once, submit them to a
+{{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }} and await the results. The
+`-obelisk-ext` import suffix provides a `Submit` and `AwaitNext` variant of every function:
 
-Expected output:
+```javascript
+// myapp:demo/workflow.parallel: func() -> result<string, string>
+import { stepSubmit, stepAwaitNext } from "myapp:demo-obelisk-ext/activity";
+import * as obelisk from "obelisk:workflow@1.0.0";
 
-```
-myworkflow      workflow:myworkflow
-Exports:
-        template-fibo:workflow/fibo-workflow-ifc.fiboa : func(n: u8, iterations: u32) -> result<u64>
-        template-fibo:workflow/fibo-workflow-ifc.fiboa-concurrent : func(n: u8, iterations: u32) -> result<u64>
-
-activity_myfibo activity_wasm:activity_myfibo
-Exports:
-        template-fibo:activity/fibo-activity-ifc.fibo : func(n: u8) -> result<u64>
-```
-
-We can run the `fiboa` workflow using CLI:
-
-```sh
-obelisk execution submit --follow \
-    template-fibo:workflow/fibo-workflow-ifc.fiboa [40,10]
-```
-
-or using the WebUI: <img src="{{ get_url(path="fiboa-submit.png") }}" alt="Submit the execution"
-style="max-width: 100%; height: auto; display: block;border: 2px dotted #efeded;" /> The result
-shows that `fibo` activities were indeed executed sequentially: <img
-src="{{ get_url(path="fiboa-trace.png") }}" alt="View the result" style="max-width: 100%; height:
-auto; display: block;border: 2px dotted #efeded;" />
-
-See {{ doc_link(title="Getting Started (Rust / WASM)", path="wasm/getting-started.md") }} for
-building and deploying a Rust workflow.
-
-## Concurrently submitting multiple child executions
-
-Using the same activity WIT, let's now submit all executions concurrently and then await their
-results:
-
-### Extended Activity WIT
-
-Obelisk can generate several helper functions for every exported activity or workflow function. See
-{{ doc_link(title="Extension Functions", path="concepts/extensions.md") }} for details.
-
-```wit
-// Generated by Obelisk
-package template-fibo:activity-obelisk-ext;
-
-interface fibo-activity-ifc {
-  use obelisk:types/execution@6.0.0.{execution-id, await-next-extension-error, get-extension-error, child-execution-request-error};
-  use obelisk:types/join-set@6.0.0.{join-set};
-
-  fibo-submit: func(join-set: borrow<join-set>, n: u8) -> result<execution-id, child-execution-request-error>;
-
-  fibo-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<u64>>, await-next-extension-error>;
-
-  fibo-get: func(execution-id: execution-id) -> result<result<u64>, get-extension-error>;
+export default function parallel() {
+  const js = obelisk.createJoinSet();
+  for (let i = 0; i < 10; i++) {
+    stepSubmit(js, i, 200); // does not block
+  }
+  let acc = 0;
+  for (let i = 0; i < 10; i++) {
+    acc += Number(stepAwaitNext(js)); // in completion order
+  }
+  return String(acc);
 }
 ```
 
-### Workflow WIT
-
-Let's add a new function signature to the exported interface:
-
-```wit
-package template-fibo:workflow;
-
-interface fibo-workflow-ifc {
-    fiboa: func(n: u8, iterations: u32) -> result<u64>;
-    fiboa-concurrent: func(n: u8, iterations: u32) -> result<u64>; // Added
-}
-```
-
-### Workflow implementation
-
-```rust
-fn fiboa_concurrent(n: u8, iterations: u32) -> Result<u64, ()> {
-    let join_set = join_set_create();
-    for _ in 0..iterations {
-        fibo_submit(&join_set, n);
-    }
-    let mut last = 0;
-    for _ in 0..iterations {
-        last = fibo_await_next(&join_set).unwrap().unwrap();
-    }
-    Ok(last)
-}
-```
-
-First, we must explicitly instantiate a
-{{ doc_link(title="Join Set", path="concepts/workflows/join-sets.md") }}. While synchronous calls
-also involve a join set, Obelisk creates it automatically in that scenario; here, manual creation is
-required.
-
-Next, we call the `-submit` extension function. This action persists the execution request to the
-database, queuing it for processing. An assigned executor will then pick up this task and run the
-child execution to completion. Importantly, the parent workflow is not blocked and can continue
-submitting other child executions while this happens.
-
-To retrieve results, call the `-await-next` extension function. This function will block if no child
-executions have finished. As the name implies, -await-next returns results based on completion
-order, not submission order – whichever child execution finishes first provides the next result.
-
-Running the `fiboa-concurrent` produces the expected trace:
-
-<img src="{{ get_url(path="fiboa-concurrent-trace.png") }}" alt="View the result" style="max-width:
-100%; height: auto; display: block;border: 2px dotted #efeded;" />
-
-The [stargazers demo repository](https://github.com/obeli-sk/demo-stargazers/tree/main/workflow)
-contains code examples demonstrating both synchronous (blocking) and concurrent submission of
-activities and sub-workflows within a workflow.
+The submit call persists the execution request and returns its execution ID. The parent is not
+blocked and can keep submitting. `AwaitNext` blocks until the next child in the join set finishes,
+in completion order rather than submission order.
 
 ## Scheduling child executions
 
-The `-schedule` {{ doc_link(title="extension function", path="concepts/extensions.md") }} is
-suitable when the workflow either doesn't require the result of the submitted execution or needs to
-defer its execution to a future time. Importantly, join sets are not used for scheduled executions,
-as this method bypasses the
-{{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}
-principles.
+Scheduling is suitable when the workflow does not need the result of the submitted execution, or
+wants to start it at a future time. Scheduled executions are not part of a join set, so they are not
+bound by {{ doc_link(title="structured concurrency", path="concepts/structured-concurrency.md") }}:
 
-```rust
-fn schedule_child(n: u8)  {
-    let duration=...
-    fibo_schedule(ScheduleAt::In(duration), n);
-}
+```javascript
+import { sendEmailSchedule } from "myapp:demo-obelisk-schedule/activity";
+
+sendEmailSchedule({ minutes: 5 }, "user@example.com"); // returns the execution ID
 ```
+
+See {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }} for the complete API, including
+{{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }} and error
+handling. Rust workflows are covered in
+{{ doc_link(title="Rust Workflows", path="wasm/workflows.md") }}.
 
 ## Logging and debugging
 
 To understand the internal state of a workflow, you can use the following:
 
 - Read the execution log. It contains workflow parameters, each child execution and the final
-  result. Execution log is available in the web UI.
-- `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[workflow]]`
-  section of the
-  {{ doc_link(title="deployment configuration", path="configuration/deployment.md") }}. By default,
-  output is stored in the database and available in the Web UI. It can also be forwarded to
-  `"stdout"` or `"stderr"` to appear in the server log.
-- `obelisk:log` API - see
-  {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}
+  result. The execution log is available in the Web UI.
+- `console.log` and friends, see {{ doc_link(title="Logging", path="concepts/logging.md") }}. Logs
+  are stored in the database and shown in the Web UI.
+- Backtraces: the Web UI can show the source line that submitted each child execution. Backtraces
+  are captured when an execution is replayed; `obelisk execution persist-backtraces <execution-id>`
+  replays an execution and stores them.
 
-Adding print statements or logs is ignored by the execution log, so you can add it to an in-progress
-or a finished execution and trigger the replay.
+Adding logging does not change the execution log, so you can add it to an in-progress or a finished
+execution and trigger the replay.
 
-## Advanced Topics
+## Blocking Strategy
 
-### Backtrace capture
+You can control what happens to the workflow instance while it waits for a child execution:
 
-<img src="{{ get_url(path="backtrace.png") }}" alt="A backtrace viewer" style="max-width: 100%;
-height: auto; border: 2px dotted #efeded;" />
-
-If we specify the `backtrace.sources`, the frontend can display source file and line for every
-captured backtrace.
-
-```toml
-[[workflow]]
-backtrace.sources = {".../src/lib.rs" = "workflow/src/lib.rs"}
-```
-
-The mapping is from frame source to local file system. When `.../` is used, the frame source path is
-matched based on the suffix, `src/lib.rs` in this example. Workflow backtraces are captured lazily
-during user-issued replay and advance operations. To replay an execution and persist its call-site
-backtraces, run:
-
-```sh
-obelisk execution persist-backtraces <execution-id>
-```
-
-### Join Next Blocking Strategy
-
-You can control what happens to the runtime instance when a blocking call is awaited (e.g. in the
-example above, when `fibo_activity()` is executed).
-
-- **`await`** - keep the instance waiting for the result, until the execution lock expires.
+- **`await`** (default) - keep the instance waiting for the result, until the execution lock
+  expires.
 - **`interrupt`** - unload the instance from memory immediately.
 
-For example, having the following configuration:
-
 ```toml
-[[workflow_wasm]]
+[[workflow_js]]
 name = "myworkflow"
-location = "target/wasm32-unknown-unknown/release/workflow.wasm"
+# ...
 exec.lock_expiry.seconds = 1
-join_next_blocking_strategy = "await"
+blocking_strategy = "await"
 ```
 
-If the workflow instance calls an action right at the start, it will be kept hot for up to 1 second.
-If the activity finishes before the lock expires, the workflow instance will receive the result and
-continue.
+With this configuration, a workflow instance that calls an activity is kept in memory for up to 1
+second. If the activity finishes before the lock expires, the workflow receives the result and
+continues.
 
-On the other hand, if the activity result is delayed, the execution will be unloaded from memory.
-Once the activity finishes, it will mark the parent workflow as pending. The workflow executor will
-lock it again, fetch its execution log and replay all the steps that the execution went through.
+If the activity result is delayed, the execution is unloaded from memory. Once the activity
+finishes, it marks the parent workflow as pending. The workflow executor locks it again, fetches its
+execution log and replays all the steps that the execution went through.
 
-If the `interrupt` strategy is selected, each call to an activity or
-{{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }} will trigger
-locking the execution and replaying the execution log.
+With the `interrupt` strategy, each call to an activity or
+{{ doc_link(title="persistent sleep", path="concepts/workflows/persistent-sleep.md") }} unloads the
+execution and later replays the execution log.

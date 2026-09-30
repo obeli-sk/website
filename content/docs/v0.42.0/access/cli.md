@@ -307,7 +307,7 @@ obelisk execution submit [OPTIONS] <function> [parameters]...
 Arguments:
 
 - `<function>` - Function to invoke, as a
-  {{ doc_link(title="fully qualified name", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }}
+  {{ doc_link(title="fully qualified name", path="concepts/ffqn.md") }}
   (`ns:pkg/ifc.fn`) or shortened to `.../ifc.fn` when the interface name is unambiguous
 - `[parameters]...` - One of:
   - JSON array string, e.g. `'["first", "second", null, 1]'`
@@ -670,8 +670,8 @@ Options:
 
 ### Generating extension functions
 
-The {{ doc_link(title="extension", path="concepts/extensions.md") }} WIT files of a given component
-can be generated using:
+The {{ doc_link(title="extension", path="wasm/extensions.md") }} WIT files of a given component can
+be generated using:
 
 ```sh
 obelisk generate wit-extensions [OPTIONS] <COMPONENT_TYPE> <INPUT_WIT_DIRECTORY> <OUTPUT_DIRECTORY>
@@ -691,7 +691,7 @@ Options:
 
 ### Generating WIT support functions
 
-As described in {{ doc_link(title="Runtime Support", path="concepts/runtime-support.md") }}, Obelisk
+As described in {{ doc_link(title="Runtime Support", path="wasm/runtime-support.md") }}, Obelisk
 provides types and host functions described as WIT interfaces.
 
 ```sh

@@ -48,17 +48,16 @@ This ensures that failures are not lost and that the system maintains a consiste
 Obelisk uses to implement and enforce structured concurrency.
 
 - **Tracking Children:** When a workflow spawns child executions using mechanisms like direct calls
-  or the `-submit` {{ doc_link(title="extension function", path="concepts/extensions.md") }}, these
-  children are associated with a join set (either an implicit one-off set for direct calls or an
-  explicit one created by the workflow).
+  or submitting them (`fooSubmit` from an `-obelisk-ext` import), these children are associated with
+  a join set (either an implicit one-off set for direct calls or an explicit one created by the
+  workflow).
 - **Awaiting Completion:** Join sets allow the parent workflow to asynchronously await the results
-  of its children as they complete using `-await-next`
-  {{ doc_link(title="extension function", path="concepts/extensions.md") }} or `join-next`
-  {{ doc_link(title="support function", path="concepts/runtime-support.md") }}. Results arrive based
-  on completion order, not submission order.
+  of its children as they complete using `fooAwaitNext` or `joinSet.joinNext()`, see
+  {{ doc_link(title="Join Sets", path="concepts/workflows/join-sets.md") }}. Results arrive based on
+  completion order, not submission order.
 - **Enforcing Lifetimes:** Crucially, join sets ensure the parent-child lifetime constraint. When a
-  Join Set gets out of scope, the execution will block and resume only when all child executions are
-  finished. See
+  join set is closed, or the workflow finishes, the execution blocks and resumes only when all child
+  executions are finished. See
   {{ doc_link(title="Join Set Close", path="concepts/workflows/join-sets.md#join-set-close") }} for
   details.
 
@@ -72,7 +71,7 @@ During normal execution, a join set closes when workflow code closes an explicit
 an implicit direct-call join set. During cancellation, Obelisk closes persisted join sets from the
 execution log, so teardown does not depend on the workflow replaying to the close point.
 
-- Pending activities and delay requests are cancelled. Running WASM and JS activities are
+- Pending activities and delay requests are cancelled. Running JavaScript and WASM activities are
   interrupted before cancellation is reported as finished. Running exec activities have their
   process group signalled with `SIGKILL` and the direct child is awaited; terminating descendants is
   best effort because a native process can spawn children or block in the kernel.
@@ -102,24 +101,25 @@ fault inside the workflow, read `e.failureKind === "cancelled"` (equivalently `e
 thrown error; externally, read the execution's specific classification (`Cancelled`) from the REST
 API (`GET /v1/executions/{id}`).
 
-### Contrast with Unstructured Concurrency (`-schedule`)
+### Contrast with Unstructured Concurrency (Scheduling)
 
-Obelisk also provides the `-schedule` extension function. It's important to understand that using
-`-schedule` **opts out** of the structured concurrency model for that specific execution:
+Obelisk also lets a workflow schedule an execution (`fooSchedule` from an `-obelisk-schedule`
+import). It's important to understand that scheduling **opts out** of the structured concurrency
+model for that specific execution:
 
 - **No Join Set:** Scheduled executions are not associated with a join set.
 - **No Lifetime Link:** The parent workflow does not automatically wait for scheduled executions to
   complete, nor does their failure automatically propagate back unless explicitly designed via other
   means (e.g., the scheduled task reporting status elsewhere).
-- **Use Cases:** `-schedule` is intended for "fire-and-forget" tasks where the result isn't
+- **Use Cases:** Scheduling is intended for "fire-and-forget" tasks where the result isn't
   immediately needed by the parent, or for delaying execution until a specific time, effectively
   detaching the child's lifecycle from the parent's immediate scope.
 
 Because a scheduled execution has no parent to enforce its lifetime, a long-lived detached root —
-for example a session workflow started by a webhook via `-schedule` — is responsible for bounding
-its own lifetime. Give it an internal limit so it cannot run forever if its driver disappears: an
-idle timeout (a persistent sleep raced against its next unit of work), an absolute cap such as a
-maximum number of iterations, or both.
+for example a session workflow started by a webhook via a schedule import — is responsible for
+bounding its own lifetime. Give it an internal limit so it cannot run forever if its driver
+disappears: an idle timeout (a persistent sleep raced against its next unit of work), an absolute
+cap such as a maximum number of iterations, or both.
 
 ### Benefits of Structured Concurrency
 

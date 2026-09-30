@@ -5,44 +5,40 @@ weight = 20
 +++
 
 Persistent or durable sleep means the workflow's state is saved, and execution will resume after the
-duration has elapsed, even if the Obelisk server restarts.
+duration has elapsed, even if the Obelisk server restarts. Workflows use `obelisk.sleep` instead of
+`setTimeout`:
 
-The {{ doc_link(title="Runtime Support API", path="concepts/runtime-support.md") }} contains method
-`sleep` which creates an one-off
-{{ doc_link(title="Join Set", path="concepts/workflows/join-sets.md") }} and blocks the execution
-until the delay has timed out.
+```javascript
+import * as obelisk from "obelisk:workflow@1.0.0";
 
-If the durable sleep is cancelled, `sleep` returns an error that must be handled by the workflow.
+obelisk.sleep({ seconds: 10 });
+obelisk.sleep(new Date(Date.now() + 30_000)); // absolute wake-up time
+const wokeAt = obelisk.sleep({ days: 1 }, "reminder"); // optional name, returns a Date
+```
+
+`sleep` creates a one-off {{ doc_link(title="join set", path="concepts/workflows/join-sets.md") }}
+with a delay and blocks until the delay expires. The optional second argument names that join set.
+
+If the durable sleep is cancelled, `sleep` throws `obelisk.ChildError` with `cancelled === true`.
 See {{ doc_link(title="Cancellation", path="concepts/structured-concurrency.md#cancellation") }} for
-how delay cancellation fits into structured concurrency:
+how delay cancellation fits into structured concurrency.
 
-```rs
-workflow_support::sleep(ScheduleAt::In(SchedulingDuration::Seconds(10)), None)
-    .map_err(|()| MyWorkflowError::Cancelled)?;
+## Delays in a join set
+
+A delay can also be submitted to a join set next to child executions. This is how a workflow
+implements a timeout: whichever finishes first is returned by `joinNext`, and closing the join set
+cancels the rest.
+
+```javascript
+const js = obelisk.createJoinSet();
+const execId = js.submit("myapp:demo/activity.step", [1, 200]);
+const delayId = js.submitDelay({ seconds: 10 });
+const result = js.joinNext(); // null if the delay won
+if (js.lastId === delayId) {
+  return "timed out";
+}
 ```
 
-The trailing `None` names the one-off join set (a name is optional).
-
-Another way to submit a persistent delay is to use
-{{ doc_link(title="Heterogenous Join Set", path="concepts/workflows/join-sets.md#heterogenous-join-sets") }}
-with the `submit_delay` function.
-
-```rs
-fn two_delays_in_same_join_set() -> Result<(), ()> {
-    let join_set = workflow_support::join_set_create();
-    let _long = submit_delay(&join_set, ScheduleAt::In(DurationEnum::Seconds(10)));
-    let short = submit_delay(&join_set, ScheduleAt::In(DurationEnum::Milliseconds(10)));
-    // child executions can be added to this join set using `-submit` extension.
-    // `join_next` returns the completed value directly:
-    // `result<result<option<string>, option<string>>, join-next-error>`.
-    let res = join_next(&join_set)
-        .expect("submitted two delays, joining first, thus `join-next-error::all-processed` cannot happen");
-    assert!(res.is_ok()); // Ok(None) for an expired delay
-    // Read which response was processed from `join_set.last_id()`.
-    let Some(ResponseId::DelayId(first)) = join_set.last_id() else {
-        unreachable!("only delays have been submitted");
-    };
-    assert_eq!(short.id, first.id);
-    // long delay will be cancelled when the join set is closed.
-    Ok(())
-```
+See
+{{ doc_link(title="Heterogenous Join Sets", path="concepts/workflows/join-sets.md#heterogenous-join-sets") }}.
+For Rust, see {{ doc_link(title="Rust Workflows", path="wasm/workflows.md#persistent-sleep") }}.
