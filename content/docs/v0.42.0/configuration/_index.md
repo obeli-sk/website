@@ -2,6 +2,7 @@
 title = "Configuration"
 template = "docs.html"
 weight = 20
+sort_by = "weight"
 +++
 
 Obelisk reads three configuration files. Each one has a different owner and changes at a different
@@ -18,9 +19,9 @@ pace:
 </div>
 
 Each file has its own reference page:
-{{ doc_link(title="Server Configuration", path="server-configuration.md") }},
-{{ doc_link(title="App Configuration", path="app-configuration.md") }}, and
-{{ doc_link(title="Deployment Configuration", path="deployment-configuration.md") }}.
+{{ doc_link(title="Server Configuration", path="configuration/server.md") }},
+{{ doc_link(title="App Configuration", path="configuration/app.md") }}, and
+{{ doc_link(title="Deployment Configuration", path="configuration/deployment.md") }}.
 
 ## Why Three Files
 

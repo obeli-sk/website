@@ -412,7 +412,7 @@ The defaults cap concurrency at 500 WASM activities, workflows, and webhooks, 16
 webhooks, 100 V8 workflows, 32 exec processes, and 8 VM activities. In 0.41, execution concurrency
 was unlimited by default. Raise the relevant cells for workloads with high parallelism, especially
 JavaScript activities and webhooks. See
-{{ doc_link(title="Server Configuration", path="server-configuration.md#execution-slots", version="v0.42.0") }}
+{{ doc_link(title="Server Configuration", path="configuration/server.md#execution-slots", version="v0.42.0") }}
 for every cell.
 
 Executors acquire a slot before locking an execution, so work beyond the limit stays pending. A
@@ -458,7 +458,7 @@ equivalent REST request bodies.
 - REST requests with `follow=true` (`POST /v1/executions`, `PUT /v1/executions/{id}`, and
   `GET /v1/executions/{id}`) now return a `text/event-stream` response. Read the `data` field of the
   `result` event instead of parsing the response body as JSON. See
-  {{ doc_link(title="Programmatic access", path="programmatic-access.md", version="v0.42.0") }}.
+  {{ doc_link(title="API access", path="cli-and-api/api.md", version="v0.42.0") }}.
 - gRPC and gRPC-web are deprecated. Move clients to the `/v1` REST API, which now covers the gRPC
   feature set, including status streams, exact function and state filters, and app policy lookup.
 
@@ -515,5 +515,5 @@ rc.3:
   `bochs-wasm`, `qemu-tcg`, `qemu-kvm`, or `firecracker`, and add required guest `memory` to each
   `[[activity_vm]]`. `cpus` is optional and defaults to one. Bochs requires `memory.mib = 512` and
   one vCPU; see
-  {{ doc_link(title="VM activity configuration", path="deployment-configuration.md#experimental-vm-activities", version="v0.42.0") }}
+  {{ doc_link(title="VM activity configuration", path="configuration/deployment.md#experimental-vm-activities", version="v0.42.0") }}
   for native backend requirements.

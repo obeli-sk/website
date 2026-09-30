@@ -1,7 +1,7 @@
 +++
 title = "Deployment Configuration"
 template = "docs.html"
-weight = 23
+weight = 3
 +++
 
 `deployment.toml` is one instance of the app, passed with `--deployment`. It lists the components
@@ -10,7 +10,8 @@ needs. It may be written by a coding agent together with the component code. Wha
 must fit within `app.toml` and `server.toml`: verification, startup, and activation reject a
 deployment that asks for an ungranted secret, environment variable, outbound HTTP destination, or
 exec activity. Run `obelisk deployment verify` to check the fit before submitting. See
-{{ doc_link(title="Configuration", path="configuration.md") }} for how the three files relate.
+{{ doc_link(title="Configuration", path="configuration/_index.md") }} for how the three files
+relate.
 
 ## Common Component Settings
 
@@ -263,9 +264,9 @@ via the CLI, REST API, and Web UI.
 
 > **Security**: exec activities run host processes outside the WASM sandbox and are disabled by
 > default. A deployment that declares one fails verification until both the app admin approves it in
-> {{ doc_link(title="`app.toml`", path="app-configuration.md#app-exec-approval") }} and the platform
+> {{ doc_link(title="`app.toml`", path="configuration/app.md#app-exec-approval") }} and the platform
 > admin enables the
-> {{ doc_link(title="exec gate", path="server-configuration.md#platform-exec-gate") }} in
+> {{ doc_link(title="exec gate", path="configuration/server.md#platform-exec-gate") }} in
 > `server.toml`.
 
 ```toml

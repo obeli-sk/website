@@ -1,7 +1,7 @@
 +++
 title = "App Configuration"
 template = "docs.html"
-weight = 22
+weight = 2
 +++
 
 `app.toml` is owned by the app admin and passed with `--app-config`. It is the reviewed policy of
@@ -13,7 +13,8 @@ is the part a human should review.
 
 Missing required inputs fail at startup, so executions do not discover them at runtime. Environment
 overrides such as `OBELISK__...` apply only to `server.toml`, not to `app.toml`. See
-{{ doc_link(title="Configuration", path="configuration.md") }} for how the three files relate.
+{{ doc_link(title="Configuration", path="configuration/_index.md") }} for how the three files
+relate.
 
 ## App Name
 
@@ -112,7 +113,7 @@ greet = "sha256:..."
 Use an array of digests when overlapping deployment revisions must be authorized. If the activity
 receives plaintext secrets, copy the generated `[secrets.<name>.exposed_to]` grants too. The
 platform must also allow the digest through its
-{{ doc_link(title="exec gate", path="server-configuration.md#platform-exec-gate") }}.
+{{ doc_link(title="exec gate", path="configuration/server.md#platform-exec-gate") }}.
 
 ## App Policy Digest
 

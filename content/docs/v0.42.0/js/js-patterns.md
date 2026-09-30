@@ -323,7 +323,7 @@ export default async function handle(_request) {
 `pending_state.status` values: `locked`, `pending_at`, `blocked_by_join_set`, `paused`,
 `cancelling`, `finished`. Pass `?follow=true` to `GET /v1/executions/{id}` instead of
 `425 Too Early` while still running. See
-{{ doc_link(title="Programmatic access", path="programmatic-access.md") }} for the full API.
+{{ doc_link(title="API access", path="cli-and-api/api.md") }} for the full API.
 
 ## Workflow import API (preferred)
 

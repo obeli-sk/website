@@ -191,7 +191,7 @@ location = "webhook/tutorial.js"
 routes = ["/*"]
 ```
 
-See {{ doc_link(title="Deployment Configuration", path="deployment-configuration.md") }} for all
+See {{ doc_link(title="Deployment Configuration", path="configuration/deployment.md") }} for all
 options.
 
 ## 4. Run
@@ -342,8 +342,8 @@ losing progress or duplicating work.
 - **Explore example apps:** {{ doc_link(title="Example applications", path="apps.md") }} introduces
   the agent template, browser automation demo, tutorial, and other apps.
 
-- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli.md") }} covers submitting
-  executions, inspecting state, and managing components.
+- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli-and-api/cli.md") }} covers
+  submitting executions, inspecting state, and managing components.
 
 - **Read the blog:** [Comparing Obelisk with DBOS](@/blog/2025-11-26-comparing-dbos-part-1.md) walks
   through this same tutorial code in depth, comparing the approach with DBOS Java.

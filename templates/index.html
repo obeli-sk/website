@@ -110,7 +110,7 @@ location = "webhook/handle.js"
 routes = [{ methods = ["GET"], route = "/run" }]</code></pre>
                         <p class="qs-note">The deployment wires the components together and declares their typed
                             signatures. No build step is needed.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/deployment-configuration.md') }}">Learn
+                            <a href="{{ get_url(path='@/docs/v0.42.0/configuration/deployment.md') }}">Learn
                                 more about deployment configuration →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-app">
@@ -122,7 +122,7 @@ pattern = "https://example.com"
 methods = ["GET"]</code></pre>
                         <p class="qs-note">The app config sets the upper bound on what any deployment of the app may
                             access.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/app-configuration.md') }}">Learn
+                            <a href="{{ get_url(path='@/docs/v0.42.0/configuration/app.md') }}">Learn
                                 more about app configuration →</a></p>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ obelisk server run --app-config app.toml --deployment deployment.toml
 curl localhost:9090/run</code></pre>
                 <p class="qs-note">Use Web UI at <strong>:8080</strong>, Webhooks at <strong>:9090</strong>,
                     API at <strong>:5005</strong> or
-                    <a href="{{ get_url(path='@/docs/v0.42.0/cli.md') }}">CLI</a> to interact with the deployed
+                    <a href="{{ get_url(path='@/docs/v0.42.0/cli-and-api/cli.md') }}">CLI</a> to interact with the deployed
                     application.
                 </p>
             </div>

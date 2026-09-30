@@ -1,7 +1,7 @@
 +++
 title = "Command Line Interface"
 template = "docs.html"
-weight = 50
+weight = 1
 +++
 
 ## Global Options
@@ -51,7 +51,7 @@ If `--deployment` is not provided, Obelisk uses the Enqueued or Active deploymen
 
 The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`. The name
 selects the default SQLite directory, `${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
-{{ doc_link(title="App Configuration", path="app-configuration.md#app-name") }}.
+{{ doc_link(title="App Configuration", path="configuration/app.md#app-name") }}.
 
 ### Verifying the Server Configuration
 

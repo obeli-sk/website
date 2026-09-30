@@ -1,7 +1,7 @@
 +++
 title = "Server Configuration"
 template = "docs.html"
-weight = 21
+weight = 1
 +++
 
 `server.toml` is owned by the platform admin and passed with `--server-config`. It sets the runtime
@@ -9,8 +9,8 @@ boundary the app runs within: listeners, the database, resource limits, runtimes
 HTTP servers, and whether exec activities are available at all. These settings belong to the host
 and normally stay the same through an app's lifecycle. The file is optional: without it, the
 built-in defaults apply. Environment overrides of the form `OBELISK__...` apply to this file only.
-See {{ doc_link(title="Configuration", path="configuration.md") }} for how it relates to `app.toml`
-and `deployment.toml`.
+See {{ doc_link(title="Configuration", path="configuration/_index.md") }} for how it relates to
+`app.toml` and `deployment.toml`.
 
 ## API Server
 
@@ -48,10 +48,10 @@ webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 
 ## Platform Exec Gate
 
-{{ doc_link(title="Exec activities", path="deployment-configuration.md#exec-activities") }} run host
+{{ doc_link(title="Exec activities", path="configuration/deployment.md#exec-activities") }} run host
 processes outside the WASM sandbox, so they are **disabled by default**. They need approval from
 both the platform admin in `server.toml` and the app admin in `app.toml` (see
-{{ doc_link(title="App Exec Approval", path="app-configuration.md#app-exec-approval") }}).
+{{ doc_link(title="App Exec Approval", path="configuration/app.md#app-exec-approval") }}).
 
 ```toml
 allowed_exec_activities = "*"   # Allow any app-approved exec activity; startup warns.

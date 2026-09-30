@@ -117,11 +117,10 @@ workflow code is not replay-compatible — unless `skip_determinism_check` is se
 | `obelisk deployment pull <ID>`          | Recreate deployment TOML and source files     |
 | `obelisk deployment verify`             | Verify a local deployment without a server    |
 
-**Web API:** see
-{{ doc_link(title="Programmatic Access — Deployments", path="programmatic-access.md") }}.
+**Web API:** see {{ doc_link(title="API access", path="cli-and-api/api.md") }}.
 
 **gRPC (deprecated):** see the `DeploymentRepository` service in
 {{ github(title="proto/obelisk.proto", path="proto/obelisk.proto") }}.
 
 Unreferenced deployment file blobs are removed by automatic maintenance; see
-{{ doc_link(title="Server Configuration", path="server-configuration.md#automatic-maintenance-and-retention") }}.
+{{ doc_link(title="Server Configuration", path="configuration/server.md#automatic-maintenance-and-retention") }}.

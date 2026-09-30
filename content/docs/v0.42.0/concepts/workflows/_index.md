@@ -302,7 +302,7 @@ To understand the internal state of a workflow, you can use the following:
   result. Execution log is available in the web UI.
 - `printf` style debugging: enable `forward_stdout` or `forward_stderr` in the `[[workflow]]`
   section of the
-  {{ doc_link(title="deployment configuration", path="deployment-configuration.md") }}. By default,
+  {{ doc_link(title="deployment configuration", path="configuration/deployment.md") }}. By default,
   output is stored in the database and available in the Web UI. It can also be forwarded to
   `"stdout"` or `"stderr"` to appear in the server log.
 - `obelisk:log` API - see

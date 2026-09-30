@@ -120,6 +120,6 @@ changes. Use `obelisk generate app-config --trusted` only when the app admin and
 author share one trust boundary; it intentionally permits unrestricted outbound HTTP. Exec
 activities and registered secrets still require explicit configuration.
 
-For concrete syntax, see {{ doc_link(title="Configuration", path="configuration.md") }}. For API
-credentials and exposed surfaces, see
+For concrete syntax, see {{ doc_link(title="Configuration", path="configuration/_index.md") }}. For
+API credentials and exposed surfaces, see
 {{ doc_link(title="Authentication", path="authentication.md") }}.

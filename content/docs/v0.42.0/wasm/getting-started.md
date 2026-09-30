@@ -179,7 +179,7 @@ location = "target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
 routes = ["/*"]
 ```
 
-See {{ doc_link(title="Deployment Configuration", path="deployment-configuration.md") }} for all
+See {{ doc_link(title="Deployment Configuration", path="configuration/deployment.md") }} for all
 options.
 
 ## 5. Build and Run
@@ -315,5 +315,5 @@ losing progress or duplicating work.
   [Stargazers demo](https://github.com/obeli-sk/demo-stargazers) uses a GitHub webhook, OpenAI, and
   a database to process GitHub star events with a multi-step workflow.
 
-- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli.md") }} covers submitting
-  executions, inspecting state, and managing components.
+- **Learn the CLI:** {{ doc_link(title="CLI reference", path="cli-and-api/cli.md") }} covers
+  submitting executions, inspecting state, and managing components.

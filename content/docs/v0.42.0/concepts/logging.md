@@ -69,7 +69,7 @@ in Rust). This byte-stream output can be forwarded to the database or to the ser
 Workflows do not support `stdout`/`stderr` forwarding — use `obelisk:log` instead.
 
 Forwarding is controlled per component in the
-{{ doc_link(title="deployment configuration", path="deployment-configuration.md") }}:
+{{ doc_link(title="deployment configuration", path="configuration/deployment.md") }}:
 
 ```toml
 [[activity_wasm]]
@@ -89,7 +89,7 @@ forward_stderr = "db"      # One of "none"|"stdout"|"stderr"|"db". Default: "db"
 ## Persistent Log Storage
 
 Both `obelisk:log` messages and forwarded `stdout`/`stderr` streams can be stored in the database.
-Stored logs can be retrieved via the {{ doc_link(title="WebAPI", path="programmatic-access.md") }}.
+Stored logs can be retrieved via the {{ doc_link(title="WebAPI", path="cli-and-api/api.md") }}.
 Export `OBELISK_API_TOKEN` as described in
 {{ doc_link(title="Authentication", path="authentication.md") }} first:
 

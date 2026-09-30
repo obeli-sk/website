@@ -11,7 +11,7 @@ with built-in tracing to enhance security and predictability. Disk I/O is curren
 > **Note**: Components that make outbound HTTP calls require `[[allowed_host]]` entries in the
 > deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both,
 > outbound HTTP is blocked. See
-> {{ doc_link(title="Configuration", path="deployment-configuration.md#outbound-http-allowlist") }}
+> {{ doc_link(title="Configuration", path="configuration/deployment.md#outbound-http-allowlist") }}
 > for details.
 
 The following WIT and code show the client pattern. See

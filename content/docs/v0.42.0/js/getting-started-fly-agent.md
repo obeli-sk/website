@@ -294,7 +294,7 @@ routes = [{ methods = ["GET"], route = "/run/:org-slug/:app-name/:prompt" }]
 ```
 
 See {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} for the full path parameter
-reference and {{ doc_link(title="Deployment Configuration", path="deployment-configuration.md") }}
+reference and {{ doc_link(title="Deployment Configuration", path="configuration/deployment.md") }}
 for all options.
 
 ## Run
@@ -393,7 +393,7 @@ polling; when the VM is eventually stopped, `apps.delete` still runs.
   in parallel and collect results.
 - **Concepts:** {{ doc_link(title="JS Workflows", path="js/js-workflows.md") }},
   {{ doc_link(title="JS Activities", path="js/js-activities.md") }}
-- **REST API:** {{ doc_link(title="Programmatic access", path="programmatic-access.md") }} — submit
-  executions and query state without the webhook.
+- **REST API:** {{ doc_link(title="API access", path="cli-and-api/api.md") }} — submit executions
+  and query state without the webhook.
 - **Rust components:** {{ doc_link(title="Rust components", path="wasm/rust-components.md") }} —
   build your own compiled activity like the fly.io one used here.

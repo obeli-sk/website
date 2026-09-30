@@ -91,7 +91,7 @@ produces `err("not found")`. A non-zero exit with empty stdout cannot be decoded
 `err` arm and instead becomes an uncategorized execution failure.
 
 See
-{{ doc_link(title="Deployment Configuration", path="deployment-configuration.md#exec-activities") }}
+{{ doc_link(title="Deployment Configuration", path="configuration/deployment.md#exec-activities") }}
 for all `activity_exec` fields including inline `content`, secrets, environment variables, and
 output size limits.
 

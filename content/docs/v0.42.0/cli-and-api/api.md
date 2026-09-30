@@ -1,7 +1,7 @@
 +++
-title = "Programmatic access"
+title = "API Access"
 template = "docs.html"
-weight = 0
+weight = 2
 +++
 
 ## OpenAPI Schema

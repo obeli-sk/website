@@ -120,8 +120,7 @@ curl -s "http://127.0.0.1:5005/v1/executions" \
   -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
-See {{ doc_link(title="Programmatic access", path="programmatic-access.md") }} for the full REST
-reference.
+See {{ doc_link(title="API access", path="cli-and-api/api.md") }} for the full REST reference.
 
 ### Web UI
 
