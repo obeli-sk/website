@@ -5,6 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{{ config.title }}{% endblock %}</title>
+    <script>
+        // Apply the saved theme before first paint; "auto" (no attribute) follows the OS.
+        try {
+            var t = localStorage.getItem("theme");
+            if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+        } catch (e) { }
+    </script>
     {% block meta_description %}{% endblock %}
     {% block rss %}
     <link rel="alternate" type="application/rss+xml" title="Obelisk Blog RSS"
@@ -30,16 +37,44 @@
                 <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
                 <a href="{{ get_url(path='@/docs/latest/_index.md') }}">Docs</a>
                 <a href="https://github.com/obeli-sk/obelisk" target="_blank">GitHub</a>
+                <button type="button" class="theme-toggle" id="theme-toggle" hidden></button>
             </div>
         </div>
     </nav>
     <script>
         (function () {
+            // Keep fragment targets clear of the nav while it is sticky (see scroll-padding-top).
             var nav = document.querySelector("nav");
             var root = document.documentElement;
-            function update() { root.style.setProperty("--nav-h", nav.offsetHeight + "px"); }
+            function update() {
+                var sticky = getComputedStyle(nav).position === "sticky";
+                root.style.setProperty("--nav-h", (sticky ? nav.offsetHeight : 0) + "px");
+            }
             update();
             if (window.ResizeObserver) new ResizeObserver(update).observe(nav);
+            window.addEventListener("resize", update);
+
+            // Theme toggle cycles auto -> light -> dark.
+            var modes = ["auto", "light", "dark"];
+            var icons = { auto: "\u25D0", light: "\u2600", dark: "\u263E" };
+            var btn = document.getElementById("theme-toggle");
+            function current() { return root.dataset.theme || "auto"; }
+            function render() {
+                var m = current();
+                btn.textContent = icons[m];
+                btn.title = "Theme: " + m;
+                btn.setAttribute("aria-label", "Theme: " + m + ". Click to change.");
+            }
+            btn.addEventListener("click", function () {
+                var next = modes[(modes.indexOf(current()) + 1) % modes.length];
+                if (next === "auto") delete root.dataset.theme; else root.dataset.theme = next;
+                try {
+                    if (next === "auto") localStorage.removeItem("theme"); else localStorage.setItem("theme", next);
+                } catch (e) { }
+                render();
+            });
+            render();
+            btn.hidden = false;
         })();
     </script>
 

@@ -1,10 +1,51 @@
-:root {
+// Theme tokens. Dark is the default; light applies when the viewer picks it with the nav toggle
+// (data-theme on <html>, set in base.html) or when the OS prefers light and nothing was picked.
+@mixin theme-dark {
+    color-scheme: dark;
     --primary: #9df2fe;
     --primary-dark: #70d9e5;
-    --bg-dark: #1e1e2e;
-    --bg-lighter: #282a36;
-    --text: #e4e4e7;
     --highlight: #8be9fd;
+    --on-primary: #1e1e2e;
+    --bg: #1e1e2e;
+    --bg-elev: #282a36;
+    --text: #e4e4e7;
+    --code-bg: #2b303b;
+    --code-text: #c0c5ce;
+    --code-comment: #65737e;
+}
+
+@mixin theme-light {
+    color-scheme: light;
+    --primary: #0e7490;
+    --primary-dark: #155e75;
+    --highlight: #0891b2;
+    --on-primary: #ffffff;
+    --bg: #fbfbfc;
+    --bg-elev: #eef1f5;
+    --text: #1f2330;
+    --code-bg: #e3e7ee;
+    --code-text: #4c4f69;
+    --code-comment: #8c8fa1;
+}
+
+:root {
+    @include theme-dark;
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        @include theme-light;
+    }
+}
+
+:root[data-theme="light"] {
+    @include theme-light;
+}
+
+// Zola's highlighter emits light-dark() colors with an inline `color-scheme: light dark`, which
+// follows the OS preference. Pin it to the page theme so the toggle applies to code too.
+pre.giallo {
+    color-scheme: inherit !important;
 }
 
 * {
@@ -22,7 +63,7 @@ video {
 
 body {
     font-family: Avenir, Montserrat, Corbel, "URW Gothic", "Helvetica Neue", sans-serif;
-    background-color: var(--bg-dark);
+    background-color: var(--bg);
     color: var(--text);
     padding: 0 0 2rem 0;
     line-height: 1.5;
@@ -68,7 +109,7 @@ html {
 }
 
 nav {
-    background-color: var(--bg-lighter);
+    background-color: var(--bg-elev);
     padding: 1rem 0;
     position: sticky;
     top: 0;
@@ -111,7 +152,35 @@ div.logo {
 .nav-links {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem 2rem;
+}
+
+.theme-toggle {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0.35rem 0.5rem;
+
+    &:hover {
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+// On phones the nav wraps to several lines; let it scroll away instead of covering the page.
+@media (max-width: 699px) {
+    nav {
+        position: static;
+    }
 }
 
 .nav-links a {
@@ -159,7 +228,7 @@ div.logo {
     display: inline-block;
     width: 200px;
     background-color: var(--primary);
-    color: var(--bg-dark);
+    color: var(--on-primary);
     padding: 0.8rem 2rem;
     border-radius: 4px;
     text-decoration: none;
@@ -168,7 +237,7 @@ div.logo {
     margin: 5px 5px 5px 5px;
 
     &:hover {
-        color: var(--bg-dark);
+        color: var(--on-primary);
         background-color: var(--primary-dark);
     }
 }
@@ -183,7 +252,7 @@ div.logo {
 
 // Quick-start section on homepage
 .quick-start {
-    background-color: var(--bg-lighter);
+    background-color: var(--bg-elev);
     padding: 3rem 0;
     margin: 2rem 0;
 
@@ -203,8 +272,8 @@ div.logo {
     }
 
     .qs-code {
-        background-color: #2b303b;
-        color: #c0c5ce;
+        background-color: var(--code-bg);
+        color: var(--code-text);
         border-radius: 8px;
         padding: 1.2em 1.4em;
         font-family: ui-monospace, Menlo, monospace;
@@ -213,7 +282,7 @@ div.logo {
         margin: 0;
 
         .qs-comment {
-            color: #65737e;
+            color: var(--code-comment);
             font-style: italic;
         }
     }
@@ -221,7 +290,7 @@ div.logo {
     .qs-note {
         margin-top: 0.75rem;
         font-size: 0.85em;
-        color: rgba(228, 228, 231, 0.6);
+        color: color-mix(in srgb, var(--text) 60%, transparent);
     }
 
     .qs-tabs {
@@ -243,7 +312,7 @@ div.logo {
             text-transform: uppercase;
             letter-spacing: 0.08em;
             cursor: pointer;
-            color: rgba(228, 228, 231, 0.35);
+            color: color-mix(in srgb, var(--text) 35%, transparent);
             border: 1px solid transparent;
             transition: color 0.15s, border-color 0.15s;
 
@@ -280,7 +349,7 @@ div.logo {
             font-weight: normal;
             text-transform: none;
             letter-spacing: normal;
-            color: rgba(228, 228, 231, 0.55);
+            color: color-mix(in srgb, var(--text) 55%, transparent);
         }
     }
 
@@ -320,7 +389,7 @@ div.logo {
             transform: translateY(-50%);
             font-size: 3rem;
             line-height: 1;
-            color: rgba(228, 228, 231, 0.4);
+            color: color-mix(in srgb, var(--text) 40%, transparent);
             cursor: pointer;
             padding: 0 0.5rem;
             z-index: 1;
@@ -338,7 +407,7 @@ div.logo {
         .sc-caption {
             text-align: center;
             font-size: 0.85em;
-            color: rgba(228, 228, 231, 0.5);
+            color: color-mix(in srgb, var(--text) 50%, transparent);
             margin-top: 0.75rem;
         }
 
@@ -353,12 +422,12 @@ div.logo {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: rgba(228, 228, 231, 0.2);
+            background: color-mix(in srgb, var(--text) 20%, transparent);
             cursor: pointer;
             transition: background 0.15s;
 
             &:hover {
-                background: rgba(228, 228, 231, 0.5);
+                background: color-mix(in srgb, var(--text) 50%, transparent);
             }
         }
 
@@ -412,8 +481,8 @@ div.logo {
 }
 
 .new-in-banner {
-    background-color: rgba(157, 242, 254, 0.07);
-    border: 1px solid rgba(157, 242, 254, 0.25);
+    background-color: color-mix(in srgb, var(--primary) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
     border-radius: 10px;
     padding: 1.5rem 2rem;
     margin-bottom: 3rem;
@@ -421,7 +490,7 @@ div.logo {
     .new-in-label {
         display: inline-block;
         background-color: var(--primary);
-        color: var(--bg-dark);
+        color: var(--on-primary);
         font-weight: 700;
         font-size: 0.8rem;
         letter-spacing: 0.06em;
@@ -456,31 +525,31 @@ div.logo {
 
     h2 {
         font-size: 0.8rem;
-        color: rgba(157, 242, 254, 0.7);
+        color: color-mix(in srgb, var(--primary) 70%, transparent);
         margin-top: 0;
         margin-bottom: 1.25rem;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-weight: 700;
-        border-bottom: 1px solid rgba(157, 242, 254, 0.12);
+        border-bottom: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
         padding-bottom: 0.6rem;
     }
 
     .feature-grid {
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
         gap: 0.75rem;
         margin-top: 0;
     }
 
     .feature-card {
-        background-color: rgba(157, 242, 254, 0.04);
-        border: 1px solid rgba(157, 242, 254, 0.1);
+        background-color: color-mix(in srgb, var(--primary) 4%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
         border-left: 3px solid var(--primary);
         border-radius: 0 8px 8px 0;
         padding: 1rem 1.25rem;
 
         &:hover {
-            background-color: rgba(157, 242, 254, 0.08);
+            background-color: color-mix(in srgb, var(--primary) 8%, transparent);
             transform: none;
         }
 
@@ -493,7 +562,7 @@ div.logo {
         p {
             margin-bottom: 0;
             font-size: 0.88em;
-            color: rgba(228, 228, 231, 0.8);
+            color: color-mix(in srgb, var(--text) 80%, transparent);
             line-height: 1.5;
         }
     }
@@ -505,13 +574,13 @@ div.logo {
 
 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
     gap: 2rem;
     margin-top: 2rem;
 }
 
 .feature-card {
-    background-color: var(--bg-lighter);
+    background-color: var(--bg-elev);
     padding: 2rem;
     border-radius: 8px;
     transition: transform 0.3s;
@@ -532,7 +601,11 @@ div.logo {
 }
 
 .breadcrumb {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+
     a {
+        margin-right: 0.4rem;
         text-decoration: none;
         color: var(--primary);
 
@@ -557,27 +630,37 @@ div.logo {
     }
 }
 
+// Docs and blog pages: article plus optional sidebars. Narrow screens stack the sidebars as
+// collapsed boxes above the article; wide screens put "On this page" (.page-toc) on the right
+// and, for docs, the docs tree (.docs-nav) on the left.
+.container-wide,
+body:has(.container-wide) nav .container {
+    max-width: 1480px;
+}
+
 .page-layout {
     display: flex;
     flex-direction: column;
+    font-size: 1.0625rem;
 
     > article {
         min-width: 0;
     }
 }
 
-.page-toc {
+.page-toc,
+.docs-nav {
     order: -1;
-    margin: 1rem 0;
+    margin: 1rem 0 0;
     padding: 0.75rem 1rem;
-    background-color: var(--bg-lighter);
+    background-color: var(--bg-elev);
     border-radius: 6px;
     font-size: 0.9rem;
 
     summary {
         cursor: pointer;
         font-weight: 600;
-        color: rgba(228, 228, 231, 0.8);
+        color: color-mix(in srgb, var(--text) 80%, transparent);
     }
 
     ul {
@@ -591,53 +674,154 @@ div.logo {
 
         ul {
             margin: 0.2rem 0 0.5rem 0.9rem;
-            font-size: 0.85rem;
+            font-size: 0.95em;
         }
     }
 
     a {
         text-decoration: none;
-        color: rgba(228, 228, 231, 0.75);
+        color: color-mix(in srgb, var(--text) 75%, transparent);
 
         &:hover {
             color: var(--primary);
         }
     }
+}
 
-    > ul > li > a {
+.page-toc > ul > li > a {
+    color: var(--primary);
+}
+
+.docs-nav {
+    .docs-nav-version {
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-weight: 700;
         color: var(--primary);
+    }
+
+    .docs-nav-versions {
+        margin-left: 0.5rem;
+        font-size: 0.85em;
+    }
+
+    ul ul {
+        margin-left: 0.4rem;
+        padding-left: 0.6rem;
+        border-left: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
+    }
+
+    // Section entries: the link navigates, the marker expands.
+    li > details > summary {
+        font-weight: 600;
+        color: color-mix(in srgb, var(--text) 50%, transparent);
+
+        a {
+            color: color-mix(in srgb, var(--text) 85%, transparent);
+        }
+    }
+
+    a.current {
+        color: var(--primary);
+        font-weight: 700;
+    }
+}
+
+.table-scroll {
+    overflow-x: auto;
+    margin: 1.5em 0;
+
+    table {
+        margin: 0 !important;
     }
 }
 
 @media (min-width: 1100px) {
     .page-layout {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 16rem;
-        gap: 3rem;
+        grid-template-columns: minmax(0, 1fr) 15rem;
+        grid-template-areas:
+            "docsnav docsnav"
+            "main toc";
+        column-gap: 3rem;
         align-items: start;
+
+        > article {
+            grid-area: main;
+        }
+    }
+
+    .docs-nav {
+        grid-area: docsnav;
     }
 
     .page-toc {
-        order: 0;
+        grid-area: toc;
+    }
+
+    .page-toc,
+    .docs-layout .docs-nav {
         position: sticky;
         top: calc(var(--nav-h, 5.75rem) + 1rem);
         max-height: calc(100vh - var(--nav-h, 5.75rem) - 2rem);
         overflow-y: auto;
         margin-top: 2rem;
         background: none;
-        border-left: 1px solid rgba(228, 228, 231, 0.15);
         border-radius: 0;
+    }
+
+    .page-toc {
+        border-left: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
         padding: 0 0 0 1rem;
+    }
 
-        summary {
-            pointer-events: none;
-            list-style: none;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
+    .page-toc > summary {
+        pointer-events: none;
+        list-style: none;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
 
-            &::-webkit-details-marker {
-                display: none;
+        &::-webkit-details-marker {
+            display: none;
+        }
+    }
+
+    // Below 1300px the docs tree stays a collapsible box above the article.
+    .docs-layout .docs-nav {
+        position: static;
+        max-height: none;
+        margin-top: 1rem;
+        background-color: var(--bg-elev);
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+    }
+}
+
+@media (min-width: 1300px) {
+    .docs-layout {
+        grid-template-columns: 15rem minmax(0, 1fr) 14rem;
+        grid-template-areas: "docsnav main toc";
+
+        .docs-nav {
+            position: sticky;
+            max-height: calc(100vh - var(--nav-h, 5.75rem) - 2rem);
+            margin-top: 2rem;
+            background: none;
+            border-radius: 0;
+            border-right: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
+            padding: 0 1rem 0 0;
+
+            > summary {
+                pointer-events: none;
+                list-style: none;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+
+                &::-webkit-details-marker {
+                    display: none;
+                }
             }
         }
     }
@@ -654,8 +838,8 @@ pre {
     margin-top: 1em;
     margin-bottom: 1em;
     padding: 1em;
-    background-color: #2b303b;
-    color: #c0c5ce;
+    background-color: var(--code-bg);
+    color: var(--code-text);
     border-radius: 8px;
     font-size: 0.7em;
 }
@@ -668,7 +852,7 @@ article {
         overflow-x: auto;
         font-family: ui-monospace, Menlo, monospace;
         margin: 2em 0;
-        font-size: 0.7em;
+        font-size: 0.85em;
     }
 
     table {
@@ -678,10 +862,10 @@ article {
         font-size: 0.95em;
         border-radius: 8px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
 
         thead {
-            background-color: rgba(255, 255, 255, 0.06);
+            background-color: color-mix(in srgb, var(--text) 6%, transparent);
 
             th {
                 color: var(--primary);
@@ -696,18 +880,18 @@ article {
         td {
             padding: 0.65em 1em;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
         }
 
         tbody tr {
             transition: background-color 0.15s ease;
 
             &:nth-child(even) {
-                background-color: rgba(255, 255, 255, 0.02);
+                background-color: color-mix(in srgb, var(--text) 2%, transparent);
             }
 
             &:hover {
-                background-color: rgba(157, 242, 254, 0.05);
+                background-color: color-mix(in srgb, var(--primary) 5%, transparent);
             }
 
             &:last-child td {
@@ -718,7 +902,7 @@ article {
 
     hr {
         border: none;
-        border-top: 1px solid rgba(157, 242, 254, 0.2);
+        border-top: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
         margin: 3em 0;
     }
 
@@ -726,8 +910,8 @@ article {
         margin: 1.5em 0;
         padding: 0.75em 1.25em;
         color: var(--text);
-        border-left: 3px solid rgba(157, 242, 254, 0.4);
-        background-color: rgba(157, 242, 254, 0.03);
+        border-left: 3px solid color-mix(in srgb, var(--primary) 40%, transparent);
+        background-color: color-mix(in srgb, var(--primary) 3%, transparent);
         border-radius: 0 6px 6px 0;
 
         p:last-child {
@@ -743,11 +927,14 @@ article {
 }
 
 :not(pre)>code {
-    display: inline-block;
+    overflow-wrap: break-word;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
     padding: 0.15em 0.4em;
+    border-radius: 4px;
+    background-color: color-mix(in srgb, var(--text) 8%, transparent);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
-    font-size: 1em;
-    line-height: 1;
+    font-size: 0.9em;
 }
 
 .faq-section {
@@ -763,7 +950,7 @@ article {
 }
 
 .faq-item {
-    border: 1px solid rgba(157, 242, 254, 0.15);
+    border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
     border-radius: 8px;
     overflow: hidden;
 
@@ -777,7 +964,7 @@ article {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: var(--bg-lighter);
+        background-color: var(--bg-elev);
         user-select: none;
 
         &::-webkit-details-marker {
@@ -793,7 +980,7 @@ article {
     }
 
     &[open] summary {
-        border-bottom: 1px solid rgba(157, 242, 254, 0.1);
+        border-bottom: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
 
         &::after {
             content: '−';
@@ -803,12 +990,17 @@ article {
     .faq-answer {
         padding: 1rem 1.25rem;
         font-size: 0.95rem;
-        color: rgba(228, 228, 231, 0.85);
+        color: color-mix(in srgb, var(--text) 85%, transparent);
         line-height: 1.6;
-        background-color: rgba(157, 242, 254, 0.03);
+        background-color: color-mix(in srgb, var(--primary) 3%, transparent);
 
         p {
             margin-bottom: 0;
         }
     }
+}
+
+.date {
+    color: color-mix(in srgb, var(--text) 55%, transparent);
+    font-size: 0.9em;
 }

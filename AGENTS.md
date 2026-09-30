@@ -111,26 +111,38 @@ Gotchas:
 
 ## Styling
 
-All CSS is in `sass/style.scss`. Key design tokens are CSS custom properties:
+All CSS is in `sass/style.scss`. Colors come from CSS custom properties defined twice, in the
+`theme-dark` and `theme-light` mixins at the top of the file:
 
 ```scss
---primary: #9df2fe;      // Cyan accent
---primary-dark: #70d9e5; // Hover state
---bg-dark: #1e1e2e;      // Page background
---bg-lighter: #282a36;   // Nav, cards
---text: #e4e4e7;         // Body text
---highlight: #8be9fd;    // Gradient highlight
+--primary       // Accent (links, headings); cyan on dark, teal on light
+--primary-dark  // Accent hover
+--highlight     // Gradient highlight
+--on-primary    // Text on accent-colored backgrounds (buttons, labels)
+--bg            // Page background
+--bg-elev       // Nav, cards, collapsed sidebars
+--text          // Body text
+--code-bg, --code-text, --code-comment // Hand-written code blocks (home page)
 ```
 
-The site uses a dark theme throughout. Tables, code blocks, and blockquotes
-are styled within the `article` scope so they only affect doc/blog content.
+Never hard-code colors; derive tints with `color-mix(in srgb, var(--text) 60%, transparent)`.
+Dark is the default. The nav toggle cycles auto/light/dark, stores the choice in `localStorage`
+and sets `data-theme` on `<html>` (script in `base.html` head, before first paint); "auto" follows
+`prefers-color-scheme`. Syntax highlighting uses `light_theme`/`dark_theme` via CSS
+`light-dark()`, pinned to the page theme by the `pre.giallo` rule.
 
-Zola renders Markdown tables as bare `<table>` elements (no wrapper div).
+Docs and blog pages use `.page-layout`: the article, "On this page" (`macros::page_toc`) and, for
+docs, the docs tree (`macros::docs_nav`). Wide screens show them as sticky sidebars, narrow screens
+as collapsed boxes above the article. Tables, code blocks, and blockquotes are styled within the
+`article` scope so they only affect doc/blog content.
+
+Zola renders Markdown tables as bare `<table>` elements; `docs.html` and `blog_page.html` wrap them
+in `.table-scroll` so wide tables scroll inside the article instead of widening the page.
 
 ## Templates
 
 - **base.html** — Shared layout with nav bar. All other templates extend this.
-- **docs.html** — Single doc page with breadcrumb and article content.
+- **docs.html** — Single doc page: breadcrumb, docs tree, article, "On this page".
 - **docs_toc.html** — Version index with recursive TOC via `macros::render_toc`.
 - **docs_versions.html** — Docs landing showing all versions.
 - **blog_page.html** / **blog_list.html** — Blog post and listing.

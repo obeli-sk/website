@@ -29,20 +29,22 @@
 <link rel="canonical" href="{{ config.base_url ~ canonical_path }}" />
 {% endblock head_extra %}
 {% block content %}
-<div class="container">
+<div class="container container-wide">
     {{ macros::doc_breadcrumb(ancestors=pageorsection.ancestors, title = pageorsection.title) }}
 
-    <div class="page-layout">
+    <div class="page-layout docs-layout">
+        {{ macros::docs_nav(root=get_section(path=pageorsection.ancestors | nth(n=2)), current=pageorsection.path) }}
         <article>
             <h1>{{ pageorsection.title }}</h1>
-            {{ pageorsection.content | safe }}
+            {{ pageorsection.content | replace(from="<table>", to='<div class="table-scroll"><table>') |
+            replace(from="</table>", to="</table></div>") | safe }}
+            {% if section is defined %}
+            <h2>Subsections</h2>
+            {{ macros::render_toc(section=section) }}
+            {% endif %}
         </article>
         {{ macros::page_toc(toc=pageorsection.toc) }}
     </div>
-    {% if section is defined %}
-    <h2>Subsections</h2>
-    {{ macros::render_toc(section=section) }}
-    {% endif %}
 </div>
 
 

@@ -31,7 +31,8 @@ paths = "safe"
 external_links_target_blank = true
 
 [markdown.highlighting]
-theme = "catppuccin-mocha"
+light_theme = "catppuccin-latte"
+dark_theme = "catppuccin-mocha"
 
 [extra]
 latest = "v0.41.5"
