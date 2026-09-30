@@ -30,13 +30,23 @@
                     Obelisk
                 </a>
             </div>
+            {# Which nav link is active. Get Started and Apps are docs pages, matched in any version. #}
             {% set cp = current_path | default(value="/") %}
+            {% set active = "" %}
+            {% if cp is starting_with("/features/") %}{% set active = "features" %}
+            {% elif cp is starting_with("/blog/") %}{% set active = "blog" %}
+            {% elif cp is starting_with("/docs/") %}
+            {% set in_version = cp | split(pat="/") | slice(start=3) | join(sep="/") %}
+            {% if in_version == "js/getting-started/" %}{% set active = "getstarted" %}
+            {% elif in_version == "apps/" %}{% set active = "apps" %}
+            {% else %}{% set active = "docs" %}{% endif %}
+            {% endif %}
             <div class="nav-links">
-                <a href="{{ get_url(path='@/features/_index.md') }}" {% if cp is starting_with("/features/") %}class="active" aria-current="page" {% endif %}>Features</a>
-                <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}">Get Started</a>
-                <a href="{{ get_url(path='@/docs/v0.42.0/apps.md') }}">Apps</a>
-                <a href="{{ get_url(path='@/blog/_index.md') }}" {% if cp is starting_with("/blog/") %}class="active" aria-current="page" {% endif %}>Blog</a>
-                <a href="{{ get_url(path='@/docs/latest/_index.md') }}" {% if cp is starting_with("/docs/") %}class="active" aria-current="page" {% endif %}>Docs</a>
+                <a href="{{ get_url(path='@/features/_index.md') }}" {% if active == "features" %}class="active" aria-current="page" {% endif %}>Features</a>
+                <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}" {% if active == "getstarted" %}class="active" aria-current="page" {% endif %}>Get Started</a>
+                <a href="{{ get_url(path='@/docs/v0.42.0/apps.md') }}" {% if active == "apps" %}class="active" aria-current="page" {% endif %}>Apps</a>
+                <a href="{{ get_url(path='@/blog/_index.md') }}" {% if active == "blog" %}class="active" aria-current="page" {% endif %}>Blog</a>
+                <a href="{{ get_url(path='@/docs/latest/_index.md') }}" {% if active == "docs" %}class="active" aria-current="page" {% endif %}>Docs</a>
                 <a href="https://github.com/obeli-sk/obelisk" target="_blank" rel="noopener">GitHub</a>
                 <button type="button" class="theme-toggle" id="theme-toggle" hidden></button>
             </div>
