@@ -1401,14 +1401,76 @@ article {
     }
 }
 
-.doc-cards {
+.docs-root-title {
+    font-size: clamp(1.8rem, 3vw, 2.3rem);
+    margin-bottom: 0.5rem;
+}
+
+.docs-lead {
+    font-size: 1.1rem;
+    color: color-mix(in srgb, var(--text) 75%, transparent);
+    margin: 0 0 1.75rem;
+}
+
+.doc-start {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: 0.9rem;
+}
+
+.doc-start-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+    border-radius: 12px;
+    background-color: var(--bg-elev);
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color 0.2s;
+
+    &:first-child {
+        border-color: color-mix(in srgb, var(--primary) 55%, transparent);
+    }
+
+    &:hover {
+        border-color: var(--primary);
+    }
+
+    &:hover .doc-start-title {
+        color: var(--primary);
+    }
+}
+
+.doc-start-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.doc-start-desc {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--text) 75%, transparent);
+}
+
+.doc-more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    margin: 1rem 0 2rem;
+    font-size: 0.95rem;
+}
+
+.doc-cards {
+    columns: 3 17rem;
+    column-gap: 1rem;
     margin: 1.5rem 0;
 }
 
 .doc-card {
+    break-inside: avoid;
+    margin-bottom: 1rem;
     padding: 1.25rem 1.4rem;
     border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
     border-radius: 12px;

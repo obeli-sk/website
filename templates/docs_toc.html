@@ -35,12 +35,34 @@ Documentation - {{ title }}
         {{ macros::docs_nav(root=root, current=section.path) }}
         <article>
             {% if section.extra is defined and section.extra.versionroot is defined %}
-            <h1>Obelisk {{ title }} documentation</h1>
+            <h1 class="docs-root-title">Obelisk {{ title }} documentation</h1>
+            {% if section.extra.lead is defined %}<p class="docs-lead">{{ section.extra.lead }}</p>{% endif %}
             {% else %}
             <h1>{{ title }}</h1>
             {% endif %}
             {{ section.content | safe }}
+            {% if section.extra is defined and section.extra.start is defined %}
+            {% set prefix = section.relative_path | replace(from="_index.md", to="") %}
+            {% set_global start_paths = [] %}
+            <div class="doc-start">
+                {% for item in section.extra.start %}
+                {% set p = get_page(path=prefix ~ item.path) %}
+                {% set_global start_paths = start_paths | concat(with=p.relative_path) %}
+                <a class="doc-start-card" href="{{ p.permalink }}">
+                    <span class="doc-start-title">{{ item.title }} →</span>
+                    <span class="doc-start-desc">{{ item.desc }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            <p class="doc-more">
+                {% for page in section.pages %}{% if page.relative_path not in start_paths %}
+                <a href="{{ page.permalink }}">{{ page.title }}</a>
+                {% endif %}{% endfor %}
+            </p>
+            {{ macros::section_cards(section=section, tiles=false) }}
+            {% else %}
             {{ macros::section_cards(section=section) }}
+            {% endif %}
         </article>
     </div>
 </div>

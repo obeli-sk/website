@@ -116,8 +116,8 @@
 
 {# Card grid for docs index pages: top-level pages as link tiles, then one card per
    subsection listing its pages. #}
-{% macro section_cards(section) %}
-{% if section.pages %}
+{% macro section_cards(section, tiles=true) %}
+{% if tiles and section.pages %}
 <div class="doc-tiles">
     {% for page in section.pages %}
     <a class="doc-tile" href="{{ page.permalink }}">{{ page.title }}</a>
