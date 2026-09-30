@@ -32,10 +32,36 @@
 <div class="container">
     {{ macros::doc_breadcrumb(ancestors=pageorsection.ancestors, title = pageorsection.title) }}
 
-    <article class="docs-page">
-        <h1>{{ pageorsection.title }}</h1>
-        {{ pageorsection.content | safe }}
-    </article>
+    <div class="docs-layout">
+        <article class="docs-page">
+            <h1>{{ pageorsection.title }}</h1>
+            {{ pageorsection.content | safe }}
+        </article>
+        {% if pageorsection.toc | length >= 3 %}
+        <details class="docs-otp" id="docs-otp" open>
+            <summary>On this page</summary>
+            <ul>
+                {% for h2 in pageorsection.toc %}
+                <li>
+                    <a href="#{{ h2.id }}">{{ h2.title }}</a>
+                    {% if h2.children %}
+                    <ul>
+                        {% for h3 in h2.children %}
+                        <li><a href="#{{ h3.id }}">{{ h3.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        <script>
+            if (window.matchMedia("(max-width: 1099px)").matches) {
+                document.getElementById("docs-otp").open = false;
+            }
+        </script>
+        {% endif %}
+    </div>
     {% if section is defined %}
     <h2>Subsections</h2>
     {{ macros::render_toc(section=section) }}

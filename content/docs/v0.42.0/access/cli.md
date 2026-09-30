@@ -4,14 +4,72 @@ template = "docs.html"
 weight = 1
 +++
 
+## Commands
+
+<div class="table">
+
+| Command                                                                                     | Description                                                       |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [`obelisk server run`](#running-the-server)                                                 | Start the server, optionally activating a deployment file         |
+| [`obelisk server verify`](#verifying-the-server-configuration)                              | Check configuration and deployment without serving traffic        |
+| [`obelisk deployment verify`](#verifying-a-local-deployment)                                | Compile and check a deployment against the app policy, offline    |
+| [`obelisk deployment submit`](#submitting-a-deployment)                                     | Upload a deployment and print its ID                              |
+| [`obelisk deployment enqueue`](#enqueueing-a-deployment)                                    | Activate a deployment on the next server restart                  |
+| [`obelisk deployment apply`](#applying-a-deployment)                                        | Activate a deployment immediately with a hot redeploy             |
+| [`obelisk deployment list`](#listing-deployments)                                           | List stored deployments                                           |
+| [`obelisk deployment active`](#showing-the-active-deployment-id)                            | Print the ID of the active deployment                             |
+| [`obelisk deployment show`](#showing-a-deployment)                                          | Print a stored `deployment.toml` or one of its source files       |
+| [`obelisk deployment pull`](#retrieving-a-deployment)                                       | Download a deployment to disk so it can be resubmitted            |
+| [`obelisk execution submit`](#submitting-an-execution)                                      | Start a function execution                                        |
+| [`obelisk execution list`](#listing-executions)                                             | List executions with filters                                      |
+| [`obelisk execution status`](#getting-the-current-execution-state)                          | Print or follow the state of an execution                         |
+| [`obelisk execution result`](#getting-the-final-result)                                     | Print the result of a finished execution                          |
+| [`obelisk execution logs`](#fetching-logs)                                                  | Print the logs of an execution                                    |
+| [`obelisk execution events`](#showing-execution-events)                                     | Print the execution log events                                    |
+| [`obelisk execution responses`](#showing-execution-responses)                               | Print the responses a workflow received                           |
+| [`obelisk execution cancel`](#cancelling-an-activity-cancellable-workflow-or-delay-request) | Cancel an activity, a cancellable workflow, or a delay            |
+| [`obelisk execution stub`](#providing-the-result-of-a-stubbed-activity)                     | Supply the return value of a stub activity                        |
+| [`obelisk execution pause`](#pausing-an-execution-or-delay)                                 | Pause an execution or delay                                       |
+| [`obelisk execution unpause`](#resuming-a-paused-execution-or-delay)                        | Resume a paused execution or delay                                |
+| [`obelisk execution replay`](#replaying-an-execution)                                       | Replay a workflow to check for non-determinism                    |
+| [`obelisk execution persist-backtraces`](#persisting-workflow-backtraces)                   | Replay a workflow and store its call-site backtraces              |
+| [`obelisk execution advance`](#advancing-a-paused-execution)                                | Step a paused workflow forward                                    |
+| [`obelisk execution upgrade`](#upgrading-an-execution)                                      | Move a workflow to the component version in the active deployment |
+| [`obelisk admin`](#obelisk-admin)                                                           | Operator maintenance, retention, and system events                |
+| [`obelisk component list`](#listing-available-components-and-functions)                     | List the components and functions of the active deployment        |
+| [`obelisk component push`](#pushing-a-component-to-an-oci-registry)                         | Publish a component to an OCI registry                            |
+| [`obelisk component add`](#adding-a-component-to-the-deployment-configuration)              | Add a component from an OCI reference to `deployment.toml`        |
+| [`obelisk generate wit-extensions`](#generating-extension-functions)                        | Generate extension WIT files for a component                      |
+| [`obelisk generate wit-support`](#generating-wit-support-functions)                         | Generate the runtime support WIT files                            |
+| [`obelisk generate wit-deps`](#generating-wit-dependencies)                                 | Generate the WIT dependency folder for a deployment               |
+| [`obelisk generate new`](#starting-a-new-app)                                               | Create a JavaScript starter app                                   |
+| [`obelisk generate server-config`](#generating-server-configuration)                        | Write a commented `server.toml` reference                         |
+| [`obelisk generate app-config`](#generating-app-configuration)                              | Write a commented `app.toml` reference                            |
+| [`obelisk generate split-config`](#splitting-a-0-41-server-configuration)                   | Move app policy out of a 0.41 `server.toml` into `app.toml`       |
+| [`obelisk generate deployment`](#generating-deployment-configuration)                       | Write a commented `deployment.toml` reference                     |
+| [`obelisk generate secret-config-digest`](#generating-secret-exposure-digests)              | Compute reviewed digests for exec activities and exposed secrets  |
+| [`obelisk generate deployment-id`](#generating-a-deployment-id)                             | Print a new deployment ID                                         |
+| [`obelisk generate execution-id`](#generating-an-execution-id)                              | Print a new execution ID                                          |
+| [`obelisk generate token`](#generating-an-api-token)                                        | Print a random API token                                          |
+| [`obelisk generate prompt`](#generating-a-coding-agent-prompt)                              | Print a prompt for authoring an app with a coding agent           |
+
+</div>
+
 ## Global Options
 
-- `--api-token <TOKEN>` - API token presented to the server as `Authorization: Bearer <token>` by
-  subcommands that talk to the API. Pass it after the subcommand, for example
-  `obelisk execution list --api-token <TOKEN>`; `obelisk --api-token <TOKEN> execution list` is
-  rejected. Falls back to `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. See
-  {{ doc_link(title="Authentication", path="access/authentication.md") }}
 - `-v, --version` - Print version. Accepted only directly after `obelisk`, as in `obelisk --version`
+
+## Connecting to the Server
+
+Commands that call the API server, such as `deployment submit`, `execution list`, and `admin`,
+accept these options after the subcommand, for example `obelisk execution list --api-token <TOKEN>`;
+`obelisk --api-token <TOKEN> execution list` is rejected.
+
+- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+  `OBELISK_API_URL`)
+- `--api-token <TOKEN>` - API token presented as `Authorization: Bearer <token>`. Falls back to
+  `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. See
+  {{ doc_link(title="Authentication", path="access/authentication.md") }}
 
 ## Obelisk Server
 
@@ -138,8 +196,6 @@ Options:
   platform approvals are pending; activation still checks strictly
 - `--description <DESCRIPTION>` - Optional human-readable description
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Enqueueing a deployment
 
@@ -162,8 +218,6 @@ Options:
   deployment
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
   submitting a file or empty deployment
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Applying a deployment
 
@@ -185,19 +239,12 @@ Options:
   deployment
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
   submitting a file or empty deployment
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Listing deployments
 
 ```sh
 obelisk deployment list [OPTIONS]
 ```
-
-Options:
-
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Showing the active deployment ID
 
@@ -208,8 +255,6 @@ obelisk deployment active [OPTIONS]
 Options:
 
 - `--json` - Output as JSON instead of plain text
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Showing a deployment
 
@@ -229,8 +274,6 @@ Arguments:
 Options:
 
 - `--json` - Print the stored TOML manifest as JSON instead of TOML
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Retrieving a deployment
 
@@ -252,8 +295,6 @@ Options:
 - `-f, --force` - Overwrite existing files in the output directory
 - `--include-generated-metadata` - Keep generated content digests and JavaScript module metadata in
   `deployment.toml`, retaining the stored server view
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ## Obelisk Execution
 
@@ -277,8 +318,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `-e, --execution-id <ID>` - Use this explicit execution ID instead of having the server assign one
   (useful for idempotency — see `obelisk generate execution-id`)
 - `-f, --follow` - Follow the status stream until the execution finishes
@@ -296,8 +335,6 @@ obelisk execution list [OPTIONS]
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `--ffqn <FFQN_PREFIX>` - Filter by function FFQN prefix (any prefix of a fully-qualified name,
   e.g. `namespace:`; short `.../ifc.fn` form not supported)
 - `-e, --execution-id <EXECUTION_ID_PREFIX>` - Filter by execution ID or its prefix (useful with
@@ -332,8 +369,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `-f, --follow` - Follow the status stream until the execution finishes
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -350,8 +385,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `-f, --follow` - Follow until the execution finishes and the final result is available
 - `--no-reconnect` - Do not attempt to reconnect on connection error while following
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -368,8 +401,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `--show-derived` - Include logs from child (derived) executions
 - `--level <LEVEL>` - Minimum log level: `trace`, `debug`, `info`, `warn`, `error`, `off` (default:
   `debug`)
@@ -393,8 +424,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `--from <VERSION>` - Start from this event version (inclusive)
 - `--limit <LIMIT>` - Number of events to return (default: `20`)
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -425,8 +454,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `--from <CURSOR>` - Start from this response cursor (inclusive)
 - `--limit <LIMIT>` - Number of responses to return (default: `20`)
 - `-j, --json` - Output as JSON instead of human-readable text
@@ -454,11 +481,6 @@ Arguments:
 - `<ID>` - Execution ID of an activity or cancellable workflow (`E_01...`) or a delay request
   (`Delay_01...`)
 
-Options:
-
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
-
 Workflow cancellation is accepted only for workflows whose exported function name ends in
 `-cancellable`. This lets an operator release a workflow that is stuck on a long-lived stub, blocked
 on a child, or unable to replay after a failed upgrade. Obelisk does not run the cancelled workflow
@@ -477,11 +499,6 @@ Arguments:
 - `<EXECUTION_ID>` - Execution ID of the stub execution waiting for its return value
 - `<RETURN_VAL>` - Return value encoded as JSON
 
-Options:
-
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
-
 ### Pausing an execution or delay
 
 Pause a workflow execution, pending activity execution, or pending delay, preventing it from being
@@ -496,11 +513,6 @@ Arguments:
 
 - `<ID>` - Execution ID (`E_01...`) or delay ID (`Delay_01...`) to pause
 
-Options:
-
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
-
 ### Resuming a paused execution or delay
 
 ```sh
@@ -510,11 +522,6 @@ obelisk execution unpause [OPTIONS] <ID>
 Arguments:
 
 - `<ID>` - Execution ID (`E_01...`) or delay ID (`Delay_01...`) to unpause
-
-Options:
-
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Replaying an execution
 
@@ -531,8 +538,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `-j, --json` - Output as JSON instead of human-readable text
 
 ### Persisting workflow backtraces
@@ -542,11 +547,6 @@ Replay a workflow and persist its call-site backtraces:
 ```sh
 obelisk execution persist-backtraces [OPTIONS] <EXECUTION_ID>
 ```
-
-Options:
-
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 
 ### Advancing a paused execution
 
@@ -565,8 +565,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `-j, --json` - Output as JSON instead of human-readable text
 - `--trim <TRIM>` - Send only the first N captured writes from replay to advance
 - `-p, --pause-all` (alias: `--pause`) - Pause both replayed child executions and delay requests
@@ -593,8 +591,6 @@ Arguments:
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `--skip-determinism-check` - Skip the determinism check during upgrade
 
 ## Obelisk Admin
@@ -633,8 +629,6 @@ obelisk component list [OPTIONS]
 
 Options:
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
-  `OBELISK_API_URL`)
 - `-i, --imports` - Show component imports
 - `-e, --extensions` - Show auto-generated export extensions
 
