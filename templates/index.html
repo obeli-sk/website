@@ -30,14 +30,15 @@
             <div class="qs-step">
                 <div class="qs-step-label">Install</div>
                 <pre
-                    class="qs-code"><code>curl -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash</code></pre>
+                    class="qs-code"><code>curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash -s -- v0.42.0-rc.8</code></pre>
+                <p class="qs-note">Installs the Obelisk 0.42 release candidate. See
+                    <a href="{{ get_url(path='@/install/_index.md') }}">Install</a> for Docker, Nix, and other
+                    options.</p>
             </div>
             <div class="qs-step">
                 <div class="qs-step-label">Create</div>
                 <pre class="qs-code"><code>obelisk generate new my-app</code></pre>
-                <p class="qs-note">Requires Obelisk 0.42, currently available as a
-                    <a href="https://github.com/obeli-sk/obelisk/releases">release candidate</a>.
-                    The generated app has a webhook, a durable workflow, and an HTTP activity:</p>
+                <p class="qs-note">The generated app has a webhook, a durable workflow, and an HTTP activity:</p>
                 <div class="qs-tabs qs-files">
                     <input type="radio" name="qs-file" id="qs-file-webhook" class="qs-tab-input" checked>
                     <input type="radio" name="qs-file" id="qs-file-workflow" class="qs-tab-input">
@@ -58,7 +59,9 @@ export default function handle() {
   const status = run();
   return new Response(`example.com returned HTTP ${status}\n`);
 }</code></pre>
-                        <p class="qs-note">The webhook endpoint serves <code>GET /run</code> and calls the workflow.</p>
+                        <p class="qs-note">The webhook endpoint serves <code>GET /run</code> and calls the workflow.
+                            <a href="{{ get_url(path='@/docs/v0.42.0/js/js-webhooks.md') }}">Learn more about webhook
+                                endpoints →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-workflow">
                         <pre class="qs-code"><code>import { fetchStatus } from "starter:app/activity";
@@ -67,7 +70,9 @@ export default function run() {
   return fetchStatus();
 }</code></pre>
                         <p class="qs-note">The workflow is deterministic. Every child call and its result is persisted,
-                            so after a crash it replays and continues where it left off.</p>
+                            so after a crash it replays and continues where it left off.
+                            <a href="{{ get_url(path='@/docs/v0.42.0/js/js-workflows.md') }}">Learn more about
+                                workflows →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-activity">
                         <pre class="qs-code"><code>export default async function fetchStatus() {
@@ -75,7 +80,9 @@ export default function run() {
   return response.status;
 }</code></pre>
                         <p class="qs-note">Activities perform side effects such as HTTP calls and are retried
-                            automatically on failure.</p>
+                            automatically on failure.
+                            <a href="{{ get_url(path='@/docs/v0.42.0/js/js-activities.md') }}">Learn more about
+                                activities →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-deployment">
                         <pre class="qs-code"><code>[[activity_js]]
@@ -101,7 +108,9 @@ name = "webhook"
 location = "webhook/handle.js"
 routes = [{ methods = ["GET"], route = "/run" }]</code></pre>
                         <p class="qs-note">The deployment wires the components together and declares their typed
-                            signatures. No build step is needed.</p>
+                            signatures. No build step is needed.
+                            <a href="{{ get_url(path='@/docs/v0.42.0/configuration.md#deployment-configuration-deployment-toml') }}">Learn
+                                more about deployment configuration →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-app">
                         <pre class="qs-code"><code>app_name = "my-app"
@@ -111,7 +120,9 @@ routes = [{ methods = ["GET"], route = "/run" }]</code></pre>
 pattern = "https://example.com"
 methods = ["GET"]</code></pre>
                         <p class="qs-note">The app config sets the upper bound on what any deployment of the app may
-                            access.</p>
+                            access.
+                            <a href="{{ get_url(path='@/docs/v0.42.0/configuration.md#app-configuration-app-toml') }}">Learn
+                                more about app configuration →</a></p>
                     </div>
                 </div>
             </div>
