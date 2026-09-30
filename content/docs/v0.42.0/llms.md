@@ -31,6 +31,6 @@ Obelisk is a deterministic durable execution engine. Write new apps in JavaScrip
 - Name each app in `app.toml` with `app_name`; `obelisk generate new` creates it. When running without an app policy file, set `OBELISK_APP_NAME`.
 - Outbound HTTP needs a component `allowed_host` entry in `deployment.toml` and a matching `[[outbound_http.allowed_host]]` entry in `app.toml`. Deployment environment variables must be declared in the app's `[public_env]`; credentials go in the app's `[secrets]`.
 - Use `obelisk deployment verify --app-config app.toml --deployment deployment.toml --fix` to repair deployment digests and scaffold missing app configuration, then run `obelisk server run --app-config app.toml --deployment deployment.toml`.
-- Read the Example Applications page before building an app. Start an agent from `agent-template`; study `demo-playwright` for durable browser work and `demo-tutorial` for basic workflow patterns. Copy the relevant source and permissions into the new app.
+- Read the Example Applications page before building an app. Start an agent from `demo-agent`; study `demo-playwright` for durable browser work and `demo-tutorial` for basic workflow patterns. Copy the relevant source and permissions into the new app.
 """
 +++

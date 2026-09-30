@@ -10,7 +10,7 @@ this page through [llms.txt](@/docs/v0.42.0/llms.md) and copy only the pieces an
 
 | App                                                                            | What to learn from it                                                                                                                       |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| [agent-template](https://github.com/obeli-sk/agent-template)                   | Minimal durable JavaScript agent loop, tool dispatch, human input, and web UI. Start here for a new agent.                                  |
+| [demo-agent](https://github.com/obeli-sk/demo-agent)                           | Minimal durable JavaScript agent loop, tool dispatch, human input, and web UI. Start here for a new agent.                                  |
 | [workflow-agent](https://github.com/obeli-sk/workflow-agent)                   | Full agent with a persistent shell, deployment editing, app mounts, and peer sessions. It has JavaScript and Rust workflow implementations. |
 | [agent-backed-llm-server](https://github.com/obeli-sk/agent-backed-llm-server) | OpenAI-compatible endpoint backed by persistent CLI agent sessions.                                                                         |
 | [demo-tutorial](https://github.com/obeli-sk/demo-tutorial)                     | Small serial and parallel workflows, activities, and webhooks in JavaScript, with Rust equivalents.                                         |
