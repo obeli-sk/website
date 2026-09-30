@@ -6,10 +6,16 @@
 {% endblock meta_description %}
 {% block content %}
 <div class="container install-page">
-    <h1 class="page-title">Installation Guide</h1>
+    <header class="page-header">
+        <h1>Install Obelisk</h1>
+        <p class="page-lead">One binary, no dependencies. Pick the method that fits your machine.</p>
+    </header>
+
+    <div class="page-layout">
+    <article>
 
     <section class="install-section">
-        <h2>Quick Start</h2>
+        <h2 id="quick-start">Quick Start</h2>
         <div class="code-container">
             <pre><code class="language-bash"># Download latest release from GitHub
 curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash
@@ -31,7 +37,7 @@ obelisk server run --app-config app.toml --deployment deployment.toml</code></pr
     </section>
 
     <section class="install-section">
-        <h2>Docker</h2>
+        <h2 id="docker">Docker</h2>
         <div class="code-container">
             <pre><code class="language-bash"># Start Obelisk in a container (pick any token for the demo)
 docker run --rm --name obelisk \
@@ -67,60 +73,48 @@ curl http://127.0.0.1:9090/parallel</code></pre>
     </section>
 
     <section class="install-section">
-        <h2>Download latest release from GitHub</h2>
-        <p>Choose your platform:</p>
-        <ul>
-            <li><a
-                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-gnu.tar.gz">
-                    Linux x86 64bit, libc
-                </a>
-            </li>
-            <li>
-                <a
-                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-gnu.tar.gz">
-                    Linux ARM64, libc
-                </a>
-            </li>
-            <li>
-                <a
-                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-musl.tar.gz">
-                    Linux x86 64bit, musl
-                </a>
-            </li>
-            <li>
-                <a
-                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-musl.tar.gz">
-                    Linux ARM64, musl
-                </a>
-            </li>
-            <li>
-                <a
-                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-apple-darwin.tar.gz">
-                    MacOS ARM64
-                </a>
-            </li>
-            <li>
-                <a
-                    href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-apple-darwin.tar.gz">
-                    MacOS x86 64bit
-                </a>
-            </li>
-        </ul>
+        <h2 id="download">Download latest release from GitHub</h2>
+        <div class="download-grid">
+            <a class="download-card" href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-gnu.tar.gz">
+                <strong>Linux</strong>
+                <span>x86-64, glibc</span>
+            </a>
+            <a class="download-card" href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-gnu.tar.gz">
+                <strong>Linux</strong>
+                <span>ARM64, glibc</span>
+            </a>
+            <a class="download-card" href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-unknown-linux-musl.tar.gz">
+                <strong>Linux</strong>
+                <span>x86-64, musl</span>
+            </a>
+            <a class="download-card" href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-unknown-linux-musl.tar.gz">
+                <strong>Linux</strong>
+                <span>ARM64, musl</span>
+            </a>
+            <a class="download-card" href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-aarch64-apple-darwin.tar.gz">
+                <strong>macOS</strong>
+                <span>Apple silicon</span>
+            </a>
+            <a class="download-card" href="https://github.com/obeli-sk/obelisk/releases/latest/download/obelisk-x86_64-apple-darwin.tar.gz">
+                <strong>macOS</strong>
+                <span>Intel</span>
+            </a>
+        </div>
     </section>
 
     <section class="install-section">
-        <h2>Build from Source</h2>
+        <h2 id="build-from-source">Build from Source</h2>
         <div class="code-container">
             <pre><code class="language-bash">git clone https://github.com/obeli-sk/obelisk && cd obelisk
 cargo build --release</code></pre>
         </div>
-        Building requires <code>protoc</code>, see project's
-        <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">README</a>
-        for details.
+        <p>Building requires <code>protoc</code>, see project's
+            <a href="https://github.com/obeli-sk/obelisk/blob/main/README.md" target="_blank">README</a>
+            for details.</p>
     </section>
 
     <section class="install-section">
-        <h2>Nix Flake</h2>
+        <h2 id="nix">Nix Flake</h2>
         <p>Built artifacts are stored in the
             <a href="https://app.cachix.org/cache/obeli-sk" target="_blank">obeli-sk Cachix cache</a>.<br />
             Make sure experimental features
@@ -146,8 +140,23 @@ extra-trusted-public-keys = obeli-sk.cachix.org-1:31iM9GWSEhAXvvuTWQ7CvAcwvgRzsu
 nix profile install github:obeli-sk/obelisk/latest</code></pre>
         </div>
     </section>
-
-
+    </article>
+    <details class="page-toc" id="page-toc" open>
+        <summary>On this page</summary>
+        <ul>
+            <li><a href="#quick-start">Quick Start</a></li>
+            <li><a href="#docker">Docker</a></li>
+            <li><a href="#download">Download latest release from GitHub</a></li>
+            <li><a href="#build-from-source">Build from Source</a></li>
+            <li><a href="#nix">Nix Flake</a></li>
+        </ul>
+    </details>
+    <script>
+        if (window.matchMedia("(max-width: 1099px)").matches) {
+            document.getElementById("page-toc").open = false;
+        }
+    </script>
+    </div>
 </div>
 
 {% endblock %}

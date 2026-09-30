@@ -30,13 +30,14 @@
                     Obelisk
                 </a>
             </div>
+            {% set cp = current_path | default(value="/") %}
             <div class="nav-links">
-                <a href="{{ get_url(path='@/features/_index.md') }}">Features</a>
+                <a href="{{ get_url(path='@/features/_index.md') }}" {% if cp is starting_with("/features/") %}class="active" aria-current="page" {% endif %}>Features</a>
                 <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}">Get Started</a>
                 <a href="{{ get_url(path='@/docs/v0.42.0/apps.md') }}">Apps</a>
-                <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
-                <a href="{{ get_url(path='@/docs/latest/_index.md') }}">Docs</a>
-                <a href="https://github.com/obeli-sk/obelisk" target="_blank">GitHub</a>
+                <a href="{{ get_url(path='@/blog/_index.md') }}" {% if cp is starting_with("/blog/") %}class="active" aria-current="page" {% endif %}>Blog</a>
+                <a href="{{ get_url(path='@/docs/latest/_index.md') }}" {% if cp is starting_with("/docs/") %}class="active" aria-current="page" {% endif %}>Docs</a>
+                <a href="https://github.com/obeli-sk/obelisk" target="_blank" rel="noopener">GitHub</a>
                 <button type="button" class="theme-toggle" id="theme-toggle" hidden></button>
             </div>
         </div>
@@ -78,7 +79,67 @@
         })();
     </script>
 
-    {% block content %}{% endblock %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <img src="{{ get_url(path='logo.png') }}" alt="" />
+                <div>
+                    <strong>Obelisk</strong>
+                    <p>Open-source durable and deterministic workflow runtime.</p>
+                </div>
+            </div>
+            <div class="footer-links">
+                <div>
+                    <h2>Product</h2>
+                    <a href="{{ get_url(path='@/features/_index.md') }}">Features</a>
+                    <a href="{{ get_url(path='@/install/_index.md') }}">Install</a>
+                    <a href="{{ get_url(path='@/docs/v0.42.0/security.md') }}">Security model</a>
+                </div>
+                <div>
+                    <h2>Learn</h2>
+                    <a href="{{ get_url(path='@/docs/latest/_index.md') }}">Documentation</a>
+                    <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}">Get started</a>
+                    <a href="{{ get_url(path='@/docs/v0.42.0/llms.md') }}">llms.txt</a>
+                </div>
+                <div>
+                    <h2>Community</h2>
+                    <a href="https://github.com/obeli-sk/obelisk" target="_blank" rel="noopener">GitHub</a>
+                    <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
+                    <a href="{{ get_url(path='blog/rss.xml', trailing_slash=false) | safe }}">RSS</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Copy buttons on code blocks.
+        (function () {
+            if (!navigator.clipboard) return;
+            document.querySelectorAll("pre").forEach(function (pre) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "copy-button";
+                btn.textContent = "Copy";
+                btn.setAttribute("aria-label", "Copy code");
+                btn.addEventListener("click", function () {
+                    var code = pre.querySelector("code") || pre;
+                    navigator.clipboard.writeText(code.innerText.replace(/\n$/, "")).then(function () {
+                        btn.textContent = "Copied";
+                        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+                    });
+                });
+                var wrap = document.createElement("div");
+                wrap.className = "code-block";
+                pre.parentNode.insertBefore(wrap, pre);
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+            });
+        })();
+    </script>
 </body>
 
 </html>

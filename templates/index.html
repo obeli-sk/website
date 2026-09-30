@@ -6,27 +6,35 @@
 {% endblock meta_description %}
 
 {% block content %}
-<div class="container">
-    <section class="hero">
-        <div class="container">
-            <h1>Obelisk</h1>
-            <p>
-                A <a href="{{ get_url(path='@/blog/2025-10-29-challenging-fastest-workflow-engine.md') }}">fast</a>
-                Open-Source Durable & Deterministic
-                <a href="{{ get_url(path='@/features/_index.md') }}">Workflow
-                    Runtime</a>
-            </p>
-            <p>Write workflows in JavaScript, with no build step.
-                <a href="{{ get_url(path='@/docs/v0.42.0/wasm/rust-components.md') }}">Rust components</a> are
-                supported when performance matters.</p>
-            <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
+<section class="hero">
+    <div class="container">
+        <a class="hero-eyebrow" href="{{ get_url(path='@/features/_index.md') }}">
+            <span class="hero-eyebrow-tag">0.42 RC</span>
+            Layered sandboxes for agent-written apps →
+        </a>
+        <h1>Durable workflows you can <span class="hero-accent">trust an agent with</span></h1>
+        <p class="hero-lead">
+            Obelisk is a <a href="{{ get_url(path='@/blog/2025-10-29-challenging-fastest-workflow-engine.md') }}">fast</a>,
+            open-source, deterministic <a href="{{ get_url(path='@/features/_index.md') }}">workflow runtime</a>.
+            Write workflows in JavaScript with no build step, or in
+            <a href="{{ get_url(path='@/docs/v0.42.0/wasm/rust-components.md') }}">Rust</a> when performance matters.
+        </p>
+        <div class="hero-actions">
             <a href="{{ get_url(path='@/docs/v0.42.0/js/getting-started.md') }}" class="cta-button">Get Started</a>
+            <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button cta-secondary">Install</a>
         </div>
-    </section>
-</div>
+        <ul class="hero-facts">
+            <li>Single binary</li>
+            <li>SQLite or Postgres</li>
+            <li>Crash resilient</li>
+            <li>Open source</li>
+        </ul>
+    </div>
+</section>
 
 <section class="quick-start">
     <div class="container">
+        <h2 class="section-title">From zero to a durable app in three steps</h2>
         <div class="qs-steps">
             <div class="qs-step">
                 <div class="qs-step-label">Install</div>
@@ -148,6 +156,7 @@ curl localhost:9090/run</code></pre>
 
 <section class="screenshots">
     <div class="container">
+        <h2 class="section-title">See every step in the Web UI</h2>
         <div class="sc-carousel">
             <input type="radio" name="sc" id="sc-1" class="sc-input" checked>
             <input type="radio" name="sc" id="sc-2" class="sc-input">
@@ -157,32 +166,32 @@ curl localhost:9090/run</code></pre>
             <div class="sc-track">
                 <div class="sc-slide">
                     <label for="sc-5" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="/sc-executions.png" alt="Execution list in the Web UI">
+                    <img src="{{ get_url(path="sc-executions.png") }}" alt="Execution list in the Web UI">
                     <label for="sc-2" class="sc-arrow sc-next">&#8250;</label>
                     <p class="sc-caption">Execution list — browse and filter all workflow and activity executions</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-1" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="/sc-trace.png" alt="Parallel workflow execution trace in the Web UI">
+                    <img src="{{ get_url(path="sc-trace.png") }}" alt="Parallel workflow execution trace in the Web UI">
                     <label for="sc-3" class="sc-arrow sc-next">&#8250;</label>
                     <p class="sc-caption">Execution trace — parallel fan-out activities visualised in a timeline</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-2" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="/sc-events.png" alt="Execution event log in the Web UI">
+                    <img src="{{ get_url(path="sc-events.png") }}" alt="Execution event log in the Web UI">
                     <label for="sc-4" class="sc-arrow sc-next">&#8250;</label>
                     <p class="sc-caption">Execution log — every workflow step persisted for deterministic replay
                     </p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-3" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="/sc-logs.png" alt="Logs in the Web UI">
+                    <img src="{{ get_url(path="sc-logs.png") }}" alt="Logs in the Web UI">
                     <label for="sc-5" class="sc-arrow sc-next">&#8250;</label>
                     <p class="sc-caption">Logs — structured log output and stdout/stderr from executions</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-4" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="/blog/0-38-advance-trace.png" alt="Advance modal in the Web UI">
+                    <img src="{{ get_url(path="blog/0-38-advance-trace.png") }}" alt="Advance modal in the Web UI">
                     <label for="sc-1" class="sc-arrow sc-next">&#8250;</label>
                     <p class="sc-caption">Step-through debugging — inspect the Advance modal before writing new execution log entries</p>
                 </div>
@@ -198,8 +207,7 @@ curl localhost:9090/run</code></pre>
     </div>
 </section>
 
-<div class="container">
-    <section class="features" id="features">
+<section class="features" id="features">
         <div class="container">
             <h2 class="section-title">Why Obelisk?</h2>
             <div class="feature-grid">
@@ -223,7 +231,6 @@ curl localhost:9090/run</code></pre>
             </div>
         </div>
     </section>
-</div>
 
 
 <div class="container">

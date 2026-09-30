@@ -136,17 +136,23 @@ docs, the docs tree (`macros::docs_nav`). Wide screens show them as sticky sideb
 as collapsed boxes above the article. Tables, code blocks, and blockquotes are styled within the
 `article` scope so they only affect doc/blog content.
 
+Landing-style pages (blog list, install, docs versions) start with `.page-header` and
+`.page-lead`; `.narrow-page` limits a container to a reading width.
+
 Zola renders Markdown tables as bare `<table>` elements; `docs.html` and `blog_page.html` wrap them
 in `.table-scroll` so wide tables scroll inside the article instead of widening the page.
 
 ## Templates
 
-- **base.html** — Shared layout with nav bar. All other templates extend this.
+- **base.html** — Shared layout: nav bar (active section highlighted), footer, theme toggle, and a
+  script that wraps every `<pre>` in `.code-block` with a copy button. All other templates extend
+  this.
 - **docs.html** — Single doc page: breadcrumb, docs tree, article, "On this page".
-- **docs_toc.html** — Version index with recursive TOC via `macros::render_toc`.
-- **docs_versions.html** — Docs landing showing all versions.
-- **blog_page.html** / **blog_list.html** — Blog post and listing.
-- **index.html** — Homepage with hero, feature grid, screencast.
+- **docs_toc.html** — Version root and section indexes: docs tree plus `macros::section_cards`.
+- **docs_versions.html** — Docs landing showing all versions grouped by minor release.
+- **blog_page.html** / **blog_list.html** — Blog post and listing (post cards).
+- **index.html** — Homepage: hero, numbered quick start, screenshot carousel, feature cards, FAQ.
+- **install.html** — Install methods with a download grid and a hand-written "On this page".
 
 ## Shortcodes
 

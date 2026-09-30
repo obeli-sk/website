@@ -17,20 +17,22 @@
 {% endblock meta_description %}
 {% block content %}
 
+{% set blog_section = get_section(path="blog/_index.md") %}
 <div class="container">
+    <div class="breadcrumb"><a href="{{ blog_section.permalink | safe }}">← Blog</a></div>
 
     <div class="page-layout">
         <article>
             <h1>{{ page.title }}</h1>
-            <span class="date">{{ page.date | date(format="%Y-%m-%d") }}</span>
+            <p class="post-meta"><time class="date" datetime="{{ page.date }}">{{ page.date | date(format="%B %-d, %Y")
+                    }}</time> · {{ page.reading_time }} min read</p>
             {{ page.content | replace(from="<table>", to='<div class="table-scroll"><table>') |
             replace(from="</table>", to="</table></div>") | safe }} {# Render the full markdown content of the page #}
         </article>
         {{ macros::page_toc(toc=page.toc) }}
     </div>
 
-    {% set blog_section = get_section(path="blog/_index.md") %}
-    <p><a href="{{ blog_section.permalink | safe }}">« Back to Blog List</a></p>
+    <p class="back-link"><a href="{{ blog_section.permalink | safe }}">← All posts</a></p>
 
 </div>
 

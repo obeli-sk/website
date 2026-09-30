@@ -22,12 +22,27 @@ Documentation - {{ title }}
 {% endblock head_extra %}
 
 {% block content %}
-<div class="container">
+<div class="container container-wide">
 
     {{ macros::doc_breadcrumb(ancestors=section.ancestors, title = title) }}
 
-    <h1>{{ title }}</h1>
-    {{ macros::render_toc(section=section) }}
+    <div class="page-layout docs-layout docs-index">
+        {% if section.extra is defined and section.extra.versionroot is defined %}
+        {% set root = section %}
+        {% else %}
+        {% set root = get_section(path=section.ancestors | nth(n=2)) %}
+        {% endif %}
+        {{ macros::docs_nav(root=root, current=section.path) }}
+        <article>
+            {% if section.extra is defined and section.extra.versionroot is defined %}
+            <h1>Obelisk {{ title }} documentation</h1>
+            {% else %}
+            <h1>{{ title }}</h1>
+            {% endif %}
+            {{ section.content | safe }}
+            {{ macros::section_cards(section=section) }}
+        </article>
+    </div>
 </div>
 
 {% endblock content %}

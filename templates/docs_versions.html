@@ -9,23 +9,32 @@ Documentation - {{ section.title }}
 <meta name="description" content="Obelisk workflow runtime documentation: all versions." />
 {% endblock meta_description %}
 {% block content %}
-<div class="container">
-    <h1>{{ section.title }}</h1>
+<div class="container narrow-page">
+    <header class="page-header">
+        <h1>{{ section.title }}</h1>
+        <p class="page-lead">
+            <a href="{{ get_url(path='@/docs/latest/_index.md') }}">Latest ({{ config.extra.latest }}) →</a>
+        </p>
+    </header>
 
-
-    <h2>Select Version</h2>
-    <ul>
+    <h2>All versions</h2>
+    <div class="version-groups">
+        {% set_global series = "" %}
         {% for version in config.extra.versions %}
-        {% set section_path = "docs/" ~ version ~ "/_index.md" %}
-        {% set subsection_data = get_section(path=section_path) %}
         {% if version != "latest" %}
-
-        <li>
-            <a href="{{ subsection_data.permalink }}">{{ version }}</a>
-        </li>
+        {% set parts = version | split(pat=".") %}
+        {% set this_series = parts[0] ~ "." ~ parts[1] %}
+        {% if this_series != series %}
+        {% if series != "" %}</div>{% endif %}
+        {% set_global series = this_series %}
+        <div class="version-group"><span class="version-series">{{ this_series }}</span>
+        {% endif %}
+        {% set subsection_data = get_section(path="docs/" ~ version ~ "/_index.md") %}
+        <a class="version-chip{% if version == config.extra.latest %} is-latest{% endif %}"
+            href="{{ subsection_data.permalink }}">{{ version }}</a>
         {% endif %}
         {% endfor %}
-    </ul>
-
+        {% if series != "" %}</div>{% endif %}
+    </div>
 </div>
 {% endblock content %}
