@@ -69,7 +69,7 @@ in Rust). This byte-stream output can be forwarded to the database or to the ser
 Workflows do not support `stdout`/`stderr` forwarding — use `obelisk:log` instead.
 
 Forwarding is controlled per component in the
-{{ doc_link(title="TOML configuration", path="configuration.md") }}:
+{{ doc_link(title="deployment configuration", path="deployment-configuration.md") }}:
 
 ```toml
 [[activity_wasm]]

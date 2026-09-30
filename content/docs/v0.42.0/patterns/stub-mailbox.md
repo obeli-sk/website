@@ -90,7 +90,7 @@ blocks for its reply, see {{ doc_link(title="Stub RPC", path="patterns/stub-rpc.
 The mailbox and outbox functions live in one WIT interface. The workflow **exports** that interface,
 and each stub declares its signature by pointing at the **same WIT folder** rather than restating
 `params` and `return_type` inline (see
-{{ doc_link(title="Function Signatures", path="configuration.md#function-signatures") }}):
+{{ doc_link(title="Function Signatures", path="deployment-configuration.md#function-signatures") }}):
 
 ```toml
 [[activity_stub]]

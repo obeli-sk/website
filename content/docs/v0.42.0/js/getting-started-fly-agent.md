@@ -294,7 +294,8 @@ routes = [{ methods = ["GET"], route = "/run/:org-slug/:app-name/:prompt" }]
 ```
 
 See {{ doc_link(title="JS Webhooks", path="js/js-webhooks.md") }} for the full path parameter
-reference and {{ doc_link(title="Configuration", path="configuration.md") }} for all options.
+reference and {{ doc_link(title="Deployment Configuration", path="deployment-configuration.md") }}
+for all options.
 
 ## Run
 

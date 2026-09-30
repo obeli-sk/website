@@ -124,4 +124,4 @@ workflow code is not replay-compatible — unless `skip_determinism_check` is se
 {{ github(title="proto/obelisk.proto", path="proto/obelisk.proto") }}.
 
 Unreferenced deployment file blobs are removed by automatic maintenance; see
-{{ doc_link(title="Configuration", path="configuration.md") }}.
+{{ doc_link(title="Server Configuration", path="server-configuration.md#automatic-maintenance-and-retention") }}.

@@ -412,7 +412,8 @@ The defaults cap concurrency at 500 WASM activities, workflows, and webhooks, 16
 webhooks, 100 V8 workflows, 32 exec processes, and 8 VM activities. In 0.41, execution concurrency
 was unlimited by default. Raise the relevant cells for workloads with high parallelism, especially
 JavaScript activities and webhooks. See
-{{ doc_link(title="Configuration", path="configuration.md", version="v0.42.0") }} for every cell.
+{{ doc_link(title="Server Configuration", path="server-configuration.md#execution-slots", version="v0.42.0") }}
+for every cell.
 
 Executors acquire a slot before locking an execution, so work beyond the limit stays pending. A
 webhook request that cannot get a slot now returns `503 Service Unavailable` instead of
@@ -514,5 +515,5 @@ rc.3:
   `bochs-wasm`, `qemu-tcg`, `qemu-kvm`, or `firecracker`, and add required guest `memory` to each
   `[[activity_vm]]`. `cpus` is optional and defaults to one. Bochs requires `memory.mib = 512` and
   one vCPU; see
-  {{ doc_link(title="VM activity configuration", path="configuration.md", version="v0.42.0") }} for
-  native backend requirements.
+  {{ doc_link(title="VM activity configuration", path="deployment-configuration.md#experimental-vm-activities", version="v0.42.0") }}
+  for native backend requirements.

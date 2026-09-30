@@ -90,8 +90,10 @@ On failure, exit with a non-zero status and write the `err` value, also JSON-enc
 produces `err("not found")`. A non-zero exit with empty stdout cannot be decoded into a non-unit
 `err` arm and instead becomes an uncategorized execution failure.
 
-See {{ doc_link(title="Configuration", path="configuration.md") }} for all `activity_exec` fields
-including inline `content`, secrets, environment variables, and output size limits.
+See
+{{ doc_link(title="Deployment Configuration", path="deployment-configuration.md#exec-activities") }}
+for all `activity_exec` fields including inline `content`, secrets, environment variables, and
+output size limits.
 
 ## Defining activity functions in WIT
 

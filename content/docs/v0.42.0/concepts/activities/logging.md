@@ -15,7 +15,7 @@ In summary:
   `debug`, `info`, `warn`, `error`). Available to activities, workflows, and webhook endpoints.
 - **`stdout`/`stderr` forwarding**: Byte-stream output from `println!` and similar. Available to
   activities and webhook endpoints only. Controlled by `forward_stdout` and `forward_stderr` in the
-  {{ doc_link(title="configuration", path="configuration.md") }}.
+  {{ doc_link(title="deployment configuration", path="deployment-configuration.md") }}.
 
 ## Debugging and Testing
 

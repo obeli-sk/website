@@ -191,7 +191,8 @@ location = "webhook/tutorial.js"
 routes = ["/*"]
 ```
 
-See {{ doc_link(title="Configuration", path="configuration.md") }} for all options.
+See {{ doc_link(title="Deployment Configuration", path="deployment-configuration.md") }} for all
+options.
 
 ## 4. Run
 
