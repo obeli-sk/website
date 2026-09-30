@@ -33,6 +33,15 @@
             </div>
         </div>
     </nav>
+    <script>
+        (function () {
+            var nav = document.querySelector("nav");
+            var root = document.documentElement;
+            function update() { root.style.setProperty("--nav-h", nav.offsetHeight + "px"); }
+            update();
+            if (window.ResizeObserver) new ResizeObserver(update).observe(nav);
+        })();
+    </script>
 
     {% block content %}{% endblock %}
 </body>
