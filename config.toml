@@ -27,6 +27,9 @@ skip_prefixes = [
 [slugify]
 paths = "safe"
 
+[markdown]
+external_links_target_blank = true
+
 [markdown.highlighting]
 theme = "catppuccin-mocha"
 
