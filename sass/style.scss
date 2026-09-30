@@ -122,6 +122,8 @@ ol {
 html {
     /* Keep fragment targets clear of the sticky nav; --nav-h is set in base.html. */
     scroll-padding-top: calc(var(--nav-h, 6rem) + 1rem);
+    /* Reserve the scrollbar's space on short pages too, so the layout width never changes. */
+    scrollbar-gutter: stable;
 }
 
 nav {
@@ -214,8 +216,11 @@ div.logo {
         color: var(--primary);
     }
 
+    // No bold: a wider label would shift the links after it.
     &.active {
-        font-weight: 600;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 0.45em;
     }
 }
 
@@ -796,9 +801,11 @@ div.logo {
 // Docs and blog pages: article plus optional sidebars. Narrow screens stack the sidebars as
 // collapsed boxes above the article; wide screens put "On this page" (.page-toc) on the right
 // and, for docs, the docs tree (.docs-nav) on the left.
+// The nav and footer use the wide container on every page so the nav links stay put when
+// navigating between docs and other pages.
 .container-wide,
-body:has(.container-wide) nav .container,
-body:has(.container-wide) .site-footer .container {
+nav .container,
+.site-footer .container {
     max-width: 1480px;
 }
 
