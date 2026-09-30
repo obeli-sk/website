@@ -17,9 +17,9 @@ executed at least once for resiliency.
   important activity contract, and the responsibility for satisfying it lies with the activity
   implementation.
 
-- **Sandboxing**: WASM and JS activities are executed within a WebAssembly sandbox, providing a
-  secure, isolated environment. Exec activities run as native child processes and rely on OS-level
-  isolation.
+- **Isolation**: WASM activities run in Wasmtime. JavaScript activities run in fresh V8 isolates by
+  default, or in Boa compiled to WASM when selected. Exec activities run as host processes; VM
+  activities run through the selected experimental VM backend.
 
 - **Retry safety**: Activities must be safe to retry after errors, timeouts, and traps, but also
   after ambiguous outcomes. In particular, an activity may be executed again even if it already
@@ -43,15 +43,16 @@ executed at least once for resiliency.
 
 ## Activity Types
 
-Obelisk supports three kinds of activities:
+Obelisk supports four kinds of activities:
 
-- **Rust Activities** (`activity_wasm`) — Rust components compiled to WebAssembly and run in
-  Wasmtime
-- **JavaScript Activities** (`activity_js`) — JavaScript functions executed in V8
-- **Exec Activities** (`activity_exec`) — approved host processes used by JavaScript or Rust apps
+- **Rust Activities** (`activity_wasm`): Rust components compiled to WebAssembly and run in Wasmtime
+- **JavaScript Activities** (`activity_js`): JavaScript functions executed in V8
+- **Exec Activities** (`activity_exec`): approved host processes used by JavaScript or Rust apps
+- **VM Activities** (`activity_vm`): Nix-packaged Linux programs run through an opt-in Bochs, QEMU,
+  or Firecracker backend
 
-All three types share the same retry, durability, and observability guarantees. The choice depends
-on your toolchain and use case.
+All four types share the same retry, durability, and observability guarantees. The choice depends on
+your toolchain and use case.
 
 ### Exec Activities
 
@@ -68,7 +69,7 @@ ffqn = "myapp:scripts/greet.greet"
 location = "scripts/greet.sh"
 params = [{ name = "name", type = "string" }]
 return_type = "result<string, string>"
-env_vars = ["PATH"]
+env_vars = [{ key = "PATH", value = "/usr/bin:/bin" }]
 max_retries = 5
 ```
 

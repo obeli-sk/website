@@ -126,8 +126,9 @@ obelisk deployment verify \
 
 `obelisk server verify --fix` provides the same repair behavior. With `--app-config`, `--fix` adds
 missing `[public_env]` entries, scaffolds `[secrets]` entries, and writes the reviewed exec
-allowlist and `exposed_to` grants into `app.toml`. It does not add outbound HTTP rules or change
-`server.toml`. Review its diff and set the real secret values before starting the server.
+allowlist and `exposed_to` grants into `app.toml`. It also scaffolds uncovered outbound HTTP
+destinations for review. It does not change `server.toml`. Review its diff and set the real secret
+values before starting the server.
 
 When an exec activity already has a stale digest in `app.toml`, `--fix` keeps it and appends the
 current digest, turning the entry into an `["sha256:old", "sha256:new"]` array. Remove the old
@@ -309,7 +310,7 @@ The deprecated `obelisk.ChildExecutionError` alias is also gone. Catch `obelisk.
 JavaScript workflows, activities, and webhooks now run on native V8 isolates instead of Boa compiled
 to WASM. Components need no changes, and V8 activities additionally support Web Crypto. V8 slots are
 bounded by the `v8` cells of `[limits]` (see [Review resource limits](#review-resource-limits)). To
-keep the previous engine, start the server with `OBELISK_JS_RUNTIME=boawasm`; Boa components then
+keep the previous engine, start the server with `OBELISK_JS_RUNTIME=boa-wasm`; Boa components then
 use the `wasm` cells.
 
 ## Regenerate Rust WIT dependencies
@@ -507,4 +508,11 @@ rc.3:
   deployment revisions must run.
 - Replace the instance limiters with `[limits]` cells and review the new defaults.
 - Update scripts that use `obelisk deployment get` or `cargo install obelisk`.
-- Expect JavaScript components to run on V8 unless `OBELISK_JS_RUNTIME=boawasm` is set.
+- Expect JavaScript components to run on V8 unless `OBELISK_JS_RUNTIME=boa-wasm` is set. The former
+  `boawasm` value is rejected.
+- Set `OBELISK_UNSTABLE_ACTIVITY_VM` on the deployment CLI and server for every VM activity. Choose
+  `bochs-wasm`, `qemu-tcg`, `qemu-kvm`, or `firecracker`, and add required guest `memory` to each
+  `[[activity_vm]]`. `cpus` is optional and defaults to one. Bochs requires `memory.mib = 512` and
+  one vCPU; see
+  {{ doc_link(title="VM activity configuration", path="configuration.md", version="v0.42.0") }} for
+  native backend requirements.

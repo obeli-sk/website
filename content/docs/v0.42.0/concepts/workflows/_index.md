@@ -13,10 +13,10 @@ interruptions like server restarts.
 ## Determinism and Replayability
 
 This reliability is fundamentally enabled by ensuring **deterministic execution** and thus
-**replayability**. Workflows run within a WASM sandbox, guaranteeing that given the same inputs and
-event history, the workflow logic will always produce the exact same outputs and sequence of
-operations. To support this, Obelisk persistently records every child execution submission and its
-eventual result, forming a **durable
+**replayability**. Rust workflows run in Wasmtime, while JavaScript workflows run in V8 by default.
+Both runtimes restrict nondeterministic access so the same inputs and event history produce the same
+outputs and sequence of operations. To support this, Obelisk persistently records every child
+execution submission and its eventual result, forming a **durable
 {{ doc_link(title="execution log", path="concepts/execution-log.md") }}**. This log allows a
 workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can
 reliably continue from where it left off without duplicating or skipping steps.
@@ -30,7 +30,8 @@ value is recorded in the execution log and replays identically.
 
 ## How Workflows Are Executed in Obelisk
 
-1. The Obelisk runtime instantiates the WASM component and calls the requested workflow function.
+1. The Obelisk runtime starts the WASM component or V8 isolate and calls the requested workflow
+   function.
 1. When the workflow needs to start a child execution, it makes a request to store its
    {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} and parameters.
 1. The Obelisk runtime schedules the activity or a child workflow for execution in the background.

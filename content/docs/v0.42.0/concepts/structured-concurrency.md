@@ -32,9 +32,9 @@ executions.
 
 Structured concurrency provides clear rules for how errors are handled within the execution tree:
 
-1.  **Child to Parent:** If a child execution fails – whether by returning an error, panicking
-    (trapping within the WASM sandbox), or timing out – and the configured amount of retries is
-    exhausted – the last execution error is propagated upwards to its immediate parent workflow.
+1.  **Child to Parent:** If a child execution fails – whether by returning an error, trapping, or
+    timing out – and the configured amount of retries is exhausted – the last execution error is
+    propagated upwards to its immediate parent workflow.
 2.  **Bubbling Up Unhandled errors:** If the parent workflow does not explicitly handle the error
     from its child, the error continues to bubble up the execution tree.
 3.  **Root Failure:** An unhandled error that reaches the root execution will cause the entire
@@ -73,14 +73,13 @@ an implicit direct-call join set. During cancellation, Obelisk closes persisted 
 execution log, so teardown does not depend on the workflow replaying to the close point.
 
 - Pending activities and delay requests are cancelled. Running WASM and JS activities are
-  interrupted in-process by dropping the Wasmtime invocation before cancellation is reported as
-  finished. Running exec activities have their process group signalled with `SIGKILL` and the direct
-  child is awaited; terminating descendants is best effort because a native process can spawn
-  children or block in the kernel.
+  interrupted before cancellation is reported as finished. Running exec activities have their
+  process group signalled with `SIGKILL` and the direct child is awaited; terminating descendants is
+  best effort because a native process can spawn children or block in the kernel.
 - Child workflows are awaited by default.
 - Child workflows whose exported function name ends in `-cancellable` are cancelled instead of
   awaited. Cancellation closes their own join sets from the persisted execution log, recursively
-  applying the same rules; the workflow WASM is not advanced again.
+  applying the same rules; the workflow code is not advanced again.
 
 A cancellable workflow is useful when an operator or parent workflow needs to release a subtree that
 is stuck on a long-lived stub, blocked on a child, or unable to replay after a code change. It is
@@ -96,12 +95,12 @@ await barrier.
 A cancelled child cannot report its own cancellation — because its code is not run, it cannot return
 a sentinel value. A parent observes the outcome only externally. A cancelled child finishes as an
 {{ doc_link(title="execution failure", path="concepts/execution-states.md") }}, so
-`obelisk.getResult` (and an awaited `joinNext` / `awaitNext`) throws `obelisk.ChildError`,
-and `obelisk.getStatus` reports `finishedStatus: "executionFailure"` — a coarse category it shares
-with nondeterminism and out-of-fuel failures. To distinguish a deliberate cancellation from a
-genuine fault inside the workflow, read `e.failureKind === "cancelled"` (equivalently `e.cancelled`)
-on the thrown error; externally, read the execution's specific classification (`Cancelled`) from the
-REST API (`GET /v1/executions/{id}`).
+`obelisk.getResult` (and an awaited `joinNext` / `awaitNext`) throws `obelisk.ChildError`, and
+`obelisk.getStatus` reports `finishedStatus: "executionFailure"` — a coarse category it shares with
+nondeterminism and out-of-fuel failures. To distinguish a deliberate cancellation from a genuine
+fault inside the workflow, read `e.failureKind === "cancelled"` (equivalently `e.cancelled`) on the
+thrown error; externally, read the execution's specific classification (`Cancelled`) from the REST
+API (`GET /v1/executions/{id}`).
 
 ### Contrast with Unstructured Concurrency (`-schedule`)
 

@@ -14,8 +14,9 @@ and the exec gate in `server.toml`.
 This is a defense-in-depth boundary, not a claim that arbitrary hostile native code is safe. WASM
 components run inside the Wasmtime sandbox. Native exec activities deliberately cross that sandbox
 and therefore require explicit, digest-bound approval from both admins. Experimental VM activities
-isolate Linux programs inside a Bochs x86 emulator compiled to WASM, but still require app policy
-for secrets and network access.
+run Linux programs through an explicitly selected Bochs, QEMU, or Firecracker backend and still
+require app policy for secrets and network access. The native backends require host executables;
+QEMU with KVM and Firecracker also require access to `/dev/kvm`.
 
 The operating principle is least privilege: choose the least powerful component type that can do the
 job, grant only the public configuration and network destinations it needs, and prefer secret

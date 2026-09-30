@@ -38,8 +38,8 @@ secrets = ["API_KEY"]
 replace_in = ["headers"]
 ```
 
-The server must register `API_KEY` in `[secrets]` and allow the same destination, method, secret,
-and `replace_in` target in `[[outbound_http.allowed_host]]`.
+The app policy must register `API_KEY` in `[secrets]` and allow the same destination, method,
+secret, and `replace_in` target in `[[outbound_http.allowed_host]]` in `app.toml`.
 
 `WEBHOOK_SIGNING_SECRET` is different: the handler must read its plaintext to validate inbound
 signatures. Register it under `[secrets]`, generate a digest with

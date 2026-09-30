@@ -91,7 +91,7 @@ old component digest. To migrate one to the new version, use the upgrade API:
 
 ```sh
 OLD=$(curl "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H accept:application/json -H "Authorization: Bearer $OBELISK_API_TOKEN" | jq .component_digest)
-NEW=$(curl '127.1:5005/v1/components?name=my_workflow' -H accept:application/json -H "Authorization: Bearer $OBELISK_API_TOKEN" | jq .[0].component_id.input_digest)
+NEW=$(curl '127.1:5005/v1/components?name=my_workflow' -H accept:application/json -H "Authorization: Bearer $OBELISK_API_TOKEN" | jq .[0].component_id.component_digest)
 
 curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" \
   -H "Authorization: Bearer $OBELISK_API_TOKEN" \

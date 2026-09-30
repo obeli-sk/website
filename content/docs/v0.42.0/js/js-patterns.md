@@ -36,8 +36,8 @@ pattern = "https://raw.githubusercontent.com"
 methods = ["GET"]
 ```
 
-The server also needs a matching `[[outbound_http.allowed_host]]` entry for this destination and
-method.
+The app policy also needs a matching `[[outbound_http.allowed_host]]` entry for this destination and
+method in `app.toml`.
 
 Throw a snake_case string to select a no-payload case; throw `{ case_name: payload }` for a case
 with payload:
@@ -262,8 +262,8 @@ secrets = ["OBELISK_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Register `OBELISK_API_TOKEN` in the server's `[secrets]` table and mirror this policy in a matching
-`[[outbound_http.allowed_host]]` entry.
+Register `OBELISK_API_TOKEN` in the app's `[secrets]` table and mirror this policy in a matching
+`[[outbound_http.allowed_host]]` entry in `app.toml`.
 
 ```javascript
 // webhook/show.js

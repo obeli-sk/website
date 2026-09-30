@@ -423,9 +423,9 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/status" -H
 ### `GET /v1/executions/{execution-id}/events-and-responses`
 
 Returns a consistent snapshot of an execution's events and join-set responses in one request. It
-accepts the query parameters of the `events` endpoint (`version_from`, `events_length`,
-`include_backtrace_id`) and of the `responses` endpoint (`responses_cursor_from`,
-`responses_length`, `responses_including_cursor`).
+uses `version_from`, `events_length`, and `include_backtrace_id` for events, plus
+`responses_cursor_from`, `responses_length`, and `responses_including_cursor` for responses. These
+names differ from the separate events and responses endpoints.
 
 ---
 
@@ -437,8 +437,10 @@ Retrieves the history of events for an execution.
 
 | Parameter              | Type    | Description                      | Default |
 | :--------------------- | :------ | :------------------------------- | :------ |
-| `version_from`         | Integer | Start from this event version.   | `0`     |
+| `version`              | Integer | Event version cursor.            | `0`     |
 | `length`               | Integer | Max number of events.            | `20`    |
+| `direction`            | String  | `older` or `newer`.              | `newer` |
+| `including_cursor`     | Boolean | Include the cursor event.        | `false` |
 | `include_backtrace_id` | Boolean | Include debugging backtrace IDs. | `false` |
 
 #### Example request
@@ -488,6 +490,37 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H
 
 ---
 
+### `POST /v1/executions/events/batch`
+
+Reads the `Created` event and optional `Finished` event for each requested execution in one database
+transaction. The response preserves the order of `execution_ids`. Send at least one ID; an unknown
+ID returns `404` for the whole request.
+
+```sh
+curl -H "$OBELISK_API_AUTH" -H 'content-type: application/json' \
+  '127.1:5005/v1/executions/events/batch' -d \
+  '{"execution_ids":["E_01KDN9VJ2TJ396ZARNEMRBNBHP"]}'
+```
+
+```json
+[
+  {
+    "execution_id": "E_01KDN9VJ2TJ396ZARNEMRBNBHP",
+    "created": {
+      "created_at": "...",
+      "version": 0,
+      "event": { "created": { "ffqn": "...", "params": [] } }
+    },
+    "finished": null
+  }
+]
+```
+
+The event bodies above show only selected fields. `finished` is `null` while the execution is in
+progress. When it finishes, the field contains its `Finished` event, including the return value.
+
+---
+
 ### `GET /v1/executions/{execution-id}/responses`
 
 Retrieves responses associated with an execution (used for long-running interactions).
@@ -496,10 +529,11 @@ Retrieves responses associated with an execution (used for long-running interact
 
 | Parameter          | Type    | Description                              | Default |
 | :----------------- | :------ | :--------------------------------------- | :------ |
-| `cursor_from`      | Integer | Start from this cursor index.            | `0`     |
+| `cursor`           | Integer | Response cursor for pagination.          | `0`     |
 | `length`           | Integer | Max number of responses.                 | `20`    |
-| `including_cursor` | Boolean | Include the event at `cursor_from`.      | `false` |
+| `including_cursor` | Boolean | Include the response at `cursor`.        | `false` |
 | `join_set`         | String  | Filter to responses of this join-set ID. | all     |
+| `direction`        | String  | `older` or `newer`.                      | `newer` |
 
 `join_set` takes a canonical join-set ID as shown in `join_set_id`, for example `o:1-fibo` or
 `n:session-events` (URL-encode the colon as `%3A` if needed). A bare join-set name is rejected with
@@ -621,7 +655,7 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H conten
 obelisk server run -a app-testing-wasm.toml --deployment deployment-testing-wasm-local.toml # components built locally
 # Find the old and new sha256 digest
 OLD=$(curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/status"  -H accept:application/json | jq .component_digest)
-NEW=$(curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'accept:application/json' | jq .[0].component_id.input_digest)
+NEW=$(curl -H "$OBELISK_API_AUTH" '127.1:5005/v1/components?name=test_programs_sleep_workflow' -H 'accept:application/json' | jq .[0].component_id.component_digest)
 
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" -H content-type:application/json -X PUT -d \
 '{"old":'$OLD', "new": '$NEW' }'
@@ -641,15 +675,21 @@ API.
 
 **Query Parameters:**
 
-| Parameter          | Type                | Description                                      | Default        |
-| :----------------- | :------------------ | :----------------------------------------------- | :------------- |
-| `show_logs`        | Boolean             | Include structured log entries                   | `true`         |
-| `show_streams`     | Boolean             | Include stdout/stderr stream entries             | `true`         |
-| `show_derived`     | Boolean             | Include logs from all derived (child) executions | `false`        |
-| `cursor`           | DateTime (ISO 8601) | Pagination cursor                                | start of time  |
-| `length`           | Integer             | Max entries to return                            | system default |
-| `including_cursor` | Boolean             | Include the entry at `cursor`                    | `false`        |
-| `direction`        | String              | `older` or `newer`                               | `older`        |
+| Parameter          | Type     | Description                                      | Default |
+| :----------------- | :------- | :----------------------------------------------- | :------ |
+| `level`            | String   | Filter by log level; repeat for several levels   | all     |
+| `stream_type`      | String   | Filter by `stdout` or `stderr`; repeat as needed | both    |
+| `show_logs`        | Boolean  | Include structured log entries                   | `true`  |
+| `show_streams`     | Boolean  | Include stdout/stderr stream entries             | `true`  |
+| `show_derived`     | Boolean  | Include logs from all derived (child) executions | `false` |
+| `show_run_id`      | Boolean  | Include run IDs in text output                   | `false` |
+| `cursor`           | String   | Opaque pagination cursor returned by the API     | none    |
+| `after`            | DateTime | Include only entries after this timestamp        | none    |
+| `length`           | Integer  | Max entries to return                            | `20`    |
+| `including_cursor` | Boolean  | Include the entry at `cursor`                    | `false` |
+| `direction`        | String   | `older` or `newer`                               | `newer` |
+
+Use `after` with an RFC 3339 timestamp for time filtering. A timestamp in `cursor` is rejected.
 
 #### Example request
 
@@ -896,7 +936,8 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/delays/${DELAY_ID}/unpause" -X PUT -H
 
 ### `GET /v1/functions`
 
-Lists all available functions across all components.
+Lists available functions across all components. Pass `extensions=true` to include extension
+functions; they are omitted by default.
 
 #### Example request
 
@@ -980,7 +1021,8 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments" -H accept:application/js
     "finished_ok": 6,
     "finished_error": 0,
     "finished_execution_failure": 0,
-    "component_summary": null
+    "component_summary": null,
+    "deployment_toml": null
   }
 ]
 ```
@@ -989,7 +1031,9 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments" -H accept:application/js
 
 ### `GET /v1/deployments/{deployment-id}`
 
-Returns the full details of a specific deployment, including its stored `deployment.toml`.
+Returns the full details of a specific deployment, including its stored `deployment.toml`. Pass
+`include_generated_metadata=false` to remove server-generated metadata from the returned manifest;
+the stored server view is returned by default.
 
 **Path Parameters:**
 
@@ -1019,6 +1063,14 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
   "files": [...]
 }
 ```
+
+---
+
+### `POST /v1/deployments`
+
+Submits a JSON or multipart deployment package under a server-generated ID and returns
+`201 Created`, a `Location` header, and `{ "deployment_id": "Dep_..." }` in JSON. Use the `PUT` form
+to make retries idempotent with a caller-generated ID.
 
 ---
 
@@ -1089,6 +1141,13 @@ location = "scripts/run.sh"
 content_digest = "sha256:..." # sha256sum scripts/run.sh
 return_type = "result"
 ```
+
+---
+
+### `GET /v1/files/{digest}`
+
+Downloads a deployment-owned file from the content store by its `sha256:...` digest. Returns the raw
+file bytes, or `404 Not Found` if the digest is absent.
 
 ---
 

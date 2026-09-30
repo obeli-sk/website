@@ -100,10 +100,10 @@ Missing public environment variables and secrets are reported together with a so
 `app.toml` snippet. Add `--fix` to add missing `[public_env]` entries, scaffold missing `[secrets]`
 entries, and write the reviewed exec allowlist and secret-exposure grants into `app.toml`. Review
 the generated policy and set each secret's environment variable before starting the server.
-`obelisk server verify --fix` provides the same repair behavior. Outbound HTTP rules are not added
-automatically; verification prints the missing `app.toml` entries instead. A stale exec digest is
-kept and the current one appended as an array; remove the old digest when no running revision needs
-it, and update the platform exec gate in `server.toml`, which `--fix` does not change.
+`obelisk server verify --fix` provides the same repair behavior. Missing outbound HTTP destinations
+are scaffolded in `app.toml` for review. A stale exec digest is kept and the current one appended as
+an array; remove the old digest when no running revision needs it, and update the platform exec gate
+in `server.toml`, which `--fix` does not change.
 
 ---
 
@@ -191,7 +191,7 @@ count = 16
 memory.mib = 256
 [limits.activities.process]    # activity_exec: an operating system process, so no `memory`.
 count = 32
-[limits.activities.vm_bochs]   # activity_vm
+[limits.activities.vm_bochs]   # activity_vm (the VM slot cell for all backends)
 count = 8
 memory.gib = 1
 [limits.workflows.wasm]        # Includes Boa JavaScript workflows.
@@ -214,8 +214,8 @@ stays pending in the database. A webhook request that cannot acquire a slot rece
 `503 Service Unavailable`; capacity is acquired only after a route matches.
 
 The `v8` cells apply to JavaScript components, which run on native V8 by default. When the server is
-started with `OBELISK_JS_RUNTIME=boawasm`, JavaScript components run on Boa compiled to WASM and use
-the `wasm` cells.
+started with `OBELISK_JS_RUNTIME=boa-wasm`, JavaScript components run on Boa compiled to WASM and
+use the `wasm` cells.
 
 ### Automatic Maintenance and Retention
 
@@ -737,12 +737,20 @@ app secret registry and authorize the generated digest under `[secrets.ACTIVITY_
 
 ### Experimental VM Activities
 
-`activity_vm` runs a Nix-packaged Linux executable inside an experimental Linux VM: a
-[Bochs](https://github.com/obeli-sk/activity-vm-bochs) x86 emulator compiled to WASM and hosted by
-Wasmtime. The minimal guest (Linux kernel, BusyBox, and an HTTP proxy) is built by
-[activity-vm-bochs-runtime](https://github.com/obeli-sk/activity-vm-bochs-runtime) and distributed
-as the `getobelisk/activity-vm-runtime` OCI artifact. Its configuration, guest ABI, cache layout,
-and runtime behavior may change or be removed in a later release.
+`activity_vm` runs a Nix-packaged Linux executable inside an experimental Linux VM. Set
+`OBELISK_UNSTABLE_ACTIVITY_VM` on both the deployment CLI and server to select a backend:
+
+| Value         | Backend                                                                              | Host requirements                                                          |
+| :------------ | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| `bochs-wasm`  | [Bochs](https://github.com/obeli-sk/activity-vm-bochs) x86 emulator compiled to WASM | Wasmtime; fixed 512 MiB guest and one vCPU                                 |
+| `qemu-tcg`    | Native QEMU with software emulation                                                  | Matching `qemu-system-x86_64` on `PATH`                                    |
+| `qemu-kvm`    | Native QEMU with KVM acceleration                                                    | Matching `qemu-system-x86_64` on `PATH` and `/dev/kvm`                     |
+| `firecracker` | Firecracker microVM, cold booted for each execution                                  | `firecracker` and `mkfs.erofs` on `PATH`; readable and writable `/dev/kvm` |
+
+The value is required even for existing VM deployments. Without it, deployment verification rejects
+`[[activity_vm]]` and existing VM deployments cannot activate. Each backend pulls a pinned runtime
+bundle from OCI. The guest ABI, cache layout, configuration, and runtime behavior may change or be
+removed in a later release.
 
 ```toml
 [[activity_vm]]
@@ -757,12 +765,19 @@ store_paths = [
   "/nix/store/...-bash-interactive-5.3p15",
   "/nix/store/...-curl-8.22.0-bin",
 ]
+memory.mib = 512 # Required guest RAM; use memory.gib = 4 with a native backend.
+cpus = 1         # Optional; defaults to 1.
 exec.lock_expiry.seconds = 120
 
 [[activity_vm.allowed_host]]
 pattern = "https://api.example.com"
 methods = ["GET"]
 ```
+
+Native QEMU supports guest RAM from 256 MiB up to the pinned bundle's limit (currently 16.25 GiB)
+and vCPUs up to the bundle's limit. Bochs requires exactly 512 MiB and one vCPU. Firecracker checks
+memory and vCPU counts against its pinned bundle. The `memory` setting is required for every
+backend; `cpus` defaults to one.
 
 The pinned VM runtime and verified Nix closures are cached and exposed read-only to the guest.
 `cache.nixos.org` is enabled by default; add `[[activity_vm.nix_cache]]` entries with trusted public

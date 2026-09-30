@@ -4,11 +4,11 @@ template = "docs.html"
 weight = 23
 +++
 
-Activities are the units of side-effectful work. They run inside a WASM sandbox, are retried
-automatically on failure or timeout, and must be **idempotent** — Obelisk may execute them more than
-once. See {{ doc_link(title="Activities", path="concepts/activities/_index.md") }} for the general
-model and {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }} for the full type
-and JSON encoding reference.
+Activities are the units of side-effectful work. JavaScript activities run in V8 by default, are
+retried automatically on failure or timeout, and must be **idempotent**, since Obelisk may execute
+them more than once. See {{ doc_link(title="Activities", path="concepts/activities/_index.md") }}
+for the general model and {{ doc_link(title="WIT reference", path="concepts/wit-reference.md") }}
+for the full type and JSON encoding reference.
 
 ```toml
 [[activity_js]]
@@ -27,8 +27,8 @@ pattern = "https://api.example.com"
 methods = ["GET", "POST"]
 ```
 
-The server must permit the same destination and methods with a matching
-`[[outbound_http.allowed_host]]` entry. An empty server allowlist denies component-originated HTTP.
+The app policy must permit the same destination and methods with a matching
+`[[outbound_http.allowed_host]]` entry in `app.toml`. An empty app allowlist denies outbound HTTP.
 `SIGNING_KEY` must be registered under `[secrets]` and authorized for this component under
 `[secrets.SIGNING_KEY.exposed_to]`; it is then available as `process.env.SIGNING_KEY`. Prefer an
 outbound HTTP secret placeholder instead when the activity does not need to read the plaintext.
@@ -81,15 +81,15 @@ throws.
 
 ## Available globals
 
-| Global                        | Description                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------------- |
-| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                     |
-| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                    |
-| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) (HMAC, AES, RSA, …) |
-| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                       |
-| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                |
-| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                    |
-| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                      |
+| Global                        | Description                                                                                                |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                              |
+| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                             |
+| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) (HMAC, AES, RSA, …); V8 only |
+| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                |
+| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                         |
+| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                             |
+| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                               |
 
 ## Examples
 

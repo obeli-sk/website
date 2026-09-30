@@ -186,9 +186,9 @@ export default async function handle(request) {
 // child submission, returning { reqId, respId }.
 async function latestPendingRequest(workflowExecId) {
   const base = `/v1/executions/${encodeURIComponent(workflowExecId)}/events`;
-  const { max_version } = await apiGetJson(`${base}?version_from=0&length=1`);
+  const { max_version } = await apiGetJson(`${base}?direction=older&length=1`);
   const from = Math.max(0, max_version - WINDOW);
-  const { events } = await apiGetJson(`${base}?version_from=${from}&length=${WINDOW}`);
+  const { events } = await apiGetJson(`${base}?version=${from}&length=${WINDOW}`);
 
   for (let i = events.length - 1; i >= 0; i--) {
     // A child submission is a join_set_request / child_execution_request history event.
