@@ -16,9 +16,10 @@
                 <a href="{{ get_url(path='@/features/_index.md') }}">Workflow
                     Runtime</a>
             </p>
-            <p>Build in JavaScript on V8, or use Rust components in Wasmtime.</p>
+            <p>Write workflows in JavaScript, with no build step. Rust components are supported when
+                performance matters.</p>
             <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button install-button">Install</a>
-            <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}" class="cta-button">Get Started</a>
+            <a href="{{ get_url(path='@/docs/v0.42.0/js/getting-started.md') }}" class="cta-button">Get Started</a>
         </div>
     </section>
 </div>
@@ -32,33 +33,99 @@
                     class="qs-code"><code>curl -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash</code></pre>
             </div>
             <div class="qs-step">
-                <div class="qs-tabs">
-                    <input type="radio" name="qs-tab" id="qs-tab-ai" class="qs-tab-input" checked>
-                    <input type="radio" name="qs-tab" id="qs-tab-rust" class="qs-tab-input">
+                <div class="qs-step-label">Create</div>
+                <pre class="qs-code"><code>obelisk generate new my-app</code></pre>
+                <p class="qs-note">Requires Obelisk 0.42, currently available as a
+                    <a href="https://github.com/obeli-sk/obelisk/releases">release candidate</a>.
+                    The generated app has a webhook, a durable workflow, and an HTTP activity:</p>
+                <div class="qs-tabs qs-files">
+                    <input type="radio" name="qs-file" id="qs-file-webhook" class="qs-tab-input" checked>
+                    <input type="radio" name="qs-file" id="qs-file-workflow" class="qs-tab-input">
+                    <input type="radio" name="qs-file" id="qs-file-activity" class="qs-tab-input">
+                    <input type="radio" name="qs-file" id="qs-file-deployment" class="qs-tab-input">
+                    <input type="radio" name="qs-file" id="qs-file-app" class="qs-tab-input">
                     <div class="qs-tab-labels">
-                        <label for="qs-tab-ai" class="qs-tab-label-btn">JavaScript in V8</label>
-                        <label for="qs-tab-rust" class="qs-tab-label-btn">Rust in Wasmtime</label>
+                        <label for="qs-file-webhook" class="qs-tab-label-btn">webhook/handle.js</label>
+                        <label for="qs-file-workflow" class="qs-tab-label-btn">workflow/run.js</label>
+                        <label for="qs-file-activity" class="qs-tab-label-btn">activity/fetch-status.js</label>
+                        <label for="qs-file-deployment" class="qs-tab-label-btn">deployment.toml</label>
+                        <label for="qs-file-app" class="qs-tab-label-btn">app.toml</label>
                     </div>
-                    <div class="qs-tab-panel" id="qs-panel-ai">
-                        <pre class="qs-code"><code>obelisk generate prompt 'Create a workflow that fans out weather
-    lookups for a list of cities in parallel' | claude</code></pre>
-                        <p class="qs-note">The agent writes JavaScript activities, workflows, webhook endpoints,
-                            an app policy, and a deployment file.</p>
+                    <div class="qs-tab-panel" id="qs-panel-webhook">
+                        <pre class="qs-code"><code>import { run } from "starter:app/workflow";
+
+export default function handle() {
+  const status = run();
+  return new Response(`example.com returned HTTP ${status}\n`);
+}</code></pre>
+                        <p class="qs-note">The webhook endpoint serves <code>GET /run</code> and calls the workflow.</p>
                     </div>
-                    <div class="qs-tab-panel" id="qs-panel-rust">
-                        <pre class="qs-code"><code>Ask your coding agent to build a Rust WASM component</code></pre>
-                        <p class="qs-note">See the <a href="{{ get_url(path='@/docs/v0.42.0/wasm/rust-components.md') }}">Rust component guide</a>
-                            for WIT, Cargo, and Wasmtime setup.</p>
+                    <div class="qs-tab-panel" id="qs-panel-workflow">
+                        <pre class="qs-code"><code>import { fetchStatus } from "starter:app/activity";
+
+export default function run() {
+  return fetchStatus();
+}</code></pre>
+                        <p class="qs-note">The workflow is deterministic. Every child call and its result is persisted,
+                            so after a crash it replays and continues where it left off.</p>
+                    </div>
+                    <div class="qs-tab-panel" id="qs-panel-activity">
+                        <pre class="qs-code"><code>export default async function fetchStatus() {
+  const response = await fetch("https://example.com/");
+  return response.status;
+}</code></pre>
+                        <p class="qs-note">Activities perform side effects such as HTTP calls and are retried
+                            automatically on failure.</p>
+                    </div>
+                    <div class="qs-tab-panel" id="qs-panel-deployment">
+                        <pre class="qs-code"><code>[[activity_js]]
+name = "fetch_status"
+location = "activity/fetch-status.js"
+ffqn = "starter:app/activity.fetch-status"
+params = []
+return_type = "result&lt;u32, string&gt;"
+
+[[activity_js.allowed_host]]
+pattern = "https://example.com"
+methods = ["GET"]
+
+[[workflow_js]]
+name = "run"
+location = "workflow/run.js"
+ffqn = "starter:app/workflow.run"
+params = []
+return_type = "result&lt;u32, string&gt;"
+
+[[webhook_endpoint_js]]
+name = "webhook"
+location = "webhook/handle.js"
+routes = [{ methods = ["GET"], route = "/run" }]</code></pre>
+                        <p class="qs-note">The deployment wires the components together and declares their typed
+                            signatures. No build step is needed.</p>
+                    </div>
+                    <div class="qs-tab-panel" id="qs-panel-app">
+                        <pre class="qs-code"><code>app_name = "my-app"
+
+<span class="qs-comment"># The app admin reviews which external requests a deployment may make.</span>
+[[outbound_http.allowed_host]]
+pattern = "https://example.com"
+methods = ["GET"]</code></pre>
+                        <p class="qs-note">The app config sets the upper bound on what any deployment of the app may
+                            access.</p>
                     </div>
                 </div>
             </div>
             <div class="qs-step">
                 <div class="qs-step-label">Run</div>
-                <pre class="qs-code"><code>obelisk server run --app-config app.toml --deployment deployment.toml</code></pre>
+                <pre class="qs-code"><code>cd my-app
+obelisk server run --app-config app.toml --deployment deployment.toml
+<span class="qs-comment"># in another terminal</span>
+curl localhost:9090/run</code></pre>
                 <p class="qs-note">Use Web UI at <strong>:8080</strong>, Webhooks at <strong>:9090</strong>,
                     API at <strong>:5005</strong> or
-                    <a href="{{ get_url(path='@/docs/latest/cli.md') }}">CLI</a> to interact with the deployed
-                    application.
+                    <a href="{{ get_url(path='@/docs/v0.42.0/cli.md') }}">CLI</a> to interact with the deployed
+                    application. Prefer Rust? See the
+                    <a href="{{ get_url(path='@/docs/v0.42.0/wasm/rust-components.md') }}">Rust component guide</a>.
                 </p>
             </div>
         </div>

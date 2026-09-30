@@ -251,15 +251,31 @@ div.logo {
             display: none;
         }
 
-        #qs-tab-ai:checked ~ .qs-tab-labels label[for="qs-tab-ai"],
-        #qs-tab-rust:checked ~ .qs-tab-labels label[for="qs-tab-rust"] {
-            color: var(--primary);
-            border-color: var(--primary);
+        @each $tab in webhook, workflow, activity, deployment, app {
+            #qs-file-#{$tab}:checked ~ .qs-tab-labels label[for="qs-file-#{$tab}"] {
+                color: var(--primary);
+                border-color: var(--primary);
+            }
+
+            #qs-file-#{$tab}:checked ~ #qs-panel-#{$tab} {
+                display: block;
+            }
+        }
+    }
+
+    .qs-files {
+        margin-top: 1rem;
+
+        .qs-tab-labels {
+            flex-wrap: wrap;
         }
 
-        #qs-tab-ai:checked ~ #qs-panel-ai,
-        #qs-tab-rust:checked ~ #qs-panel-rust {
-            display: block;
+        .qs-tab-label-btn {
+            font-family: ui-monospace, Menlo, monospace;
+            font-weight: normal;
+            text-transform: none;
+            letter-spacing: normal;
+            color: rgba(228, 228, 231, 0.55);
         }
     }
 
