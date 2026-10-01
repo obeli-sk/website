@@ -57,3 +57,29 @@ obelisk execution submit --follow stargazers:github/account.account-info '["your
 
 Functions in the same interface share the part before the dot, so group related functions (for
 example all GitHub activities) into one interface.
+
+## Versioned packages
+
+A package version follows the interface name, before the function name. It must be written
+everywhere the FFQN or interface name appears:
+
+```toml
+[[activity_js]]
+name = "account_info"
+location = "activity/account-info.js"
+ffqn = "stargazers:github/account@1.2.0.account-info"
+params = [{ name = "login", type = "string" }]
+return_type = "result<string, string>"
+```
+
+```javascript
+import { accountInfo } from "stargazers:github/account@1.2.0";
+```
+
+```sh
+obelisk execution submit --follow stargazers:github/account@1.2.0.account-info '["your-github-login"]'
+```
+
+Versions let two incompatible revisions of an interface be deployed side by side, for example
+`stargazers:github/account@1.2.0` and `stargazers:github/account@2.0.0`, while running executions
+keep calling the version they were written against.
