@@ -1,7 +1,7 @@
 +++
 title = "Obelisk 0.42: Sandboxes All the Way Down"
 date = 2026-09-30
-draft = true
+draft = false
 +++
 
 Letting a coding agent write your workflows is easy. Letting it ship them is the hard part. Obelisk
