@@ -119,6 +119,51 @@ Choose a backend by setting `OBELISK_UNSTABLE_ACTIVITY_VM` for both the CLI and 
 - `qemu-tcg` and `qemu-kvm`: native QEMU, with or without KVM, up to 16.25 GiB of guest RAM.
 - `firecracker`: a Firecracker microVM, cold booted for each execution; needs `/dev/kvm`.
 
+What does the VM layer cost? We measured from the activity's persisted `Locked` event to its
+`Finished` event. The VM runs used a local release build; QEMU used the published 2026-10-01 EROFS
+runtime. Docker bars use same-host measurements. The small cases print a string with Bash or use
+curl to fetch a local page through Obelisk's HTTP bridge. The larger cases are the
+[todoapp and inception Playwright demos](https://github.com/obeli-sk/demo-playwright): one opens a
+task-list page, while the other boots Obelisk inside a browser tab. Each bar is a median in seconds;
+the scales differ between workloads.
+
+<div style="overflow-x:auto">
+<svg role="img" aria-labelledby="vm-bench-title vm-bench-desc" viewBox="0 0 760 705" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
+  <title id="vm-bench-title">Activity latency across VM backends and Docker</title>
+  <desc id="vm-bench-desc">Median seconds from Locked to Finished. Bash printf: Firecracker 0.154, QEMU KVM 0.215, QEMU TCG 0.435, Bochs WASM 0.872. Curl: Firecracker 0.179, QEMU KVM 0.269, QEMU TCG 0.733, Bochs WASM 2.243. Todoapp: Docker 0.505, Firecracker 0.816, QEMU KVM 1.438, QEMU TCG 12.940, clipped at 2 seconds. Inception: Docker 5.744, Firecracker 11.201, QEMU KVM 14.588.</desc>
+  <g fill="currentColor">
+    <text x="20" y="27" font-weight="700">Bash printf</text><text x="595" y="27">scale: 0–1 s</text>
+    <text x="20" y="63">Firecracker</text><text x="20" y="93">QEMU KVM</text><text x="20" y="123">QEMU TCG</text><text x="20" y="153">Bochs WASM</text>
+    <text x="670" y="63">0.154 s</text><text x="670" y="93">0.215 s</text><text x="670" y="123">0.435 s</text><text x="670" y="153">0.872 s</text>
+    <text x="20" y="207" font-weight="700">Curl to local page</text><text x="595" y="207">scale: 0–2.5 s</text>
+    <text x="20" y="243">Firecracker</text><text x="20" y="273">QEMU KVM</text><text x="20" y="303">QEMU TCG</text><text x="20" y="333">Bochs WASM</text>
+    <text x="670" y="243">0.179 s</text><text x="670" y="273">0.269 s</text><text x="670" y="303">0.733 s</text><text x="670" y="333">2.243 s</text>
+    <text x="20" y="387" font-weight="700">Todoapp in Chromium</text><text x="540" y="387">scale: 0–2 s; TCG clipped</text>
+    <text x="20" y="423">Docker</text><text x="20" y="453">Firecracker</text><text x="20" y="483">QEMU KVM</text><text x="20" y="513">QEMU TCG</text>
+    <text x="670" y="423">0.505 s</text><text x="670" y="453">0.816 s</text><text x="670" y="483">1.438 s</text><text x="670" y="513">12.940 s</text>
+    <text x="20" y="567" font-weight="700">Inception in Chromium</text><text x="595" y="567">scale: 0–20 s</text>
+    <text x="20" y="603">Docker</text><text x="20" y="633">Firecracker</text><text x="20" y="663">QEMU KVM</text>
+    <text x="670" y="603">5.744 s</text><text x="670" y="633">11.201 s</text><text x="670" y="663">14.588 s</text>
+  </g>
+  <g fill="none" stroke="currentColor" opacity="0.35">
+    <path d="M200 39V160 M600 39V160 M200 219V340 M600 219V340 M200 399V520 M600 399V520 M200 579V670 M600 579V670"/>
+  </g>
+  <g style="fill:var(--primary)">
+    <rect x="200" y="48" width="62" height="19" rx="3"/><rect x="200" y="78" width="86" height="19" rx="3"/><rect x="200" y="108" width="174" height="19" rx="3"/><rect x="200" y="138" width="349" height="19" rx="3"/>
+    <rect x="200" y="228" width="29" height="19" rx="3"/><rect x="200" y="258" width="43" height="19" rx="3"/><rect x="200" y="288" width="117" height="19" rx="3"/><rect x="200" y="318" width="359" height="19" rx="3"/>
+    <rect x="200" y="408" width="101" height="19" rx="3"/><rect x="200" y="438" width="163" height="19" rx="3"/><rect x="200" y="468" width="288" height="19" rx="3"/>
+    <rect x="200" y="498" width="395" height="19" rx="3"/><path d="M595 498L612 507.5L595 517Z"/>
+    <rect x="200" y="588" width="115" height="19" rx="3"/><rect x="200" y="618" width="224" height="19" rx="3"/><rect x="200" y="648" width="292" height="19" rx="3"/>
+  </g>
+</svg>
+</div>
+
+All timings came from the same Intel i9-14900HX host. The VM runs were sequential, with cached
+runtime images and warmup runs. Echo, curl, and todoapp use 512 MiB and one guest vCPU; inception
+uses 8 GiB and four. The
+[benchmark notes](https://github.com/obeli-sk/demo-playwright/tree/main/bench) include the commands
+and sample counts.
+
 The name says it: the guest ABI, configuration, and behavior may still change or disappear.
 
 ## Native V8
