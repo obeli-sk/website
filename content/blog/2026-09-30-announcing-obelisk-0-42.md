@@ -159,8 +159,8 @@ the scales differ between workloads.
 </div>
 
 All timings came from the same Intel i9-14900HX host. The VM runs were sequential, with cached
-runtime images and warmup runs. Echo, curl, and todoapp use 512 MiB and one guest vCPU; inception
-uses 8 GiB and four. The
+runtime images and warmup runs. Bash printf, curl, and todoapp use 512 MiB and one guest vCPU;
+inception uses 8 GiB and four. The
 [benchmark notes](https://github.com/obeli-sk/demo-playwright/tree/main/bench) include the commands
 and sample counts.
 
