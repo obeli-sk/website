@@ -124,8 +124,8 @@ The name says it: the guest ABI, configuration, and behavior may still change or
 ## Native V8
 
 JavaScript workflows, activities, and webhooks can now run on native V8 instead of Boa compiled to
-WASM: start the server with `OBELISK_JS_RUNTIME=v8`. Each activity gets a fresh isolate, activities
-gain Web Crypto, and existing components need no changes. Boa remains the default engine.
+WASM: start the server with `OBELISK_JS_RUNTIME=v8`. Each activity gets a fresh isolate and existing
+components need no changes. Boa remains the default engine.
 
 Concurrency and memory are now bounded per workload and runtime by `[limits]` cells in
 `server.toml`, so the platform admin can cap V8 activities, WASM workflows, and VM activities
