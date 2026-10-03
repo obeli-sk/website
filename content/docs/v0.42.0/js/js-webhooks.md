@@ -246,7 +246,8 @@ const myExecId = obelisk.executionIdCurrent();
 ## Available globals
 
 Same as {{ doc_link(title="JS activities", path="js/js-activities.md") }}: `process.env`, `fetch`,
-`crypto.subtle`, `console`, `TextEncoder`/`TextDecoder`, `URL`/`URLSearchParams`.
+`crypto.subtle` (HMAC `importKey`, `sign`, and `verify`), `console`, `TextEncoder`/`TextDecoder`,
+`URL`/`URLSearchParams`.
 
 ## Fetch example
 

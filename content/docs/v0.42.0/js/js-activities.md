@@ -82,15 +82,15 @@ throws.
 
 ## Available globals
 
-| Global                        | Description                                                                                                                         |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                                                       |
-| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                                                      |
-| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) (HMAC, AES, RSA, …); requires `OBELISK_JS_RUNTIME=v8` |
-| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                         |
-| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                                                  |
-| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                                                      |
-| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                                                        |
+| Global                        | Description                                                                                                                                                                   |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                                                                                                 |
+| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                                                                                                |
+| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) subset: HMAC only, `importKey("raw", ...)`, `sign`, and `verify` (no `verify` on V8 activities) |
+| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                                                                   |
+| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                                                                                            |
+| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                                                                                                |
+| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                                                                                                  |
 
 ## Examples
 

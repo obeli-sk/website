@@ -317,8 +317,8 @@ The deprecated `obelisk.ChildExecutionError` alias is also gone. Catch `obelisk.
 JavaScript workflows, activities, and webhooks still run on Boa compiled to WASM by default, bounded
 by the `wasm` cells of `[limits]` (see [Review resource limits](#review-resource-limits)). Start the
 server with `OBELISK_JS_RUNTIME=v8` to run them on native V8 isolates instead. Components need no
-changes, V8 activities additionally support Web Crypto, and V8 slots are bounded by the `v8` cells.
-Exceeding a V8 cell's heap limit fails the execution with "JavaScript heap limit exceeded".
+changes, and V8 slots are bounded by the `v8` cells. Exceeding a V8 cell's heap limit fails the
+execution with "JavaScript heap limit exceeded".
 
 ## Regenerate Rust WIT dependencies
 
