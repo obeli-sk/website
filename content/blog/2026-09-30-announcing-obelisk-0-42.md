@@ -8,7 +8,7 @@ Letting a coding agent write your workflows is easy. Letting it ship them is the
 0.42 answers that with layers: each layer can only narrow what the one above it allows, and the
 agent gets to touch only the innermost one. The configuration is split between the people who own
 each boundary, the runtime adds a VM layer for code that needs a real Linux userspace, and
-JavaScript now runs on native V8 by default.
+JavaScript can run on native V8.
 
 <!-- more -->
 
@@ -121,11 +121,11 @@ Choose a backend by setting `OBELISK_UNSTABLE_ACTIVITY_VM` for both the CLI and 
 
 The name says it: the guest ABI, configuration, and behavior may still change or disappear.
 
-## Native V8 by default
+## Native V8
 
-JavaScript workflows, activities, and webhooks now run on native V8 instead of Boa compiled to WASM.
-Each activity gets a fresh isolate, activities gain Web Crypto, and existing components need no
-changes. `OBELISK_JS_RUNTIME=boa-wasm` keeps the previous engine.
+JavaScript workflows, activities, and webhooks can now run on native V8 instead of Boa compiled to
+WASM: start the server with `OBELISK_JS_RUNTIME=v8`. Each activity gets a fresh isolate, activities
+gain Web Crypto, and existing components need no changes. Boa remains the default engine.
 
 Concurrency and memory are now bounded per workload and runtime by `[limits]` cells in
 `server.toml`, so the platform admin can cap V8 activities, WASM workflows, and VM activities
