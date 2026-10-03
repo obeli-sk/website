@@ -19,9 +19,8 @@ goes further: any executable (a shell script, a Python script, a Docker command)
 durable activity with the same retry, timeout, and observability guarantees as WASM and JS
 components.
 
-The [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) app can be
-extended with an exec activity that calls an external tool. Here is a greeting activity implemented
-as a Bash script:
+The [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) app can be extended with an exec
+activity that calls an external tool. Here is a greeting activity implemented as a Bash script:
 
 ```toml
 [[activity_exec]]
@@ -67,7 +66,8 @@ env_vars = ["PATH"]
 env_vars = [{ name = "DEPLOY_TOKEN", value = "${HOST_DEPLOY_TOKEN}" }]
 ```
 
-See {{ doc_link(title="Configuration", path="configuration.md") }} for all `activity_exec` fields.
+See {{ doc_link(title="Configuration", path="configuration.md", version="v0.41.5") }} for all
+`activity_exec` fields.
 
 ## Idiomatic JavaScript
 
@@ -103,9 +103,9 @@ With 0.37, JS components required separate `.js` files referenced via `location`
 JavaScript components and exec activities support inline `content`, so a complete application can
 live in a single `deployment.toml`.
 
-Here is the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial)
-rewritten as a self-contained deployment: an activity, a workflow that calls it, and a webhook that
-triggers everything, all in one file:
+Here is the [demo-tutorial](https://github.com/obeli-sk/demo-tutorial) rewritten as a self-contained
+deployment: an activity, a workflow that calls it, and a webhook that triggers everything, all in
+one file:
 
 ```toml
 [[activity_js]]

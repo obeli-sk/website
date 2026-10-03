@@ -419,8 +419,8 @@ like `wall-clock`, `network`, and `random`, using which adds nondeterminism on r
 
 As mentioned earlier JavaScript tooling allows stubbing these interfaces, but Go does not. To work
 around this, I added an experimental `stub_wasi`
-<a href="{{ get_url(path='@/docs/latest/configuration.md') }}">configuration switch</a> that handles
-it directly in Obelisk.
+<a href="{{ get_url(path='@/docs/v0.41.5/configuration.md') }}">configuration switch</a> that
+handles it directly in Obelisk.
 
 ## Webhook Endpoint
 

@@ -210,13 +210,16 @@ Obelisk separates restart-controlled host policy from hot-redeployable applicati
 sets API tokens and broad rules such as exec-activity pinning. `deployment.toml` describes
 components and narrower HTTP and secret capabilities; it must pass verification and cannot loosen
 server policy. See the
-{{ doc_link(title="configuration overview", path="configuration.md#overview") }} and
-{{ doc_link(title="exec activity gating", path="configuration.md#exec-activity-gating") }}.
+{{ doc_link(title="configuration overview", path="configuration.md#overview", version="v0.41.5") }}
+and
+{{ doc_link(title="exec activity gating", path="configuration.md#exec-activity-gating", version="v0.41.5") }}.
 
 Obelisk's API requires a token by default, while its webhook port remains open for application
 traffic. Self-hosted Temporal defaults to a no-op authorizer, and self-hosted Restate expects a
 proxy and network controls around ingress and administration. Their clouds add authentication. See
-Obelisk's {{ doc_link(title="authentication documentation", path="authentication.md") }}, Temporal's
+Obelisk's
+{{ doc_link(title="authentication documentation", path="authentication.md", version="v0.41.5") }},
+Temporal's
 {{ target_link(title="self-hosted security guide", href="https://docs.temporal.io/self-hosted-guide/security") }}
 and Restate's
 {{ target_link(title="server security guide", href="https://docs.restate.dev/server/security") }}.
@@ -250,7 +253,7 @@ replace_in = ["headers"]
 The component puts an opaque placeholder in a header. The host substitutes the real value only after
 the destination is approved, keeping the secret out of component memory, logs and workflow history.
 See the
-{{ doc_link(title="outbound HTTP configuration", path="configuration.md#outbound-http-allowlist") }}.
+{{ doc_link(title="outbound HTTP configuration", path="configuration.md#outbound-http-allowlist", version="v0.41.5") }}.
 
 This boundary also suits generated code. In
 {{ target_link(title="workflow-agent", href="https://github.com/obeli-sk/workflow-agent") }}, an
@@ -275,9 +278,8 @@ let approval = approval(order_id)?;
 The pending child can be fulfilled with a typed result through the CLI, Web UI or API, including by
 another workflow. A workflow that submits the stub asynchronously with `-submit` can even resolve it
 itself later. Either way the input has a fixed arrival point: it can only target a stub the workflow
-has already created.
-Obelisk has no workflow-defined Query or handler that can run at an arbitrary point,
-although execution state and history remain inspectable. Two stubs can form a
+has already created. Obelisk has no workflow-defined Query or handler that can run at an arbitrary
+point, although execution state and history remain inspectable. Two stubs can form a
 {{ doc_link(title="request/response pair", path="patterns/stub-rpc.md") }}.
 
 ### Temporal: a durable object with three message types
@@ -356,9 +358,9 @@ obelisk --api-token "$TOKEN" deployment apply \
   --api-url https://obelisk.example.com deployment.toml
 ```
 
-`obelisk deployment apply` stores a versioned manifest and hot-activates it without restarting the server.
-Local artifacts enter content-addressed storage; OCI components remain registry references. A
-changed WASM or JS digest triggers replay of in-progress workflows against the new component.
+`obelisk deployment apply` stores a versioned manifest and hot-activates it without restarting the
+server. Local artifacts enter content-addressed storage; OCI components remain registry references.
+A changed WASM or JS digest triggers replay of in-progress workflows against the new component.
 Compatible executions upgrade automatically, while incompatible ones stay on the previous version.
 See the {{ doc_link(title="deployments documentation", path="concepts/deployments.md") }}.
 
@@ -370,17 +372,17 @@ high-availability infrastructure remain options when the deployment outgrows tha
 Owning the components also enables a few useful operator features:
 
 - **Replay and Advance** preview and selectively apply a paused workflow's next durable writes. See
-  {{ doc_link(title="Replay and Advance CLI documentation", path="cli.md#replaying-an-execution") }};
+  {{ doc_link(title="Replay and Advance CLI documentation", path="cli.md#replaying-an-execution", version="v0.41.5") }};
   the [0.38 announcement](@/blog/2026-05-29-announcing-obelisk-0-38.md#step-through-debugging) shows
   the Web UI.
 - **Automatic backtraces** link durable events to stored source, creating a time-travelling
   debugger. See
-  {{ doc_link(title="Backtrace capture", path="concepts/workflows/_index.md#backtrace-capture") }}.
+  {{ doc_link(title="Backtrace capture", path="concepts/workflows/_index.md#backtrace-capture", version="v0.41.5") }}.
 - **Logs follow the execution tree** across workflows and activities. See the
-  {{ doc_link(title="execution logs CLI", path="cli.md#fetching-logs") }}.
+  {{ doc_link(title="execution logs CLI", path="cli.md#fetching-logs", version="v0.41.5") }}.
 - **Exec activities** provide native process integration. They are disabled by default and can be
   restricted to reviewed script digests. See
-  {{ doc_link(title="exec activity gating", path="configuration.md#exec-activity-gating") }}.
+  {{ doc_link(title="exec activity gating", path="configuration.md#exec-activity-gating", version="v0.41.5") }}.
 
 ### Temporal and Restate: orchestrators plus application processes
 

@@ -380,8 +380,9 @@ Obelisk workflows can call a child execution directly without a callback:
 let result = step(i, i * 200).unwrap();
 ```
 
-or using {{ doc_link(title="Extension Functions", path="concepts/extensions.md") }}, automatically
-generated from the activity's WIT file:
+or using
+{{ doc_link(title="Extension Functions", path="concepts/extensions.md", version="v0.41.5") }},
+automatically generated from the activity's WIT file:
 
 ```rs
 step_submit(&join_set, i, i * 200);

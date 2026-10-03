@@ -33,8 +33,9 @@ issues:
 This was previously mitigated with the `execution-failed` error. The parent execution had to choose
 between:
 
-- Calling an {{ doc_link(title="extension funcion", path="concepts/extensions.md") }} such as
-  `-invoke` or `-await-next`, then handling the error, or
+- Calling an
+  {{ doc_link(title="extension funcion", path="concepts/extensions.md", version="v0.41.5") }} such
+  as `-invoke` or `-await-next`, then handling the error, or
 - Calling the child function directly, in which case the error was unhandled.
 
 In the latter case, the parent execution itself would abort with an "Unhandled child execution
@@ -76,15 +77,17 @@ Other changes are mostly focused on CLI:
 
 - `obelisk generate wit-support` was added to export the Obelisk WIT files. These files are required
   for working with extensions and include workflow support functions. See
-  {{ doc_link(title="CLI command", path="cli.md#obelisk-generate") }} for details.
+  {{ doc_link(title="CLI command", path="cli.md#obelisk-generate", version="v0.41.5") }} for
+  details.
 - `-invoke` extension now accepts a join set label. With execution-error removed, this function was
   repurposed to attach a label to its one-off join set. This is especially useful when calling the
   same function with different parameters, as custom join set names make it easier to understand a
   workflow’s pending state without inspecting the execution log.
-- A new {{ doc_link(title="runtime support", path="concepts/runtime-support.md") }} function,
-  `close(join-set)`, was added. In garbage-collected languages, join set resources aren’t
+- A new
+  {{ doc_link(title="runtime support", path="concepts/runtime-support.md", version="v0.41.5") }}
+  function, `close(join-set)`, was added. In garbage-collected languages, join set resources aren’t
   automatically dropped, so this explicit function in workflow-support ensures proper cleanup.
 - The `obelisk client execution submit` command now supports the shorthand
   `.../interface-name.fn-name` for specifying functions in addition to the
-  {{ doc_link(title="FFQN", path="concepts/ffqn.md#function-fully-qualified-name-ffqn") }} format.
+  {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} format.
 - Minor usability improvements have been made to the WebUI.

@@ -60,7 +60,7 @@ exported functions can be executed directly, or submitted and then awaited in a
 distinction though: no code is executed on behalf of stub activity. Instead, the response (be it
 success or an execution failure) must be supplied externally, either by an
 {{ doc_link(title="workflow", path="concepts/workflows/_index.md") }},
-{{ doc_link(title="CLI", path="cli.md") }}, or a gRPC client.
+{{ doc_link(title="CLI", path="cli.md", version="v0.41.5") }}, or a gRPC client.
 
 Stub activities are useful when a workflow needs to evaluate an external execution, either a process
 or a human intervention. Since workflows can send and receive values using this mechanism, it can be
@@ -95,11 +95,12 @@ cancel child executions that were not awaited as soon as the join set gets out o
 
 ## Ability to generate extension WIT files
 
-The {{ doc_link(title="Extension WIT interfaces", path="concepts/extensions.md") }} are
-automatically implemented by the runtime for every WASM export.
+The
+{{ doc_link(title="Extension WIT interfaces", path="concepts/extensions.md", version="v0.41.5") }}
+are automatically implemented by the runtime for every WASM export.
 
 Previously, the generated WIT interfaces were available via the Web UI, but not through the
-{{ doc_link(title="CLI", path="cli.md#obelisk-generate") }}.
+{{ doc_link(title="CLI", path="cli.md#obelisk-generate", version="v0.41.5") }}.
 
 The new
 

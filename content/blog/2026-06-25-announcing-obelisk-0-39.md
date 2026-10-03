@@ -107,6 +107,7 @@ Exec secrets are also nested under `secrets` in stdin:
 Code that previously read secrets from the top-level stdin object should switch to the `secrets`
 field.
 
-For complete reference material, see the updated {{ doc_link(title="CLI", path="cli.md") }},
-{{ doc_link(title="Configuration", path="configuration.md") }}, and
-{{ doc_link(title="Programmatic access", path="programmatic-access.md") }} docs.
+For complete reference material, see the updated
+{{ doc_link(title="CLI", path="cli.md", version="v0.41.5") }},
+{{ doc_link(title="Configuration", path="configuration.md", version="v0.41.5") }}, and
+{{ doc_link(title="Programmatic access", path="programmatic-access.md", version="v0.41.5") }} docs.
