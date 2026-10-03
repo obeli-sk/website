@@ -14,7 +14,9 @@ Prefer imports when the target function is known statically. Imports are verifie
 deployment starts; use dynamic FFQN calls only when the target is constructed at runtime.
 
 Import `obelisk:webhook@1.0.0` for execution IDs and result lookup. Runtime-selected calls and
-schedules come from the separate `obelisk:webhook-dynamic@1.0.0` module.
+schedules come from the separate `obelisk:webhook-dynamic@1.0.0` module, which is available only to
+components that declare it with a static `import` or `export ... from`, even when it is also loaded
+with `import()`.
 
 ```javascript
 import * as obelisk from "obelisk:webhook@1.0.0";

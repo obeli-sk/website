@@ -30,8 +30,11 @@ implements a timeout: whichever finishes first is returned by `joinNext`, and cl
 cancels the rest.
 
 ```javascript
+import * as obelisk from "obelisk:workflow@1.0.0";
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
+
 const js = obelisk.createJoinSet();
-const execId = js.submit("myapp:demo/activity.step", [1, 200]);
+const execId = dynamic.submit(js, "myapp:demo/activity.step", [1, 200]);
 const delayId = js.submitDelay({ seconds: 10 });
 const result = js.joinNext(); // null if the delay won
 if (js.lastId === delayId) {

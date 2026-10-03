@@ -6,8 +6,7 @@ weight = 0
 
 This guide walks you through running a durable application with Obelisk, a workflow runtime that
 automatically recovers your program from crashes. You'll write a `step` activity, serial and
-parallel workflows, and a webhook endpoint in JavaScript running on V8, then see crash recovery in
-action.
+parallel workflows, and a webhook endpoint in JavaScript, then see crash recovery in action.
 
 No build step or toolchain required — just install Obelisk and run.
 

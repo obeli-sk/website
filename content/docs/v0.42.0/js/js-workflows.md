@@ -22,7 +22,9 @@ Workflow exports may be synchronous or `async`. Awaiting ordinary JavaScript pro
 but durable child calls and sleeps still use the Obelisk APIs described below.
 
 Import the base runtime module for sleeps, join sets, IDs, random values, stubs, and error classes.
-Import the dynamic module only when calling or scheduling an FFQN selected at runtime:
+Import the dynamic module only when calling, submitting, or scheduling an FFQN selected at runtime.
+The dynamic module is available only to components that declare it with a static `import` or
+`export ... from`, even when it is also loaded with `import()`:
 
 ```javascript
 import * as obelisk from "obelisk:workflow@1.0.0";
@@ -101,7 +103,7 @@ Every Obelisk API returns the useful value on success and throws on error. There
 | JavaScript API                       | Returns                    | Throws                                          |
 | ------------------------------------ | -------------------------- | ----------------------------------------------- |
 | Typed `fooSubmit(joinSet, ...)`      | Execution ID string        | `Error`                                         |
-| `joinSet.submit(ffqn, params)`       | Execution ID string        | `Error`                                         |
+| `dynamic.submit(joinSet, ffqn, ps)`  | Execution ID string        | `Error`                                         |
 | Typed `fooSchedule(at, ...)`         | Execution ID string        | `Error`                                         |
 | `dynamic.schedule(...)`              | `undefined`                | `Error`                                         |
 | Typed `fooStub(id, result)`          | `undefined`                | `Error`                                         |
@@ -183,14 +185,15 @@ export default function parallel() {
 ```
 
 You can also use the lower-level join set API with string FFQNs when the function is constructed at
-runtime and cannot be imported statically:
+runtime and cannot be imported statically. Submit with `dynamic.submit(joinSet, ffqn, args)`; join
+set objects have no `submit` method:
 
 **Join set API:**
 
 | Call                               | Returns                                                                        | Description                                                                                                                                                      |
 | ---------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `let js = obelisk.createJoinSet()` | join set object                                                                | Create a new join set; a named set (`{ name: "…" }`) throws `Error` if creation fails                                                                            |
-| `js.submit(ffqn, argArray)`        | childExecId (string)                                                           | Submit without blocking; throws `Error` if submission fails                                                                                                      |
+| `dynamic.submit(js, ffqn, args)`   | childExecId (string)                                                           | Submit without blocking; throws `Error` if submission fails                                                                                                      |
 | `js.submitDelay(scheduleAt)`       | `delayId` (string)                                                             | Submit a timer using a relative duration object or an absolute `Date`                                                                                            |
 | `js.joinNext()`                    | ok value directly; `null` for a completed delay (throws on failure, see below) | Block until the next result in this join set                                                                                                                     |
 | `js.joinNextTry()`                 | same as `joinNext()`, but returns `undefined` while requests are still pending | Non-blocking: attempt to get next result without waiting; other errors still throw                                                                               |
@@ -213,8 +216,11 @@ runtime and cannot be imported statically:
 compare it against the IDs you submitted to tell which response you got:
 
 ```javascript
+import * as obelisk from "obelisk:workflow@1.0.0";
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
+
 const js = obelisk.createJoinSet();
-const execId = js.submit("myapp:demo/activity.step", [payload]);
+const execId = dynamic.submit(js, "myapp:demo/activity.step", [payload]);
 const delayId = js.submitDelay({ seconds: 30 });
 
 const result = js.joinNext();

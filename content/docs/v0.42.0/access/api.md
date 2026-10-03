@@ -1202,8 +1202,9 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 ### `GET /v1/app-config`
 
 Returns the running app policy (secrets without values, public environment names, exec approvals,
-and outbound HTTP rules) together with its canonical `app_config_digest`. Deployments record the
-digest that was in effect when they were activated, and system events carry the current digest.
+and outbound HTTP rules) together with its canonical `app_config_digest`. JSON is the default; send
+`Accept: application/toml` to receive the same document as TOML. Deployments record the digest that
+was in effect when they were activated, and system events carry the current digest.
 
 ```json
 {
@@ -1246,6 +1247,19 @@ Deletion tombstones execution roots synchronously; automatic maintenance removes
 unreferenced shared metadata and CAS blobs in bounded batches. Forced deletion can remove a
 non-terminal tree unless its root belongs to the active deployment. Active and enqueued deployments
 are always retained.
+
+`POST /v1/admin/system-events/retain` accepts `max_age_seconds`, `batch_size`, and an optional
+`dry_run`. With `"dry_run": true` it deletes nothing and returns the number of events the batch
+would delete:
+
+```sh
+curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/admin/system-events/retain -H content-type:application/json \
+  -d '{ "max_age_seconds": 86400, "batch_size": 1000, "dry_run": true }'
+```
+
+```json
+{ "deleted": 12, "has_more": false }
+```
 
 ## Cancellation requests
 

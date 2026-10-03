@@ -13,7 +13,7 @@ common_design_patterns = [
 preamble = """
 # Obelisk
 
-Obelisk is a deterministic durable execution engine. Write new apps in JavaScript on the native V8 runtime by default. Use Rust components in Wasmtime when performance or an existing Rust library matters.
+Obelisk is a deterministic durable execution engine. Write new apps in JavaScript by default; they run on Boa compiled to WASM, or on native V8 with `OBELISK_JS_RUNTIME=v8`. Use Rust components in Wasmtime when performance or an existing Rust library matters.
 
 ## Default authoring path
 - Start every new app with `obelisk generate new NAME` (or `obelisk generate new` inside an empty directory). It writes a runnable `app.toml`, `deployment.toml`, JavaScript webhook, workflow, and HTTP activity, and a `README.md`. Adapt the generated files instead of writing the configuration from scratch.

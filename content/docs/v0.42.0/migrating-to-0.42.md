@@ -5,7 +5,7 @@ weight = 61
 +++
 
 Obelisk 0.42 separates platform, app, and deployment configuration, removes configuration and API
-aliases deprecated in 0.41, makes native V8 the default JavaScript runtime, and replaces the global
+aliases deprecated in 0.41, adds native V8 as an opt-in JavaScript runtime, and replaces the global
 JavaScript runtime API with explicit ES module imports. This guide covers the changes required to
 upgrade a 0.41 server and its deployments. See
 {{ doc_link(title="Security model", path="security.md", version="v0.42.0") }} for the trust boundary
@@ -296,22 +296,29 @@ import * as obelisk from "obelisk:workflow@1.0.0";
 import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
 
 const result = dynamic.call(ffqn, params);
+const execId = dynamic.submit(joinSet, ffqn, params);
 ```
 
-Webhooks use `obelisk:webhook-dynamic@1.0.0`. Move `call`, `schedule`, and workflow `submitJson`
-uses to `dynamic`; APIs such as `sleep`, `createJoinSet`, execution ID helpers, and error classes
-remain on the base module. Deployments that do not need runtime-selected dispatch no longer receive
-that capability implicitly.
+Webhooks use `obelisk:webhook-dynamic@1.0.0`. Move `call` and `schedule` uses to `dynamic`. Join set
+objects no longer have a `submit` method: replace `joinSet.submit(ffqn, params)` with
+`dynamic.submit(joinSet, ffqn, params)`. Typed `fooSubmit(joinSet, ...)` imports are unchanged. APIs
+such as `sleep`, `createJoinSet`, execution ID helpers, and error classes remain on the base module,
+which does not export `call`, `schedule`, or `submit`.
+
+The dynamic module is only available to a component that declares it statically: an `import` or
+`export ... from` of `obelisk:workflow-dynamic@1.0.0` (or `obelisk:webhook-dynamic@1.0.0`) in any of
+its source files. This also applies when the module is loaded with `import()`. Deployments that do
+not need runtime-selected dispatch no longer receive that capability implicitly.
 
 The deprecated `obelisk.ChildExecutionError` alias is also gone. Catch `obelisk.ChildError`.
 
-### Native V8 is the default JavaScript runtime
+### Native V8 is an opt-in JavaScript runtime
 
-JavaScript workflows, activities, and webhooks now run on native V8 isolates instead of Boa compiled
-to WASM. Components need no changes, and V8 activities additionally support Web Crypto. V8 slots are
-bounded by the `v8` cells of `[limits]` (see [Review resource limits](#review-resource-limits)). To
-keep the previous engine, start the server with `OBELISK_JS_RUNTIME=boa-wasm`; Boa components then
-use the `wasm` cells.
+JavaScript workflows, activities, and webhooks still run on Boa compiled to WASM by default, bounded
+by the `wasm` cells of `[limits]` (see [Review resource limits](#review-resource-limits)). Start the
+server with `OBELISK_JS_RUNTIME=v8` to run them on native V8 isolates instead. Components need no
+changes, V8 activities additionally support Web Crypto, and V8 slots are bounded by the `v8` cells.
+Exceeding a V8 cell's heap limit fails the execution with "JavaScript heap limit exceeded".
 
 ## Regenerate Rust WIT dependencies
 
@@ -338,12 +345,12 @@ translate WIT results into JavaScript return values and exceptions. Do not manua
 `{ tag: "ok" | "err", val: ... }` result in JavaScript. `submit-json`, `schedule-json`, and
 `stub-json` are internal WIT bindings, not JavaScript functions to call directly:
 
-| JavaScript API                  | JavaScript behavior                                      |
-| ------------------------------- | -------------------------------------------------------- |
-| Typed `fooSubmit(joinSet, ...)` | Returns the execution ID string; throws `Error` on error |
-| `joinSet.submit(ffqn, params)`  | Returns the execution ID string; throws `Error` on error |
-| Typed `fooSchedule(at, ...)`    | Returns the execution ID string; throws `Error` on error |
-| Typed `fooStub(id, result)`     | Returns `undefined`; throws `Error` on error             |
+| JavaScript API                          | JavaScript behavior                                      |
+| --------------------------------------- | -------------------------------------------------------- |
+| Typed `fooSubmit(joinSet, ...)`         | Returns the execution ID string; throws `Error` on error |
+| `dynamic.submit(joinSet, ffqn, params)` | Returns the execution ID string; throws `Error` on error |
+| Typed `fooSchedule(at, ...)`            | Returns the execution ID string; throws `Error` on error |
+| Typed `fooStub(id, result)`             | Returns `undefined`; throws `Error` on error             |
 
 Awaiting and retrieval APIs are translated similarly: they return the decoded child value and throw
 on child, retrieval, or platform errors. See
@@ -509,8 +516,12 @@ rc.3:
   deployment revisions must run.
 - Replace the instance limiters with `[limits]` cells and review the new defaults.
 - Update scripts that use `obelisk deployment get` or `cargo install obelisk`.
-- Expect JavaScript components to run on V8 unless `OBELISK_JS_RUNTIME=boa-wasm` is set. The former
-  `boawasm` value is rejected.
+- Expect JavaScript components to run on Boa compiled to WASM unless `OBELISK_JS_RUNTIME=v8` is set.
+  rc.4 through rc.10 defaulted to V8; set `OBELISK_JS_RUNTIME=v8` to keep it. The former `boawasm`
+  value is rejected.
+- Replace `joinSet.submit(ffqn, params)` with `dynamic.submit(joinSet, ffqn, params)` and import
+  `obelisk:workflow-dynamic@1.0.0` statically in every component that uses the dynamic module, even
+  when it is loaded with `import()`. The base module does not export `call` or `schedule`.
 - Set `OBELISK_UNSTABLE_ACTIVITY_VM` on the deployment CLI and server for every VM activity. Choose
   `bochs-wasm`, `qemu-tcg`, `qemu-kvm`, or `firecracker`, and add required guest `memory` to each
   `[[activity_vm]]`. `cpus` is optional and defaults to one. Bochs requires `memory.mib = 512` and

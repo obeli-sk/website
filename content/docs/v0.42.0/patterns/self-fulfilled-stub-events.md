@@ -20,12 +20,13 @@ return_type = "result<string, string>"
 
 ```javascript
 import * as obelisk from "obelisk:workflow@1.0.0";
+import * as dynamic from "obelisk:workflow-dynamic@1.0.0";
 
 export default function session() {
   const events = obelisk.createJoinSet({ name: "events" });
 
   function publish(eventId, value) {
-    const executionId = events.submit("example:session/events.publish", [eventId]);
+    const executionId = dynamic.submit(events, "example:session/events.publish", [eventId]);
     // Fulfil the stub from this workflow. No external producer is involved.
     obelisk.stub(executionId, { ok: JSON.stringify(value) });
     // Consume the completion so it becomes a processed response of the join set.
