@@ -117,10 +117,10 @@ is the process bound. Executors acquire a slot before locking an execution, so w
 stays pending in the database. A webhook request that cannot acquire a slot receives
 `503 Service Unavailable`; capacity is acquired only after a route matches.
 
-JavaScript components run on Boa compiled to WASM by default and use the `wasm` cells. When the
-server is started with `OBELISK_JS_RUNTIME=v8`, JavaScript components run on native V8 and use the
-`v8` cells. Exceeding a V8 cell's heap limit fails the execution with "JavaScript heap limit
-exceeded".
+JavaScript components run on Boa compiled to WASM by default (`OBELISK_JS_RUNTIME=boa-wasm`) and use
+the `wasm` cells. When the server is started with `OBELISK_JS_RUNTIME=v8`, JavaScript components run
+on native V8 and use the `v8` cells. Any other value fails startup. Exceeding a V8 cell's heap limit
+fails the execution with "JavaScript heap limit exceeded".
 
 ## Automatic Maintenance and Retention
 
