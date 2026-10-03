@@ -1,6 +1,6 @@
 +++
 title = "Obelisk 0.42: Sandboxes All the Way Down"
-date = 2026-09-30
+date = 2026-10-03
 draft = false
 +++
 

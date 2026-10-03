@@ -20,10 +20,9 @@
                     agent may write</li>
                 <li>Experimental VM activities – run Nix-packaged Linux tools in Bochs-in-WASM, QEMU, or
                     Firecracker, under the same HTTP and secret policy</li>
-                <li>Native V8 is the default JavaScript runtime, with Web Crypto in activities</li>
+                <li>Native V8 as an opt-in JavaScript runtime next to the default Boa</li>
             </ul>
-            <a href="{{ get_url(path='@/docs/v0.42.0/security.md') }}" class="new-in-link">Read the security
-                model →</a>
+            <a href="{{ get_url(path='@/blog/2026-09-30-announcing-obelisk-0-42.md') }}" class="new-in-link">Read the announcement →</a>
         </div>
 
         <div class="features-section">
@@ -43,7 +42,7 @@
                 </div>
                 <div class="feature-card">
                     <h3><a
-                            href="{{ get_url(path='@/docs/v0.42.0/concepts/workflows/join-sets.md') }}">Structured
+                            href="{{ get_url(path='@/docs/latest/concepts/workflows/join-sets.md') }}">Structured
                             concurrency</a></h3>
                     <p>Submit multiple child executions in parallel and await them individually or all at once.
                         Unawaited activities and delays are automatically cancelled when the parent completes.</p>
@@ -57,11 +56,11 @@
                     <h3>Saga pattern</h3>
                     <p>Nest workflows to guarantee cleanup runs even after a crash: the outer workflow catches inner
                         failures and always executes <a
-                            href="{{ get_url(path='@/docs/v0.42.0/js/getting-started-fly-agent.md')}}">
+                            href="{{ get_url(path='@/docs/latest/js/getting-started-fly-agent.md')}}">
                             compensation logic</a>.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/concepts/cron.md') }}">Cron scheduling</a></h3>
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/cron.md') }}">Cron scheduling</a></h3>
                     <p>Declare recurring tasks in <code>deployment.toml</code>. Standard five-field expressions, named
                         shorthands (<code>@daily</code>, <code>@hourly</code>), or <code>@once</code> for one-time
                         migrations.</p>
@@ -90,16 +89,16 @@
                     </p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/js/js-components.md') }}">JS component
+                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-components.md') }}">JS component
                             types</a>
                     </h3>
-                    <p><a href="{{ get_url(path='@/docs/v0.42.0/js/js-activities.md') }}">Activities</a>, <a
-                            href="{{ get_url(path='@/docs/v0.42.0/js/js-workflows.md') }}">Workflows</a>, and <a
-                            href="{{ get_url(path='@/docs/v0.42.0/js/js-webhooks.md') }}">Webhook endpoints</a>, all in
+                    <p><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Activities</a>, <a
+                            href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Workflows</a>, and <a
+                            href="{{ get_url(path='@/docs/latest/js/js-webhooks.md') }}">Webhook endpoints</a>, all in
                         JavaScript. Import activities and workflows directly instead of calling by FFQN string.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/configuration/deployment.md') }}#experimental-vm-activities">VM
+                    <h3><a href="{{ get_url(path='@/docs/latest/configuration/deployment.md') }}#experimental-vm-activities">VM
                             activities</a> (experimental)</h3>
                     <p>Run a script with Nix-packaged Linux tools inside a VM: the Bochs emulator compiled to WASM,
                         native QEMU, or Firecracker. Guest HTTP passes through the same allowlists and secret
@@ -117,7 +116,7 @@
                         recorded on first call and replayed identically on crash recovery.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/configuration/_index.md') }}">Layered
+                    <h3><a href="{{ get_url(path='@/docs/latest/configuration/_index.md') }}">Layered
                             permissions</a></h3>
                     <p>The platform admin owns <code>server.toml</code>, the app admin owns <code>app.toml</code>,
                         and a deployment (possibly written by an agent) can only narrow what both grant. Reviewing the
@@ -132,7 +131,7 @@
             <h2>Deployments &amp; Distribution</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/concepts/deployments.md') }}">Versioned deployments</a>
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/deployments.md') }}">Versioned deployments</a>
                     </h3>
                     <p>Every <code>obelisk deployment apply</code> stores a versioned snapshot of your full config.
                         Executions carry a reference to the deployment that ran them.</p>
@@ -198,13 +197,13 @@
                         diagnose defects autonomously and push fixes via hot redeploy, no server restart needed.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/access/api.md') }}">REST API</a></h3>
+                    <h3><a href="{{ get_url(path='@/docs/latest/access/api.md') }}">REST API</a></h3>
                     <p>Full HTTP API with OpenAPI schema, used by the CLI and the Web UI. Submit executions, inspect
                         state, follow logs over SSE, replay, pause, cancel, all scriptable with plain <code>curl</code>.
                         gRPC is deprecated.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/access/authentication.md') }}">API authentication</a></h3>
+                    <h3><a href="{{ get_url(path='@/docs/latest/access/authentication.md') }}">API authentication</a></h3>
                     <p>The API port denies unauthenticated requests by default and accepts bearer tokens. Token hashes
                         live in <code>server.toml</code>, so the config stays safe to commit. Webhook endpoints stay
                         open.</p>
@@ -216,7 +215,7 @@
                         Plaintext secrets need their own digest-bound grant.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/v0.42.0/access/cli.md') }}">CLI</a></h3>
+                    <h3><a href="{{ get_url(path='@/docs/latest/access/cli.md') }}">CLI</a></h3>
                     <p><code>obelisk generate new</code>, <code>obelisk execution submit/list/logs</code>,
                         <code>obelisk component add/push</code>, <code>obelisk deployment verify/submit/pull</code>,
                         <code>obelisk admin</code>. Everything from the terminal.
@@ -232,7 +231,7 @@
                     <h3>WASM &amp; WIT</h3>
                     <p>Built on the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM
                             Component Model</a>. Rust components run in Wasmtime and interoperate with JavaScript. Schema
-                        defined in <a href="{{ get_url(path='@/docs/v0.42.0/concepts/wit-reference.md') }}">WIT IDL</a>.
+                        defined in <a href="{{ get_url(path='@/docs/latest/concepts/wit-reference.md') }}">WIT IDL</a>.
                     </p>
                 </div>
                 <div class="feature-card">

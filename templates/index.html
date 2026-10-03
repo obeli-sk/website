@@ -9,7 +9,7 @@
 <section class="hero">
     <div class="container">
         <a class="hero-eyebrow" href="{{ get_url(path='@/features/_index.md') }}">
-            <span class="hero-eyebrow-tag">0.42 RC</span>
+            <span class="hero-eyebrow-tag">0.42</span>
             Layered sandboxes for agent-written apps →
         </a>
         <h1>Durable workflows you can <span class="hero-accent">trust an agent with</span></h1>
@@ -17,10 +17,10 @@
             Obelisk is a <a href="{{ get_url(path='@/blog/2025-10-29-challenging-fastest-workflow-engine.md') }}">fast</a>,
             open-source, deterministic <a href="{{ get_url(path='@/features/_index.md') }}">workflow runtime</a>.
             Write workflows in JavaScript with no build step, or in
-            <a href="{{ get_url(path='@/docs/v0.42.0/wasm/rust-components.md') }}">Rust</a> when performance matters.
+            <a href="{{ get_url(path='@/docs/latest/wasm/rust-components.md') }}">Rust</a> when performance matters.
         </p>
         <div class="hero-actions">
-            <a href="{{ get_url(path='@/docs/v0.42.0/js/getting-started.md') }}" class="cta-button">Get Started</a>
+            <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}" class="cta-button">Get Started</a>
             <a href="{{ get_url(path='@/install/_index.md') }}" class="cta-button cta-secondary">Install</a>
         </div>
         <ul class="hero-facts">
@@ -39,7 +39,7 @@
             <div class="qs-step">
                 <div class="qs-step-label">Install</div>
                 <pre
-                    class="qs-code"><code>curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash -s -- v0.42.0-rc.8</code></pre>
+                    class="qs-code"><code>curl -L --tlsv1.2 -sSf https://raw.githubusercontent.com/obeli-sk/obelisk/main/download.sh | bash</code></pre>
                 <p class="qs-note">Installs the Obelisk 0.42 release candidate. See
                     <a href="{{ get_url(path='@/install/_index.md') }}">Install</a> for Docker, Nix, and other
                     options.</p>
@@ -69,7 +69,7 @@ export default function handle() {
   return new Response(`example.com returned HTTP ${status}\n`);
 }</code></pre>
                         <p class="qs-note">The webhook endpoint serves <code>GET /run</code> and calls the workflow.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/js/js-webhooks.md') }}">Learn more about webhook
+                            <a href="{{ get_url(path='@/docs/latest/js/js-webhooks.md') }}">Learn more about webhook
                                 endpoints →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-workflow">
@@ -80,7 +80,7 @@ export default function run() {
 }</code></pre>
                         <p class="qs-note">The workflow is deterministic. Every child call and its result is persisted,
                             so after a crash it replays and continues where it left off.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/js/js-workflows.md') }}">Learn more about
+                            <a href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Learn more about
                                 workflows →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-activity">
@@ -90,7 +90,7 @@ export default function run() {
 }</code></pre>
                         <p class="qs-note">Activities perform side effects such as HTTP calls and are retried
                             automatically on failure.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/js/js-activities.md') }}">Learn more about
+                            <a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Learn more about
                                 activities →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-deployment">
@@ -118,7 +118,7 @@ location = "webhook/handle.js"
 routes = [{ methods = ["GET"], route = "/run" }]</code></pre>
                         <p class="qs-note">The deployment wires the components together and declares their typed
                             signatures. No build step is needed.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/configuration/deployment.md') }}">Learn
+                            <a href="{{ get_url(path='@/docs/latest/configuration/deployment.md') }}">Learn
                                 more about deployment configuration →</a></p>
                     </div>
                     <div class="qs-tab-panel" id="qs-panel-app">
@@ -130,12 +130,12 @@ pattern = "https://example.com"
 methods = ["GET"]</code></pre>
                         <p class="qs-note">The app config sets the upper bound on what any deployment of the app may
                             access.
-                            <a href="{{ get_url(path='@/docs/v0.42.0/configuration/app.md') }}">Learn
+                            <a href="{{ get_url(path='@/docs/latest/configuration/app.md') }}">Learn
                                 more about app configuration →</a></p>
                     </div>
                 </div>
                 <p class="qs-note">Building with a coding agent? Point it at
-                    <a href="{{ get_url(path='@/docs/v0.42.0/llms.md') }}">llms.txt</a>, which links every docs page
+                    <a href="{{ get_url(path='@/docs/latest/llms.md') }}">llms.txt</a>, which links every docs page
                     and lists the recommended authoring path.</p>
             </div>
             <div class="qs-step">
@@ -146,7 +146,7 @@ obelisk server run --app-config app.toml --deployment deployment.toml
 curl localhost:9090/run</code></pre>
                 <p class="qs-note">Use Web UI at <strong>:8080</strong>, Webhooks at <strong>:9090</strong>,
                     API at <strong>:5005</strong> or
-                    <a href="{{ get_url(path='@/docs/v0.42.0/access/cli.md') }}">CLI</a> to interact with the deployed
+                    <a href="{{ get_url(path='@/docs/latest/access/cli.md') }}">CLI</a> to interact with the deployed
                     application.
                 </p>
             </div>

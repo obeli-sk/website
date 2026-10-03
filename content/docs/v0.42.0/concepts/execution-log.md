@@ -156,8 +156,8 @@ Version 7: Finished(Ok(42))
 ```
 
 Note: if the original executor is still holding the WASM instance warm (see
-[Join Next Blocking Strategy](@/docs/latest/concepts/workflows/_index.md#join-next-blocking-strategy)),
-it may continue directly without an additional Locked event.
+[Join Next Blocking Strategy](@/docs/latest/concepts/workflows/_index.md#blocking-strategy)), it may
+continue directly without an additional Locked event.
 
 ## Inspecting the Execution Log
 

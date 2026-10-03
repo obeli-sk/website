@@ -35,8 +35,9 @@ light_theme = "catppuccin-latte"
 dark_theme = "catppuccin-mocha"
 
 [extra]
-latest = "v0.41.5"
+latest = "v0.42.0"
 versions = [
+    "v0.42.0",
     "v0.41.5",
     "v0.41.4",
     "v0.41.3",
