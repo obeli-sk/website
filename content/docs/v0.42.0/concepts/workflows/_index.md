@@ -13,12 +13,13 @@ interruptions like server restarts.
 ## Determinism and Replayability
 
 This reliability is fundamentally enabled by ensuring **deterministic execution** and thus
-**replayability**. JavaScript workflows run on Boa compiled to WASM by default (native V8 is
-opt-in), Rust workflows run in Wasmtime. Both runtimes restrict nondeterministic access so the same
-inputs and event history produce the same outputs and sequence of operations. To support this,
-Obelisk persistently records every child execution submission and its eventual result, forming a
-**durable {{ doc_link(title="execution log", path="concepts/execution-log.md") }}**. This log allows
-a workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can
+**replayability**. JavaScript workflows run on the
+{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}, Rust workflows run in Wasmtime. Both
+restrict nondeterministic access so the same inputs and event history produce the same outputs and
+sequence of operations. To support this, Obelisk persistently records every child execution
+submission and its eventual result, forming a **durable
+{{ doc_link(title="execution log", path="concepts/execution-log.md") }}**. This log allows a
+workflow's state to be precisely reconstructed and resumed after any interruption, ensuring it can
 reliably continue from where it left off without duplicating or skipping steps.
 
 In JavaScript, `Date.now()`, `new Date()`, and `Math.random()` are safe to use: their values come

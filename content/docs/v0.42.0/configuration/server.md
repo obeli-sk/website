@@ -82,12 +82,12 @@ equivalent REST request bodies.
 ### Execution Slots
 
 Every execution slot in the process is charged to exactly one (workload, runtime) cell. `count` is
-how many slots the cell grants, and `memory` is how much linear memory (for a V8 cell, isolate heap)
-one slot may hold. Both accept `"unlimited"`. Byte sizes require a unit key: `memory.mib`,
-`memory.gib`, or `memory.bytes`. The defaults are:
+how many slots the cell grants, and `memory` is how much memory one slot may hold. Both accept
+`"unlimited"`. Byte sizes require a unit key: `memory.mib`, `memory.gib`, or `memory.bytes`. The
+defaults are:
 
 ```toml
-[limits.activities.wasm]       # Includes Boa JavaScript activities.
+[limits.activities.wasm]       # Includes JavaScript activities on the boa-wasm JS runtime.
 count = 500
 memory.gib = 1
 [limits.activities.v8]
@@ -98,13 +98,13 @@ count = 32
 [limits.activities.vm_bochs]   # activity_vm (the VM slot cell for all backends)
 count = 8
 memory.gib = 1
-[limits.workflows.wasm]        # Includes Boa JavaScript workflows.
+[limits.workflows.wasm]        # Includes JavaScript workflows on the boa-wasm JS runtime.
 count = 500
 memory.mib = 512
 [limits.workflows.v8]
 count = 100
 memory.mib = 256
-[limits.webhooks.wasm]         # Includes Boa JavaScript webhook endpoints.
+[limits.webhooks.wasm]         # Includes JavaScript webhook endpoints on the boa-wasm JS runtime.
 count = 500
 memory.mib = 512
 [limits.webhooks.v8]
@@ -117,10 +117,8 @@ is the process bound. Executors acquire a slot before locking an execution, so w
 stays pending in the database. A webhook request that cannot acquire a slot receives
 `503 Service Unavailable`; capacity is acquired only after a route matches.
 
-JavaScript components run on Boa compiled to WASM by default (`OBELISK_JS_RUNTIME=boa-wasm`) and use
-the `wasm` cells. When the server is started with `OBELISK_JS_RUNTIME=v8`, JavaScript components run
-on native V8 and use the `v8` cells. Any other value fails startup. Exceeding a V8 cell's heap limit
-fails the execution with "JavaScript heap limit exceeded".
+JavaScript components use the `wasm` or `v8` cells depending on the selected
+{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}.
 
 ## Automatic Maintenance and Retention
 
@@ -243,16 +241,10 @@ enabled = true
 directory = "${CACHE_DIR}/codegen"   # Path to directory where AOT generated code is cached. Supports path prefixes.
 ```
 
-## Native V8 Configuration
+## JS Runtime Configuration
 
-```toml
-[v8]
-thread_stack_size.mib = 4   # Stack size for each native V8 isolate thread.
-```
-
-These settings apply when the server is started with `OBELISK_JS_RUNTIME=v8`. Each V8 isolate runs
-on its own OS thread. The number of isolates and their heap size are the `v8` cells of
-[`[limits]`](#execution-slots).
+The `[v8]` table and the choice between the `boa-wasm` and `v8` runtimes are described in
+{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}.
 
 ## Global Webhook Configuration
 
@@ -261,8 +253,8 @@ on its own OS thread. The number of isolates and their heap size are the `v8` ce
 request_timeout.seconds = 30   # Deadline for a webhook handler to return its HTTP response.
 ```
 
-The deadline applies to WASM and V8 webhook handlers. It does not limit a streaming response body
-after the response has been returned.
+The deadline applies to all webhook handlers. It does not limit a streaming response body after the
+response has been returned.
 
 ## Global Workflow Configuration
 

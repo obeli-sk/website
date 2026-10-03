@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 23
 +++
 
-Activities are the units of side-effectful work. JavaScript activities run on Boa compiled to WASM
-by default (native V8 with `OBELISK_JS_RUNTIME=v8`), are retried automatically on failure or
+Activities are the units of side-effectful work. JavaScript activities run on the
+{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}, are retried automatically on failure or
 timeout, and must be **idempotent**, since Obelisk may execute them more than once. See
 {{ doc_link(title="Activities", path="concepts/activities/_index.md") }} for the general model and
 {{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }} for the full type and JSON
@@ -82,15 +82,18 @@ throws.
 
 ## Available globals
 
-| Global                        | Description                                                                                                                                                                   |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                                                                                                 |
-| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                                                                                                |
-| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) subset: HMAC only, `importKey("raw", ...)`, `sign`, and `verify` (no `verify` on V8 activities) |
-| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                                                                   |
-| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                                                                                            |
-| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                                                                                                |
-| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                                                                                                  |
+| Global                        | Description                                                                                                                                    |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                                                                  |
+| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                                                                 |
+| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) subset: HMAC only, `importKey("raw", ...)`, `sign`, and `verify` |
+| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                                    |
+| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                                                             |
+| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                                                                 |
+| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                                                                   |
+
+Which `crypto.subtle` methods are available depends on the
+{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}.
 
 ## Examples
 

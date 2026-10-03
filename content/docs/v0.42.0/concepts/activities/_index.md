@@ -17,9 +17,10 @@ executed at least once for resiliency.
   important activity contract, and the responsibility for satisfying it lies with the activity
   implementation.
 
-- **Isolation**: JavaScript activities run in fresh Boa WASM instances by default, or in fresh V8
-  isolates with `OBELISK_JS_RUNTIME=v8`. WASM activities run in Wasmtime. Exec activities run as
-  host processes; VM activities run through the selected experimental VM backend.
+- **Isolation**: JavaScript activities run in a fresh instance of the
+  {{ doc_link(title="JS runtime", path="js/js-runtime.md") }} for each execution. WASM activities
+  run in Wasmtime. Exec activities run as host processes; VM activities run through the selected
+  experimental VM backend.
 
 - **Retry safety**: Activities must be safe to retry after errors, timeouts, and crashes, but also
   after ambiguous outcomes. In particular, an activity may be executed again even if it already
@@ -83,8 +84,8 @@ until `max_retries` is exhausted. Because an activity can always fail, its `retu
 
 Obelisk supports four kinds of activities:
 
-- **JavaScript Activities** (`activity_js`): JavaScript functions executed by Boa compiled to WASM,
-  or by native V8 when enabled
+- **JavaScript Activities** (`activity_js`): JavaScript functions executed by the
+  {{ doc_link(title="JS runtime", path="js/js-runtime.md") }}
 - **Rust Activities** (`activity_wasm`): Rust components compiled to WebAssembly and run in
   Wasmtime, see {{ doc_link(title="Rust Activities", path="wasm/activities.md") }}
 - **Exec Activities** (`activity_exec`): approved host processes used by JavaScript or Rust apps
