@@ -278,11 +278,13 @@ response_refresh_interval = 32         # Reload responses from the database afte
 
 The built-in `"external"` HTTP server is always available and does not need to be declared. It
 listens on `127.0.0.1:9090` by default; move it with `external.listening_addr`, because declaring an
-`[[http_server]]` named `external` is rejected as a duplicate name. Define additional named servers
-in `server.toml` when you need non-default ports:
+`[[http_server]]` named `external` is rejected as a duplicate name. The server binds its port even
+when no webhook endpoint uses it; set `external.enabled = false` to disable it. Define additional
+named servers in `server.toml` when you need non-default ports:
 
 ```toml
 external.listening_addr = "127.0.0.1:9090" # Address and port for the built-in "external" server
+external.enabled = true                    # Set to false to disable the built-in "external" server
 
 [[http_server]]
 name = "server_name"                  # Server identifier
