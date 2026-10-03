@@ -276,10 +276,14 @@ response_refresh_interval = 32         # Reload responses from the database afte
 
 ## HTTP Servers
 
-The built-in `"external"` HTTP server is always available at `127.0.0.1:9090` and does not need to
-be declared. Define additional named servers in `server.toml` when you need non-default ports:
+The built-in `"external"` HTTP server is always available and does not need to be declared. It
+listens on `127.0.0.1:9090` by default; move it with `external.listening_addr`, because declaring an
+`[[http_server]]` named `external` is rejected as a duplicate name. Define additional named servers
+in `server.toml` when you need non-default ports:
 
 ```toml
+external.listening_addr = "127.0.0.1:9090" # Address and port for the built-in "external" server
+
 [[http_server]]
 name = "server_name"                  # Server identifier
 listening_addr = "0.0.0.0:9000"       # Listen address and port
