@@ -106,7 +106,8 @@ JavaScript `dynamic.call`. The mapping between WIT types and JSON:
 | `enum { case-name }`                | `"case_name"` (kebab-case → snake_case)                               |
 | `flags { flag-name }`               | Array of active flag strings: `["flag_name"]`                         |
 
-Note: kebab-case WIT identifiers become snake_case in JSON keys and values.
+Note: kebab-case WIT identifiers become snake_case in JSON keys and values. A record field of type
+`option<T>` may be omitted from the JSON object; it is then treated as none.
 
 ### Numeric precision
 
