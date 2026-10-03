@@ -82,18 +82,16 @@ throws.
 
 ## Available globals
 
-| Global                        | Description                                                                                                                                    |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `process.env`                 | Access configured `env_vars` and authorized `exposed_secrets`                                                                                  |
-| `fetch(url, options)`         | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                                                                 |
-| `crypto.subtle`               | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) subset: HMAC only, `importKey("raw", ...)`, `sign`, and `verify` |
-| `setTimeout` / `Promise`      | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                                    |
-| `console.log/info/warn/error` | Structured log entries stored in the execution log                                                                                             |
-| `TextEncoder` / `TextDecoder` | UTF-8 encoding                                                                                                                                 |
-| `URL` / `URLSearchParams`     | WHATWG URL parsing and query-string building                                                                                                   |
-
-Which `crypto.subtle` methods are available depends on the
-{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}.
+| Global                               | Description                                                                                                                                                                 |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `process.env`                        | Access configured `env_vars` and authorized `exposed_secrets`                                                                                                               |
+| `fetch(url, options)`                | Outbound HTTP; requires `[[activity_js.allowed_host]]` entries                                                                                                              |
+| `crypto.subtle`                      | [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) subset: HMAC with SHA-256, SHA-384, or SHA-512; `importKey("raw", ...)`, `sign`, and `verify` |
+| `crypto.getRandomValues(typedArray)` | Fills an integer typed array with cryptographically secure random values, up to 65536 bytes per call                                                                        |
+| `setTimeout` / `Promise`             | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                                                                 |
+| `console.log/info/warn/error`        | Structured log entries stored in the execution log                                                                                                                          |
+| `TextEncoder` / `TextDecoder`        | UTF-8 encoding                                                                                                                                                              |
+| `URL` / `URLSearchParams`            | WHATWG URL parsing and query-string building                                                                                                                                |
 
 ## Examples
 

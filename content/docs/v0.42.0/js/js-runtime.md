@@ -21,13 +21,12 @@ Any other value fails startup.
 
 ## Differences
 
-|                               | `boa-wasm`                                     | `v8`                                                      |
-| ----------------------------- | ---------------------------------------------- | --------------------------------------------------------- |
-| Activity isolation            | A fresh WASM instance per execution            | A fresh V8 isolate per execution                          |
-| Execution slots               | `wasm` cells of [`[limits]`](#execution-slots) | `v8` cells of [`[limits]`](#execution-slots)              |
-| Slot `memory` limit           | WASM linear memory                             | Isolate heap                                              |
-| Exceeding the memory limit    | Fails the execution                            | Fails the execution with "JavaScript heap limit exceeded" |
-| `crypto.subtle` in activities | HMAC `importKey`, `sign`, and `verify`         | HMAC `importKey` and `sign`; no `verify`                  |
+|                            | `boa-wasm`                                     | `v8`                                                      |
+| -------------------------- | ---------------------------------------------- | --------------------------------------------------------- |
+| Activity isolation         | A fresh WASM instance per execution            | A fresh V8 isolate per execution                          |
+| Execution slots            | `wasm` cells of [`[limits]`](#execution-slots) | `v8` cells of [`[limits]`](#execution-slots)              |
+| Slot `memory` limit        | WASM linear memory                             | Isolate heap                                              |
+| Exceeding the memory limit | Fails the execution                            | Fails the execution with "JavaScript heap limit exceeded" |
 
 Workflows are deterministic on both runtimes: each restricts nondeterministic access so the same
 inputs and event history replay to the same result.

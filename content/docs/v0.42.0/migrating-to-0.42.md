@@ -519,6 +519,8 @@ rc.3:
 - Expect JavaScript components to run on Boa compiled to WASM unless `OBELISK_JS_RUNTIME=v8` is set.
   rc.4 through rc.10 defaulted to V8; set `OBELISK_JS_RUNTIME=v8` to keep it. The former `boawasm`
   value is rejected; `OBELISK_JS_RUNTIME=boa-wasm` selects the Boa default explicitly.
+- On V8, declare the HMAC hash actually used and include `sign` or `verify` in the key usages.
+  Through rc.11, V8 signed with SHA-256 regardless of the key's hash and did not check usages.
 - Replace `joinSet.submit(ffqn, params)` with `dynamic.submit(joinSet, ffqn, params)` and import
   `obelisk:workflow-dynamic@1.0.0` statically in every component that uses the dynamic module, even
   when it is loaded with `import()`. The base module does not export `call` or `schedule`.
