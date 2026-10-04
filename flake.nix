@@ -17,6 +17,7 @@
           <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
           <fontconfig>
             <dir>${pkgs.dejavu_fonts}</dir>
+            <dir>${pkgs.noto-fonts-color-emoji}</dir>
             <include ignore_missing="yes">${pkgs.fontconfig.out}/etc/fonts/conf.d</include>
           </fontconfig>
         '';

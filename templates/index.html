@@ -163,37 +163,50 @@ curl localhost:9090/run</code></pre>
             <input type="radio" name="sc" id="sc-3" class="sc-input">
             <input type="radio" name="sc" id="sc-4" class="sc-input">
             <input type="radio" name="sc" id="sc-5" class="sc-input">
+            <input type="radio" name="sc" id="sc-6" class="sc-input">
+            <input type="radio" name="sc" id="sc-7" class="sc-input">
             <div class="sc-track">
                 <div class="sc-slide">
-                    <label for="sc-5" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="{{ get_url(path="sc-executions.png") }}" alt="Execution list in the Web UI">
+                    <label for="sc-7" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="{{ get_url(path="sc-executions.png") }}" alt="Execution list: browse and filter workflow and activity executions">
                     <label for="sc-2" class="sc-arrow sc-next">&#8250;</label>
-                    <p class="sc-caption">Execution list — browse and filter all workflow and activity executions</p>
+                    <p class="sc-caption">Execution list: browse and filter workflow and activity executions</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-1" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="{{ get_url(path="sc-trace.png") }}" alt="Parallel workflow execution trace in the Web UI">
+                    <img src="{{ get_url(path="sc-deployments.png") }}" alt="Deployments: inspect deployment states and execution counts">
                     <label for="sc-3" class="sc-arrow sc-next">&#8250;</label>
-                    <p class="sc-caption">Execution trace — parallel fan-out activities visualised in a timeline</p>
+                    <p class="sc-caption">Deployments: inspect deployment states and execution counts</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-2" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="{{ get_url(path="sc-events.png") }}" alt="Execution event log in the Web UI">
+                    <img src="{{ get_url(path="sc-deployment-graph.png") }}" alt="Deployment graph: see how components connect">
                     <label for="sc-4" class="sc-arrow sc-next">&#8250;</label>
-                    <p class="sc-caption">Execution log — every workflow step persisted for deterministic replay
-                    </p>
+                    <p class="sc-caption">Deployment graph: see how components connect</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-3" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="{{ get_url(path="sc-logs.png") }}" alt="Logs in the Web UI">
+                    <img src="{{ get_url(path="sc-trace.png") }}" alt="Execution trace: follow a durable agent session and its child executions">
                     <label for="sc-5" class="sc-arrow sc-next">&#8250;</label>
-                    <p class="sc-caption">Logs — structured log output and stdout/stderr from executions</p>
+                    <p class="sc-caption">Execution trace: follow a durable agent session and its child executions</p>
                 </div>
                 <div class="sc-slide">
                     <label for="sc-4" class="sc-arrow sc-prev">&#8249;</label>
-                    <img src="{{ get_url(path="blog/0-38-advance-trace.png") }}" alt="Advance modal in the Web UI">
+                    <img src="{{ get_url(path="sc-events.png") }}" alt="Execution log: inspect the recorded steps used for replay">
+                    <label for="sc-6" class="sc-arrow sc-next">&#8250;</label>
+                    <p class="sc-caption">Execution log: inspect the recorded steps used for replay</p>
+                </div>
+                <div class="sc-slide">
+                    <label for="sc-5" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="{{ get_url(path="sc-logs.png") }}" alt="Application logs: read workflow and child activity output">
+                    <label for="sc-7" class="sc-arrow sc-next">&#8250;</label>
+                    <p class="sc-caption">Application logs: read workflow and child activity output</p>
+                </div>
+                <div class="sc-slide">
+                    <label for="sc-6" class="sc-arrow sc-prev">&#8249;</label>
+                    <img src="{{ get_url(path="sc-system-events.png") }}" alt="System logs: inspect startup, deployment, and maintenance events">
                     <label for="sc-1" class="sc-arrow sc-next">&#8250;</label>
-                    <p class="sc-caption">Step-through debugging — inspect the Advance modal before writing new execution log entries</p>
+                    <p class="sc-caption">System logs: inspect startup, deployment, and maintenance events</p>
                 </div>
             </div>
             <div class="sc-dots">
@@ -202,6 +215,8 @@ curl localhost:9090/run</code></pre>
                 <label for="sc-3" class="sc-dot"></label>
                 <label for="sc-4" class="sc-dot"></label>
                 <label for="sc-5" class="sc-dot"></label>
+                <label for="sc-6" class="sc-dot"></label>
+                <label for="sc-7" class="sc-dot"></label>
             </div>
         </div>
     </div>

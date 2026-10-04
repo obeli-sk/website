@@ -1,110 +1,74 @@
-/**
- * Playwright script to capture Web UI screenshots for the homepage carousel.
- *
- * Prerequisites:
- *   1. Start the demo-tutorial server:
- *        cd /workspace/apps/demo-tutorial
- *        obelisk server run --deployment deployment.toml
- *   2. Trigger the workflows (webhooks spawn both serial and parallel):
- *        curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait
- *      Wait ~30s for the serial workflow to finish.
- *   3. Run this script from the website/ directory:
- *        nix develop .#screenshots -c node scripts/screenshot-webui.js
- *
- *   4. Copy outputs to static/:
- *        cp /tmp/sc-*.png static/
- *
- * Captured views (all clipped to 1280×680, saved to /tmp/sc-*.png):
- *   sc-executions.png   — execution list (home page)
- *   sc-trace.png        — parallel workflow execution trace
- *   sc-events.png       — execution event log
- *   sc-logs.png         — execution logs
- */
-
+// Capture the published Web UI for SCREENSHOT_EXECUTION_ID, or a completed tutorial workflow.
+// Run with nix develop .#screenshots -c node scripts/screenshot-webui.js.
+const fs = require('node:fs');
+const path = require('node:path');
 const { chromium } = require('playwright-core');
 
-const LAUNCH_OPTS = {
-  headless: true,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-setuid-sandbox', '--disable-gpu'],
-};
+const webuiUrl = process.env.WEBUI_URL || 'http://127.0.0.1:8080';
+const apiUrl = process.env.OBELISK_API_URL || 'http://127.0.0.1:5005';
+const token = process.env.OBELISK_API_TOKEN;
+const outputDir = process.env.SCREENSHOT_DIR || '/tmp';
+const viewport = { width: 1280, height: 800 };
 
-const VIEWPORT = { width: 1280, height: 680 };
-
-async function shot(page, path) {
-  await page.waitForTimeout(2000);
-  await page.screenshot({ path, clip: { x: 0, y: 0, ...VIEWPORT } });
-  console.log(`Saved ${path}`);
-}
+if (!token) throw new Error('Set OBELISK_API_TOKEN to the demo server token');
 
 (async () => {
-  const browser = await chromium.launch(LAUNCH_OPTS);
-  const ctx = await browser.newContext({ viewport: VIEWPORT });
-  const page = await ctx.newPage();
+  fs.mkdirSync(outputDir, { recursive: true });
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({ viewport });
+    await context.addInitScript(value => localStorage.setItem('obelisk-api-token', value), token);
+    const apiGet = async route => {
+      const response = await context.request.get(apiUrl + route, {
+        headers: { authorization: `Bearer ${token}`, accept: 'application/json' },
+      });
+      if (!response.ok()) throw new Error(`GET ${route}: HTTP ${response.status()}`);
+      return response.json();
+    };
+    const deploymentId = await apiGet('/v1/deployment-id');
+    let executionId = process.env.SCREENSHOT_EXECUTION_ID;
+    if (!executionId) {
+      const executions = await apiGet('/v1/executions?show_derived=true&function=tutorial:demo/workflow.parallel');
+      const parallel = executions.find(execution => execution.pending_state.status === 'finished');
+      if (!parallel) throw new Error('Set SCREENSHOT_EXECUTION_ID or complete the tutorial /parallel workflow');
+      executionId = parallel.execution_id;
+    }
+    const page = await context.newPage();
+    const capture = async (route, name, selector) => {
+      await page.goto(webuiUrl + route, { waitUntil: 'networkidle' });
+      await page.locator(selector).first().waitFor();
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: path.join(outputDir, `sc-${name}.png`) });
+      console.log(`Saved sc-${name}.png`);
+    };
 
-  // --- Execution list ---
-  await page.goto('http://localhost:8080', { waitUntil: 'domcontentloaded' });
-  await shot(page, '/tmp/sc-executions.png');
-
-  // Find execution IDs from the list
-  const traceLinks = await page.locator('a[href^="/execution/E_"]').all();
-  const rows = [];
-  for (const link of traceLinks) {
-    const href = await link.getAttribute('href');
-    const match = href.match(/\/execution\/(E_[^/]+)/);
-    if (!match) continue;
-    const execId = match[1];
-    const row = link.locator('xpath=ancestor::tr[1]');
-    const cells = await row.locator('td').all();
-    const timingText = cells.length > 0 ? await cells[cells.length - 1].innerText() : '';
-    rows.push({ execId, timingText });
-    console.log(`  ${execId}: ${timingText.replace(/\n/g, ' ')}`);
-  }
-
-  if (rows.length < 2) {
-    console.error('Not enough executions found:', rows.length);
+    await capture('/', 'executions', 'a[href^="/execution/E_"]');
+    await capture('/deployments', 'deployments', '.deployment-list-item');
+    await capture(`/deployment/${deploymentId}#graph`, 'deployment-graph', '.component-graph svg');
+    await page.goto(webuiUrl + `/execution/${executionId}`, { waitUntil: 'networkidle' });
+    await page.locator('.trace-view').waitFor();
+    await page.locator('.trace-view .step-row').nth(1).waitFor();
+    await page.locator('.trace-view').evaluate(element => element.style.width = '580px');
+    await page.screenshot({ path: path.join(outputDir, 'sc-trace.png') });
+    console.log('Saved sc-trace.png');
+    await capture(`/execution/${executionId}/log`, 'events', '.timeline-row');
+    await page.goto(webuiUrl + `/execution/${executionId}/applogs`, { waitUntil: 'networkidle' });
+    const derived = page.getByRole('button', { name: 'Derived', exact: true });
+    if (await derived.getAttribute('aria-pressed') !== 'true') await derived.click();
+    await page.getByRole('columnheader', { name: 'Child', exact: true }).waitFor();
+    await page.locator('.logs-table .log-row').first().waitFor();
+    if (process.env.SCREENSHOT_LOG_TEXT) {
+      await page.locator('.logs-table .log-row').filter({ hasText: process.env.SCREENSHOT_LOG_TEXT })
+        .first().evaluate(row => row.closest('.logs-list').scrollTop = row.offsetTop - 40);
+    }
+    await page.screenshot({ path: path.join(outputDir, 'sc-logs.png') });
+    console.log('Saved sc-logs.png');
+    await capture('/admin/system-events?all_deployments=true', 'system-events', '.system-event-list-item');
+    fs.writeFileSync(path.join(outputDir, 'capture.json'), JSON.stringify({
+      viewport, deploymentId, executionId,
+      capturedAt: new Date().toISOString(),
+    }, null, 2) + '\n');
+  } finally {
     await browser.close();
-    return;
   }
-
-  // Pick the two most recently created executions (first two in the list).
-  // Among those, the one that took longer is serial, the faster one is parallel.
-  const recent = rows.slice(0, 2);
-  const secsOf = r => {
-    const m = r.timingText.match(/Took (\d+) secs?/);
-    return m ? parseInt(m[1]) : 0;
-  };
-  let serialId, parallelId;
-  if (secsOf(recent[0]) >= secsOf(recent[1])) {
-    serialId = recent[0].execId;
-    parallelId = recent[1].execId;
-  } else {
-    serialId = recent[1].execId;
-    parallelId = recent[0].execId;
-  }
-  console.log(`Serial: ${serialId}  Parallel: ${parallelId}`);
-
-  // The top-level executions are webhooks; the workflow is the first child (.o:1_1).
-  // Use the workflow child for trace/events/logs so we see the actual workflow detail.
-  const parallelWorkflowId = `${parallelId}.o:1_1`;
-  console.log(`Parallel workflow: ${parallelWorkflowId}`);
-
-  // --- Execution trace (parallel workflow child, with children autoloaded) ---
-  await page.goto(`http://localhost:8080/execution/${parallelWorkflowId}/trace`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2000);
-  const autoload = page.getByLabel('Autoload children');
-  if (await autoload.count() > 0 && !(await autoload.isChecked())) {
-    await autoload.check();
-    await page.waitForTimeout(4000);
-  }
-  await shot(page, '/tmp/sc-trace.png');
-
-  // --- Execution event log (default route: /execution/{id}) ---
-  await page.goto(`http://localhost:8080/execution/${parallelWorkflowId}`, { waitUntil: 'domcontentloaded' });
-  await shot(page, '/tmp/sc-events.png');
-
-  // --- Logs ---
-  await page.goto(`http://localhost:8080/execution/${parallelWorkflowId}/logs`, { waitUntil: 'domcontentloaded' });
-  await shot(page, '/tmp/sc-logs.png');
-
-  await browser.close();
 })();

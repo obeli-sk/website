@@ -167,22 +167,23 @@ Used in Markdown content:
 
 ## Screenshots
 
-Homepage carousel screenshots (`static/sc-*.png`) are captured with Playwright. Use the
+Web UI screenshots (`static/sc-*.png`) are captured with Playwright. Use the
 `screenshots` devShell (`nix develop .#screenshots`) which provides `node` and `playwright`
 on `$PATH`. To regenerate:
 
 1. Start the demo-tutorial server:
    ```sh
    cd /workspace/apps/demo-tutorial
-   obelisk server run --deployment deployment.toml
+   export OBELISK_API_TOKEN=demo-token
+   obelisk server run --deployment deployment.toml --server-config server.toml --app-config app.toml
    ```
-2. Trigger both workflows and wait for the serial one (~30 s) to finish:
+2. Trigger both workflows and wait for them to finish:
    ```sh
    curl http://localhost:9090/serial & curl http://localhost:9090/parallel; wait
-   sleep 30
    ```
 3. Run the capture script from `website/`:
    ```sh
+   export OBELISK_API_TOKEN=demo-token
    nix develop .#screenshots -c node scripts/screenshot-webui.js
    ```
 4. Copy outputs to `static/`:
@@ -190,9 +191,14 @@ on `$PATH`. To regenerate:
    cp /tmp/sc-*.png static/
    ```
 
-The script captures four views at 1280×680 pixels: execution list, parallel trace, event log, and
-logs. It auto-detects serial vs parallel by timing and always uses the two most recently created
-executions. See `scripts/screenshot-webui.js` for details.
+The script captures the execution list, deployment list, deployment graph, trace, event log,
+application logs, and system logs. All screenshots are 1280×800 so the homepage carousel keeps a
+consistent height. Set `SCREENSHOT_EXECUTION_ID` to capture a real workflow-agent session; otherwise
+it finds a completed tutorial parallel workflow. It authenticates with `OBELISK_API_TOKEN`. Override
+`WEBUI_URL`, `OBELISK_API_URL`, and `SCREENSHOT_DIR` for other ports or output directories. The
+homepage uses workflow-agent for execution views and demo-tutorial for the smaller deployment graph.
+Use `SCREENSHOT_LOG_TEXT` to scroll application logs to a particular recorded message.
+See `scripts/screenshot-webui.js` for details.
 
 ## Validation
 
