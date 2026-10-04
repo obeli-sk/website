@@ -1,16 +1,26 @@
 +++
-title = "Obelisk 0.42: Sandboxes All the Way Down"
+title = "Obelisk 0.42: Determinism for the Age of Agents"
 date = 2026-10-04
 draft = false
 +++
 
-Letting a coding agent write your workflows is easy. Letting it ship them is the hard part. Obelisk
-0.42 answers that with layers: each layer can only narrow what the one above it allows, and the
-agent gets to touch only the innermost one. The configuration is split between the people who own
-each boundary, the runtime adds a VM layer for code that needs a real Linux userspace, and
-JavaScript can run on native V8.
+An agent's progress should survive the process that runs it. Its code should run within a policy you
+can review, and its failures should leave a history you can inspect.
+
+Obelisk keeps workflow progress in a database. Workflow code replays deterministically from that
+history, using recorded activity results before doing new work. A process can stop; the next one
+reconstructs where it left off. The same history lets you see what ran and debug it afterward.
+
+0.42 builds on that foundation for agentic workloads: reviewable security boundaries for generated
+code, native V8 for faster JavaScript replay, Linux VM activities for tools that need them, and a
+workflow-agent prototype that can deploy, test, and fix applications on another Obelisk instance.
 
 <!-- more -->
+
+The idea follows
+[SQLite is All You Need for Durable Workflows](@/blog/2026-05-29-sqlite-is-all-you-need-for-durable-workflows.md):
+keep durable state close to the runtime, and let compute come and go. An agent waiting for a model,
+a tool, or a person can be represented by rows in the database, without a running VM per session.
 
 ## Security
 
@@ -29,11 +39,9 @@ resource limits) and what a particular app was allowed to do. 0.42 splits it:
 The effective permission is the intersection. A deployment can request less than `app.toml` grants,
 never more, and `app.toml` cannot switch on exec activities unless `server.toml` allows it.
 
-This is the split we want for agents. An agent can rewrite code and `deployment.toml` as often as it
-likes; `obelisk deployment verify --fix` tells it exactly which `app.toml` entries its change would
-need. Those entries are the review. Reading the diff of `app.toml` tells a reviewer which secrets
-exist and who reads them, which hosts the app calls, and which native executables it runs, without
-reading any of the code.
+An agent can rewrite code and `deployment.toml` within those grants. A request for broader access
+requires a change to `app.toml`, which gives the reviewer a small, explicit policy diff: which
+secrets the code can use, which hosts it can call, and which native executables it can run.
 
 ```toml
 # app.toml
@@ -50,39 +58,31 @@ secrets = ["OPENAI_KEY"]
 replace_in = ["headers"]
 ```
 
-The running policy has a canonical digest, available at `GET /v1/app-config`, and every deployment
-records the digest it was activated under. `obelisk generate split-config` moves app policy out of a
-0.41 `server.toml`.
+`obelisk deployment verify` reports missing policy entries; `--fix` can scaffold them for review.
+Every deployment records the digest of the app policy it was activated under, so that boundary is
+part of its inspectable history.
 
-### Plaintext secrets need a signed-off digest
+### Secrets stay at the network edge
 
 Secrets still default to placeholders that the runtime replaces at the network edge, so component
 code never sees the value. Some code legitimately needs the plaintext, such as a webhook verifying
 an HMAC signature. In 0.42, WASM and JavaScript activities, webhooks, exec activities, and VM
 activities can request that with `exposed_secrets`.
 
-Each exposure requires a grant in `app.toml` bound to a digest of the component's configuration and
-its complete set of exposed secrets:
-
-```sh
-obelisk generate secret-config-digest --deployment deployment.toml
-```
-
-```toml
-# app.toml
-[secrets.WEBHOOK_SIGNING_SECRET.exposed_to]
-"signed-webhook" = "sha256:..."
-```
-
-If the agent changes the component or asks for one more secret, the digest changes and the grant no
-longer applies. Nothing is exposed until a human approves the new digest.
+Each exposure requires a grant in `app.toml` bound to a digest of the component and its complete set
+of exposed secrets. If the agent changes the component or asks for one more secret, the digest
+changes and the grant no longer applies. The app admin must approve the new digest before the
+runtime exposes those secrets.
 
 ### Exec activities: the escape hatch, approved twice
 
-Exec activities run a host process. They are deliberately outside every sandbox, which is why they
-now need two signatures: the platform admin opens the gate in `server.toml`, and the app admin
-approves the specific digest in `app.toml`. The process starts with a cleared environment and is
-killed as a process group when its lock expires. Treat it as the tool of last resort.
+Exec activities run a host process outside the sandbox. They now need two approvals: the platform
+admin opens the gate in `server.toml`, and the app admin approves the specific digest in `app.toml`.
+The process starts with a cleared environment and is killed as a process group when its lock
+expires. Use it when a sandboxed activity cannot do the job.
+
+The {{ doc_link(title="Security Model", path="security.md", version="v0.42.0") }} explains the
+grants and approval digests in detail.
 
 ## Native V8
 
@@ -98,9 +98,9 @@ For replay timings from a real agent conversation, see the
 
 ## VM activities (experimental)
 
-Between the WASM sandbox and a raw host process there was nothing. 0.42 adds `[[activity_vm]]`: a
-script that runs inside a Linux VM, with its tools supplied as Nix store paths that are verified and
-mounted read-only.
+For activities that need a real Linux userspace, 0.42 adds `[[activity_vm]]`: a script that runs
+inside a Linux VM, with its tools supplied as Nix store paths that are verified and mounted
+read-only.
 
 Guest HTTP goes through the same app and deployment policy as every other component, including
 secret placeholders, so a VM activity cannot reach a host that a JavaScript activity could not.
@@ -166,6 +166,8 @@ Or run the agent itself as a durable workflow, with model calls and tools as act
 useful for enterprise agents that wait on people or external systems, and for coding agents that
 work inside a simulated Bash session with a persistent virtual filesystem.
 
+### A coding agent that can inspect what it ships
+
 [workflow-agent](https://github.com/obeli-sk/workflow-agent) is our prototype of that second path: a
 browser UI and a durable agent loop with a simulated Bash environment based on just-bash, a
 persistent virtual filesystem, and MCP tools.
@@ -224,8 +226,8 @@ API and ships in every 0.42 release binary, served at `http://localhost:8080` by
 - `obelisk generate new` creates a JavaScript starter app.
 - Retention and garbage collection run automatically (30 days by default) and can be managed with
   `obelisk admin`; system events are persisted.
-- JavaScript and Rust workflows write identical execution logs, so a workflow can switch languages
-  mid-execution.
+- Compatible JavaScript and Rust workflow implementations can replay the same execution log,
+  allowing a language switch mid-execution.
 - `execution submit --follow-logs`, SSE streams for `follow=true`, and a batch events endpoint.
 - Experimental WASIp3 support for WASM activities and webhooks.
 - gRPC and gRPC-web are deprecated; the REST `/v1` API covers everything they did.
