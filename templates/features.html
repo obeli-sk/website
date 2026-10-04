@@ -4,254 +4,122 @@
 
 {% block meta_description %}
 <meta name="description"
-    content="Obelisk features: JavaScript in V8, Rust components in Wasmtime, experimental Linux VM activities, layered permissions for agent-written deployments, durable workflows, crash recovery, hot redeploy, cron, and Web UI debugging." />
+    content="Durable JavaScript workflows, activities and webhooks, explicit permissions, versioned deployments, and execution debugging in one Obelisk server." />
 {% endblock meta_description %}
 
 {% block content %}
 <div class="container">
     <section class="features-page">
         <h1 class="features-page-title">Features</h1>
-
-        <div class="new-in-banner">
-            <span class="new-in-label">New in 0.42</span>
-            <ul class="new-in-list">
-                <li>Three configuration files, three owners – <code>server.toml</code> for the platform,
-                    <code>app.toml</code> for the reviewed app policy, <code>deployment.toml</code> for code an
-                    agent may write</li>
-                <li>Experimental VM activities – run Nix-packaged Linux tools in Bochs-in-WASM, QEMU, or
-                    Firecracker, under the same HTTP and secret policy</li>
-                <li>Native V8 as an opt-in JavaScript runtime next to the default Boa</li>
-            </ul>
-            <a href="{{ get_url(path='@/blog/2026-09-30-announcing-obelisk-0-42.md') }}" class="new-in-link">Read the announcement →</a>
-        </div>
+        <p class="page-lead">Durable execution for applications and agentic workloads, with deterministic
+            workflows, explicit permissions, and tools to inspect every run.</p>
+        <p><a href="{{ get_url(path='@/blog/2026-09-30-announcing-obelisk-0-42.md') }}">What's new in Obelisk 0.42 →</a></p>
 
         <div class="features-section">
-            <h2>Durable Workflows</h2>
+            <h2>Durable workflows</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>Crash recovery</h3>
-                    <p>The execution log records every activity call, sleep, result, structured log message, and
-                        outgoing HTTP trace. Server crash or restart? Workflows resume from the last completed step with
-                        full history intact.</p>
+                    <h3>Recovery &amp; retries</h3>
+                    <p>Workflows recover their progress after a server restart. Activities retry automatically
+                        on transient failures, with configurable retry and timeout policies.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Auto-retry</h3>
-                    <p>Activities are retried automatically on timeout, trap, or error. Activities can also signal
-                        permanent failure to skip remaining retries. Configure per-component retry policy and lock
-                        expiry in <code>deployment.toml</code>.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Deterministic replay</a></h3>
+                    <p>Recorded history reconstructs workflow state without repeating completed activities.
+                        Workflow time and random values remain consistent during replay.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a
-                            href="{{ get_url(path='@/docs/latest/concepts/workflows/join-sets.md') }}">Structured
-                            concurrency</a></h3>
-                    <p>Submit multiple child executions in parallel and await them individually or all at once.
-                        Unawaited activities and delays are automatically cancelled when the parent completes.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/workflows/join-sets.md') }}">Structured concurrency</a></h3>
+                    <p>Run child workflows and activities in parallel, await their results, and cancel
+                        whole execution trees. Unawaited activities and delays are cancelled when their parent completes.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Persistent sleep</h3>
-                    <p><code>obelisk.sleep()</code> is durable: its position is saved to the execution log. Survive a
-                        server restart mid-sleep with no progress lost.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Saga pattern</h3>
-                    <p>Nest workflows to guarantee cleanup runs even after a crash: the outer workflow catches inner
-                        failures and always executes <a
-                            href="{{ get_url(path='@/docs/latest/js/getting-started-fly-agent.md')}}">
-                            compensation logic</a>.</p>
-                </div>
-                <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/cron.md') }}">Cron scheduling</a></h3>
-                    <p>Declare recurring tasks in <code>deployment.toml</code>. Standard five-field expressions, named
-                        shorthands (<code>@daily</code>, <code>@hourly</code>), or <code>@once</code> for one-time
-                        migrations.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Replay &amp; Advance</h3>
-                    <p>Pause any execution, then step through it one event at a time. Replay previews the next writes;
-                        Advance applies them. Verify a new component version produces identical results before deploying
-                        to production.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Step-through debugger</h3>
-                    <p>Stack traces attached to every execution log event: submits, joins, sleeps. Step through any
-                        execution in the Web UI and see the exact source line.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/cron.md') }}">Scheduling &amp; waiting</a></h3>
+                    <p>Durable sleeps, scheduled executions, and cron jobs survive restarts. Pause and
+                        resume long-running workflows, including agents waiting on people or external systems.</p>
                 </div>
             </div>
         </div>
 
         <div class="features-section">
-            <h2>JavaScript in V8 and Rust in Wasmtime</h2>
+            <h2>JavaScript &amp; tools</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>No build step</h3>
-                    <p>Plain <code>.js</code> files run in V8. No bundler, no compiler, no toolchain. Point
-                        <code>deployment.toml</code> at the file and run.
-                    </p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-components.md') }}">JavaScript first</a></h3>
+                    <p>Write workflows, activities, and webhooks as plain JavaScript, with no build step.
+                        Boa is the default runtime; native V8 is an opt-in alternative.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-components.md') }}">JS component
-                            types</a>
-                    </h3>
-                    <p><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Activities</a>, <a
-                            href="{{ get_url(path='@/docs/latest/js/js-workflows.md') }}">Workflows</a>, and <a
-                            href="{{ get_url(path='@/docs/latest/js/js-webhooks.md') }}">Webhook endpoints</a>, all in
-                        JavaScript. Import activities and workflows directly instead of calling by FFQN string.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/js/js-activities.md') }}">Activities &amp; webhooks</a></h3>
+                    <p>Put network calls and other external work in activities; expose HTTP endpoints
+                        through webhooks. Rust components are also supported and can interoperate with JavaScript.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/configuration/deployment.md') }}#experimental-vm-activities">VM
-                            activities</a> (experimental)</h3>
-                    <p>Run a script with Nix-packaged Linux tools inside a VM: the Bochs emulator compiled to WASM,
-                        native QEMU, or Firecracker. Guest HTTP passes through the same allowlists and secret
-                        placeholders as every other component.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/configuration/deployment.md') }}#experimental-vm-activities">VM activities</a> (experimental)</h3>
+                    <p>Run Nix-packaged Linux tools inside a VM, using Bochs, QEMU, or Firecracker. Guest HTTP uses
+                        the same outbound permissions and secret handling as other components.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Exec activities</h3>
-                    <p>Use an approved executable when an activity needs a host process. It has the same
-                        retry, timeout, and observability guarantees as Rust and JavaScript activities. Parameters arrive as
-                        JSON arguments, results go to stdout.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Determinism without restrictions</h3>
-                    <p><code>Math.random()</code> and <code>Date.now()</code> are safe in workflow code. Values are
-                        recorded on first call and replayed identically on crash recovery.</p>
-                </div>
-                <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/configuration/_index.md') }}">Layered
-                            permissions</a></h3>
-                    <p>The platform admin owns <code>server.toml</code>, the app admin owns <code>app.toml</code>,
-                        and a deployment (possibly written by an agent) can only narrow what both grant. Reviewing the
-                        <code>app.toml</code> diff shows which secrets, hosts, and executables the app can touch.
-                        Secrets are injected at the network edge; plaintext reaches component code only through a
-                        digest-bound grant.</p>
+                    <p>Run host executables with activity retries and observability. They run outside the
+                        sandbox and require approval from both the platform admin and the app admin.</p>
                 </div>
             </div>
         </div>
 
         <div class="features-section">
-            <h2>Deployments &amp; Distribution</h2>
+            <h2>Deployments &amp; permissions</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/deployments.md') }}">Versioned deployments</a>
-                    </h3>
-                    <p>Every <code>obelisk deployment apply</code> stores a versioned snapshot of your full config.
-                        Executions carry a reference to the deployment that ran them.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/configuration/_index.md') }}">Layered permissions</a></h3>
+                    <p>The platform and app admins grant access to hosts, secrets, and executables.
+                        Deployments, including code written by agents, can only narrow those grants.
+                        Secrets can be injected at the network edge without exposing their values to code.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Hot redeploy</h3>
-                    <p>Update components without restarting the server. Activity workers pick up the new version
-                        immediately; in-flight workflows continue on the old digest until explicitly upgraded.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/concepts/deployments.md') }}">Versioned deployments</a></h3>
+                    <p>Redeploy without restarting the server. Running workflows keep their original code
+                        until explicitly upgraded. Every deployment's configuration and source can be retrieved.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Self-contained deployments</h3>
-                    <p>Inline JavaScript and shell scripts directly in <code>deployment.toml</code> with
-                        <code>content</code>. A complete application (activities, workflows, webhooks) can live in a
-                        single file. Local file paths are embedded at deploy time automatically.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>OCI distribution</h3>
-                    <p>Push and pull JS or WASM components from any OCI registry. Config (allowed hosts, env vars,
-                        secrets, WIT types) is embedded in the manifest so <code>component add</code> restores
-                        everything automatically.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Offline verify &amp; repair</h3>
-                    <p><code>obelisk deployment verify</code> compiles and checks a deployment with no running server or
-                        database. <code>--fix</code> repairs content digests and scaffolds the <code>app.toml</code> entries
-                        (secrets, public environment, outbound destinations) a change needs, the loop an agent runs
-                        before submitting.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Reconstructable deployments</h3>
-                    <p>The submitted <code>deployment.toml</code> and its owned source files are the stored source of
-                        truth. Reconstruct any past deployment back to disk with <code>deployment pull</code>, even after
-                        the active one has moved on.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="features-section">
-            <h2>Developer Experience</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3>Web UI</h3>
-                    <p>Embedded in the server binary. Visual trace view with color-coded join sets and rail lines.
-                        Step-through debugger. Autoload child executions. Filter by FFQN or execution ID. Pause/resume
-                        controls.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Persistent logs</h3>
-                    <p>Structured log output (five levels) and forwarded stdout/stderr stored in the database alongside
-                        execution events. Query logs for any execution via the CLI, API or Web
-                        UI</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Outgoing HTTP traces</h3>
-                    <p>Outgoing HTTP calls made by activities are captured in the execution log on failure and timeout
-                        events. Inspect request URLs, status codes, and response details for any failed attempt via the
-                        API or Web UI.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Execution introspection</h3>
-                    <p>Fetch execution events (with stack traces attached), follow responses and child executions,
-                        collect errors, stream logs, and retrieve source code, all via the API or CLI. AI agents can
-                        diagnose defects autonomously and push fixes via hot redeploy, no server restart needed.</p>
-                </div>
-                <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/access/api.md') }}">REST API</a></h3>
-                    <p>Full HTTP API with OpenAPI schema, used by the CLI and the Web UI. Submit executions, inspect
-                        state, follow logs over SSE, replay, pause, cancel, all scriptable with plain <code>curl</code>.
-                        gRPC is deprecated.</p>
+                    <h3>Verify &amp; distribute</h3>
+                    <p>Verify deployments offline and repair digests with <code>--fix</code>. Bundle code in
+                        a single deployment file or distribute components through OCI registries.</p>
                 </div>
                 <div class="feature-card">
                     <h3><a href="{{ get_url(path='@/docs/latest/access/authentication.md') }}">API authentication</a></h3>
-                    <p>The API port denies unauthenticated requests by default and accepts bearer tokens. Token hashes
-                        live in <code>server.toml</code>, so the config stays safe to commit. Webhook endpoints stay
-                        open.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Gated exec activities</h3>
-                    <p>Exec activities run host processes outside every sandbox, so they need two approvals: the
-                        platform gate in <code>server.toml</code> and a reviewed digest in <code>app.toml</code>.
-                        Plaintext secrets need their own digest-bound grant.</p>
-                </div>
-                <div class="feature-card">
-                    <h3><a href="{{ get_url(path='@/docs/latest/access/cli.md') }}">CLI</a></h3>
-                    <p><code>obelisk generate new</code>, <code>obelisk execution submit/list/logs</code>,
-                        <code>obelisk component add/push</code>, <code>obelisk deployment verify/submit/pull</code>,
-                        <code>obelisk admin</code>. Everything from the terminal.
-                    </p>
+                    <p>The management API requires bearer tokens by default. Token hashes live in server
+                        configuration; applications expose their own HTTP routes through webhooks.</p>
                 </div>
             </div>
         </div>
 
         <div class="features-section">
-            <h2>Architecture</h2>
+            <h2>Inspect &amp; operate</h2>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>WASM &amp; WIT</h3>
-                    <p>Built on the <a href="https://component-model.bytecodealliance.org/" target="_blank">WASM
-                            Component Model</a>. Rust components run in Wasmtime and interoperate with JavaScript. Schema
-                        defined in <a href="{{ get_url(path='@/docs/latest/concepts/wit-reference.md') }}">WIT IDL</a>.
-                    </p>
+                    <h3>Web UI &amp; debugger</h3>
+                    <p>Explore deployment graphs and execution traces in the embedded Web UI. Persist
+                        backtraces, inspect source, and replay or advance paused executions step by step.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Single binary</h3>
-                    <p>One process. No brokers, no sidecars, no orchestration layer. Embedded SQLite for single-node;
-                        Postgres for multi-node and high availability.</p>
+                    <h3>Persistent logs &amp; HTTP traces</h3>
+                    <p>Application logs and captured outgoing HTTP traces stay with execution history.
+                        Inspect failed attempts through the Web UI, CLI, or API.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Resource limits &amp; retention</h3>
-                    <p><code>[limits]</code> caps concurrency and memory separately for each workload and runtime:
-                        V8, WASM, exec, and VM. Finished executions are garbage collected after 30 days by default.</p>
+                    <h3><a href="{{ get_url(path='@/docs/latest/access/api.md') }}">API &amp; CLI</a></h3>
+                    <p>Submit, inspect, pause, cancel, and replay executions programmatically. Developers
+                        and agents can follow child executions, read logs, and retrieve source through the same interfaces.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Open source</h3>
-                    <p>Source at <a href="https://github.com/obeli-sk/obelisk"
-                            target="_blank">github.com/obeli-sk/obelisk</a>, written in Rust.</p>
+                    <h3>One server</h3>
+                    <p>A single binary with SQLite for one node or Postgres for multiple nodes.
+                        Configure concurrency, memory limits, and execution retention.</p>
                 </div>
             </div>
         </div>
-
+        <p>Obelisk is open source, written in Rust. <a href="https://github.com/obeli-sk/obelisk" target="_blank">Explore the source →</a></p>
     </section>
 </div>
 {% endblock %}
