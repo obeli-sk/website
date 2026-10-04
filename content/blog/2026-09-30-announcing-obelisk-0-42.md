@@ -1,5 +1,5 @@
 +++
-title = "Obelisk 0.42: Sandboxes All the Way Down"
+title = "Obelisk 0.42: Durable Agents, Layered Sandboxes"
 date = 2026-10-04
 draft = false
 +++
@@ -82,8 +82,8 @@ grants and approval digests in detail.
 ## Native V8
 
 JavaScript workflows, activities, and webhooks can now run on native V8 instead of Boa compiled to
-WASM: start the server with `OBELISK_JS_RUNTIME=v8`. Each activity gets a fresh isolate and existing
-components need no changes. Boa remains the default engine.
+WASM: start the server with `OBELISK_JS_RUNTIME=v8`. Each activity gets a fresh isolate. Components
+using the 0.42 JavaScript API need no changes to switch engines. Boa remains the default engine.
 
 Concurrency and memory are bounded per workload and runtime by `[limits]` in `server.toml`, so the
 platform admin can cap V8 activities, WASM workflows, and VM activities independently.
@@ -95,8 +95,9 @@ WASM, and Rust in Wasmtime:
 
 {{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
 
-Nine replays after warmup on the same Intel i9-14900HX host. Bars show medians; labels show observed
-ranges. Replay time excludes database loading and varies by workload.
+For this conversation, median replay fell from 3.17 seconds on Boa WASM to 128 milliseconds on V8,
+about 25× faster. Nine replays after warmup on the same Intel i9-14900HX host. Bars show medians;
+labels show observed ranges. Replay time excludes database loading and varies by workload.
 
 ## VM activities (experimental)
 
@@ -175,9 +176,11 @@ for configuration. The guest ABI, configuration, and behavior are experimental.
 ## Agentic workflows
 
 There are two ways to bring agentic workloads to Obelisk. Let a coding agent such as Claude Code or
-Codex generate application code, then deploy it within the application's security policy. Once
-deployed, that code runs durably without needing another model call for each execution: a zero-token
-architecture for the resulting application.
+Codex generate application code, then deploy it within the application's security policy. Generated
+applications that do not call a model consume no further LLM tokens during execution. This follows
+the idea in Kelsey Hightower's
+[Zero Token Architecture talk at PlatformCon 2026](https://www.youtube.com/watch?v=A7WFt2JQ5sg): use
+the model to build the application, then run the resulting code.
 
 Or run the agent itself as a durable workflow, with model calls and tools as activities. This is
 useful for enterprise agents that wait on people or external systems, and for coding agents that
@@ -200,8 +203,7 @@ the deployment, and test it by calling functions and webhooks. It can then inspe
 history, application logs, and recorded HTTP traces to diagnose failures, fix the code, and deploy
 again. That introspection closes the loop between writing an app and checking how it actually runs.
 
-The aim is thousands of concurrent sessions without an external VM per chat. Waiting sessions are
-just rows in the database; Obelisk reconstructs their state when work resumes.
+The aim is thousands of concurrent sessions without an external VM per chat.
 
 ![workflow-agent showing the prompt to build a GitHub contribution app, thinking bubbles, and Bash tool calls](/blog/2026-10-04-obelisk-0-42/workflow-agent.png)
 
