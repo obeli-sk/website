@@ -172,11 +172,16 @@ Or run the agent itself as a durable workflow, with model calls and tools as act
 useful for enterprise agents that wait on people or external systems, and for coding agents that
 work inside a simulated Bash session with a persistent virtual filesystem.
 
+Enterprise agents inherit parent/child agent hierarchies, durable scheduling, pause/resume, and
+hierarchical cancellation from the runtime. Obelisk can transparently unload inactive sessions and
+reconstruct them from recorded history when work resumes. The same replay mechanism recovers their
+progress after a server restart. These capabilities come with the workflow runtime.
+
 ### A coding agent that can inspect what it ships
 
 [workflow-agent](https://github.com/obeli-sk/workflow-agent) is our prototype of that second path: a
-browser UI and a durable agent loop with a simulated Bash environment based on just-bash, a
-persistent virtual filesystem, and MCP tools.
+browser UI and a durable agent loop. For coding agents, its cheap virtual workspaces are just-bash
+sessions with a persistent virtual filesystem and deeply integrated Obelisk and MCP commands.
 
 It also exposes a simulated `obelisk` CLI that can connect to a separate target Obelisk instance.
 The agent can read the target's deployment into its virtual filesystem, edit application code, apply
