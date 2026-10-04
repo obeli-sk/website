@@ -95,9 +95,11 @@ WASM, and Rust in Wasmtime:
 
 {{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
 
-For this conversation, median replay fell from 3.17 seconds on Boa WASM to 128 milliseconds on V8,
-about 25× faster. Nine replays after warmup on the same Intel i9-14900HX host. Bars show medians;
-labels show observed ranges. Replay time excludes database loading and varies by workload.
+For this 726-event conversation, median replay fell from 3.17 seconds on Boa WASM to 128
+milliseconds on V8, about 25× faster. Nine replays after warmup on the same Intel i9-14900HX host.
+Bars show medians; labels show observed ranges. Replay time excludes database loading and varies by
+workload. The [replay measurements](/blog/2026-10-04-obelisk-0-42/js-replay.json) include every
+sample and the benchmark setup.
 
 ## VM activities (experimental)
 
@@ -186,10 +188,14 @@ Or run the agent itself as a durable workflow, with model calls and tools as act
 useful for enterprise agents that wait on people or external systems, and for coding agents that
 work inside a simulated Bash session with a persistent virtual filesystem.
 
-Enterprise agents inherit parent/child agent hierarchies, durable scheduling, pause/resume, and
-hierarchical cancellation from the runtime. Obelisk can transparently unload inactive sessions and
-reconstruct them from recorded history when work resumes. The same replay mechanism recovers their
-progress after a server restart. These capabilities come with the workflow runtime.
+Enterprise agents inherit parent/child agent hierarchies, durable scheduling, and pause/resume from
+the runtime. Hierarchical cancellation requires every workflow on the cancellation path to be
+explicitly marked with the `-cancellable` export suffix. Cancelled workflows do not run their own
+cleanup handlers; see
+{{ doc_link(title="Structured Concurrency", path="concepts/structured-concurrency.md#cancellation", version="v0.42.0") }}
+for cleanup ownership. Obelisk can transparently unload inactive sessions and reconstruct them from
+recorded history when work resumes. The same replay mechanism recovers their progress after a server
+restart. These capabilities come with the workflow runtime.
 
 ### A coding agent that can inspect what it ships
 
@@ -239,6 +245,10 @@ API and ships in every 0.42 release binary, served at `http://localhost:8080` by
 - gRPC and gRPC-web are deprecated; the REST `/v1` API covers everything they did.
 
 ## Upgrading
+
+Obelisk is no longer published to crates.io, so `cargo install obelisk` and `cargo binstall obelisk`
+no longer receive new versions. Choose a supported channel from the
+[installation guide](@/install/_index.md).
 
 This release breaks configuration, the JavaScript runtime API, WIT packages, and a few API
 endpoints. Split your configuration, name the app, import `obelisk:workflow@1.0.0` instead of using
