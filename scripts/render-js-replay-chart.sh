@@ -65,15 +65,13 @@ set tmargin at screen 0.80
 set bmargin at screen 0.27
 set label 20 sprintf('Workflow-agent replay: %d events', event_count) at screen 0.0263158, screen 0.88 left
 set label 21 sprintf('scale: 0–%d s', scale_max) at screen 0.77, screen 0.88 left
-set label 22 'Median bars; observed ranges from 9 replays' at screen 0.0263158, screen 0.10 left
+set label 22 'Median bars; labels show observed ranges' at screen 0.0263158, screen 0.10 left
 load label_file
 set arrow 1 from graph 0, graph 0 to graph 0, graph 1 nohead lc rgb '#888888'
 set arrow 2 from graph 1, graph 0 to graph 1, graph 1 nohead lc rgb '#888888'
 unset key
 set style fill solid 1.0 noborder
-set bars 0.5
-plot data_file using ($2/2):1:(0):2:($1-0.32):($1+0.32) with boxxyerrorbars lc rgb '#00aaaa', \
-     data_file using 2:1:5:6 with xerrorbars pt -1 lc rgb 'black'
+plot data_file using ($2/2):1:(0):2:($1-0.32):($1+0.32) with boxxyerrorbars lc rgb '#00aaaa'
 PLOT
 
 sed -e '/^<?xml /d' -e '/^<!DOCTYPE /d' \

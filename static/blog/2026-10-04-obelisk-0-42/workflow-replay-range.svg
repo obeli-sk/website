@@ -66,7 +66,7 @@
 		<text>scale: 0–4 s</text>
 	</g>
 	<g transform="translate(20.00,175.55)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
-		<text>Median bars; observed ranges from 9 replays</text>
+		<text>Median bars; labels show observed ranges</text>
 	</g>
 </g>
 <g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -84,24 +84,7 @@
 	</g>
 </g>
 	</g>
-	<g id="gnuplot_plot_2" ><title>data_file using 2:1:5:6</title>
-<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='currentColor'  d='M212.30,61.70 L214.00,61.70 M212.30,64.33 L212.30,59.08 M214.00,64.33 L214.00,59.08 M210.50,91.32 L211.70,91.32
-		M210.50,93.95 L210.50,88.70 M211.70,93.95 L211.70,88.70 M512.19,120.93 L525.49,120.93 M512.19,123.56 L512.19,118.31
-		M525.49,123.56 L525.49,118.31  '/></g>
-<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<use xlink:href='#gpPt6' transform='translate(212.80,61.70) scale(5.25)' color='white'/>
-</g>
-<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<use xlink:href='#gpPt6' transform='translate(210.60,91.32) scale(5.25)' color='white'/>
-</g>
-<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<use xlink:href='#gpPt6' transform='translate(517.09,120.93) scale(5.25)' color='white'/>
-</g>
-<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-</g>
-	</g>
-<g fill="none" color="currentColor" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g fill="none" color="currentColor" stroke="var(--primary, currentColor)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="currentColor" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>

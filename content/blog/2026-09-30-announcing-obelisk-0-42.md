@@ -1,5 +1,5 @@
 +++
-title = "Obelisk 0.42: Determinism for the Age of Agents"
+title = "Obelisk 0.42: Sandboxes All the Way Down"
 date = 2026-10-04
 draft = false
 +++
@@ -197,21 +197,13 @@ UI. Its mock deployment runs without an LLM key.
 
 ### Workflow-agent replay
 
-Replay is where a faster JavaScript engine pays off: a workflow runs through its recorded history
-before doing new work. workflow-agent has two separate workflow implementations, JavaScript and Rust
-WASM, including separate Bash interpreters. We replayed a real conversation asking the agent to
-build a GitHub contribution app: 18 agent steps, 17 tool calls, and 726 events. On the same Intel
-i9-14900HX host with the published Obelisk 0.42.0 binary, the nine measured replays took **123–140
-ms on V8**, about **3.1–3.3 s on Boa WASM**, and **105–117 ms for Rust in Wasmtime**. The ranges
-show variation between runs of this session; performance across agent sessions depends on the code
-and recorded history.
+workflow-agent has separate JavaScript and Rust workflow implementations. We replayed the same real
+agent conversation with both, comparing V8, Boa WASM, and Rust in Wasmtime.
 
 {{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
 
-Bars show the median; markers and labels show the observed minimum and maximum over nine calls after
-warmup, excluding database loading. All three replayed the complete history to the same waiting
-state. Replay uses recorded activity results, so these measurements made no live model or tool
-calls.
+Nine replays after warmup on the same Intel i9-14900HX host. Bars show medians; labels show observed
+ranges. Replay time excludes database loading and varies by workload.
 
 ## Web UI: themes and new screens
 
