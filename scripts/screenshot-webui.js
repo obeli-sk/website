@@ -66,7 +66,7 @@ if (!token) throw new Error('Set OBELISK_API_TOKEN to the demo server token');
     await capture(`/execution/${executionId}/debug/${debuggerVersion}`, 'debugger', '.syntect-block', async () => {
       await page.locator('#hide-frames').check();
       await page.locator('.version-slider-container').evaluate(element =>
-        window.scrollTo(0, window.scrollY + element.getBoundingClientRect().top - 76));
+        window.scrollTo(0, window.scrollY + element.getBoundingClientRect().top - 206));
     });
     await page.goto(webuiUrl + `/execution/${executionId}/applogs`, { waitUntil: 'networkidle' });
     const derived = page.getByRole('button', { name: 'Derived', exact: true });
