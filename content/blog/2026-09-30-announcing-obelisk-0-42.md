@@ -180,9 +180,17 @@ useful for enterprise agents that wait on people or external systems, and for co
 work inside a simulated Bash session with a persistent virtual filesystem.
 
 [workflow-agent](https://github.com/obeli-sk/workflow-agent) is our prototype of that second path: a
-browser UI, a durable agent loop, Bash, MCP tools, and the ability to inspect, edit, and deploy an
-Obelisk application. The aim is thousands of concurrent sessions without an external VM per chat.
-Waiting sessions are just rows in the database; Obelisk reconstructs their state when work resumes.
+browser UI and a durable agent loop with a simulated Bash environment based on just-bash, a
+persistent virtual filesystem, and MCP tools.
+
+It also exposes a simulated `obelisk` CLI that can connect to a separate target Obelisk instance.
+The agent can read the target's deployment into its virtual filesystem, edit application code, apply
+the deployment, and test it by calling functions and webhooks. It can then inspect execution
+history, application logs, and recorded HTTP traces to diagnose failures, fix the code, and deploy
+again. That introspection closes the loop between writing an app and checking how it actually runs.
+
+The aim is thousands of concurrent sessions without an external VM per chat. Waiting sessions are
+just rows in the database; Obelisk reconstructs their state when work resumes.
 
 ![workflow-agent showing the prompt to build a GitHub contribution app, thinking bubbles, and Bash tool calls](/blog/2026-10-04-obelisk-0-42/workflow-agent.png)
 
