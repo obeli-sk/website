@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sandbox-title sandbox-desc" viewBox="0 0 760 430" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
   <title id="sandbox-title">Permissions narrow from server to app to deployment</title>
-  <desc id="sandbox-desc">Nested boxes represent permission scopes, not separate processes. The platform admin configures the server; the app admin grants capabilities; developers and agents deploy code within those grants. Alternative execution boundaries are Wasmtime for Boa JavaScript, Rust, or Bochs VM activities; optional native V8 isolates; and Linux VM activities using QEMU or Firecracker, with KVM or emulation. Exec activities run outside these runtime sandboxes.</desc>
+  <desc id="sandbox-desc">Nested boxes represent permission scopes, not separate processes. The platform admin configures the server; the app admin grants capabilities; developers and agents deploy code within those grants. Alternative execution boundaries are Wasmtime for Boa JavaScript, Rust, or Bochs VM activities; optional native V8 isolates; and Linux VM activities using QEMU or Firecracker, with KVM or emulation. Exec activities, marked with an asterisk and a dashed outline, run host processes without a sandbox and require approval from both admins.</desc>
   <g stroke="var(--primary)" stroke-width="1.5">
     <rect x="8" y="8" width="744" height="354" rx="14" style="fill:color-mix(in srgb,var(--primary) 4%,var(--bg))"/>
     <rect x="28" y="86" width="704" height="256" rx="12" style="fill:color-mix(in srgb,var(--primary) 7%,var(--bg))"/>
@@ -18,15 +18,17 @@
     <text x="68" y="219" opacity="0.75">Code can request capabilities within those grants</text>
   </g>
   <g fill="var(--bg)" stroke="var(--primary)" stroke-width="1.5">
-    <rect x="68" y="245" width="192" height="56" rx="8"/>
-    <rect x="280" y="245" width="192" height="56" rx="8"/>
-    <rect x="492" y="245" width="200" height="56" rx="8"/>
+    <rect x="68" y="245" width="147" height="56" rx="8"/>
+    <rect x="227" y="245" width="147" height="56" rx="8"/>
+    <rect x="386" y="245" width="147" height="56" rx="8"/>
+    <rect x="545" y="245" width="147" height="56" rx="8" stroke-dasharray="5 4"/>
   </g>
   <g fill="currentColor">
-    <text x="164" y="279" text-anchor="middle" font-size="17" font-weight="700">Wasmtime</text>
-    <text x="376" y="279" text-anchor="middle" font-size="17" font-weight="700">V8</text>
-    <text x="592" y="279" text-anchor="middle" font-size="17" font-weight="700">Linux VM</text>
-    <text x="8" y="388" opacity="0.75">Nested permission scopes above; alternative execution sandboxes inside.</text>
-    <text x="8" y="412" opacity="0.75">Exec activities run host processes outside these runtime sandboxes.</text>
+    <text x="141.5" y="279" text-anchor="middle" font-size="16" font-weight="700">Wasmtime</text>
+    <text x="300.5" y="279" text-anchor="middle" font-size="16" font-weight="700">V8</text>
+    <text x="459.5" y="279" text-anchor="middle" font-size="16" font-weight="700">Linux VM</text>
+    <text x="618.5" y="279" text-anchor="middle" font-size="16" font-weight="700">Exec activities*</text>
+    <text x="8" y="388" opacity="0.75">Nested boxes show permission scopes; bottom row shows execution options.</text>
+    <text x="8" y="412" opacity="0.75">* Host processes without a sandbox; approval required from both admins.</text>
   </g>
 </svg>
