@@ -235,6 +235,9 @@ endpoints. Split your configuration, name the app, import `obelisk:workflow@1.0.
 the global `obelisk` object, rename `activity_exec.secrets` to `exposed_secrets` and generate the
 grants, and review the new `[limits]` defaults. `deployment get` is now `deployment pull`.
 
+If you use the default SQLite directory, pin the existing path or move the database before
+restarting.
+
 The {{ doc_link(title="Migrating to 0.42", path="migrating-to-0.42.md", version="v0.42.0") }} guide
 covers each step, and the
 {{ doc_link(title="Security Model", path="security.md", version="v0.42.0") }} page describes how the
