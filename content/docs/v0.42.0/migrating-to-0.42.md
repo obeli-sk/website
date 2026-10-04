@@ -11,10 +11,6 @@ upgrade a 0.41 server and its deployments. See
 {{ doc_link(title="Security model", path="security.md", version="v0.42.0") }} for the trust boundary
 behind the new policy requirements.
 
-If you already migrated to a 0.42 release candidate, see
-[Upgrading from an earlier 0.42 release candidate](#upgrading-from-an-earlier-0-42-release-candidate)
-at the end of this guide.
-
 ## Split the configuration into three files
 
 0.42 uses three configuration files, each owned by a different role:
@@ -489,44 +485,3 @@ equivalent REST request bodies.
     deployment.
 14. Back up the database, upgrade the server with `--app-config`, and smoke-test workflow calls,
     webhook schedules, outbound HTTP, and log pagination.
-
-## Upgrading from an earlier 0.42 release candidate
-
-Applications already migrated to 0.42.0-rc.2 or rc.3 have handled the JavaScript, WIT, and
-exposure-grant changes above, and most API changes. They still need the changes introduced after
-rc.3:
-
-- Split `server.toml` into `server.toml` and `app.toml`, add `app_name`, and pass `--app-config` to
-  `server run`, `server verify`, and `deployment verify`.
-- Pin or move the SQLite directory, because the default path now includes the app name.
-- Convert `[public_env].allowed` to named entries and remove `env` source aliases from `[secrets]`.
-  Entries are required at startup unless marked `optional = true`, even when the active deployment
-  does not reference them, so test servers that share the app policy must set them too.
-- Cover every outbound HTTP destination before activating a deployment. rc.6 rejected uncovered
-  destinations even with `--allow-unavailable-runtime-config`; the current version permits
-  verification and submission while app approval is pending. `verify --fix` can scaffold the missing
-  `app.toml` entries for review.
-- Parse `follow=true` REST responses as `text/event-stream` and read the `data` field of the
-  `result` event. rc.3 still returned the JSON result to clients that sent
-  `Accept: application/json`.
-- Move `[secrets.<name>.exposed_to]` grants and `[allowed_exec_activities]` digests into `app.toml`,
-  and add the platform `allowed_exec_activities` gate to `server.toml`.
-- Regenerate exec digests with `obelisk generate secret-config-digest`. Digests approved under rc.2
-  or rc.3 are rejected by rc.6 and later. List the old and new digest as an array only while both
-  deployment revisions must run.
-- Replace the instance limiters with `[limits]` cells and review the new defaults.
-- Update scripts that use `obelisk deployment get` or `cargo install obelisk`.
-- Expect JavaScript components to run on Boa compiled to WASM unless `OBELISK_JS_RUNTIME=v8` is set.
-  rc.4 through rc.10 defaulted to V8; set `OBELISK_JS_RUNTIME=v8` to keep it. The former `boawasm`
-  value is rejected; `OBELISK_JS_RUNTIME=boa-wasm` selects the Boa default explicitly.
-- On V8, declare the HMAC hash actually used and include `sign` or `verify` in the key usages.
-  Through rc.11, V8 signed with SHA-256 regardless of the key's hash and did not check usages.
-- Replace `joinSet.submit(ffqn, params)` with `dynamic.submit(joinSet, ffqn, params)` and import
-  `obelisk:workflow-dynamic@1.0.0` statically in every component that uses the dynamic module, even
-  when it is loaded with `import()`. The base module does not export `call` or `schedule`.
-- Set `OBELISK_UNSTABLE_ACTIVITY_VM` on the deployment CLI and server for every VM activity. Choose
-  `bochs-wasm`, `qemu-tcg`, `qemu-kvm`, or `firecracker`, and add required guest `memory` to each
-  `[[activity_vm]]`. `cpus` is optional and defaults to one. Bochs requires `memory.mib = 512` and
-  one vCPU; see
-  {{ doc_link(title="VM activity configuration", path="configuration/deployment.md#experimental-vm-activities", version="v0.42.0") }}
-  for native backend requirements.
