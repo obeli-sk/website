@@ -74,12 +74,11 @@ of exposed secrets. If the agent changes the component or asks for one more secr
 changes and the grant no longer applies. The app admin must approve the new digest before the
 runtime exposes those secrets.
 
-### Exec activities: the escape hatch, approved twice
+### Exec activities require both admins' approval
 
-Exec activities run a host process outside the sandbox. They now need two approvals: the platform
-admin opens the gate in `server.toml`, and the app admin approves the specific digest in `app.toml`.
-The process starts with a cleared environment and is killed as a process group when its lock
-expires. Use it when a sandboxed activity cannot do the job.
+Existing exec activities run host processes outside the sandbox. In 0.42, both the platform admin
+and the app admin must approve them: the platform permits exec in `server.toml`, and the app grants
+access in `app.toml`.
 
 The {{ doc_link(title="Security Model", path="security.md", version="v0.42.0") }} explains the
 grants and approval digests in detail.
@@ -93,8 +92,15 @@ components need no changes. Boa remains the default engine.
 Concurrency and memory are bounded per workload and runtime by `[limits]` in `server.toml`, so the
 platform admin can cap V8 activities, WASM workflows, and VM activities independently.
 
-For replay timings from a real agent conversation, see the
-[workflow-agent benchmark below](#workflow-agent-replay).
+Faster replay means less time reconstructing a session before it can resume. Our durable
+coding-agent prototype, [workflow-agent](#agentic-workflows), has separate JavaScript and Rust
+workflow implementations. We replayed the same real agent conversation with both, comparing V8, Boa
+WASM, and Rust in Wasmtime:
+
+{{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
+
+Nine replays after warmup on the same Intel i9-14900HX host. Bars show medians; labels show observed
+ranges. Replay time excludes database loading and varies by workload.
 
 ## VM activities (experimental)
 
@@ -194,16 +200,6 @@ design.
 For a smaller starting point, [demo-agent](https://github.com/obeli-sk/demo-agent) provides a
 JavaScript agent loop, an LLM activity, example tools, a human-in-the-loop question, and a polling
 UI. Its mock deployment runs without an LLM key.
-
-### Workflow-agent replay
-
-workflow-agent has separate JavaScript and Rust workflow implementations. We replayed the same real
-agent conversation with both, comparing V8, Boa WASM, and Rust in Wasmtime.
-
-{{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
-
-Nine replays after warmup on the same Intel i9-14900HX host. Bars show medians; labels show observed
-ranges. Replay time excludes database loading and varies by workload.
 
 ## Web UI: themes and new screens
 
