@@ -30,11 +30,7 @@ In 0.41 the operator's policy lived in `server.toml` and the application lived i
 That left one file doing two jobs: `server.toml` described both the platform (listeners, database,
 resource limits) and what a particular app was allowed to do. 0.42 splits it:
 
-| File              | Owner              | What it holds                                                   |
-| ----------------- | ------------------ | --------------------------------------------------------------- |
-| `server.toml`     | Platform admin     | Listeners, database, `[limits]`, the exec gate                  |
-| `app.toml`        | App admin          | Secrets, public environment, outbound HTTP policy, exec grants  |
-| `deployment.toml` | Developers, agents | Components, routes, retries; requests capabilities from the app |
+{{ inline_svg(path="blog/2026-10-04-obelisk-0-42/sandbox-hierarchy.svg") }}
 
 The effective permission is the intersection. A deployment can request less than `app.toml` grants,
 never more, and `app.toml` cannot switch on exec activities unless `server.toml` allows it.
