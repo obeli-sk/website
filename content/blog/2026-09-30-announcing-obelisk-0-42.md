@@ -170,9 +170,10 @@ for configuration. The guest ABI, configuration, and behavior are experimental.
 
 ## Agentic workflows
 
-There are two ways to bring agents to Obelisk. Let an LLM generate code, then deploy it within the
-application's security policy. Once deployed, that code runs durably without needing another model
-call for each execution: a zero-token architecture for the resulting application.
+There are two ways to bring agentic workloads to Obelisk. Let a coding agent such as Claude Code or
+Codex generate application code, then deploy it within the application's security policy. Once
+deployed, that code runs durably without needing another model call for each execution: a zero-token
+architecture for the resulting application.
 
 Or run the agent itself as a durable workflow, with model calls and tools as activities. This is
 useful for enterprise agents that wait on people or external systems, and for coding agents that
