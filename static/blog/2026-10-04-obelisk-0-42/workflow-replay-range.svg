@@ -6,7 +6,7 @@
 >
 
 <title id="js-replay-title">Workflow-agent replay time</title>
-<desc id="js-replay-desc">Median workflow replay time. boa-wasm: 11227 ms; rust-wasm: 98 ms; v8: 101 ms.</desc>
+<desc id="js-replay-desc">Workflow replay time over nine measured calls. boa-wasm: median 11227 ms, range 10964–11778 ms; rust-wasm: median 98 ms, range 93–100 ms; v8: median 101 ms, range 96–110 ms.</desc>
 
 <g id="gnuplot_canvas">
 
@@ -45,28 +45,28 @@
 		<text>JavaScript / V8</text>
 	</g>
 	<g transform="translate(669.99,66.25)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
-		<text>101 ms</text>
+		<text>96–110 ms</text>
 	</g>
 	<g transform="translate(20.00,95.87)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
 		<text>Rust / Wasmtime</text>
 	</g>
 	<g transform="translate(669.99,95.87)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
-		<text>98 ms</text>
+		<text>93–100 ms</text>
 	</g>
 	<g transform="translate(20.00,125.48)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
 		<text>JavaScript / Boa WASM</text>
 	</g>
 	<g transform="translate(669.99,125.48)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
-		<text>11227 ms</text>
+		<text>11.0–11.8 s</text>
 	</g>
-	<g transform="translate(20.00,19.76)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
+	<g transform="translate(20.00,27.36)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
 		<text font-weight="700">Workflow-agent replay: 542 events</text>
 	</g>
-	<g transform="translate(585.19,19.76)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
-		<text>scale: 0–11500 ms</text>
+	<g transform="translate(585.19,27.36)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
+		<text>scale: 0–12 s</text>
 	</g>
 	<g transform="translate(20.00,175.55)" stroke="none" fill="currentColor" font-family="system-ui, sans-serif" font-size="14.00"  text-anchor="start">
-		<text>Replay time (ms), lower is faster</text>
+		<text>Median bars; observed ranges from 9 replays</text>
 	</g>
 </g>
 <g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -75,16 +75,33 @@
 	<path stroke='color-mix(in srgb, var(--text, currentColor) 35%, transparent)'  d='M600.00,138.69 L600.00,38.00  '/></g>
 <g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
-	<g id="gnuplot_plot_1" ><title>data_file using ($2/2):1:(0):2:($1-0.22):($1+0.22)</title>
+	<g id="gnuplot_plot_1" ><title>data_file using ($2/2):1:(0):2:($1-0.32):($1+0.32)</title>
 <g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<g stroke='none' shape-rendering='crispEdges'>
-		<polygon style="fill:var(--primary, currentColor)" points = '200.00,68.22 203.52,68.22 203.52,55.18 200.00,55.18 '/>
-		<polygon style="fill:var(--primary, currentColor)" points = '200.00,97.83 203.42,97.83 203.42,84.79 200.00,84.79 '/>
-		<polygon style="fill:var(--primary, currentColor)" points = '200.00,127.45 590.50,127.45 590.50,114.41 200.00,114.41 '/>
+	<g stroke='none' shape-rendering='geometricPrecision'>
+<rect x="200.00" y="52.22" width="3.38" height="18.96" rx="3" style="fill:var(--primary)"/>
+<rect x="200.00" y="81.83" width="3.28" height="18.96" rx="3" style="fill:var(--primary)"/>
+<rect x="200.00" y="111.44" width="374.23" height="18.97" rx="3" style="fill:var(--primary)"/>
 	</g>
 </g>
 	</g>
-<g fill="none" color="currentColor" stroke="var(--primary, currentColor)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g id="gnuplot_plot_2" ><title>data_file using 2:1:5:6</title>
+<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='currentColor'  d='M203.20,61.70 L203.67,61.70 M203.20,64.33 L203.20,59.08 M203.67,64.33 L203.67,59.08 M203.10,91.32 L203.33,91.32
+		M203.10,93.95 L203.10,88.70 M203.33,93.95 L203.33,88.70 M565.46,120.93 L592.59,120.93 M565.46,123.56 L565.46,118.31
+		M592.59,123.56 L592.59,118.31  '/></g>
+<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<use xlink:href='#gpPt6' transform='translate(203.37,61.70) scale(5.25)' color='white'/>
+</g>
+<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<use xlink:href='#gpPt6' transform='translate(203.27,91.32) scale(5.25)' color='white'/>
+</g>
+<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<use xlink:href='#gpPt6' transform='translate(574.22,120.93) scale(5.25)' color='white'/>
+</g>
+<g fill="none" color="currentColor" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+	</g>
+<g fill="none" color="currentColor" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="currentColor" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>

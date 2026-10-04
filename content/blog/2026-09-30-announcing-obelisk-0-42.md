@@ -95,16 +95,19 @@ platform admin can cap V8 activities, WASM workflows, and VM activities independ
 
 Replay is where a faster JavaScript engine pays off: a workflow runs through its recorded history
 before doing new work. workflow-agent has two separate workflow implementations, JavaScript and Rust
-WASM, including separate Bash interpreters. We replayed a scripted session with 24 shell turns and
-542 events: generating JSON, processing it with jq, and updating the virtual filesystem. On the same
-Intel i9-14900HX host with the published Obelisk 0.42.0 binary, V8 took **101 ms**, compared with
-**11,227 ms on Boa WASM**, about **111× faster**. The Rust workflow in Wasmtime took **98 ms**.
+WASM, including separate Bash interpreters. We replayed a scripted shell stress benchmark with 24
+turns and 542 events: generating JSON, processing it with jq, and updating the virtual filesystem.
+On the same Intel i9-14900HX host with the published Obelisk 0.42.0 binary, the nine measured
+replays took **96–110 ms on V8**, about **11.0–11.8 s on Boa WASM**, and **93–100 ms for Rust in
+Wasmtime**. This benchmark emphasizes interpreter and JSON processing work. The ranges show
+variation between runs of this session; performance across agent sessions depends on the code and
+recorded history.
 
-{{ inline_svg(path="blog/2026-10-04-obelisk-0-42/js-replay.svg") }}
+{{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
 
-The bars show median replay time over nine calls after warmup, excluding database loading. All three
-replayed the complete history to the same waiting state. This local shell benchmark made no model
-calls.
+Bars show the median; markers and labels show the observed minimum and maximum over nine calls after
+warmup, excluding database loading. All three replayed the complete history to the same waiting
+state. This local shell benchmark made no model calls.
 
 ## VM activities (experimental)
 
