@@ -123,8 +123,10 @@ What does the VM layer cost? We measured from the activity's persisted `Locked` 
 `Finished` event. The VM runs used a local release build; QEMU used the published 2026-10-01 EROFS
 runtime. Docker bars use same-host measurements. The small cases print a string with Bash or use
 curl to fetch a local page through Obelisk's HTTP bridge. The larger case is the
-[inception Playwright demo](https://github.com/obeli-sk/demo-playwright), which boots Obelisk inside
-a browser tab. Each bar is a median in seconds; the scales differ between workloads.
+[inception Playwright demo](https://github.com/obeli-sk/demo-playwright/tree/main/inception): it
+launches Chromium, opens trynix.dev with Playwright, boots Obelisk in the page's Linux VM, runs
+`obelisk -v`, and returns the command output as the activity result. Its timing includes that
+in-browser boot. Each bar is a median in seconds; the scales differ between workloads.
 
 <div style="overflow-x:auto">
 <svg role="img" aria-labelledby="vm-bench-title vm-bench-desc" viewBox="0 0 760 525" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
@@ -137,7 +139,7 @@ a browser tab. Each bar is a median in seconds; the scales differ between worklo
     <text x="20" y="207" font-weight="700">Curl to local page</text><text x="595" y="207">scale: 0–2.5 s</text>
     <text x="20" y="243">Firecracker</text><text x="20" y="273">QEMU KVM</text><text x="20" y="303">QEMU TCG</text><text x="20" y="333">Bochs WASM</text>
     <text x="670" y="243">0.179 s</text><text x="670" y="273">0.269 s</text><text x="670" y="303">0.733 s</text><text x="670" y="333">2.243 s</text>
-    <text x="20" y="387" font-weight="700">Inception in Chromium</text><text x="595" y="387">scale: 0–20 s</text>
+    <text x="20" y="387" font-weight="700">Chromium: trynix.dev → obelisk -v</text><text x="595" y="387">scale: 0–20 s</text>
     <text x="20" y="423">Docker</text><text x="20" y="453">Firecracker</text><text x="20" y="483">QEMU KVM</text>
     <text x="670" y="423">5.744 s</text><text x="670" y="453">11.201 s</text><text x="670" y="483">14.588 s</text>
   </g>
