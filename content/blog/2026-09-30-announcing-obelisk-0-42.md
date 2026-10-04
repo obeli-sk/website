@@ -95,19 +95,19 @@ platform admin can cap V8 activities, WASM workflows, and VM activities independ
 
 Replay is where a faster JavaScript engine pays off: a workflow runs through its recorded history
 before doing new work. workflow-agent has two separate workflow implementations, JavaScript and Rust
-WASM, including separate Bash interpreters. We replayed a scripted shell stress benchmark with 24
-turns and 542 events: generating JSON, processing it with jq, and updating the virtual filesystem.
-On the same Intel i9-14900HX host with the published Obelisk 0.42.0 binary, the nine measured
-replays took **96–110 ms on V8**, about **11.0–11.8 s on Boa WASM**, and **93–100 ms for Rust in
-Wasmtime**. This benchmark emphasizes interpreter and JSON processing work. The ranges show
-variation between runs of this session; performance across agent sessions depends on the code and
-recorded history.
+WASM, including separate Bash interpreters. We replayed a real conversation asking the agent to
+build a GitHub contribution app: 18 agent steps, 17 tool calls, and 726 events. On the same Intel
+i9-14900HX host with the published Obelisk 0.42.0 binary, the nine measured replays took **123–140
+ms on V8**, about **3.1–3.3 s on Boa WASM**, and **105–117 ms for Rust in Wasmtime**. The ranges
+show variation between runs of this session; performance across agent sessions depends on the code
+and recorded history.
 
 {{ inline_svg(path="blog/2026-10-04-obelisk-0-42/workflow-replay-range.svg") }}
 
 Bars show the median; markers and labels show the observed minimum and maximum over nine calls after
 warmup, excluding database loading. All three replayed the complete history to the same waiting
-state. This local shell benchmark made no model calls.
+state. Replay uses recorded activity results, so these measurements made no live model or tool
+calls.
 
 ## VM activities (experimental)
 
@@ -183,7 +183,7 @@ browser UI, a durable agent loop, Bash, MCP tools, and the ability to inspect, e
 Obelisk application. The aim is thousands of concurrent sessions without an external VM per chat.
 Waiting sessions are just rows in the database; Obelisk reconstructs their state when work resumes.
 
-![workflow-agent at the start of a real session, showing the prompt to build a GitHub contribution app and its first tool calls](/blog/2026-10-04-obelisk-0-42/workflow-agent.png)
+![workflow-agent showing the prompt to build a GitHub contribution app, thinking bubbles, and Bash tool calls](/blog/2026-10-04-obelisk-0-42/workflow-agent.png)
 
 These agentic workflows also shape Obelisk's APIs. Earlier versions copied the growing conversation
 into every LLM activity, ballooning workflow state and stored data. Now the workflow keeps the

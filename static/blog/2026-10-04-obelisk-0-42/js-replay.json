@@ -7,257 +7,257 @@
   "metric": "replay_duration_ms (excludes execution-log loading)",
   "warmup_calls_per_execution_per_runtime": 1,
   "measured_calls_per_execution_per_runtime": 9,
-  "method": "Sequential V8, Boa WASM, then Rust Wasmtime calls against the same paused fresh scripted shell session. All implementations replayed all 542 history events to version 555 and the same blocked state. Corrected JavaScript and unchanged Rust implementations.",
+  "method": "Sequential V8, Boa WASM, then Rust Wasmtime calls against an isolated paused copy of a real coding-agent conversation. All implementations replayed all 726 history events to version 740 and the same blocked state. One warmup and nine measured calls per runtime; no live model or tool calls during replay.",
   "samples": [
     {
       "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 1,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 101
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 136
     },
     {
       "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 2,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 98
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 125
     },
     {
       "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 3,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 107
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 131
     },
     {
       "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 4,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 110
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 128
     },
     {
       "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 5,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 128
+    },
+    {
+      "runtime": "v8",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 6,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 137
+    },
+    {
+      "runtime": "v8",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 7,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 140
+    },
+    {
+      "runtime": "v8",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 8,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 123
+    },
+    {
+      "runtime": "v8",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 9,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 123
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 1,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3137
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 2,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3171
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 3,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3217
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 4,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3225
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 5,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3255
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 6,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3155
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 7,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3122
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 8,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3142
+    },
+    {
+      "runtime": "boa-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 9,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 3233
+    },
+    {
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 1,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 117
+    },
+    {
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 2,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 105
+    },
+    {
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 3,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
       "replay_duration_ms": 106
     },
     {
-      "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 4,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 105
+    },
+    {
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
+      "sample": 5,
+      "outcome": "blocked",
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 109
+    },
+    {
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 6,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
+      "replayed_event_count": 726,
+      "replay_version": 740,
       "replay_duration_ms": 106
     },
     {
-      "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 7,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 97
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 108
     },
     {
-      "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 8,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 96
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 105
     },
     {
-      "runtime": "v8",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
+      "runtime": "rust-wasm",
+      "execution_id": "E_01M4386JT2SM9JXT5DKJ2535X4",
       "sample": 9,
       "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 96
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 1,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 10964
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 2,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11199
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 3,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11237
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 4,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11227
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 5,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11209
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 6,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11119
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 7,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11419
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 8,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11710
-    },
-    {
-      "runtime": "boa-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 9,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 11778
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 1,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 94
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 2,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 98
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 3,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 98
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 4,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 100
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 5,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 93
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 6,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 97
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 7,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 99
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 8,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 96
-    },
-    {
-      "runtime": "rust-wasm",
-      "execution_id": "E_01M437BTZ9PMWRQXB6N77061CZ",
-      "sample": 9,
-      "outcome": "blocked",
-      "replayed_event_count": 542,
-      "replay_version": 555,
-      "replay_duration_ms": 98
+      "replayed_event_count": 726,
+      "replay_version": 740,
+      "replay_duration_ms": 108
     }
   ],
-  "workflow_agent_revision": "5d74c12eceb43de3181657e8c2d4c9104271a5f6",
+  "workflow_agent_revision": "131a982",
   "rust_workflow_sha256": "66425917e8c013e95d65fffcca9fadf501c3727a13b1c96c8dff2b273e3e7f04",
   "workload": {
-    "shell_turns": 24,
-    "json_rows_per_turn": 2000,
-    "description": "Local Bash/VFS shell turns: 2000 JSON rows, awk, jq summation, grep/sort/uniq, nested bash, persistent history; no LLM or external tool calls"
+    "agent_steps": 18,
+    "tool_calls": 17,
+    "description": "Recorded conversation asking the coding agent to build an app that accepts a GitHub username and gathers sourced contribution facts. Includes Bash, starter-source inspection, virtual filesystem edits, and deployment tools."
   }
 }
