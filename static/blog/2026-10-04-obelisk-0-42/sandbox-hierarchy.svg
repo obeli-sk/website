@@ -1,40 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sandbox-title sandbox-desc" viewBox="0 0 760 502" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sandbox-title sandbox-desc" viewBox="0 0 760 430" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
   <title id="sandbox-title">Permissions narrow from server to app to deployment</title>
   <desc id="sandbox-desc">Nested boxes represent permission scopes, not separate processes. The platform admin configures the server; the app admin grants capabilities; developers and agents deploy code within those grants. Alternative execution boundaries are Wasmtime for Boa JavaScript, Rust, or Bochs VM activities; optional native V8 isolates; and Linux VM activities using QEMU or Firecracker, with KVM or emulation. Exec activities run outside these runtime sandboxes.</desc>
   <g stroke="var(--primary)" stroke-width="1.5">
-    <rect x="8" y="8" width="744" height="426" rx="14" style="fill:color-mix(in srgb,var(--primary) 4%,var(--bg))"/>
-    <rect x="28" y="86" width="704" height="328" rx="12" style="fill:color-mix(in srgb,var(--primary) 7%,var(--bg))"/>
-    <rect x="48" y="164" width="664" height="230" rx="10" style="fill:color-mix(in srgb,var(--primary) 10%,var(--bg))"/>
+    <rect x="8" y="8" width="744" height="354" rx="14" style="fill:color-mix(in srgb,var(--primary) 4%,var(--bg))"/>
+    <rect x="28" y="86" width="704" height="256" rx="12" style="fill:color-mix(in srgb,var(--primary) 7%,var(--bg))"/>
+    <rect x="48" y="164" width="664" height="158" rx="10" style="fill:color-mix(in srgb,var(--primary) 10%,var(--bg))"/>
   </g>
   <g fill="currentColor">
-    <text x="30" y="38" font-size="19" font-weight="700">Server</text>
-    <text x="730" y="38" text-anchor="end">Platform admin · server.toml</text>
+    <text x="30" y="38" font-size="19" font-weight="700">server.toml</text>
+    <text x="730" y="38" text-anchor="end">Platform admin</text>
     <text x="30" y="63" opacity="0.75">Resource limits, runtime configuration, host execution gate</text>
-    <text x="48" y="116" font-size="19" font-weight="700">App</text>
-    <text x="710" y="116" text-anchor="end">App admin · app.toml</text>
+    <text x="48" y="116" font-size="19" font-weight="700">app.toml</text>
+    <text x="710" y="116" text-anchor="end">App admin</text>
     <text x="48" y="141" opacity="0.75">Grants access to secrets, outbound hosts, and approved executables</text>
-    <text x="68" y="194" font-size="19" font-weight="700">Deployment</text>
-    <text x="690" y="194" text-anchor="end">Developers, agents · deployment.toml</text>
+    <text x="68" y="194" font-size="19" font-weight="700">deployment.toml</text>
+    <text x="690" y="194" text-anchor="end">Developers, agents</text>
     <text x="68" y="219" opacity="0.75">Code can request capabilities within those grants</text>
   </g>
   <g fill="var(--bg)" stroke="var(--primary)" stroke-width="1.5">
-    <rect x="68" y="245" width="192" height="128" rx="8"/>
-    <rect x="280" y="245" width="192" height="128" rx="8"/>
-    <rect x="492" y="245" width="200" height="128" rx="8"/>
+    <rect x="68" y="245" width="192" height="56" rx="8"/>
+    <rect x="280" y="245" width="192" height="56" rx="8"/>
+    <rect x="492" y="245" width="200" height="56" rx="8"/>
   </g>
   <g fill="currentColor">
-    <text x="84" y="274" font-size="17" font-weight="700">Wasmtime</text>
-    <text x="84" y="302">Boa JavaScript (default)</text>
-    <text x="84" y="326">Rust components</text>
-    <text x="84" y="350">Bochs VM activities</text>
-    <text x="296" y="274" font-size="17" font-weight="700">Native V8</text>
-    <text x="296" y="302">JavaScript (opt-in)</text>
-    <text x="296" y="326" opacity="0.75">V8 isolate</text>
-    <text x="508" y="274" font-size="17" font-weight="700">VM activities</text>
-    <text x="508" y="302">Linux guest</text>
-    <text x="508" y="326">QEMU: KVM / emulation</text>
-    <text x="508" y="350">Firecracker: KVM</text>
-    <text x="8" y="460" opacity="0.75">Nested permission scopes above; alternative execution sandboxes inside.</text>
-    <text x="8" y="484" opacity="0.75">Exec activities run host processes outside these runtime sandboxes.</text>
+    <text x="164" y="279" text-anchor="middle" font-size="17" font-weight="700">Wasmtime</text>
+    <text x="376" y="279" text-anchor="middle" font-size="17" font-weight="700">V8</text>
+    <text x="592" y="279" text-anchor="middle" font-size="17" font-weight="700">VM activities</text>
+    <text x="8" y="388" opacity="0.75">Nested permission scopes above; alternative execution sandboxes inside.</text>
+    <text x="8" y="412" opacity="0.75">Exec activities run host processes outside these runtime sandboxes.</text>
   </g>
 </svg>
