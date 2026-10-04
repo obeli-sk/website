@@ -124,9 +124,10 @@ What does the VM layer cost? We measured from the activity's persisted `Locked` 
 runtime. Docker bars use same-host measurements. The small cases print a string with Bash or use
 curl to fetch a local page through Obelisk's HTTP bridge. The larger case is the
 [inception Playwright demo](https://github.com/obeli-sk/demo-playwright/tree/main/inception): it
-launches Chromium, opens trynix.dev with Playwright, boots Obelisk in the page's Linux VM, runs
-`obelisk -v`, and returns the command output as the activity result. Its timing includes that
-in-browser boot. Each bar is a median in seconds; the scales differ between workloads.
+launches Chromium, opens [trynix.dev](https://trynix.dev/) with Playwright, boots Obelisk in the
+page's Linux VM, runs `obelisk -v`, and returns the command output as the activity result. Its
+timing includes that in-browser boot. Each bar is a median in seconds; the scales differ between
+workloads.
 
 <div style="overflow-x:auto">
 <svg role="img" aria-labelledby="vm-bench-title vm-bench-desc" viewBox="0 0 760 525" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
