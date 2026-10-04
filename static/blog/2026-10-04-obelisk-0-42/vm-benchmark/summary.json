@@ -1,0 +1,175 @@
+{
+  "measured_at": "2026-10-04",
+  "cpu": "Intel Core i9-14900HX",
+  "kernel": "6.18.43",
+  "obelisk_version": "0.42.0",
+  "binary_target": "x86_64-unknown-linux-musl",
+  "binary_sha256": "3d7943bb46e7f9fa12e22348a54e67d2cb991c0a9b30b18148aedf7b1c7759df",
+  "obelisk_source_revision": "cd011d7239dcfa6ee507ff391f0954aefc17bfc8",
+  "demo_source_revision": "920f611cb910dd37f5bee830c0bcd42523e891ae",
+  "qemu_version": "11.1.1",
+  "firecracker_version": "1.16.1",
+  "runtime_pins": {
+    "qemu-kvm": "oci://docker.io/getobelisk/activity-vm-qemu-kvm-runtime:2026-10-01@sha256:959d9182d7dc4a5b35996cca1954efd950b1caf5788061b50a858483368172f4",
+    "qemu-tcg": "oci://docker.io/getobelisk/activity-vm-qemu-tcg-runtime:2026-10-01@sha256:28e1cd9ce8b622149f5a0d621cec82f2d84db788ebb7094b89aa492d73be62a0",
+    "firecracker": "oci://docker.io/getobelisk/activity-vm-firecracker-runtime:2026-10-01@sha256:09a19047a740f641882a294de4737871f124747129308f9dd37de7ee3f72cdc4",
+    "bochs-wasm": "oci://docker.io/getobelisk/activity-vm-runtime:2026-09-28-7@sha256:6504b27ac92ae5fc6c0a33933b9d660d07faafd6bb461274dda44b98d26da1fe3"
+  },
+  "inception_store_path": "/nix/store/82b2qf8r29jykh3jlkq2dxk5nghgj23v-obelisk-0.42.0",
+  "metric": "Persisted Locked to Finished elapsed milliseconds, including VM setup, command, and result persistence; excluding deployment verification, runtime downloads, and server startup.",
+  "method": "Sequential executions on one host, separate server and SQLite directory for each backend. Bash and curl shared a server; Chromium used a fresh server and database. Warmup runs excluded. All measured activities succeeded. Docker was not measured because its daemon was unavailable.",
+  "resources": {
+    "echo": {
+      "memory_mib": 512,
+      "vcpus": 1
+    },
+    "curl": {
+      "memory_mib": 512,
+      "vcpus": 1
+    },
+    "inception": {
+      "memory_mib": 8192,
+      "vcpus": 4
+    }
+  },
+  "inputs": [
+    {
+      "file": "scripts/bench.sh",
+      "sha256": "2c9ee40bf8c1cbcad98fa0f0f494a04821419cdb466f89141165eb8a3492a8cb"
+    },
+    {
+      "file": "bench/deployment-vm.toml",
+      "sha256": "855bc4fe298b405e13a1bfbd2291979afecf2a7b933aca70c62f2d574193760b"
+    },
+    {
+      "file": "bench/app-vm.toml",
+      "sha256": "615c5fa2167a9e294df188dce53396cea1d08704b864a8a06d5bd7f7d9ee5d68"
+    },
+    {
+      "file": "inception/deployment-vm.toml",
+      "sha256": "27f867f347d0f847b676838210ed24596d6242656462634e494e9e418a9895c9"
+    },
+    {
+      "file": "inception/app-vm.toml",
+      "sha256": "34dc0e0033abb4efee6f544dc175c6435eb9b36fb7cddcca4de6c46cce5bbcce"
+    },
+    {
+      "file": "inception/workflow/run.js",
+      "sha256": "c6b2caf64366ee6c36ebedaceedb8bb942c3c6a46634c15ec908a0257b1b50a8"
+    },
+    {
+      "file": "runner/vm/browser.js",
+      "sha256": "09f13a9bd96440f47f68c96d2f19bcec425774457818c386769725af128b17d2"
+    },
+    {
+      "file": "todoapp/page/server.mjs",
+      "sha256": "af9f3ba71f8711572390ee4bc7e5ca79d2016fe12338789f46db8161ec01d243"
+    },
+    {
+      "file": "todoapp/page/index.html",
+      "sha256": "b9125b0f13586981cd49035fecb552698727824ff52d0dbaeaec3bb2a2d45f1a"
+    }
+  ],
+  "measurements": [
+    {
+      "workload": "echo",
+      "backend": "qemu-kvm",
+      "median_ms": 144.424,
+      "min_ms": 140.573,
+      "max_ms": 159.4,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "echo-qemu-kvm.csv"
+    },
+    {
+      "workload": "echo",
+      "backend": "qemu-tcg",
+      "median_ms": 431.432,
+      "min_ms": 423.587,
+      "max_ms": 447.311,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "echo-qemu-tcg.csv"
+    },
+    {
+      "workload": "echo",
+      "backend": "firecracker",
+      "median_ms": 154.536,
+      "min_ms": 146.341,
+      "max_ms": 164.39,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "echo-firecracker.csv"
+    },
+    {
+      "workload": "echo",
+      "backend": "bochs-wasm",
+      "median_ms": 966.279,
+      "min_ms": 899.661,
+      "max_ms": 1030.059,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "echo-bochs-wasm.csv"
+    },
+    {
+      "workload": "curl",
+      "backend": "qemu-kvm",
+      "median_ms": 186.769,
+      "min_ms": 169.128,
+      "max_ms": 195.524,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "curl-qemu-kvm.csv"
+    },
+    {
+      "workload": "curl",
+      "backend": "qemu-tcg",
+      "median_ms": 693.702,
+      "min_ms": 678.583,
+      "max_ms": 722.787,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "curl-qemu-tcg.csv"
+    },
+    {
+      "workload": "curl",
+      "backend": "firecracker",
+      "median_ms": 180.371,
+      "min_ms": 175.441,
+      "max_ms": 186.982,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "curl-firecracker.csv"
+    },
+    {
+      "workload": "curl",
+      "backend": "bochs-wasm",
+      "median_ms": 2342.046,
+      "min_ms": 2268.83,
+      "max_ms": 2418.385,
+      "sample_count": 7,
+      "warmup_count": 2,
+      "samples_file": "curl-bochs-wasm.csv"
+    },
+    {
+      "workload": "inception",
+      "backend": "qemu-kvm",
+      "median_ms": 13124.13,
+      "min_ms": 12284.835,
+      "max_ms": 16029.715,
+      "sample_count": 3,
+      "warmup_count": 1,
+      "samples_file": "inception-qemu-kvm.csv"
+    },
+    {
+      "workload": "inception",
+      "backend": "firecracker",
+      "median_ms": 13713.013,
+      "min_ms": 12199.885,
+      "max_ms": 13938.782,
+      "sample_count": 3,
+      "warmup_count": 1,
+      "samples_file": "inception-firecracker.csv"
+    }
+  ]
+}

@@ -120,9 +120,9 @@ Choose a backend by setting `OBELISK_UNSTABLE_ACTIVITY_VM` for both the CLI and 
 - `firecracker`: a Firecracker microVM, cold booted for each execution; needs `/dev/kvm`.
 
 What does the VM layer cost? We measured from the activity's persisted `Locked` event to its
-`Finished` event. The VM runs used a local release build; QEMU used the published 2026-10-01 EROFS
-runtime. Docker bars use same-host measurements. The small cases print a string with Bash or use
-curl to fetch a local page through Obelisk's HTTP bridge. The larger case is the
+`Finished` event using the published Obelisk 0.42.0 binary and published VM runtimes, including
+QEMU's 2026-10-01 EROFS bundles. The small cases print a string with Bash or use curl to fetch a
+local page through Obelisk's HTTP bridge. The larger case is the
 [inception Playwright demo](https://github.com/obeli-sk/demo-playwright/tree/main/inception): it
 launches Chromium, opens [trynix.dev](https://trynix.dev/) with Playwright, boots Obelisk in the
 page's Linux VM, runs `obelisk -v`, and returns the command output as the activity result. Its
@@ -130,35 +130,47 @@ timing includes that in-browser boot. Each bar is a median in seconds; the scale
 workloads.
 
 <div style="overflow-x:auto">
-<svg role="img" aria-labelledby="vm-bench-title vm-bench-desc" viewBox="0 0 760 525" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
-  <title id="vm-bench-title">Activity latency across VM backends and Docker</title>
-  <desc id="vm-bench-desc">Median seconds from Locked to Finished. Bash printf: Firecracker 0.154, QEMU KVM 0.215, QEMU TCG 0.435, Bochs WASM 0.872. Curl: Firecracker 0.179, QEMU KVM 0.269, QEMU TCG 0.733, Bochs WASM 2.243. Inception: Docker 5.744, Firecracker 11.201, QEMU KVM 14.588.</desc>
+<svg role="img" aria-labelledby="vm-bench-title vm-bench-desc" viewBox="0 0 760 495" style="display:block;width:760px;max-width:none;height:auto;color:var(--text);font:14px system-ui,sans-serif">
+  <title id="vm-bench-title">Activity latency across VM backends</title>
+  <desc id="vm-bench-desc">Median seconds from Locked to Finished. Bash printf: Firecracker 0.155, QEMU KVM 0.144, QEMU TCG 0.431, Bochs WASM 0.966. Curl to local page: Firecracker 0.180, QEMU KVM 0.187, QEMU TCG 0.694, Bochs WASM 2.342. Chromium: trynix.dev → obelisk -v: Firecracker 13.713, QEMU KVM 13.124.</desc>
   <g fill="currentColor">
     <text x="20" y="27" font-weight="700">Bash printf</text><text x="595" y="27">scale: 0–1 s</text>
-    <text x="20" y="63">Firecracker</text><text x="20" y="93">QEMU KVM</text><text x="20" y="123">QEMU TCG</text><text x="20" y="153">Bochs WASM</text>
-    <text x="670" y="63">0.154 s</text><text x="670" y="93">0.215 s</text><text x="670" y="123">0.435 s</text><text x="670" y="153">0.872 s</text>
+    <text x="20" y="63">Firecracker</text><text x="670" y="63">0.155 s</text>
+    <text x="20" y="93">QEMU KVM</text><text x="670" y="93">0.144 s</text>
+    <text x="20" y="123">QEMU TCG</text><text x="670" y="123">0.431 s</text>
+    <text x="20" y="153">Bochs WASM</text><text x="670" y="153">0.966 s</text>
     <text x="20" y="207" font-weight="700">Curl to local page</text><text x="595" y="207">scale: 0–2.5 s</text>
-    <text x="20" y="243">Firecracker</text><text x="20" y="273">QEMU KVM</text><text x="20" y="303">QEMU TCG</text><text x="20" y="333">Bochs WASM</text>
-    <text x="670" y="243">0.179 s</text><text x="670" y="273">0.269 s</text><text x="670" y="303">0.733 s</text><text x="670" y="333">2.243 s</text>
+    <text x="20" y="243">Firecracker</text><text x="670" y="243">0.180 s</text>
+    <text x="20" y="273">QEMU KVM</text><text x="670" y="273">0.187 s</text>
+    <text x="20" y="303">QEMU TCG</text><text x="670" y="303">0.694 s</text>
+    <text x="20" y="333">Bochs WASM</text><text x="670" y="333">2.342 s</text>
     <text x="20" y="387" font-weight="700">Chromium: trynix.dev → obelisk -v</text><text x="595" y="387">scale: 0–20 s</text>
-    <text x="20" y="423">Docker</text><text x="20" y="453">Firecracker</text><text x="20" y="483">QEMU KVM</text>
-    <text x="670" y="423">5.744 s</text><text x="670" y="453">11.201 s</text><text x="670" y="483">14.588 s</text>
+    <text x="20" y="423">Firecracker</text><text x="670" y="423">13.713 s</text>
+    <text x="20" y="453">QEMU KVM</text><text x="670" y="453">13.124 s</text>
   </g>
   <g fill="none" stroke="currentColor" opacity="0.35">
-    <path d="M200 39V160 M600 39V160 M200 219V340 M600 219V340 M200 399V490 M600 399V490"/>
+    <path d="M200 39V160 M600 39V160 M200 219V340 M600 219V340 M200 399V460 M600 399V460"/>
   </g>
   <g style="fill:var(--primary)">
-    <rect x="200" y="48" width="62" height="19" rx="3"/><rect x="200" y="78" width="86" height="19" rx="3"/><rect x="200" y="108" width="174" height="19" rx="3"/><rect x="200" y="138" width="349" height="19" rx="3"/>
-    <rect x="200" y="228" width="29" height="19" rx="3"/><rect x="200" y="258" width="43" height="19" rx="3"/><rect x="200" y="288" width="117" height="19" rx="3"/><rect x="200" y="318" width="359" height="19" rx="3"/>
-    <rect x="200" y="408" width="115" height="19" rx="3"/><rect x="200" y="438" width="224" height="19" rx="3"/><rect x="200" y="468" width="292" height="19" rx="3"/>
+    <rect x="200" y="48" width="61.81" height="19" rx="3"/>
+    <rect x="200" y="78" width="57.77" height="19" rx="3"/>
+    <rect x="200" y="108" width="172.57" height="19" rx="3"/>
+    <rect x="200" y="138" width="386.51" height="19" rx="3"/>
+    <rect x="200" y="228" width="28.86" height="19" rx="3"/>
+    <rect x="200" y="258" width="29.88" height="19" rx="3"/>
+    <rect x="200" y="288" width="110.99" height="19" rx="3"/>
+    <rect x="200" y="318" width="374.73" height="19" rx="3"/>
+    <rect x="200" y="408" width="274.26" height="19" rx="3"/>
+    <rect x="200" y="438" width="262.48" height="19" rx="3"/>
   </g>
 </svg>
 </div>
 
 All timings came from the same Intel i9-14900HX host. The VM runs were sequential, with cached
 runtime images and warmup runs. Bash printf and curl use 512 MiB and one guest vCPU; inception uses
-8 GiB and four. The [benchmark notes](https://github.com/obeli-sk/demo-playwright/tree/main/bench)
-include the commands and sample counts.
+8 GiB and four. Bash and curl each have seven measured runs after two warmups; Chromium has three
+after one warmup. The [benchmark notes](/blog/2026-10-04-obelisk-0-42/vm-benchmark/README.md)
+include the matching CSV measurements, commands, and pinned source and runtime versions.
 
 See the
 {{ doc_link(title="VM activity reference", path="configuration/deployment.md#experimental-vm-activities", version="v0.42.0") }}
