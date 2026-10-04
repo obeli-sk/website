@@ -192,12 +192,15 @@ on `$PATH`. To regenerate:
    ```
 
 The script captures the execution list, deployment list, deployment graph, trace, event log,
-application logs, and system logs. All screenshots are 1280×800 so the homepage carousel keeps a
+debugger, application logs, and system logs. It persists backtraces before capturing the debugger.
+All screenshots are 1280×800 so the homepage carousel keeps a
 consistent height. Set `SCREENSHOT_EXECUTION_ID` to capture a real workflow-agent session; otherwise
 it finds a completed tutorial parallel workflow. It authenticates with `OBELISK_API_TOKEN`. Override
 `WEBUI_URL`, `OBELISK_API_URL`, and `SCREENSHOT_DIR` for other ports or output directories. The
 homepage uses workflow-agent for execution views and demo-tutorial for the smaller deployment graph.
 Use `SCREENSHOT_LOG_TEXT` to scroll application logs to a particular recorded message.
+Use `SCREENSHOT_DEBUGGER_VERSION` to select a recorded call site; by default it selects an LLM call
+when present, or the first persisted backtrace.
 See `scripts/screenshot-webui.js` for details.
 
 ## Validation

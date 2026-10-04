@@ -34,10 +34,11 @@ if (!token) throw new Error('Set OBELISK_API_TOKEN to the demo server token');
       executionId = parallel.execution_id;
     }
     const page = await context.newPage();
-    const capture = async (route, name, selector) => {
+    const capture = async (route, name, selector, prepare) => {
       await page.goto(webuiUrl + route, { waitUntil: 'networkidle' });
       await page.locator(selector).first().waitFor();
       await page.evaluate(() => document.fonts.ready);
+      if (prepare) await prepare();
       await page.screenshot({ path: path.join(outputDir, `sc-${name}.png`) });
       console.log(`Saved sc-${name}.png`);
     };
@@ -52,6 +53,21 @@ if (!token) throw new Error('Set OBELISK_API_TOKEN to the demo server token');
     await page.screenshot({ path: path.join(outputDir, 'sc-trace.png') });
     console.log('Saved sc-trace.png');
     await capture(`/execution/${executionId}/log`, 'events', '.timeline-row');
+    const persisted = await context.request.put(`${apiUrl}/v1/executions/${executionId}/backtrace/persist`, {
+      headers: { authorization: `Bearer ${token}`, accept: 'application/json' },
+    });
+    if (!persisted.ok()) throw new Error(`Persist backtraces: HTTP ${persisted.status()}`);
+    const { events } = await apiGet(`/v1/executions/${executionId}/events?length=200&include_backtrace_id=true`);
+    const call = events.find(event => event.backtrace_id != null &&
+      event.event?.history_event?.event?.request?.target_ffqn === 'obelisk-agent:llm/chat.completion');
+    const debuggerVersion = process.env.SCREENSHOT_DEBUGGER_VERSION ?? call?.backtrace_id ??
+      events.find(event => event.backtrace_id != null)?.backtrace_id;
+    if (debuggerVersion == null) throw new Error('No persisted backtrace in the selected execution');
+    await capture(`/execution/${executionId}/debug/${debuggerVersion}`, 'debugger', '.syntect-block', async () => {
+      await page.locator('#hide-frames').check();
+      await page.locator('.version-slider-container').evaluate(element =>
+        window.scrollTo(0, window.scrollY + element.getBoundingClientRect().top - 76));
+    });
     await page.goto(webuiUrl + `/execution/${executionId}/applogs`, { waitUntil: 'networkidle' });
     const derived = page.getByRole('button', { name: 'Derived', exact: true });
     if (await derived.getAttribute('aria-pressed') !== 'true') await derived.click();
