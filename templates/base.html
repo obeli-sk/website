@@ -11,6 +11,17 @@
             var t = localStorage.getItem("theme");
             if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
         } catch (e) { }
+        // Use our own dark theme when Dark Reader is active and lock out its filters.
+        new MutationObserver((_, observer) => {
+            const root = document.documentElement;
+            if (root.dataset.darkreaderMode !== "dynamic") return;
+            observer.disconnect();
+            root.dataset.theme = "dark";
+            root.dataset.darkReaderLocked = "";
+            const lock = document.createElement("meta");
+            lock.name = "darkreader-lock";
+            document.head.append(lock);
+        }).observe(document.documentElement, { attributeFilter: ["data-darkreader-mode"] });
     </script>
     {% block meta_description %}{% endblock %}
     {% block rss %}

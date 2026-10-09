@@ -198,6 +198,10 @@ div.logo {
     }
 }
 
+:root[data-dark-reader-locked] .theme-toggle {
+    display: none;
+}
+
 // On phones the nav wraps to several lines; let it scroll away instead of covering the page.
 @media (max-width: 699px) {
     nav {
