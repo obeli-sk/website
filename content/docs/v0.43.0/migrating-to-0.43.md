@@ -101,8 +101,14 @@ Boa and V8 webhooks no longer receive automatic `__OBELISK_JS_SOURCE__` or
 
 The generated packages are now `obelisk:types@6.1.0`, `obelisk:workflow@7.1.0`, and
 `obelisk:webhook@7.1.0`. Existing components importing types `6.0.0` and workflow/webhook `7.0.0`
-remain accepted, so regenerating existing WIT is optional unless adopting the new extensions. To
-regenerate with the target CLI:
+remain accepted, so regenerating existing WIT is optional unless adopting the new extensions.
+
+If you regenerate support or dependency WIT, update authored worlds and native WIT imports to match
+the generated packages: workflow and webhook references become `@7.1.0`, and types become `@6.1.0`.
+This includes `workflow-support` and `workflow-dynamic-support`. A world importing `@7.0.0` cannot
+resolve a dependency directory that contains only `@7.1.0`; acceptance of existing compiled
+components does not make those source package names interchangeable. To regenerate with the target
+CLI:
 
 ```sh
 obelisk generate wit-support workflow wit/deps --force
