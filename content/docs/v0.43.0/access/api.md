@@ -77,6 +77,24 @@ Lists all registered components in the system.
 | `submittable`   | Boolean | If set, filters the `exports` list to only include functions that can be submitted.                                              | `None` (Shows all) |
 | `extensions`    | Boolean | Include {{ doc_link(title="Extension Functions", path="wasm/extensions.md") }} exports (e.g. `-schedule` variant).               | `false`            |
 
+#### Export extension classification
+
+With `exports=true&extensions=true`, each generated export has an `extension` string. Ordinary
+exports omit that field. The values are:
+
+| Export suffix       | `extension` value  |
+| ------------------- | ------------------ |
+| `-submit`           | `submit`           |
+| `-await-next`       | `await_next`       |
+| `-get`              | `get`              |
+| `-schedule`         | `schedule`         |
+| `-schedule-with-id` | `schedule_with_id` |
+| `-stub`             | `stub`             |
+
+`-schedule-with-id` is classified as `schedule_with_id`, not `schedule`. Clients decoding the enum
+must accept this new value in 0.43. These values were checked against the 0.43.0-rc.1 binary with
+workflow and stub exports through this endpoint.
+
 #### Example request
 
 ```sh

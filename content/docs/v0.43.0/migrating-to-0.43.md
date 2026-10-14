@@ -90,6 +90,9 @@ Use JSON for structured REST resources and actions. Structured `text/plain` repr
 been removed. WIT, source files, IDs, scalar app-config digests, execution-log streams, and SSE
 retain their supported representations.
 
+Clients decoding `/v1/components` exports must accept the new `extension` value `"schedule_with_id"`
+for `-schedule-with-id` functions; it is distinct from `"schedule"`.
+
 System-event retention requests must explicitly include `dry_run`; omission is rejected without
 deleting events. gRPC behavior is unchanged. The CLI no longer supplies compatibility defaults for
 replay measurements and public environment classifications when talking to servers older than 0.42.
