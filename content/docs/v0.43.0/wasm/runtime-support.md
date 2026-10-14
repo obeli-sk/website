@@ -29,16 +29,19 @@ Used by other Obelisk WIT interfaces as well as the generated
 {{ doc_link(title="extension", path="wasm/extensions.md") }}, contains `time` and `execution`
 interfaces with types like `execution-id` and others.
 
-### {{ github(title="`obelisk:types@6.0.0`", path="wit/obelisk_types%406.0.0/obelisk_types%406.0.0.wit") }}
+Generated WIT uses types `6.1.0` and workflow/webhook `7.1.0`. Existing imports of types `6.0.0` and
+workflow/webhook `7.0.0` remain accepted.
 
-The `function` record is in the dedicated `obelisk:types/function@6.0.0` interface. It is no longer
+### {{ github(title="`obelisk:types@6.1.0`", path="wit/obelisk_types%406.1.0/obelisk_types%406.1.0.wit", version="v0.43.0-rc.1") }}
+
+The `function` record is in the dedicated `obelisk:types/function@6.1.0` interface. It is no longer
 defined by the `execution` interface.
 
 ## Available Support Functions
 
 Here's a breakdown of the available functions, grouped by their WIT interface:
 
-### {{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/log.wit") }}
+### {{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/log.wit", version="v0.43.0-rc.1") }}
 
 Available to:
 
@@ -57,7 +60,7 @@ log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
 
-### {{ github(title="`obelisk:workflow/workflow-support@7.0.0`", path="wit/obelisk_workflow%407.0.0/obelisk_workflow%407.0.0.wit") }}
+### {{ github(title="`obelisk:workflow/workflow-support@7.1.0`", path="wit/obelisk_workflow%407.1.0/obelisk_workflow%407.1.0.wit", version="v0.43.0-rc.1") }}
 
 Available to:
 
@@ -143,13 +146,13 @@ activity to obtain e.g. a random number. Other functions are related to
 
 ### Dynamic workflow support
 
-Runtime-selected dispatch is isolated in `obelisk:workflow/workflow-dynamic-support@7.0.0`. Import
+Runtime-selected dispatch is isolated in `obelisk:workflow/workflow-dynamic-support@7.1.0`. Import
 it only when a native workflow constructs FFQNs at runtime. It provides `submit-json`,
 `schedule-json`, and `call-json`; submission and scheduling can return `value-too-large` in addition
 to parsing, lookup, and type-check errors.
 
-Webhook components use `obelisk:webhook/webhook-support@7.0.0` for execution lookup and ID helpers,
-and `obelisk:webhook/webhook-dynamic-support@7.0.0` for runtime-selected calls and schedules.
+Webhook components use `obelisk:webhook/webhook-support@7.1.0` for execution lookup and ID helpers,
+and `obelisk:webhook/webhook-dynamic-support@7.1.0` for runtime-selected calls and schedules.
 
 ### Join set resource functions
 

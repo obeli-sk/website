@@ -120,7 +120,7 @@ workflow code is not replay-compatible — unless `skip_determinism_check` is se
 **Web API:** see {{ doc_link(title="API access", path="access/api.md") }}.
 
 **gRPC (deprecated):** see the `DeploymentRepository` service in
-{{ github(title="proto/obelisk.proto", path="proto/obelisk.proto") }}.
+{{ github(title="proto/obelisk.proto", path="proto/obelisk.proto", version="v0.43.0-rc.1") }}.
 
 Unreferenced deployment file blobs are removed by automatic maintenance; see
 {{ doc_link(title="Server Configuration", path="configuration/server.md#automatic-maintenance-and-retention") }}.

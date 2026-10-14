@@ -7,11 +7,12 @@ weight = 2
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json") }}.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.1") }}.
 
 ## gRPC, gRPC-Web
 
-See {{ github(title="obelisk.proto", path="proto/obelisk.proto") }} schema for details.
+See {{ github(title="obelisk.proto", path="proto/obelisk.proto", version="v0.43.0-rc.1") }} schema
+for details.
 
 > **Deprecated:** gRPC and gRPC-web are deprecated in 0.42. The web API below covers the same
 > feature set; new clients should use `/v1`.
@@ -50,22 +51,9 @@ All `curl` examples below use `$OBELISK_API_AUTH` defined above.
 
 ## Content Negotiation
 
-The API supports content negotiation via the `Accept` header.
-
-- `application/json`: Returns structured JSON data.
-- `text/plain`: Returns raw text or a human-readable representation.
-
-Structured endpoints default to `application/json`. Endpoints that return raw identifiers or
-file-like content default to `text/plain`: `/v1/execution-id`, `/v1/deployment-id`, WIT endpoints,
-and `/v1/executions/{execution-id}/backtrace/source`.
-
-Send an explicit `Accept` header to override an endpoint's default where both representations are
-supported.
-
-> **Deprecated:** `text/plain` representations of structured resources and actions are deprecated
-> and will be removed after 0.43; use `application/json`. Plaintext remains supported (not
-> deprecated) for WIT documents, backtrace source files, and the execution and deployment ID
-> endpoints.
+Structured resources and actions use `application/json`; their former `text/plain` representations
+were removed in 0.43. WIT, source files, IDs, scalar app-config digests, execution-log streams, and
+SSE retain their supported representations. Send an explicit `Accept` header when needed.
 
 ---
 
@@ -131,16 +119,10 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/components?exports=true&imports=false
 ]
 ```
 
-Filtering by FFQN prefix with `text/plain` output:
+Filter by FFQN prefix using JSON:
 
 ```sh
-curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/components?exports=true&ffqn=testing:fibo/fibo.fibo" -H accept:text/plain
-```
-
-```
-activity:test_programs_fibo_activity:sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0 sha256:6a4566fb2de6564b4cbdaa6572983612d10cfe5558cb48b631e303e1d6a9e2d0
- exports:
-  testing:fibo/fibo.fibo: func(n: u8) -> result<u64>
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/components?exports=true&ffqn=testing:fibo/fibo.fibo" -H accept:application/json
 ```
 
 ---
@@ -612,7 +594,7 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H conten
 # Create the expected child execution id based on code or execution log
 CHILD_EXECUTION_ID="${EXECUTION_ID}.o:1-foo_1"
 # Optionally verify the id:
-curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $CHILD_EXECUTION_ID
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json | grep $CHILD_EXECUTION_ID
 # returns a row containing: HistoryEvent(JoinSetRequest(ChildExecutionRequest(E_01KDNB650P06H69YR1FD973MA0.o:1-foo_1, testing:stub-activity/activity.foo, params: ["test"])))
 
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${CHILD_EXECUTION_ID}/stub" -H content-type:application/json -X PUT -d \
@@ -1104,10 +1086,11 @@ The endpoint also accepts `multipart/form-data`. Use text fields for `deployment
 deployment-owned file blob; its `filename` is the deployment-relative path and the form-field name
 is either the claimed `sha256:...` digest or `file`.
 
-Every deployment-owned file referenced by `location` must carry its `content_digest` in the
-submitted manifest, for example `content_digest = "sha256:..."` next to `location`. The Obelisk CLI
-adds these digests automatically; raw REST clients compute the SHA-256 of each file. Files already
-present in the server's content store need not be attached again.
+The wire upload package (not an authored deployment file) requires generated metadata. Every
+deployment-owned file referenced by `location` must carry its `content_digest` in the submitted
+manifest, for example `content_digest = "sha256:..."` next to `location`. The Obelisk CLI adds these
+digests automatically; raw REST clients compute the SHA-256 of each file. Files already present in
+the server's content store need not be attached again.
 
 **Responses:**
 
@@ -1133,7 +1116,8 @@ curl -H "$OBELISK_API_AUTH" \
   -F 'file=@scripts/run.sh;filename=scripts/run.sh'
 ```
 
-where `deployment.toml` declares the script with its digest:
+where the wire manifest declares the script with its generated digest. Authored `deployment.toml`
+must omit `content_digest` and `component_files`; use the CLI to package it:
 
 ```toml
 [[activity_exec]]
@@ -1248,9 +1232,9 @@ unreferenced shared metadata and CAS blobs in bounded batches. Forced deletion c
 non-terminal tree unless its root belongs to the active deployment. Active and enqueued deployments
 are always retained.
 
-`POST /v1/admin/system-events/retain` accepts `max_age_seconds`, `batch_size`, and an optional
-`dry_run`. With `"dry_run": true` it deletes nothing and returns the number of events the batch
-would delete:
+`POST /v1/admin/system-events/retain` accepts `max_age_seconds`, `batch_size`, and a required
+`dry_run`. Omitting `dry_run` is rejected without deleting events. With `"dry_run": true` it deletes
+nothing and returns the number of events the batch would delete:
 
 ```sh
 curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/admin/system-events/retain -H content-type:application/json \
@@ -1311,7 +1295,7 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H conten
 # Create the expected delay id based on code or execution log
 DELAY_ID="Delay_${EXECUTION_ID#E_}.o:1-sleep_1"
 # Optionally verify the id:
-curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:text/plain | grep $DELAY_ID
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/events" -H accept:application/json | grep $DELAY_ID
 # returns a row containing: HistoryEvent(JoinSetRequest(DelayRequest(Delay_01KDNCA38TYGKHF7GKH3XQJH02.o:1-sleep_1, expires_at: `2025-12-29 15:43:39.751469133 UTC`, schedule_at: `In(150s)`)))
 
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/delays/${DELAY_ID}/cancel" -X PUT -H accept:application/json

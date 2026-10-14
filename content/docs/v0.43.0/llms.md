@@ -15,6 +15,9 @@ preamble = """
 
 Obelisk is a deterministic durable execution engine. Write new apps in JavaScript by default; they run on the JS runtime selected by the server (see "JavaScript / JS Runtime" under Docs). Use Rust components in Wasmtime when performance or an existing Rust library matters.
 
+## Migration
+Read the version-specific migration guide at /docs/v0.43.0/migrating-to-0.43/ before upgrading from 0.42.
+
 ## Default authoring path
 - Start every new app with `obelisk generate new NAME` (or `obelisk generate new` inside an empty directory). It writes a runnable `app.toml`, `deployment.toml`, JavaScript webhook, workflow, and HTTP activity, and a `README.md`. Adapt the generated files instead of writing the configuration from scratch.
 - To add a single configuration file to an existing project, generate its commented reference instead: `obelisk generate app-config app.toml`, `obelisk generate deployment deployment.toml`, or `obelisk generate server-config server.toml` (optional; only needed to change platform defaults such as ports or limits). Every setting in these references is commented out; at minimum uncomment and set `app_name` in `app.toml`.
@@ -30,7 +33,7 @@ Obelisk is a deterministic durable execution engine. Write new apps in JavaScrip
 - Configuration is split by owner: `server.toml` (platform admin: limits and listeners, optional), `app.toml` (app admin: app name, secrets, public environment, outbound HTTP, and exec approvals), and `deployment.toml` (components). Agents edit component code and `deployment.toml` freely; a deployment can only use what `app.toml` and `server.toml` grant. Any change to `app.toml` or `server.toml` widens what the app can do, so point it out to a human for review instead of treating it as routine.
 - Name each app in `app.toml` with `app_name`; `obelisk generate new` creates it. When running without an app policy file, set `OBELISK_APP_NAME`.
 - Outbound HTTP needs a component `allowed_host` entry in `deployment.toml` and a matching `[[outbound_http.allowed_host]]` entry in `app.toml`. Deployment environment variables must be declared in the app's `[public_env]`; credentials go in the app's `[secrets]`.
-- Use `obelisk deployment verify --app-config app.toml --deployment deployment.toml --fix` to repair deployment digests and scaffold missing app configuration, then run `obelisk server run --app-config app.toml --deployment deployment.toml`.
+- Use `obelisk deployment verify --deployment deployment.toml` to check components. Use `obelisk server verify --skip-db --app-config app.toml --deployment deployment.toml --fix` to scaffold missing app configuration, then run `obelisk server run --app-config app.toml --deployment deployment.toml`.
 - Read the Example Applications page before building an app. Start an agent from `demo-agent`; study `demo-playwright` for durable browser work and `demo-tutorial` for basic workflow patterns. Copy the relevant source and permissions into the new app.
 """
 +++

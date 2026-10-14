@@ -103,7 +103,7 @@ activity scheduled by a webhook as input from an untrusted caller.
 Verify every deployment against its app and server policy before activation:
 
 ```sh
-obelisk deployment verify --server-config server.toml --app-config app.toml --deployment deployment.toml
+obelisk server verify --skip-db --server-config server.toml --app-config app.toml --deployment deployment.toml
 ```
 
 Verification reports missing public variables, secret registrations, execution grants, and HTTP

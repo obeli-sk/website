@@ -107,7 +107,8 @@ HTTP, see {{ doc_link(title="HTTP Client", path="wasm/http-client.md") }}.
 
 ## Logging
 
-Import the {{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/log.wit") }}
+Import the
+{{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/log.wit", version="v0.43.0-rc.1") }}
 interface in the world:
 
 ```wit

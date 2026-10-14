@@ -248,12 +248,12 @@ export it first (or start the server with `--no-auth` for a throwaway tutorial).
 export OBELISK_API_TOKEN=<token printed on server startup>
 
 # List top-level executions
-curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain' \
+curl -s "http://localhost:5005/v1/executions" -H 'Accept: application/json' \
   -H "Authorization: Bearer $OBELISK_API_TOKEN"
 
 # Include child executions (workflows + activities)
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial" \
-  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
+  -H 'Accept: application/json' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 Fetch logs for a specific execution:

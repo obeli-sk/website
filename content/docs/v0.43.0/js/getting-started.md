@@ -243,13 +243,11 @@ For a throwaway tutorial you can instead start the server with `--no-auth` and d
 List top-level executions — one per webhook call:
 
 ```bash
-curl -s "http://localhost:5005/v1/executions" -H 'Accept: text/plain' \
+curl -s "http://localhost:5005/v1/executions" -H 'Accept: application/json' \
   -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
-```
-E_01KN209P2PC...  Finished(ok)  wasi:http/incoming-handler.handle  2026-03-31 13:11:01 UTC
-```
+The response is structured JSON describing the matching executions.
 
 Fetch logs for a webhook execution (includes its `console.log` output):
 
@@ -264,14 +262,10 @@ prefix:
 
 ```bash
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=tutorial:demo" \
-  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
+  -H 'Accept: application/json' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
-```
-E_01KN209P2PC....o:1_1              Finished(ok)  tutorial:demo/workflow.serial    2026-03-31 13:11:01 UTC
-E_01KN209P2PC....o:1_1.o:2-step_1  Finished(ok)  tutorial:demo/activity.step      2026-03-31 13:11:02 UTC
-...
-```
+The response is structured JSON describing the matching executions.
 
 Then fetch logs for the workflow execution by its ID — `console.log` calls appear as structured log
 entries with timestamps.

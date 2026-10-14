@@ -12,7 +12,7 @@ weight = 1
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | [`obelisk server run`](#running-the-server)                                                 | Start the server, optionally activating a deployment file         |
 | [`obelisk server verify`](#verifying-the-server-configuration)                              | Check configuration and deployment without serving traffic        |
-| [`obelisk deployment verify`](#verifying-a-local-deployment)                                | Compile and check a deployment against the app policy, offline    |
+| [`obelisk deployment verify`](#verifying-a-local-deployment)                                | Compile and check deployment components, without app policy       |
 | [`obelisk deployment submit`](#submitting-a-deployment)                                     | Upload a deployment and print its ID                              |
 | [`obelisk deployment enqueue`](#enqueueing-a-deployment)                                    | Activate a deployment on the next server restart                  |
 | [`obelisk deployment apply`](#applying-a-deployment)                                        | Activate a deployment immediately with a hot redeploy             |
@@ -55,6 +55,26 @@ weight = 1
 
 </div>
 
+## Output and deployment reuse
+
+Human-readable listings, progress, and confirmations go to stderr. Stdout carries IDs, JSON,
+generated configuration, source content, and execution logs. Use `--json` for structured results.
+Execution JSON follow modes emit flushed NDJSON, one compact JSON object per line.
+
+Deployment `submit`, `apply`, and `enqueue` print an ID to stdout and support `--json`, as do
+`deployment list`, `component list`, execution `pause`, `unpause`, `cancel`, and `upgrade`.
+Submission reuses the active deployment when parsed content and description match. Changing or
+removing the description creates a new deployment; explicit deployment IDs are honored.
+
+## Cloud commands
+
+`obelisk cloud` manages apps and proxies deployment, execution, component, and admin commands. Use
+`cloud app` for app lifecycle, policy, environment variables, and secrets. Select an app with
+`--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud policy commands discover
+`./app.toml`. The cloud API uses `--api-url` (`OBELISK_CLOUD_API_URL`) and `--api-token`
+(`OBELISK_CLOUD_API_TOKEN`). Run `obelisk cloud --help` and `obelisk cloud app --help` for
+subcommands.
+
 ## Global Options
 
 - `-v, --version` - Print version. Accepted only directly after `obelisk`, as in `obelisk --version`
@@ -68,8 +88,7 @@ accept these options after the subcommand, for example `obelisk execution list -
 - `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
   `OBELISK_API_URL`)
 - `--api-token <TOKEN>` - API token presented as `Authorization: Bearer <token>`. Falls back to
-  `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. See
-  {{ doc_link(title="Authentication", path="access/authentication.md") }}
+  `$OBELISK_API_TOKEN`. See {{ doc_link(title="Authentication", path="access/authentication.md") }}
 
 ## Obelisk Server
 
@@ -87,8 +106,8 @@ Options:
 - `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
 - `-s, --server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
   built-in defaults are used
-- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, built-in defaults are
-  used and `OBELISK_APP_NAME` must be set
+- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, `./app.toml` is
+  discovered; otherwise built-in defaults are used and `OBELISK_APP_NAME` must be set
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is
   inserted and activated on startup, overriding any existing Enqueued or Active deployment in the
   database
@@ -101,9 +120,9 @@ Options:
 - `--no-auth` - Accept unauthenticated requests on the API port. Development / recovery override;
   conflicts with `--api-token`. See
   {{ doc_link(title="Authentication", path="access/authentication.md") }}.
-  (`--allow-unauthenticated-api` is a deprecated alias.)
+
 - `--api-token <TOKEN>` - API token required to access the API server. Falls back to
-  `$OBELISK_API_TOKEN`; `$OBELISK__API__TOKEN` is deprecated. Conflicts with `--no-auth`
+  `$OBELISK_API_TOKEN`. Conflicts with `--no-auth`
 
 If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
 
@@ -131,24 +150,28 @@ Options:
 - `--clean-codegen-cache` - Delete only the codegen cache; OCI image cache is kept
 - `-s, --server-config <FILE>` - Path to the server configuration file (`server.toml`). If omitted,
   built-in defaults are used
-- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, built-in defaults are
-  used and `OBELISK_APP_NAME` must be set
+- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, `./app.toml` is
+  discovered; otherwise built-in defaults are used and `OBELISK_APP_NAME` must be set
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued
   deployment is used, falling back to the Active deployment
-- `--allow-unavailable-runtime-config` - Verify while runtime values or app and platform approvals
-  are pending
-- `--suppress-type-checking-errors` - Do not fail when a component's imports/exports fail type
-  checking against the deployment
-- `--skip-db` - Skip opening the database, which otherwise upgrades its schema to the running
-  version. Requires `--deployment`
-- `--fix` - Clean generated deployment metadata and, when `--app-config` is passed, scaffold missing
-  public environment names, secrets, outbound HTTP destinations, and exec grants in `app.toml` for
-  review
+- `--allow-unavailable-runtime-config` - Tolerate missing environment and secret values while still
+  checking declarations and permissions
+- `--suppress-type-checking-errors` - Do not fail on component import/export type errors
+- `--skip-db` - Skip opening the database and validating its schema; requires `--deployment`
+- `--fix` - Apply all app repairs, including exec approvals and secret exposure grants; does not
+  change server permissions
+- `--fix-app-declarations` - Add missing public environment and secret declarations without
+  supplying values
+- `--fix-app-http-permissions` - Add outbound HTTP destinations and secret replacement permissions
+- `--fix-app-exec-permissions` - Add app exec approval digests for the deployment
+- `--fix-app-secret-exposure` - Add app secret exposure grants for the deployment
+- `--fix-server-exec-permissions` - Authorize app exec approvals and the deployment in an explicit
+  server configuration
 
-The availability flag allows a developer to verify a deployment before an app or platform admin has
-supplied required values or approved public environment names, secrets, outbound HTTP destinations,
-or exec activities. These gaps produce warnings. Invalid manifests, missing files, compile errors,
-and link errors still fail. Activation always checks the actual configuration strictly.
+Repairs require a deployment file and target configuration paths; discovered `./app.toml` counts.
+Existing grants are preserved and verification reruns after repair. Review all generated policy
+changes. Missing runtime values can be tolerated, but missing declarations or permissions still
+fail.
 
 ## Obelisk Deployment
 
@@ -156,26 +179,23 @@ Manage deployments (component configurations) stored in the database.
 
 ### Verifying a local deployment
 
-Compile and verify a deployment without starting a server or accessing its database:
+Compile and verify deployment components without loading app/server policy, runtime values, or
+database state:
 
 ```sh
-obelisk deployment verify --server-config server.toml --app-config app.toml --deployment deployment.toml
+obelisk deployment verify --deployment deployment.toml
 ```
 
 Options:
 
-- `-s, --server-config <FILE>` - Path to `server.toml`. If omitted, built-in defaults are used
-- `-a, --app-config <FILE>` - Path to the app policy (`app.toml`). If omitted, built-in defaults are
-  used and `OBELISK_APP_NAME` must be set
-- `-d, --deployment <FILE>` - Path to the local deployment TOML file
-- `--allow-unavailable-runtime-config` - Verify while runtime values or app and platform approvals
-  are pending; activation still checks strictly
+- `-d, --deployment <FILE>` - Required path to the authored deployment TOML
 - `--suppress-type-checking-errors` - Do not fail on component import/export type errors
-- `--fix` - Clean generated deployment metadata and, when `--app-config` is passed, scaffold missing
-  public environment names, secrets, outbound HTTP destinations, and exec grants in `app.toml` for
-  review
 - `--clean-cache` - Delete both the codegen and OCI image caches before verifying
 - `--clean-codegen-cache` - Delete only the codegen cache before verifying
+- `--api-token <TOKEN>` - API token; defaults to `OBELISK_API_TOKEN`
+
+App/server configuration, runtime availability, and repair flags belong to `server verify`. Authored
+manifests reject generated `content_digest` and `component_files` fields.
 
 ### Submitting a deployment
 

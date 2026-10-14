@@ -327,7 +327,7 @@ the console on startup; export it first (or start the server with `--no-auth`). 
 ```bash
 export OBELISK_API_TOKEN=<token printed on server startup>
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent" \
-  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
+  -H 'Accept: application/json' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ```
@@ -362,7 +362,7 @@ Check the execution log to confirm:
 
 ```bash
 curl -s "http://localhost:5005/v1/executions?show_derived=true&ffqn_prefix=demo:fly-agent" \
-  -H 'Accept: text/plain' -H "Authorization: Bearer $OBELISK_API_TOKEN"
+  -H 'Accept: application/json' -H "Authorization: Bearer $OBELISK_API_TOKEN"
 ```
 
 ```

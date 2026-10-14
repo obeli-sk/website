@@ -90,8 +90,8 @@ functions in a separate WIT package for each exported function:
 package stargazers:llm-obelisk-ext;
 
 interface llm {
-  use obelisk:types/execution@6.0.0.{execution-id, await-next-extension-error, get-extension-error, child-execution-request-error};
-  use obelisk:types/join-set@6.0.0.{join-set};
+  use obelisk:types/execution@6.1.0.{execution-id, await-next-extension-error, get-extension-error, child-execution-request-error};
+  use obelisk:types/join-set@6.1.0.{join-set};
 
   respond-submit: func(join-set: borrow<join-set>, user-prompt: string, settings-json: string) -> result<execution-id, child-execution-request-error>;
 
@@ -175,8 +175,8 @@ following interface:
 package stargazers:llm-obelisk-schedule;
 
 interface llm {
-  use obelisk:types/execution@6.0.0.{execution-id, schedule-json-error};
-  use obelisk:types/time@6.0.0.{schedule-at};
+  use obelisk:types/execution@6.1.0.{execution-id, schedule-json-error};
+  use obelisk:types/time@6.1.0.{schedule-at};
 
   respond-schedule: func(schedule-at: schedule-at, user-prompt: string, settings-json: string) -> result<execution-id, schedule-json-error>;
 }
@@ -212,8 +212,16 @@ following:
 package stargazers:llm-obelisk-stub;
 
 interface llm {
-  use obelisk:types/execution@6.0.0.{execution-id, stub-error};
+  use obelisk:types/execution@6.1.0.{execution-id, stub-error};
 
   respond-stub: func(execution-id: execution-id, execution-result: result<string, string>) -> result<_, stub-error>;
 }
 ```
+
+## Caller-supplied IDs for typed schedules
+
+The `-schedule-with-id` extensions let workflows and webhooks supply a top-level execution ID.
+Matching retries reuse the original execution. Different targets, parameters, or timing conflict.
+Relative timing compares the original offset from creation; retries never reschedule an execution.
+Generate extension WIT with the 0.43 CLI to use this addition. Existing types `6.0.0` and
+workflow/webhook `7.0.0` imports remain accepted.

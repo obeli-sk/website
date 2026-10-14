@@ -31,7 +31,6 @@ Components can also be referenced from GitHub releases using the `gh://` prefix.
 [[activity_wasm]]
 name = "myactivity"
 location = "gh://owner/repo@v1.0.0/asset.wasm"
-content_digest = "sha256:..."  # Recommended for reproducibility
 ```
 
 ## Note on caching of OCI artifacts

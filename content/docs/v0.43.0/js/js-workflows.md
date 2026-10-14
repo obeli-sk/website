@@ -365,3 +365,9 @@ Returns the execution ID of the currently running workflow:
 const myId = obelisk.executionIdCurrent();
 console.log(`Running as ${myId}`);
 ```
+
+## Caller-supplied IDs for typed schedules
+
+Typed schedules accept `executionId` in the leading schedule object. Matching retries reuse the
+original top-level execution; different targets, parameters, or timing conflict. Relative timing
+compares the original offset from creation, and retries never reschedule an execution.

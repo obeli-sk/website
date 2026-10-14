@@ -9,7 +9,8 @@ weight = 3
 needs. It may be written by a coding agent together with the component code. Whatever it requests
 must fit within `app.toml` and `server.toml`: verification, startup, and activation reject a
 deployment that asks for an ungranted secret, environment variable, outbound HTTP destination, or
-exec activity. Run `obelisk deployment verify` to check the fit before submitting. See
+exec activity. Run `obelisk server verify --skip-db --deployment deployment.toml` to check the
+policy fit before submitting. See
 {{ doc_link(title="Configuration", path="configuration/_index.md") }} for how the three files
 relate.
 
@@ -284,7 +285,6 @@ location = "scripts/my-script.sh"             # Deployment-local path or oci://r
 # content = '''#!/usr/bin/env bash
 # echo "\"hello\""
 # '''
-# content_digest = "sha256:..."
 ffqn = "namespace:package/interface.function" # Required
 params = [
   { name = "a", type = "u32" },
@@ -308,7 +308,8 @@ Exactly one of `location` or `content` must be set:
 - Local files are read at deploy time and stored with the deployment, making the deployment
   reconstructable.
 - `content` embeds the script directly in `deployment.toml`.
-- `content_digest` can be used to pin and verify the resolved script contents.
+- Generated `content_digest` and `component_files` metadata must not appear in authored deployments.
+  The CLI adds upload metadata during submission and removes it from exports.
 - `params_via_stdin = true` passes parameters in a stdin JSON `params` array, avoiding operating
   system argument-size limits for large inputs.
 

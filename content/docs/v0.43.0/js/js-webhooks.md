@@ -262,3 +262,8 @@ export default async function handle(request) {
   return resp;
 }
 ```
+
+## Source environment variables
+
+Obelisk 0.43 does not inject `__OBELISK_JS_SOURCE__` or `__OBELISK_JS_FILE_NAME__` into Boa or V8
+webhooks.

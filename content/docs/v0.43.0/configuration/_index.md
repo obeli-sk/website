@@ -56,8 +56,8 @@ them.
 A typical loop:
 
 1. The agent edits the components and `deployment.toml`.
-2. `obelisk deployment verify --app-config app.toml --deployment deployment.toml` reports every
-   requirement the app policy does not cover. With `--fix`, it writes the missing entries into
+2. `obelisk server verify --skip-db --app-config app.toml --deployment deployment.toml` reports
+   every requirement the app policy does not cover. With `--fix`, it writes the missing entries into
    `app.toml`.
 3. A reviewer audits the `app.toml` diff: a new secret, a new outbound host, or a new exec digest.
 
@@ -70,7 +70,7 @@ The `obelisk-version` field can be set in `server.toml` or `deployment.toml` to 
 with the running Obelisk version:
 
 ```toml
-obelisk-version = "0.42"
+obelisk-version = "0.43"
 ```
 
 ## Built-in Defaults
@@ -130,20 +130,26 @@ obelisk server run --server-config server.toml --app-config app.toml --deploymen
 ```
 
 If `--server-config` is omitted, built-in platform defaults are used. If `--app-config` is omitted,
-the default app policy is used and `OBELISK_APP_NAME` must be set. If `--deployment` is omitted, the
-database's active/enqueued deployment is used.
+`./app.toml` is discovered; if absent, the default app policy is used and `OBELISK_APP_NAME` must be
+set. If `--deployment` is omitted, the database's active/enqueued deployment is used.
 
-To verify a local deployment without opening the database, use:
+To verify component code without app/server policy or database state:
 
 ```sh
-obelisk deployment verify --server-config server.toml --app-config app.toml --deployment deployment.toml
+obelisk deployment verify --deployment deployment.toml
 ```
 
-Missing public environment variables and secrets are reported together with a sorted, pasteable
-`app.toml` snippet. Add `--fix` to add missing `[public_env]` entries, scaffold missing `[secrets]`
-entries, and write the reviewed exec allowlist and secret-exposure grants into `app.toml`. Review
-the generated policy and set each secret's environment variable before starting the server.
-`obelisk server verify --fix` provides the same repair behavior. Missing outbound HTTP destinations
-are scaffolded in `app.toml` for review. A stale exec digest is kept and the current one appended as
-an array; remove the old digest when no running revision needs it, and update the platform exec gate
-in `server.toml`, which `--fix` does not change.
+To check policy without opening the database:
+
+```sh
+obelisk server verify --skip-db --server-config server.toml --app-config app.toml --deployment deployment.toml
+```
+
+Add `--allow-unavailable-runtime-config` to tolerate missing runtime values while still enforcing
+all declarations and permissions. Add `--fix` to repair app declarations, HTTP permissions, exec
+approvals, and secret-exposure grants. Scoped repair flags and the separate platform exec repair are
+documented in {{ doc_link(title="CLI reference", path="access/cli.md") }}. Repairs preserve existing
+grants and rerun verification. Review the generated policy and supply values before startup.
+
+See
+{{ doc_link(title="Migrating from 0.42 to 0.43", path="migrating-to-0.43.md", version="v0.43.0") }}.

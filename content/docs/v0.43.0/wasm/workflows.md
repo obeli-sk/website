@@ -26,9 +26,9 @@ is a complete buildable example. The project uses the following layout:
 │   └── lib.rs
 └── wit
     ├── deps
-    │   ├── obelisk_types@6.0.0
+    │   ├── obelisk_types@6.1.0
     │   │   └── types.wit
-    │   ├── obelisk_workflow@7.0.0
+    │   ├── obelisk_workflow@7.1.0
     │   │   └── workflow-support.wit
     │   ├── template-fibo_activity
     │   │   └── fibo-activity.wit                   # Imported activity
@@ -69,7 +69,7 @@ world any {
     export template-fibo:workflow/fibo-workflow-ifc;
     import template-fibo:activity/fibo-activity-ifc;
     import template-fibo:activity-obelisk-ext/fibo-activity-ifc;
-    import obelisk:workflow/workflow-support@7.0.0;
+    import obelisk:workflow/workflow-support@7.1.0;
 }
 ```
 
