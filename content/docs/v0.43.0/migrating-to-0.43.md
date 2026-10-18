@@ -41,6 +41,10 @@ Deployments with
 {{ doc_link(title="experimental VM activities", path="configuration/deployment.md#experimental-vm-activities") }}
 still need `OBELISK_UNSTABLE_ACTIVITY_VM` set for either command.
 
+`server verify --skip-db` needs `--deployment`; without `--skip-db` it falls back to the database's
+enqueued or active deployment. An app policy is always checked against a deployment, so verify a
+policy file that ships without its own deployment against a deployment that runs under it.
+
 `--allow-unavailable-runtime-config` tolerates missing runtime values only. Required public
 environment and secret declarations, outbound HTTP permissions, exec approvals, and secret-exposure
 grants still have to exist. It does not bypass the app or platform policy.
