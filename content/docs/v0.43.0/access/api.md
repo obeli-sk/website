@@ -1199,6 +1199,26 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 
 ---
 
+## Server Information
+
+### `GET /v1/info`
+
+Returns the app name, Obelisk version, current deployment ID, node run ID, app config digest, and
+server start time as JSON:
+
+```json
+{
+  "app_name": "my-app",
+  "obelisk_version": "0.43.0",
+  "deployment_id": "Dep_...",
+  "node_run_id": "NodeRun_...",
+  "app_config_digest": "app-config:v1:sha256:...",
+  "started_at": "2026-10-18T11:00:00.000Z"
+}
+```
+
+---
+
 ## App Configuration
 
 ### `GET /v1/app-config`
@@ -1235,7 +1255,7 @@ types.
 
 | Endpoint                                       | Purpose                                                               |
 | ---------------------------------------------- | --------------------------------------------------------------------- |
-| `GET /v1/admin/node-run-id`                    | Identify the current server process run                               |
+| `GET /v1/admin/node-run-id`                    | Deprecated, removed after 0.43: use `node_run_id` from `GET /v1/info` |
 | `GET /v1/admin/system-events`                  | List persisted events, filtered by run, level, code, or creation time |
 | `GET /v1/admin/system-events/{event-id}`       | Retrieve one system event                                             |
 | `POST /v1/admin/system-events/retain`          | Remove system events older than the requested age                     |

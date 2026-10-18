@@ -68,12 +68,26 @@ removing the description creates a new deployment; explicit deployment IDs are h
 
 ## Cloud commands
 
-`obelisk cloud` manages apps and proxies deployment, execution, component, and admin commands. Use
-`cloud app` for app lifecycle, policy, environment variables, and secrets. Select an app with
-`--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud policy commands discover
-`./app.toml`. The cloud API uses `--api-url` (`OBELISK_CLOUD_API_URL`) and `--api-token`
-(`OBELISK_CLOUD_API_TOKEN`). Run `obelisk cloud --help` and `obelisk cloud app --help` for
-subcommands.
+`obelisk cloud` manages apps hosted by an Obelisk cloud provisioner. `cloud token` creates, lists,
+inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. Everything scoped to
+one app lives under `cloud app`:
+
+- `new`, `get`, `status`, `start`, `stop`, `delete`: app lifecycle. `new` creates a stopped app.
+- `stage` stages app policy and cloud settings without restarting the VM; `apply` applies staged
+  configuration while respecting the app's intended running state.
+- `deploy` publishes the local project: it creates or configures the app, submits the deployment,
+  and activates it. It fails on missing required values unless `--fill` is passed.
+- `fill` interactively stages declared env vars and secrets and requires a terminal. `env` and
+  `secrets` manage them individually. Internal secrets are skipped.
+- `endpoint` shows the API, webhook, and Web UI URLs; `endpoint api`, `webhook`, or `webui` prints
+  one of them.
+- `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
+
+Select an app with `cloud app --app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud
+policy commands discover `./app.toml`. The cloud API uses `--api-url` (`OBELISK_CLOUD_API_URL`) and
+`--api-token` (`OBELISK_CLOUD_API_TOKEN`). Cloud commands print concise human-readable results;
+`--json` prints machine-readable output and `--verbose` adds metadata and diagnostics. Run
+`obelisk cloud --help` and `obelisk cloud app --help` for all options.
 
 ## Global Options
 

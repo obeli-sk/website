@@ -46,6 +46,21 @@ webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
 > **Warning**: The external webhook HTTP server has no authentication. Listening on all interfaces
 > (`[::]:<port>`) is not recommended.
 
+## App Environment Prefix
+
+By default, app public environment variables and env-backed secrets declared in `app.toml` are read
+from process variables of the same name. A platform hosting several apps, or keeping its own
+variables apart from the app's, can prepend a prefix:
+
+```toml
+app_env_prefix = "APP_"
+```
+
+With this setting, `OPENAI_KEY` declared in `app.toml` is read from `APP_OPENAI_KEY`, and there is
+no fallback to the unprefixed name. Components and deployment `${...}` references keep using the
+logical name. The prefix does not apply to server settings such as `OBELISK__...` overrides,
+`OBELISK_API_TOKEN`, or `OBELISK_APP_NAME`. The default is an empty prefix.
+
 ## Platform Exec Gate
 
 {{ doc_link(title="Exec activities", path="configuration/deployment.md#exec-activities") }} run host

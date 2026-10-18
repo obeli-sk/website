@@ -42,6 +42,10 @@ get going:
 API startup token: 6f1c...<token>
 ```
 
+Components that call their own server's API can receive this token through an
+{{ doc_link(title="internal secret", path="configuration/app.md#internal-secrets") }}, so the app
+needs no operator-supplied token for that purpose.
+
 ### Persistent tokens
 
 Persistent tokens are configured as SHA-256 hashes of the token text in `server.toml`. The hashes
@@ -64,8 +68,30 @@ api.token_hashes = [
 ]
 ```
 
-The plaintext token is printed once and never stored. **Revoke** a token by deleting its hash line
-and restarting the server.
+The plaintext token is printed once and never stored. The server reloads `api.token_hashes` from the
+`server.toml` passed with `--server-config` about once per second, including atomic file
+replacements, so adding or **revoking** a token (deleting its hash line) needs no restart. An
+invalid or missing file keeps the last valid set. An empty list revokes all configured hashes but
+not the startup token, a token injected through `--api-token` or `OBELISK_API_TOKEN`, OIDC
+verification, or streams that are already authenticated. Each applied set is acknowledged with an
+`api.token_hashes_loaded` or `api.token_hashes_changed` system event carrying its SHA-256
+fingerprint and count.
+
+### OIDC ID tokens
+
+The API can also accept OIDC ID tokens, such as Fly.io machine tokens, from trusted issuers. Each
+`api.oidc` entry names an issuer, the required audience, and claims that must match exactly:
+
+```toml
+[[api.oidc]]
+issuer = "https://oidc.fly.io/my-org"
+audience = "https://my-app.example.com"
+claims = { app_name = "deployer" }
+```
+
+The issuer must be `https://` unless its host is loopback, the audience must not be empty, and at
+least one claim is required, so that not every token from the issuer is accepted. Signing keys are
+fetched through OIDC discovery. Static tokens are unaffected.
 
 ### Plaintext token from the environment
 

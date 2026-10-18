@@ -23,7 +23,8 @@ app_name = "my-app"
 ```
 
 The app name is required, either here or through `OBELISK_APP_NAME`. It selects the default SQLite
-directory.
+directory. It must be 4-25 characters long and consist of lowercase ASCII letters, digits, and
+interior hyphens (no leading or trailing hyphen). Local and cloud apps share this rule.
 
 ## Secret Registry
 
@@ -55,6 +56,32 @@ activities, and experimental VM activities. WASM, JavaScript, and VM components 
 under its logical name as an environment variable. Exec activities receive the values in the
 `secrets` object on stdin.
 
+If the server prefixes app environment sources with `app_env_prefix` (see
+{{ doc_link(title="Server Configuration", path="configuration/server.md#app-environment-prefix") }}),
+each secret is read from the prefixed variable instead, for example `TENANT_OPENAI_KEY` for
+`OPENAI_KEY`. The logical name seen by deployments and components does not change.
+
+### Internal Secrets
+
+A component that calls the API of its own Obelisk server can receive the server's generated startup
+API token instead of an operator-supplied token:
+
+```toml
+[secrets]
+OBELISK_API_TOKEN = { type = "internal" }
+```
+
+The value is the
+{{ doc_link(title="ephemeral startup token", path="access/authentication.md#ephemeral-startup-token") }},
+grants full API access, and changes on every server restart, so do not persist it. No environment
+variable is read and none needs to be set. Exposing and forwarding an internal secret works like any
+other secret: `exposed_secrets` with an `exposed_to` grant, or an outbound HTTP `secrets` entry.
+
+Internal secrets cannot be `optional`. They require an enabled API listener with authentication:
+`server run` fails at startup when the API is disabled or the server runs with `--no-auth`.
+`server verify` accepts them without a value. `cloud app fill` skips them. Secrets without a `type`,
+or with `type = "env"`, are read from the process environment as described above.
+
 ## Public Deployment Environment
 
 Deployments can only read process environment variables declared by the app admin. The declarations
@@ -72,7 +99,8 @@ Entries are required at startup unless marked `optional = true`. A deployment ma
 optional variable only through an optional forwarded reference, such as
 `{ key = "TRACE_ID", optional = true }`, or an interpolation fallback, such as `${TRACE_ID:-none}`.
 Keep credentials in the secret registry instead. A variable registered as a secret cannot also be
-read through the public environment table.
+read through the public environment table. With a server `app_env_prefix`, values are read from the
+prefixed variable names, while `${NAME}` references in the deployment keep the unprefixed name.
 
 ## App Outbound HTTP Policy
 
