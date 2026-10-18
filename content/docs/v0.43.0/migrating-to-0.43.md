@@ -37,6 +37,10 @@ obelisk server verify --skip-db --server-config server.toml --app-config app.tom
 obelisk server verify --skip-db --allow-unavailable-runtime-config --app-config app.toml --deployment deployment.toml
 ```
 
+Deployments with
+{{ doc_link(title="experimental VM activities", path="configuration/deployment.md#experimental-vm-activities") }}
+still need `OBELISK_UNSTABLE_ACTIVITY_VM` set for either command.
+
 `--allow-unavailable-runtime-config` tolerates missing runtime values only. Required public
 environment and secret declarations, outbound HTTP permissions, exec approvals, and secret-exposure
 grants still have to exist. It does not bypass the app or platform policy.
