@@ -88,10 +88,10 @@ manifest, so `component add` can reconstruct the deployment entry automatically:
 
 ```sh
 # Push a JS webhook to an OCI registry
-obelisk component push --name my_webhook --deployment deployment.toml \
-  docker.io/myorg/my-webhook:v1.0.0
+obelisk component push --deployment deployment.toml \
+  my_webhook oci://docker.io/myorg/my-webhook:v1.0.0
 
 # Add the component from OCI (type is auto-detected from manifest metadata)
-obelisk component add oci://docker.io/myorg/my-webhook:v1.0.0 \
-  --name my_webhook --deployment deployment.toml --locked
+obelisk component add --deployment deployment.toml --locked \
+  oci://docker.io/myorg/my-webhook:v1.0.0 my_webhook
 ```

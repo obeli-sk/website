@@ -35,6 +35,11 @@ entries. Split-config validates the resulting `server.toml`, so remove the keys 
 secret whose source variable differs from its logical name; see
 [Rename secret source variables](#rename-secret-source-variables).
 
+The generated `app.toml` has no `app_name`, so add one. Every generated `[public_env]` and
+`[secrets]` entry is required. Mark a variable as `{ optional = true }` if the deployment only reads
+it through a `${VAR:-default}` fallback. `[allowed_exec_activities]` is written to both files: the
+`server.toml` copy is the platform gate. If nothing else remains in `server.toml`, delete it.
+
 Pass the app policy to every server and verification command with `--app-config` (`-a`):
 
 ```sh

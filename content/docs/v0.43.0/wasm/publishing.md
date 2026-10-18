@@ -4,18 +4,19 @@ template = "docs.html"
 weight = 90
 +++
 
-After a WASM file is built, it can be pushed into an OCI registry with this command. JavaScript
-components can be published the same way, see
+After a WASM file is built, it can be pushed into an OCI registry. The command reads the component
+entry from a deployment file, pushes the file it points to, and embeds the entry's metadata in the
+image. JavaScript components can be published the same way, see
 {{ doc_link(title="JS Components", path="js/js-components.md#oci-distribution") }}.
 
 ```sh
-obelisk component push \
-    target/wasm32-wasip2/release/myactivity.wasm \
-    docker.io/youraccount/yourimage:tag
+obelisk component push --deployment deployment.toml \
+    myactivity oci://docker.io/youraccount/yourimage:tag
 ```
 
-Obelisk will output the OCI location together with its SHA digest. This can be used instead of the
-file location in `deployment.toml`:
+Obelisk prints the OCI location together with its SHA digest to stdout, e.g.
+`oci://docker.io/youraccount/yourimage:tag@sha256:...`. This can be used instead of the file
+location in `deployment.toml`:
 
 ```diff
  [[activity_wasm]]

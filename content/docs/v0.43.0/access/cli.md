@@ -681,6 +681,9 @@ Arguments:
 - `<OCI>` - OCI reference with `oci://` prefix, e.g. `oci://docker.io/repo/image:tag`
 - `--deployment <FILE>` - Path to the input deployment TOML file _(required)_
 
+On success the pushed reference with its manifest digest, e.g.
+`oci://docker.io/repo/image:tag@sha256:...`, is printed to stdout.
+
 ### Adding a component to the deployment configuration
 
 Add a component to a deployment TOML configuration file from an OCI reference. The component type is
@@ -827,6 +830,11 @@ Options:
 
 - `--server-config <FILE>` - Existing `server.toml` to update _(required)_
 - `-a, --app-config <FILE>` - Output `app.toml` (default: a sibling of `server.toml`)
+
+The generated `app.toml` has no `app_name`, so add one. Every generated `[public_env]` and
+`[secrets]` entry is required. Mark a variable as `{ optional = true }` if the deployment only reads
+it through a `${VAR:-default}` fallback. `[allowed_exec_activities]` is written to both files: the
+`server.toml` copy is the platform gate. If nothing else remains in `server.toml`, delete it.
 
 See
 {{ doc_link(title="Migrating from 0.41 to 0.42", path="migrating-to-0.42.md", version="v0.42.0") }}.
