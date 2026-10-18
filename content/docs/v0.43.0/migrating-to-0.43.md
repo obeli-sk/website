@@ -41,9 +41,11 @@ Deployments with
 {{ doc_link(title="experimental VM activities", path="configuration/deployment.md#experimental-vm-activities") }}
 still need `OBELISK_UNSTABLE_ACTIVITY_VM` set for either command.
 
-`server verify --skip-db` needs `--deployment`; without `--skip-db` it falls back to the database's
-enqueued or active deployment. An app policy is always checked against a deployment, so verify a
-policy file that ships without its own deployment against a deployment that runs under it.
+`server verify` also performs every component check of `deployment verify`, so CI that already runs
+`server verify` for a deployment does not need both. `server verify --skip-db` needs `--deployment`;
+without `--skip-db` it falls back to the database's enqueued or active deployment. An app policy is
+always checked against a deployment, so verify a policy file that ships without its own deployment
+against a deployment that runs under it.
 
 `--allow-unavailable-runtime-config` tolerates missing runtime values only. Required public
 environment and secret declarations, outbound HTTP permissions, exec approvals, and secret-exposure
@@ -184,8 +186,7 @@ tokens, policy, environment variables, and secrets. App-scoped commands, includi
 - Check every `app_name` against the 4-25 character rule.
 - Audit all authored deployments for generated metadata and all verification invocations for removed
   flags.
-- Run component verification for every deployment, then policy verification against each applicable
-  app/server configuration.
+- Run `server verify` for every deployment against each applicable app/server configuration.
 - Run the repository's CI commands with the target release, regenerate required artifacts, and check
   for tracked drift.
 - Keep cross-repository OCI dependencies pinned and remove self-references when building the same
