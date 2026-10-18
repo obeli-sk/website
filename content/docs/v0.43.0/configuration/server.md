@@ -178,7 +178,7 @@ set that value explicitly to keep using an existing database. See [Path Prefixes
 for how `${DATA_DIR}` is translated.
 
 Customize PRAGMA statements. Defaults are in
-{{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs", version="v0.43.0-rc.1") }}
+{{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs", version="v0.43.0-rc.6") }}
 
 ```toml
 database.sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }

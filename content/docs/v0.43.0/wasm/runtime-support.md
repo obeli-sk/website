@@ -32,7 +32,7 @@ interfaces with types like `execution-id` and others.
 Generated WIT uses types `6.1.0` and workflow/webhook `7.1.0`. Existing imports of types `6.0.0` and
 workflow/webhook `7.0.0` remain accepted.
 
-### {{ github(title="`obelisk:types@6.1.0`", path="wit/obelisk_types%406.1.0/obelisk_types%406.1.0.wit", version="v0.43.0-rc.1") }}
+### {{ github(title="`obelisk:types@6.1.0`", path="wit/obelisk_types%406.1.0/obelisk_types%406.1.0.wit", version="v0.43.0-rc.6") }}
 
 The `function` record is in the dedicated `obelisk:types/function@6.1.0` interface. It is no longer
 defined by the `execution` interface.
@@ -41,7 +41,7 @@ defined by the `execution` interface.
 
 Here's a breakdown of the available functions, grouped by their WIT interface:
 
-### {{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/log.wit", version="v0.43.0-rc.1") }}
+### {{ github(title="`obelisk:log/log@1.0.0`", path="wit/obelisk_log%401.0.0/obelisk_log%401.0.0.wit", version="v0.43.0-rc.6") }}
 
 Available to:
 
@@ -60,7 +60,7 @@ log::info("This is an informational message.");
 log::error("This is an error message!");
 ```
 
-### {{ github(title="`obelisk:workflow/workflow-support@7.1.0`", path="wit/obelisk_workflow%407.1.0/obelisk_workflow%407.1.0.wit", version="v0.43.0-rc.1") }}
+### {{ github(title="`obelisk:workflow/workflow-support@7.1.0`", path="wit/obelisk_workflow%407.1.0/obelisk_workflow%407.1.0.wit", version="v0.43.0-rc.6") }}
 
 Available to:
 

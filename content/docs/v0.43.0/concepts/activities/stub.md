@@ -54,7 +54,7 @@ Supplying a result is idempotent: it can be repeated as long as the value stays 
 a different value for the same execution fails with a conflict error.
 
 An
-{{ github(title="example stub workflow", path="crates/testing/test-programs/stub/workflow", version="v0.43.0-rc.1") }}
+{{ github(title="example stub workflow", path="crates/testing/test-programs/stub/workflow", version="v0.43.0-rc.6") }}
 is available in the repository. See {{ doc_link(title="Stub RPC", path="patterns/stub-rpc.md") }}
 and {{ doc_link(title="Durable Mailbox", path="patterns/stub-mailbox.md") }} for patterns built on
 stubs.

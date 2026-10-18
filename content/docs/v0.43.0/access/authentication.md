@@ -36,7 +36,7 @@ without your own protection in front of it.
 
 Every time the server starts it generates a fresh random token and prints it to standard error. This
 token is valid until the server shuts down and needs no configuration, so it is the quickest way to
-get going:
+get going. It is generated even when persistent or environment tokens are configured:
 
 ```
 API startup token: 6f1c...<token>

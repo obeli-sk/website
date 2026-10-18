@@ -7,11 +7,11 @@ weight = 2
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.1") }}.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.6") }}.
 
 ## gRPC, gRPC-Web
 
-See {{ github(title="obelisk.proto", path="proto/obelisk.proto", version="v0.43.0-rc.1") }} schema
+See {{ github(title="obelisk.proto", path="proto/obelisk.proto", version="v0.43.0-rc.6") }} schema
 for details.
 
 > **Deprecated:** gRPC and gRPC-web are deprecated in 0.42. The web API below covers the same

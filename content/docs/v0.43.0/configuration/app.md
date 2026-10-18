@@ -79,8 +79,10 @@ other secret: `exposed_secrets` with an `exposed_to` grant, or an outbound HTTP 
 
 Internal secrets cannot be `optional`. They require an enabled API listener with authentication:
 `server run` fails at startup when the API is disabled or the server runs with `--no-auth`.
-`server verify` accepts them without a value. `cloud app fill` skips them. Secrets without a `type`,
-or with `type = "env"`, are read from the process environment as described above.
+`server verify` accepts them without a value. `cloud app fill` skips them. An internal secret may
+share its name with a server setting such as `OBELISK_API_TOKEN`: the server still reads that
+variable as an additional accepted API token, while components receive the startup token. Secrets
+without a `type`, or with `type = "env"`, are read from the process environment as described above.
 
 ## Public Deployment Environment
 
