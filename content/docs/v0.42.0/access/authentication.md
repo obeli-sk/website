@@ -68,34 +68,6 @@ api.token_hashes = [
 The plaintext token is printed once and never stored. **Revoke** a token by deleting its hash line
 and restarting the server.
 
-### Token hash reload (upcoming release)
-
-In the upcoming release after 0.43.0-rc.2, the server reads the configured `server.toml` about once
-per second and atomically replaces only `api.token_hashes`. Add or revoke tokens by updating that
-list; atomic file replacement is supported. Set `api.token_hashes = []` to revoke all configured
-static tokens. The startup token, explicit `--api-token` / `OBELISK_API_TOKEN`, and OIDC verifier
-and cached signing keys remain valid. Missing, unreadable, or invalid files retain the last valid
-set and produce a diagnostic.
-
-Revocation affects requests authenticated after reload. Existing streams remain open because they
-were authenticated when opened. Writing the file alone does not acknowledge a reload.
-
-The authenticated system-events API exposes an initial `api.token_hashes_loaded` event, including
-for an empty set, and `api.token_hashes_changed` after a changed set is applied. Their details
-contain `fingerprint` and `count`. The fingerprint is `sha256:<hex>` of the sorted, deduplicated raw
-32-byte digests concatenated together, including the empty concatenation. Process-lifetime
-credentials are excluded. Reordering or duplicating entries produces no change event. Failed event
-writes are retried without undoing revocations; a newer set supersedes a pending acknowledgment.
-
-Automation should obtain the current node-run identity from `GET /v1/admin/node-run-id` and poll
-`GET /v1/admin/system-events` using an accepted bearer token, such as an OIDC ID token. Only the
-latest loaded/changed event for that node run can acknowledge the desired fingerprint. A historical
-match is insufficient; missing acknowledgment keeps synchronization pending. Initial events also
-cover restarts and retries that leave the set unchanged.
-
-Other server settings, including listeners and OIDC trust, require restart. This feature does not
-reload `app.toml` policy. Authentication disabled with `--no-auth` needs no watcher.
-
 ### Plaintext token from the environment
 
 A single plaintext token can be injected into the **server** through `--api-token` or the

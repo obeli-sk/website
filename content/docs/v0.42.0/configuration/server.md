@@ -37,21 +37,7 @@ plaintext `api.token` key in `server.toml`. See
 {{ doc_link(title="Authentication", path="access/authentication.md") }} for the full model,
 generating tokens, and the `--no-auth` recovery flag.
 
-### Token hash reload (upcoming release)
-
-After 0.43.0-rc.2, `api.token_hashes` in the configured file is reloaded about once per second.
-Atomic replacements are supported; a valid candidate replaces the complete set at once. An empty
-list revokes all configured hashes. Missing, unreadable, or invalid files retain the last valid set.
-The startup token, explicit CLI/environment token, and OIDC trust and key cache survive reload.
-Existing authenticated streams remain open; revocation applies when a subsequent request is
-authenticated. The loaded/changed system events acknowledge the applied set with its fingerprint and
-count. See
-{{ doc_link(title="Authentication", path="access/authentication.md#token-hash-reload-upcoming-release") }}
-for acknowledgment details.
-
-Reload reads hashes from disk, without reapplying `OBELISK__...` environment overrides. Other server
-settings, including OIDC trust and listeners, still require restart. `app.toml` policy is not
-reloaded by this watcher.
+Changes to `server.toml`, including `api.token_hashes` and OIDC trust, require a server restart.
 
 ## Web UI
 
