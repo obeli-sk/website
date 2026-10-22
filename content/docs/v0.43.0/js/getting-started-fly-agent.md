@@ -80,11 +80,23 @@ params = [{ name = "org-slug", type = "string" }, { name = "app-name", type = "s
 return_type = "result<record { name: string, id: string }, string>"
 exec.lock_expiry.seconds = 15
 [[activity_js.allowed_host]]
-pattern = "https://api.machines.dev"
-methods = ["GET", "POST"]
+url_prefix = "https://api.machines.dev/v1"
+methods = ["POST"]
+url_regex_suffix = "/apps$"
+secrets = ["FLY_API_TOKEN"]
+replace_in = ["headers"]
+
+[[activity_js.allowed_host]]
+url_prefix = "https://api.machines.dev/v1"
+methods = ["GET"]
+url_regex_suffix = "/apps/[A-Za-z0-9_-]+$"
 secrets = ["FLY_API_TOKEN"]
 replace_in = ["headers"]
 ```
+
+Each activity allows only the methods and endpoints it calls: `url_prefix` fixes the Fly API base
+URL, and `url_regex_suffix` restricts the path that follows it, one entry per method. See
+{{ doc_link(title="URL prefix rules", path="configuration/deployment.md#url-prefix-rules") }}.
 
 Create `app.toml` beside the deployment, name the app, register `FLY_API_TOKEN`, and add a matching
 `[[outbound_http.allowed_host]]` entry. The activities receive only an opaque token placeholder;
@@ -98,8 +110,9 @@ app_name = "demo-tutorial-fly-agent"
 FLY_API_TOKEN = {}
 
 [[outbound_http.allowed_host]]
-pattern = "https://api.machines.dev"
+url_prefix = "https://api.machines.dev/v1"
 methods = ["GET", "POST", "DELETE"]
+url_regex_suffix = "/apps(/.*)?$"
 secrets = ["FLY_API_TOKEN"]
 replace_in = ["headers"]
 ```

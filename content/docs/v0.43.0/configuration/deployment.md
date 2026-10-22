@@ -158,7 +158,7 @@ Activities returning a variant containing a case named `permanent` will skip ret
 Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the
 deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both, the
 request is blocked. The same `allowed_host` syntax applies to `[[activity_js]]`,
-`[[activity_wasm]]`, and `[[activity_vm]]`.
+`[[activity_wasm]]`, `[[activity_vm]]`, `[[webhook_endpoint_js]]`, and `[[webhook_endpoint_wasm]]`.
 
 ```toml
 [[activity_js]]

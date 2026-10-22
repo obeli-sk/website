@@ -1233,6 +1233,10 @@ effect when they were activated, and system events carry the current digest.
 }
 ```
 
+An `outbound_http` entry written with `url_prefix` keeps `url_prefix` and, when set,
+`url_regex_suffix` in place of `pattern`, both exactly as written in `app.toml` (variables are not
+expanded).
+
 ### Deprecated: `GET /v1/app-config` and `GET /v1/app-config-digest`
 
 Both endpoints are deprecated and will be removed after 0.43. `GET /v1/app-config` wraps the policy
