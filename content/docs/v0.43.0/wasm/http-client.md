@@ -12,7 +12,7 @@ with built-in tracing to enhance security and predictability. Disk I/O is curren
 > deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both,
 > outbound HTTP is blocked. See
 > {{ doc_link(title="Configuration", path="configuration/deployment.md#outbound-http-allowlist") }}
-> for details.
+> for details, including `url_prefix` rules for a single base URL.
 
 The following WIT and code show the client pattern. See
 {{ doc_link(title="Rust components", path="wasm/rust-components.md") }} for project setup.

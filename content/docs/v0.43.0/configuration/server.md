@@ -41,7 +41,14 @@ generating tokens, and the `--no-auth` recovery flag.
 
 ```toml
 webui.listening_addr = "127.0.0.1:8080" # Address and port for web UI
+webui.public_url = "https://webui.example.com" # Optional browser URL behind a proxy
 ```
+
+`webui.public_url` is the value of app public environment entries with
+`{ type = "internal", source = "webui-url" }` (see
+{{ doc_link(title="Internal public environment", path="configuration/app.md#internal-public-environment") }}).
+It must be an HTTP(S) URL without credentials, query, or fragment. Without it, those entries use the
+local Web UI listener address.
 
 > **Warning**: The external webhook HTTP server has no authentication. Listening on all interfaces
 > (`[::]:<port>`) is not recommended.
@@ -91,8 +98,8 @@ max_transport_message_size_bytes = 536870912 # 512 MiB default
 
 `max_deployment_file_bytes` limits an individual file submitted as part of a deployment.
 `max_persisted_value_size_bytes` is snapshotted by each new execution tree and bounds persisted
-parameters and results. `max_transport_message_size_bytes` independently bounds gRPC messages and
-equivalent REST request bodies.
+parameters and results. `max_transport_message_size_bytes` independently bounds a single API request
+body.
 
 ### Execution Slots
 
@@ -178,7 +185,7 @@ set that value explicitly to keep using an existing database. See [Path Prefixes
 for how `${DATA_DIR}` is translated.
 
 Customize PRAGMA statements. Defaults are in
-{{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs", version="v0.43.0-rc.6") }}
+{{ github(title="crates/db-sqlite/src/sqlite_dao.rs", path="crates/db-sqlite/src/sqlite_dao.rs", version="v0.43.0-rc.8") }}
 
 ```toml
 database.sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }

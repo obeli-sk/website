@@ -15,13 +15,10 @@ registered secrets, native execution approval, and outbound HTTP policy.
 ## What is protected
 
 Authentication guards the **API port** only (`127.0.0.1:5005` by default). A single host-level check
-runs before any routing, so all three surfaces on that port are covered uniformly:
+runs before any routing of the REST web API, which the CLI and the Web UI use. The gRPC and gRPC-web
+API was removed in 0.43.
 
-- the REST web API (used by the CLI and the Web UI),
-- gRPC and gRPC-web (deprecated).
-
-A request without an accepted token is rejected with HTTP `401 Unauthorized` (gRPC
-`UNAUTHENTICATED`, numeric status `16`).
+A request without an accepted token is rejected with HTTP `401 Unauthorized`.
 
 The **external webhook HTTP server** (`127.0.0.1:9090` by default) is **not** authenticated: webhook
 endpoints stay open so they can serve public HTTP traffic. Do not expose it on a public interface
@@ -68,14 +65,10 @@ api.token_hashes = [
 ]
 ```
 
-The plaintext token is printed once and never stored. The server reloads `api.token_hashes` from the
-`server.toml` passed with `--server-config` about once per second, including atomic file
-replacements, so adding or **revoking** a token (deleting its hash line) needs no restart. An
-invalid or missing file keeps the last valid set. An empty list revokes all configured hashes but
-not the startup token, a token injected through `--api-token` or `OBELISK_API_TOKEN`, OIDC
-verification, or streams that are already authenticated. Each applied set is acknowledged with an
-`api.token_hashes_loaded` or `api.token_hashes_changed` system event carrying its SHA-256
-fingerprint and count.
+The plaintext token is printed once and never stored. The server loads `api.token_hashes` at
+startup, so adding or **revoking** a token (deleting its hash line) takes effect only after a
+restart. The live token-file reload of earlier 0.43 release candidates and its
+`api.token_hashes_loaded` and `api.token_hashes_changed` system events were removed.
 
 ### OIDC ID tokens
 
@@ -91,7 +84,8 @@ claims = { app_name = "deployer" }
 
 The issuer must be `https://` unless its host is loopback, the audience must not be empty, and at
 least one claim is required, so that not every token from the issuer is accepted. Signing keys are
-fetched through OIDC discovery. Static tokens are unaffected.
+fetched through OIDC discovery and refreshed while the server runs, so issuer key rotation needs no
+restart. Static tokens are unaffected.
 
 ### Plaintext token from the environment
 
@@ -160,6 +154,5 @@ when the tab closes; if the token stops being accepted you are prompted again.
 | Surface                      | Port (default)   | Authenticated             |
 | ---------------------------- | ---------------- | ------------------------- |
 | REST web API                 | `127.0.0.1:5005` | Yes                       |
-| gRPC / gRPC-web (deprecated) | `127.0.0.1:5005` | Yes                       |
 | Web UI                       | `127.0.0.1:8080` | Yes (prompts for a token) |
 | External webhook HTTP server | `127.0.0.1:9090` | No                        |

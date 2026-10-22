@@ -12,6 +12,7 @@ weight = 1
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | [`obelisk server run`](#running-the-server)                                                 | Start the server, optionally activating a deployment file         |
 | [`obelisk server verify`](#verifying-the-server-configuration)                              | Check configuration and deployment without serving traffic        |
+| [`obelisk server checkpoint`](#reading-the-app-checkpoint)                                  | Print the last activated app policy and deployment ID             |
 | [`obelisk deployment verify`](#verifying-a-local-deployment)                                | Compile and check deployment components, without app policy       |
 | [`obelisk deployment submit`](#submitting-a-deployment)                                     | Upload a deployment and print its ID                              |
 | [`obelisk deployment enqueue`](#enqueueing-a-deployment)                                    | Activate a deployment on the next server restart                  |
@@ -68,26 +69,52 @@ removing the description creates a new deployment; explicit deployment IDs are h
 
 ## Cloud commands
 
-`obelisk cloud` manages apps hosted by an Obelisk cloud provisioner. `cloud token` creates, lists,
+`obelisk cloud` manages apps hosted by an Obelisk cloud control plane. `cloud token` creates, lists,
 inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. Everything scoped to
 one app lives under `cloud app`:
 
-- `new`, `get`, `status`, `start`, `stop`, `delete`: app lifecycle. `new` creates a stopped app.
-- `stage` stages app policy and cloud settings without restarting the VM; `apply` applies staged
-  configuration while respecting the app's intended running state.
+- `new`, `get`, `status`, `reactivate`, `deactivate`, `delete`: app lifecycle. `new` creates a
+  stopped app. Required env vars and secrets must be supplied at creation with `--fill` (prompts) or
+  `--fill-non-interactive` (reads same-named environment variables).
+- `stage` stages app policy and cloud settings without restarting the VM; `apply` sends the staged
+  configuration and the enqueued (or active) deployment while respecting the app's intended running
+  state.
 - `deploy` publishes the local project: it creates or configures the app, submits the deployment,
-  and activates it. It fails on missing required values unless `--fill` is passed.
-- `fill` interactively stages declared env vars and secrets and requires a terminal. `env` and
-  `secrets` manage them individually. Internal secrets are skipped.
+  and activates it. It fails on missing required values unless `--fill` or `--fill-non-interactive`
+  is passed. When the app name is taken, an interactive `deploy` offers an alternative and saves it
+  to `app.toml` if the original name came from there; noninteractive and `--json` runs fail with a
+  conflict error.
+- `fill` interactively stages declared env vars and secrets and requires a terminal;
+  `fill --non-interactive` stages same-named environment variables instead, for scripts. `env` and
+  `secrets` manage them individually; names starting with `OBELISK_` are accepted. Internal secrets
+  and internal public environment entries are skipped.
+- `fill` and `apply` compare `-a` or `./app.toml` with the staged configuration and never stage it
+  silently: on a difference they ask whether to stage it, use the staged one, or cancel, and fail
+  without a terminal unless `--staged` is passed. `apply` also accepts `--fill` and
+  `--fill-non-interactive`.
 - `endpoint` shows the API, webhook, and Web UI URLs; `endpoint api`, `webhook`, or `webui` prints
   one of them.
 - `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
 
-Select an app with `cloud app --app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud
-policy commands discover `./app.toml`. The cloud API uses `--api-url` (`OBELISK_CLOUD_API_URL`) and
-`--api-token` (`OBELISK_CLOUD_API_TOKEN`). Cloud commands print concise human-readable results;
-`--json` prints machine-readable output and `--verbose` adds metadata and diagnostics. Run
-`obelisk cloud --help` and `obelisk cloud app --help` for all options.
+Select an app with `cloud app --app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud app
+names are 4-20 lowercase ASCII letters, digits, and single interior hyphens (no `--`), and are
+unique within each cloud environment. Cloud policy commands discover `./app.toml`.
+
+The control plane is selected with `--api-url` (`OBELISK_CLOUD_API_URL`, default
+`https://cloud.obeli.sk`) and authenticated with `--api-token` (`OBELISK_CLOUD_API_TOKEN`). App
+endpoints are derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`, default
+`obelisk.works`): webhooks at `<app>.<domain>`, the API at `api--<app>.<domain>`, and the Web UI at
+`webui--<app>.<domain>`, all over HTTPS.
+
+`cloud token new --name <NAME> --token-file <FILE>` saves the server-issued token to a new private
+file; it does not overwrite an existing file. `--scope <APP>` restricts the token to apps and
+`--expires-at` sets an RFC 3339 expiry. Token names are unique per account until revoked. If the
+creation response is lost, revoke the inaccessible token before creating a replacement with the same
+name.
+
+Cloud commands print concise human-readable results to stderr; `--json` prints machine-readable
+output and `--verbose` adds metadata and diagnostics. Run `obelisk cloud --help` and
+`obelisk cloud app --help` for all options.
 
 ## Global Options
 
@@ -125,6 +152,8 @@ Options:
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If provided, the deployment is
   inserted and activated on startup, overriding any existing Enqueued or Active deployment in the
   database
+- `--deployment-id <ID>` - Select an existing deployment from the database, verify it, and activate
+  it on startup. Conflicts with `--deployment`, `--empty`, and `--description`
 - `--empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the
   database
 - `--description <DESCRIPTION>` - Optional human-readable description for the deployment created by
@@ -138,7 +167,11 @@ Options:
 - `--api-token <TOKEN>` - API token required to access the API server. Falls back to
   `$OBELISK_API_TOKEN`. Conflicts with `--no-auth`
 
-If `--deployment` is not provided, Obelisk uses the Enqueued or Active deployment from the database.
+If neither `--deployment` nor `--deployment-id` is provided, Obelisk uses the Enqueued or Active
+deployment from the database.
+
+Whenever a deployment is activated successfully, at startup or by a hot redeploy, the server
+persists the app policy and the deployment ID together as one checkpoint in the database.
 
 The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`. The name
 selects the default SQLite directory, `${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
@@ -168,6 +201,8 @@ Options:
   discovered; otherwise built-in defaults are used and `OBELISK_APP_NAME` must be set
 - `-d, --deployment <FILE>` - Path to the deployment TOML file. If omitted, the database's Enqueued
   deployment is used, falling back to the Active deployment
+- `--deployment-id <ID>` - Verify an existing deployment from the database without activating it.
+  Conflicts with `--deployment` and `--skip-db`
 - `--allow-unavailable-runtime-config` - Tolerate missing environment and secret values while still
   checking declarations and permissions
 - `--suppress-type-checking-errors` - Do not fail on component import/export type errors
@@ -186,6 +221,18 @@ Repairs require a deployment file and target configuration paths; discovered `./
 Existing grants are preserved and verification reruns after repair. Review all generated policy
 changes. Missing runtime values can be tolerated, but missing declarations or permissions still
 fail.
+
+### Reading the App Checkpoint
+
+```sh
+obelisk server checkpoint [--server-config <FILE>]
+```
+
+Print the last successfully activated checkpoint as JSON without starting the server: the
+`deployment_id`, the app policy as `app_toml`, and the `app_env_prefix` it ran with, or `null` when
+no deployment has been activated yet. The command opens the database configured in `server.toml` and
+applies pending schema migrations. It does not read the app name, so a SQLite database must be
+selected with a `database.sqlite.directory` that does not depend on `${APP_NAME}`.
 
 ## Obelisk Deployment
 

@@ -7,19 +7,13 @@ weight = 2
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.6") }}.
-
-## gRPC, gRPC-Web
-
-See {{ github(title="obelisk.proto", path="proto/obelisk.proto", version="v0.43.0-rc.6") }} schema
-for details.
-
-> **Deprecated:** gRPC and gRPC-web are deprecated in 0.42. The web API below covers the same
-> feature set; new clients should use `/v1`.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.8") }}.
 
 ## WebAPI
 
-This document describes the REST-like API for managing components, deployments, and executions.
+This document describes the REST-like API for managing components, deployments, and executions. It
+is the only API: the deprecated gRPC and gRPC-web API and `proto/obelisk.proto` were removed in
+0.43.
 
 ## General Information
 
@@ -30,8 +24,7 @@ All endpoints are prefixed with `/v1`.
 ### Authentication
 
 The API port denies any request without a valid `Authorization: Bearer <token>` header, returning
-HTTP `401` (gRPC `UNAUTHENTICATED`). The same requirement applies to the web API, gRPC, and
-gRPC-web.
+HTTP `401`.
 
 Present an accepted token on every request:
 
@@ -1203,12 +1196,13 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 
 ### `GET /v1/info`
 
-Returns the app name, Obelisk version, current deployment ID, node run ID, app config digest, and
-server start time as JSON:
+Returns the app name, the server's `app_env_prefix`, Obelisk version, current deployment ID, node
+run ID, app config digest, and server start time as JSON:
 
 ```json
 {
   "app_name": "my-app",
+  "app_env_prefix": "",
   "obelisk_version": "0.43.0",
   "deployment_id": "Dep_...",
   "node_run_id": "NodeRun_...",
@@ -1219,31 +1213,32 @@ server start time as JSON:
 
 ---
 
-## App Configuration
+## App Policy
 
-### `GET /v1/app-config`
+### `GET /v1/app-policy`
 
-Returns the running app policy (secrets without values, public environment names, exec approvals,
-and outbound HTTP rules) together with its canonical `app_config_digest`. JSON is the default; send
-`Accept: application/toml` to receive the same document as TOML. Deployments record the digest that
-was in effect when they were activated, and system events carry the current digest.
+Returns the running app policy: secrets without values, public environment names, exec approvals,
+and outbound HTTP rules. JSON is the default; send `Accept: application/toml` to receive the same
+document as TOML. The response is the policy object itself; read its canonical digest from
+`app_config_digest` in [`GET /v1/info`](#get-v1-info). Deployments record the digest that was in
+effect when they were activated, and system events carry the current digest.
 
 ```json
 {
-  "app_config_digest": "app-config:v1:sha256:03f0...",
-  "policy": {
-    "format": "obelisk-app-config-v1",
-    "secrets": {},
-    "public_env": [],
-    "allowed_exec_activities": {},
-    "outbound_http": [{ "pattern": "https://example.com", "methods": ["GET"], "...": "..." }]
-  }
+  "format": "obelisk-app-config-v1",
+  "secrets": {},
+  "public_env": [],
+  "allowed_exec_activities": {},
+  "outbound_http": [{ "pattern": "https://example.com", "methods": ["GET"], "...": "..." }]
 }
 ```
 
-### `GET /v1/app-config-digest`
+### Deprecated: `GET /v1/app-config` and `GET /v1/app-config-digest`
 
-Returns only the current `app_config_digest`, as plain text by default.
+Both endpoints are deprecated and will be removed after 0.43. `GET /v1/app-config` wraps the policy
+as `{ "app_config_digest": "...", "policy": { ... } }`; use `GET /v1/app-policy` instead.
+`GET /v1/app-config-digest` returns only the digest, as plain text by default; read
+`app_config_digest` from `GET /v1/info` instead.
 
 ---
 

@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 4
 +++
 
-This guide targets **Obelisk 0.43.0-rc.6**. It is based on the
-[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.6) of every
+This guide targets **Obelisk 0.43.0-rc.8**. It is based on the
+[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.8) of every
 0.43.0 release candidate. Audit every deployment, configuration file, script, and CI workflow
 against these changes. Apps older than 0.42 must first follow the
 {{ doc_link(title="0.42 migration guide", path="migrating-to-0.42.md", version="v0.42.0") }}.
@@ -14,8 +14,10 @@ against these changes. Apps older than 0.42 must first follow the
 
 App names must be 4-25 characters of lowercase ASCII letters, digits, and interior hyphens. 0.42
 accepted 1-63 characters. Rename any app whose `app_name` (or `OBELISK_APP_NAME`) falls outside this
-range. The app name selects the default SQLite directory, so a renamed app starts with a new
-database unless `server.toml` sets the database directory explicitly.
+range. Apps deployed with `obelisk cloud` must also fit the cloud rule: 4-20 characters, no double
+hyphens, and unique within the cloud environment. The app name selects the default SQLite directory,
+so a renamed app starts with a new database unless `server.toml` sets the database directory
+explicitly.
 
 ## Separate component verification from policy verification
 
@@ -83,6 +85,13 @@ metadata and are now rejected as authored input. Update generators and CI digest
 accordingly. The CLI adds metadata during submission and removes it from exports. Pin a genuine
 cross-repository OCI dependency with its OCI `@sha256:...` reference instead.
 
+## Move gRPC clients to REST
+
+The deprecated gRPC and gRPC-web API and `proto/obelisk.proto` have been removed. Port any client
+generated from the proto file to the {{ doc_link(title="REST API", path="access/api.md") }}, served
+on the same `api.listening_addr`. The CLI and the Web UI already use REST. OTLP trace export over
+gRPC is unaffected.
+
 ## Update authentication
 
 Replace `server run --allow-unauthenticated-api` with `server run --no-auth`. The old flag has been
@@ -105,10 +114,59 @@ the token targets a different server.
 The API can also accept OIDC ID tokens, such as Fly.io machine tokens, from issuers trusted in
 `api.oidc`; see {{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
+`api.token_hashes` is read once at startup: adding or revoking a hash in `server.toml` requires a
+restart. Earlier 0.43 release candidates reloaded the file live and emitted
+`api.token_hashes_loaded` and `api.token_hashes_changed` system events; both are gone. OIDC signing
+keys are still refreshed while the server runs.
+
 Platforms running several apps can set
 {{ doc_link(title="`app_env_prefix`", path="configuration/server.md#app-environment-prefix") }} in
 `server.toml`; app public env and env-backed secrets are then read only from the prefixed variable
 names.
+
+## Simplify app URLs and outbound HTTP rules
+
+Apps whose components call their own server's API or link to its Web UI no longer need the operator
+to supply those URLs. Replace env-backed declarations with
+{{ doc_link(title="internal public environment", path="configuration/app.md#internal-public-environment") }}
+entries:
+
+```toml
+[public_env]
+OBELISK_API_URL = { type = "internal", source = "api-url" }
+OBELISK_WEBUI_URL = { type = "internal", source = "webui-url" }
+```
+
+The server resolves them from its own listeners and ignores process variables of the same name. Set
+`webui.public_url` in `server.toml` when the Web UI is reached through a proxy, so browser links use
+the public address. Drop the corresponding variables from run scripts, `.env` files, and cloud
+environments; `cloud app fill` skips internal entries.
+
+Outbound HTTP rules in `app.toml` and deployments accept `url_prefix` with an optional
+`url_regex_suffix` instead of `pattern` and `request_url_regex`. Apps that needed separate
+environment variables for the host pattern, the request regex, and the path can derive everything
+from a single URL variable:
+
+```toml
+# Before: three related variables, kept consistent by hand.
+[[outbound_http.allowed_host]]
+pattern = "${LLM_HOST}"
+methods = ["POST"]
+request_url_regex = "^POST ${LLM_URL_REGEX}${LLM_PATH}"
+
+# After: one URL variable, matched literally.
+[[outbound_http.allowed_host]]
+url_prefix = "${LLM_URL}"
+methods = ["POST"]
+url_regex_suffix = "/v1/chat/completions$"
+```
+
+Environment variables expand before the prefix is regex-escaped, and trailing slashes are trimmed.
+The prefix must be an absolute HTTP(S) URL without credentials, query, fragment, or wildcards; keep
+`pattern` for wildcard hosts. The suffix is appended as a regex group, must not start with `^`, and
+should end with `$` to allow exactly one endpoint; without it, any continuation of the prefix
+matches. An entry cannot mix the two forms. See
+{{ doc_link(title="URL prefix rules", path="configuration/deployment.md#url-prefix-rules") }}.
 
 ## Audit stdout consumers
 
@@ -132,12 +190,17 @@ Clients decoding `/v1/components` exports must accept the new `extension` value 
 for `-schedule-with-id` functions; it is distinct from `"schedule"`.
 
 System-event retention requests must explicitly include `dry_run`; omission is rejected without
-deleting events. gRPC behavior is unchanged. The CLI no longer supplies compatibility defaults for
-replay measurements and public environment classifications when talking to servers older than 0.42.
+deleting events. The CLI no longer supplies compatibility defaults for replay measurements and
+public environment classifications when talking to servers older than 0.42.
 
-`GET /v1/info` returns the app name, Obelisk version, deployment ID, node run ID, app config digest,
-and start time. `GET /v1/admin/node-run-id` is deprecated and will be removed after 0.43; read
-`node_run_id` from `/v1/info` instead.
+`GET /v1/info` returns the app name, `app_env_prefix`, Obelisk version, deployment ID, node run ID,
+app config digest, and start time. `GET /v1/admin/node-run-id` is deprecated and will be removed
+after 0.43; read `node_run_id` from `/v1/info` instead.
+
+`GET /v1/app-config` and `GET /v1/app-config-digest` are deprecated and will be removed after 0.43.
+Read the policy from `GET /v1/app-policy` (JSON, or TOML with `Accept: application/toml`), which
+returns the policy object directly instead of wrapping it in `{ app_config_digest, policy }`, and
+read `app_config_digest` from `GET /v1/info`.
 
 In V8 activities and webhooks, `fetch` sets `Response.statusText` to the received HTTP/1 reason
 phrase. A webhook `Response` accepts `options.statusText`, which must be a valid reason phrase.
@@ -169,6 +232,14 @@ JavaScript typed schedules accept `executionId` in the leading schedule object. 
 reuse the original execution; a different target, parameters, or timing conflicts. Relative timing
 compares the original offset from creation. Retrying never reschedules an execution.
 
+## Server checkpoints
+
+Each successful activation now stores the app policy and deployment ID together as one checkpoint.
+`obelisk server checkpoint` prints it as JSON without starting the server. `server run` and
+`server verify` accept `--deployment-id` to select a stored deployment instead of a file; `run`
+activates it, `verify` checks it without activation. See
+{{ doc_link(title="CLI", path="access/cli.md#reading-the-app-checkpoint") }}.
+
 ## Deployment reuse and cloud commands
 
 `deployment submit`, `apply`, and `enqueue` reuse the active deployment when its parsed content and
@@ -181,9 +252,30 @@ tokens, policy, environment variables, and secrets. App-scoped commands, includi
 `cloud app`. Select an app with `--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`.
 `cloud app deploy` publishes a local project in one step.
 
+Scripts written against earlier 0.43 release candidates must be updated:
+
+- `cloud app start` and `cloud app stop` are renamed to `cloud app reactivate` and
+  `cloud app deactivate`.
+- Missing required env vars and secrets fail in the client. `cloud app new`, `deploy`, and `apply`
+  take `--fill` (prompts) or `--fill-non-interactive` (reads same-named environment variables);
+  `cloud app fill` takes `--non-interactive`.
+- `fill` and `apply` compare `./app.toml` (or `-a`) with the staged configuration and prompt, or
+  fail without a terminal, when they differ. Pass `--staged` to use the staged configuration.
+  `apply` sends the staged configuration and the enqueued (or active) deployment explicitly.
+- `--api-url` (`OBELISK_CLOUD_API_URL`) defaults to `https://cloud.obeli.sk`. App endpoints are
+  derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`, default `obelisk.works`):
+  `<app>.<domain>`, `api--<app>.<domain>`, and `webui--<app>.<domain>`.
+- `cloud token new` requires `--token-file` and saves the server-issued token to that new private
+  file. Token names are unique per account until revoked; after a lost creation response, revoke the
+  inaccessible token before creating a replacement.
+- `cloud app env set`, `secrets set`, and `fill` accept names starting with `OBELISK_`.
+- Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
+  cloud environment. An interactive `cloud app deploy` offers an alternative for a taken name.
+
 ## Verification checklist
 
-- Check every `app_name` against the 4-25 character rule.
+- Check every `app_name` against the 4-25 character rule, and cloud app names against the 4-20
+  character rule.
 - Audit all authored deployments for generated metadata and all verification invocations for removed
   flags.
 - Run `server verify` for every deployment against each applicable app/server configuration.
@@ -191,5 +283,9 @@ tokens, policy, environment variables, and secrets. App-scoped commands, includi
   for tracked drift.
 - Keep cross-repository OCI dependencies pinned and remove self-references when building the same
   repository locally.
-- Review app/server policy diffs, authentication (including internal secrets for self-API tokens),
-  stdout consumers, REST requests, and optional WIT regeneration.
+- Replace gRPC clients with REST and `/v1/app-config` reads with `/v1/app-policy` and `/v1/info`.
+- Consider internal public environment entries for the server's own API and Web UI URLs, and
+  `url_prefix` rules for single-URL destinations.
+- Update cloud scripts for renamed lifecycle commands and explicit fill flags.
+- Review app/server policy diffs, authentication (including internal secrets for self-API tokens and
+  restart-only token hash changes), stdout consumers, REST requests, and optional WIT regeneration.

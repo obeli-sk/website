@@ -241,8 +241,8 @@ timeout error so the workflow terminates rather than looping forever.
 ## Webhooks: Querying past executions
 
 A webhook can query the Obelisk Web API directly via `fetch` to render the result of a previously
-completed workflow run. The API is on `:5005` by default; inject the URL via `env_vars` so it is
-configurable. The API port also requires a bearer token (see
+completed workflow run. Let the server supply its own API URL through an internal public environment
+entry and forward it via `env_vars`. The API port also requires a bearer token (see
 {{ doc_link(title="Authentication", path="access/authentication.md") }}). Declare the token under
 the allowed host's `secrets` instead of exposing its plaintext value through the component's
 `env_vars`. The webhook sees only an opaque placeholder; Obelisk replaces it with the real token in
@@ -253,18 +253,36 @@ the outgoing header after the request matches the host and method allowlist:
 name = "show"
 location = "webhook/show.js"
 routes = [{ methods = ["GET"], route = "/" }]
-env_vars = [
-  { key = "OBELISK_API_URL", value = "${OBELISK_API_URL:-http://127.0.0.1:5005}" },
-]
+env_vars = ["OBELISK_API_URL"]
 [[webhook_endpoint_js.allowed_host]]
-pattern = "${OBELISK_API_URL:-http://127.0.0.1:5005}"
+url_prefix = "${OBELISK_API_URL}/v1"
 methods = ["GET"]
 secrets = ["OBELISK_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Register `OBELISK_API_TOKEN` in the app's `[secrets]` table and mirror this policy in a matching
-`[[outbound_http.allowed_host]]` entry in `app.toml`.
+The app policy declares both values as internal, so the operator supplies neither, and mirrors the
+outbound HTTP entry:
+
+```toml
+# app.toml
+[public_env]
+OBELISK_API_URL = { type = "internal", source = "api-url" }
+
+[secrets]
+OBELISK_API_TOKEN = { type = "internal" }
+
+[[outbound_http.allowed_host]]
+url_prefix = "${OBELISK_API_URL}/v1"
+methods = ["GET"]
+secrets = ["OBELISK_API_TOKEN"]
+replace_in = ["headers"]
+```
+
+See
+{{ doc_link(title="Internal public environment", path="configuration/app.md#internal-public-environment") }}
+and {{ doc_link(title="Internal secrets", path="configuration/app.md#internal-secrets") }}. To call
+a different Obelisk server, declare env-backed entries instead.
 
 ```javascript
 // webhook/show.js

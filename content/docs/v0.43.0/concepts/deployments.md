@@ -45,6 +45,17 @@ processing. This means:
 
 Only zero or one deployment can be `enqueued` and one can be `active` at any given time.
 
+On startup, `server run` activates the file passed with `--deployment`, the stored deployment
+selected with `--deployment-id`, or else the enqueued deployment, falling back to the active one.
+`server verify --deployment-id` checks a stored deployment without activating it.
+
+## App checkpoint
+
+Each successful activation, at startup or through a hot redeploy, stores the running app policy and
+the deployment ID together as one atomic checkpoint. `obelisk server checkpoint` prints the last
+checkpoint as JSON without starting the server, so tooling can recover the exact policy and
+deployment that last ran.
+
 ## Hot redeploy
 
 Hot redeploy activates a new deployment **without restarting the server**. The behavior differs by
@@ -99,28 +110,26 @@ curl "127.1:5005/v1/executions/${EXECUTION_ID}/upgrade" \
   -d "{\"old\": $OLD, \"new\": $NEW}"
 ```
 
-The RPC replays the execution history against the new component and refuses to switch if the new
-workflow code is not replay-compatible — unless `skip_determinism_check` is set to `true`.
+The upgrade endpoint replays the execution history against the new component and refuses to switch
+if the new workflow code is not replay-compatible, unless `skip_determinism_check` is set to `true`.
 
 ## Managing deployments
 
 **CLI:**
 
-| Command                                 | Description                                   |
-| --------------------------------------- | --------------------------------------------- |
-| `obelisk deployment submit <PATH>`      | Store a deployment TOML; print the new ID     |
-| `obelisk deployment enqueue <PATH\|ID>` | Submit (if path) and enqueue for next restart |
-| `obelisk deployment apply <PATH\|ID>`   | Submit (if path) and hot-redeploy immediately |
-| `obelisk deployment list`               | List recent deployments and their status      |
-| `obelisk deployment active`             | Print the active deployment ID                |
-| `obelisk deployment show <ID> [FILE]`   | Show stored TOML or a stored file             |
-| `obelisk deployment pull <ID>`          | Recreate deployment TOML and source files     |
-| `obelisk deployment verify`             | Verify a local deployment without a server    |
+| Command                                 | Description                                    |
+| --------------------------------------- | ---------------------------------------------- |
+| `obelisk deployment submit <PATH>`      | Store a deployment TOML; print the new ID      |
+| `obelisk deployment enqueue <PATH\|ID>` | Submit (if path) and enqueue for next restart  |
+| `obelisk deployment apply <PATH\|ID>`   | Submit (if path) and hot-redeploy immediately  |
+| `obelisk deployment list`               | List recent deployments and their status       |
+| `obelisk deployment active`             | Print the active deployment ID                 |
+| `obelisk deployment show <ID> [FILE]`   | Show stored TOML or a stored file              |
+| `obelisk deployment pull <ID>`          | Recreate deployment TOML and source files      |
+| `obelisk deployment verify`             | Verify a local deployment without a server     |
+| `obelisk server checkpoint`             | Print the last activated policy and deployment |
 
 **Web API:** see {{ doc_link(title="API access", path="access/api.md") }}.
-
-**gRPC (deprecated):** see the `DeploymentRepository` service in
-{{ github(title="proto/obelisk.proto", path="proto/obelisk.proto", version="v0.43.0-rc.6") }}.
 
 Unreferenced deployment file blobs are removed by automatic maintenance; see
 {{ doc_link(title="Server Configuration", path="configuration/server.md#automatic-maintenance-and-retention") }}.

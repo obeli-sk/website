@@ -35,9 +35,9 @@ placeholders that cannot be read or redirected by component code.
 
 The effective permission is the intersection of the files. A deployment cannot widen the app policy,
 and an app allowlist does not grant a capability that the deployment did not request. Exec
-activities additionally need the platform gate. The running app policy and its canonical digest are
-available through `GET /v1/app-config`, and each deployment records the digest it was activated
-under.
+activities additionally need the platform gate. The running app policy is available through
+`GET /v1/app-policy` and its canonical digest through `GET /v1/info`; each deployment records the
+digest it was activated under.
 
 ## Choose the least powerful tool
 
@@ -90,8 +90,8 @@ substitution keeps the plaintext hidden from component code and should remain th
 Component-originated HTTP is denied unless an entry matches in both `app.toml` and
 `deployment.toml`, and activation rejects a deployment that requests destinations the app policy
 does not cover. Keep the app policy narrower than or equal to the deployment request. Restrict
-methods and paths with `request_url_regex` when a component needs only part of an API. Secret
-replacement never occurs for an unapproved request.
+methods and paths with `request_url_regex`, or with `url_prefix` and `url_regex_suffix`, when a
+component needs only part of an API. Secret replacement never occurs for an unapproved request.
 
 The API port is authenticated. The external webhook server is not, because its endpoints are
 intended to receive application traffic. Put public webhook listeners behind your own TLS,

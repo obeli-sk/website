@@ -50,8 +50,8 @@ Workflows support all three locking strategies:
   upgrading their component assignment.
 - `by_component_digest` selects only executions assigned to the exact component version (by `sha256`
   digest) that was available when the execution was first submitted. Such an execution can be
-  upgraded using the upgrade API endpoint or gRPC RPC. The RPC attempts to replay the execution log
-  by default to avoid upgrading to incompatible workflow code.
+  upgraded using the upgrade API endpoint, which replays the execution log by default to avoid
+  upgrading to incompatible workflow code.
 
 Activities support `by_ffqns` (default) and `by_component_digest`, but not `auto`. Since activities
 are restarted and not replayed, the default `by_ffqns` strategy lets pending executions use the new
@@ -200,6 +200,44 @@ allows all paths accepted by those required restrictions. The regex is matched a
 with query parameters removed, for example `GET https://api.example.com/v1/items`. The regex also
 supports `${VAR}` and `${VAR:-default}` interpolation; interpolated values are treated as regex
 syntax, so escape them when they should match literally.
+
+#### URL prefix rules
+
+When a component talks to a single base URL, `url_prefix` replaces both `pattern` and
+`request_url_regex`, so one environment variable describes the whole destination:
+
+```toml
+[[activity_js]]
+name = "activity_llm"
+location = "activity/llm.js"
+env_vars = ["LLM_URL"]
+
+[[activity_js.allowed_host]]
+url_prefix = "${LLM_URL}"
+methods = ["GET", "POST"]
+# Optional; omit to allow any continuation of the prefix.
+url_regex_suffix = "/v1/models$|/v1/chat/completions$"
+secrets = ["LLM_API_KEY"]
+replace_in = ["headers"]
+```
+
+- `url_prefix` must be an absolute `http://` or `https://` URL without credentials, query, fragment,
+  or wildcards. Use `pattern` when you need wildcards.
+- `${VAR}` and `${VAR:-default}` are expanded before the prefix is regex-escaped, so the value is
+  matched literally. The URL is normalized and trailing slashes are removed.
+- The request origin (scheme, host, and port) of the prefix becomes the host pattern.
+- `url_regex_suffix` is a regex appended to the literal prefix as a group. It must not start with
+  `^`; end it with `$` to require an exact endpoint. Without a suffix, any URL continuing the prefix
+  matches, for example `https://llm.example/api` matches `https://llm.example/api/v1/models`. The
+  prefix is a plain string prefix, so it also matches `https://llm.example/api2`; use
+  `url_regex_suffix = "/"` to require a path separator.
+- As with `request_url_regex`, matching ignores query parameters.
+- An entry uses either `pattern` (with optional `request_url_regex`) or `url_prefix` (with optional
+  `url_regex_suffix`); the fields cannot be combined.
+
+The same form is accepted in `[[outbound_http.allowed_host]]` in `app.toml`. App and deployment
+entries may use different forms: verification checks that the app covers the deployment's origins
+and methods, and both URL restrictions apply at runtime.
 
 Secrets are injected via placeholder replacement in outgoing HTTP requests. The component receives
 an opaque placeholder; the runtime substitutes real values only for requests to approved hosts.

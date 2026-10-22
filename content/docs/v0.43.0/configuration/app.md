@@ -24,7 +24,8 @@ app_name = "my-app"
 
 The app name is required, either here or through `OBELISK_APP_NAME`. It selects the default SQLite
 directory. It must be 4-25 characters long and consist of lowercase ASCII letters, digits, and
-interior hyphens (no leading or trailing hyphen). Local and cloud apps share this rule.
+interior hyphens (no leading or trailing hyphen). Cloud apps are stricter: their names are limited
+to 4-20 characters, must not contain double hyphens, and are unique within each cloud environment.
 
 ## Secret Registry
 
@@ -104,6 +105,25 @@ Keep credentials in the secret registry instead. A variable registered as a secr
 read through the public environment table. With a server `app_env_prefix`, values are read from the
 prefixed variable names, while `${NAME}` references in the deployment keep the unprefixed name.
 
+### Internal Public Environment
+
+An app that needs its own server's API or Web UI URL can let the server supply it instead of
+requiring an operator-supplied variable:
+
+```toml
+[public_env]
+OBELISK_API_URL = { type = "internal", source = "api-url" }
+OBELISK_WEBUI_URL = { type = "internal", source = "webui-url" }
+```
+
+`api-url` resolves to `http://` plus the API listener address, with a wildcard bind such as
+`0.0.0.0` replaced by loopback. `webui-url` uses the server's
+{{ doc_link(title="`webui.public_url`", path="configuration/server.md#web-ui") }} when set,
+otherwise the local Web UI listener. Internal entries are always required: startup fails when the
+listener is disabled or uses port `0`. Process environment variables of the same name, with or
+without `app_env_prefix`, are ignored. Deployments use them like any other public entry, in
+`env_vars` or `${...}` interpolation. `cloud app fill` skips them.
+
 ## App Outbound HTTP Policy
 
 Component-originated HTTP must match an allowlist entry in both `app.toml` and the component's
@@ -118,11 +138,29 @@ secrets = ["OPENAI_KEY"]
 replace_in = ["headers"]
 ```
 
-The app and deployment entries use the same syntax. Both apply to every request: a request must
-match both destinations and methods, and both `request_url_regex` values, which need not be
-identical. A secret is substituted only when matching entries on both sides list the same secret and
-replacement location. Activation rejects a deployment whose destinations or methods are not covered
-by the app policy.
+When an entry covers one base URL, `url_prefix` replaces `pattern` and `request_url_regex`:
+
+```toml
+[public_env]
+LLM_URL = {}
+
+[secrets]
+LLM_API_KEY = {}
+
+[[outbound_http.allowed_host]]
+url_prefix = "${LLM_URL}"
+methods = ["GET", "POST"]
+url_regex_suffix = "/v1/models$|/v1/chat/completions$"
+secrets = ["LLM_API_KEY"]
+replace_in = ["headers"]
+```
+
+The app and deployment entries use the same syntax; see
+{{ doc_link(title="Outbound HTTP Allowlist", path="configuration/deployment.md#outbound-http-allowlist") }}
+for both forms. Both apply to every request: a request must match both destinations and methods, and
+both URL regexes, which need not be identical. A secret is substituted only when matching entries on
+both sides list the same secret and replacement location. Activation rejects a deployment whose
+destinations or methods are not covered by the app policy.
 
 ## App Exec Approval
 
@@ -148,5 +186,5 @@ platform must also allow the digest through its
 ## App Policy Digest
 
 Obelisk computes a canonical `app_config_digest` of the app policy. Deployments record the digest
-used at activation, system events carry the current digest, and the running policy is available
-through `GET /v1/app-config`.
+used at activation, system events carry the current digest, and `GET /v1/info` reports it as
+`app_config_digest`. The running policy is available through `GET /v1/app-policy`.

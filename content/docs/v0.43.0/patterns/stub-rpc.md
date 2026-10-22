@@ -134,18 +134,17 @@ header; never put the plaintext token in the component's `env_vars`:
 name = "handle"
 location = "webhook/handle.js"
 routes = [{ methods = ["POST"], route = "/" }]
-env_vars = [
-  { key = "OBELISK_API_URL", value = "${OBELISK_API_URL:-http://127.0.0.1:5005}" },
-]
+env_vars = ["OBELISK_API_URL"]
 [[webhook_endpoint_js.allowed_host]]
-pattern = "${OBELISK_API_URL:-http://127.0.0.1:5005}"
+url_prefix = "${OBELISK_API_URL}/v1"
 methods = ["PUT", "GET"]
 secrets = ["OBELISK_API_TOKEN"]
 replace_in = ["headers"]
 ```
 
-Register `OBELISK_API_TOKEN` in the app's `[secrets]` table and add a matching
-`[[outbound_http.allowed_host]]` entry to `app.toml`.
+In `app.toml`, declare `OBELISK_API_URL = { type = "internal", source = "api-url" }` under
+`[public_env]` and `OBELISK_API_TOKEN = { type = "internal" }` under `[secrets]`, so the server
+supplies its own URL and token, and add a matching `[[outbound_http.allowed_host]]` entry.
 
 ```javascript
 // example:session/webhook.handle

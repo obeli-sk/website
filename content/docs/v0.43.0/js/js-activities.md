@@ -30,6 +30,9 @@ methods = ["GET", "POST"]
 
 The app policy must permit the same destination and methods with a matching
 `[[outbound_http.allowed_host]]` entry in `app.toml`. An empty app allowlist denies outbound HTTP.
+When the activity calls a single base URL, `url_prefix = "https://api.example.com/v1"` can replace
+`pattern` and limit requests to URLs starting with it; see
+{{ doc_link(title="URL prefix rules", path="configuration/deployment.md#url-prefix-rules") }}.
 `SIGNING_KEY` must be registered under `[secrets]` and authorized for this component under
 `[secrets.SIGNING_KEY.exposed_to]`; it is then available as `process.env.SIGNING_KEY`. Prefer an
 outbound HTTP secret placeholder instead when the activity does not need to read the plaintext.
