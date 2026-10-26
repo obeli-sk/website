@@ -208,8 +208,8 @@ status code, not the reason phrase sent by the server. A webhook `Response` acce
 `options.statusText`, which must be a valid reason phrase.
 
 In JS webhooks, `fetch` resolves once the response headers arrive and exposes the body as a stream,
-and a handler can return a streaming `Response`. JS activities still read the whole body before
-`fetch` resolves. See
+and a handler can return a streaming `Response`. JS activity `fetch` does not stream the body yet;
+it still reads the whole body before resolving. See
 {{ doc_link(title="JS webhooks", path="js/js-webhooks.md#streaming-responses") }}.
 `[webhooks] request_timeout` now limits only the time until the response headers are returned, for
 every webhook kind. Handlers that stream for longer than the timeout are no longer cut off.

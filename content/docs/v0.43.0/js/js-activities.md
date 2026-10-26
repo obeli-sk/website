@@ -98,8 +98,10 @@ throws.
 
 ### Fetch responses
 
-`fetch` reads the whole response body before it resolves; activities have no `response.body` stream.
-Use `text()` or `json()` to get the body.
+An activity's return value is a single value, but nothing prevents an activity from streaming
+internally, for example reading a large or long-lived HTTP response as it arrives. WASM activities
+can do this through `wasi:http`. In JS activities, `fetch` currently reads the whole response body
+before it resolves and there is no `response.body` stream; use `text()` or `json()` to get the body.
 
 `statusText` is the canonical reason phrase of the status code, for example `"Not Found"`, not the
 text sent by the server. An activity finishes once its function settles, even if timers or fetches
