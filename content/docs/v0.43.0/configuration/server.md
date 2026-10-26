@@ -275,8 +275,19 @@ The `[v8]` table and the choice between the `boa-wasm` and `v8` runtimes are des
 request_timeout.seconds = 30   # Deadline for a webhook handler to return its HTTP response.
 ```
 
-The deadline applies to all webhook handlers. It does not limit a streaming response body after the
-response has been returned.
+The deadline applies to all webhook handlers, and only covers the time until the response headers
+are returned. It does not limit a streaming response body after that.
+
+## Outbound HTTP Connection Pool
+
+Activities and webhook endpoints share one pool of outbound HTTP connections. Idle HTTP/1
+connections are reused per scheme, host and port.
+
+```toml
+[outbound_http_pool]
+max_idle_per_host = 16       # Idle connections kept per scheme, host and port. 0 opens a new connection for every request.
+idle_timeout.seconds = 90    # How long an idle connection is kept before it is closed.
+```
 
 ## Global Workflow Configuration
 
@@ -304,6 +315,9 @@ external.enabled = true                    # Set to false to disable the built-i
 name = "server_name"                  # Server identifier
 listening_addr = "0.0.0.0:9000"       # Listen address and port
 ```
+
+Webhook listeners serve HTTP/1.1 and cleartext HTTP/2 (prior knowledge, without TLS) on the same
+port.
 
 Named servers defined here can be referenced from `webhook_endpoint_js` and `webhook_endpoint_wasm`
 entries in `deployment.toml` via `http_server = "server_name"`.

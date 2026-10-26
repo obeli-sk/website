@@ -161,7 +161,9 @@ methods = ["POST"]
 url_regex_suffix = "/v1/chat/completions$"
 ```
 
-Environment variables expand before the prefix is regex-escaped, and trailing slashes are trimmed.
+Environment variables expand before the prefix is regex-escaped. A trailing slash is kept and
+matched literally, so `https://host/repos/` does not match `/repos-other`; a bare origin matches
+any path.
 The prefix must be an absolute HTTP(S) URL without credentials, query, fragment, or wildcards; keep
 `pattern` for wildcard hosts. The suffix is appended as a regex group, must not start with `^`, and
 should end with `$` to allow exactly one endpoint; without it, any continuation of the prefix
@@ -202,8 +204,21 @@ Read the policy from `GET /v1/app-policy` (JSON, or TOML with `Accept: applicati
 returns the policy object directly instead of wrapping it in `{ app_config_digest, policy }`, and
 read `app_config_digest` from `GET /v1/info`.
 
-In V8 activities and webhooks, `fetch` sets `Response.statusText` to the received HTTP/1 reason
-phrase. A webhook `Response` accepts `options.statusText`, which must be a valid reason phrase.
+In Boa and V8 activities and webhooks, `fetch` reports the canonical `Response.statusText` for the
+status code, not the reason phrase sent by the server. A webhook `Response` accepts
+`options.statusText`, which must be a valid reason phrase.
+
+`fetch` resolves once the response headers arrive and exposes the body as a stream; JS webhooks can
+return a streaming `Response`. See
+{{ doc_link(title="JS webhooks", path="js/js-webhooks.md#streaming-responses") }}.
+`[webhooks] request_timeout` now limits only the time until the response headers are returned, for
+every webhook kind. Handlers that stream for longer than the timeout are no longer cut off.
+
+`GET /v1/execution-id` and `GET /v1/deployment-id` are deprecated. Generate execution IDs locally,
+for example with `obelisk generate execution-id`, and read `deployment_id` from `GET /v1/info`.
+Clients polling responses, logs, or statuses can switch to the `follow=true` streams and
+`POST /v1/executions/status/batch` described in
+{{ doc_link(title="REST API", path="access/api.md#following-pages") }}.
 
 Boa and V8 webhooks no longer receive automatic `__OBELISK_JS_SOURCE__` or
 `__OBELISK_JS_FILE_NAME__` environment variables. Remove any dependency on them.
@@ -232,6 +247,15 @@ JavaScript typed schedules accept `executionId` in the leading schedule object. 
 reuse the original execution; a different target, parameters, or timing conflicts. Relative timing
 compares the original offset from creation. Retrying never reschedules an execution.
 
+## Cron overlap and lock extension
+
+Cron entries accept `overlap`. The default, `"skip"`, skips a tick while the execution submitted by
+the previous tick is unfinished. Earlier releases submitted on every tick; set `overlap = "allow"`
+to keep that behavior. See {{ doc_link(title="Cron", path="concepts/cron.md#overlapping-runs") }}.
+
+Lock extension now renews the lock once half of `exec.lock_expiry` has elapsed.
+`exec.lock_extension_leeway` is still accepted but ignored with a warning; remove it.
+
 ## Server checkpoints
 
 Each successful activation now stores the app policy and deployment ID together as one checkpoint.
@@ -254,8 +278,14 @@ tokens, policy, environment variables, and secrets. App-scoped commands, includi
 
 Scripts written against earlier 0.43 release candidates must be updated:
 
-- `cloud app start` and `cloud app stop` are renamed to `cloud app reactivate` and
-  `cloud app deactivate`.
+- `cloud app start` and `cloud app stop`, later named `reactivate` and `deactivate`, are now
+  `cloud app enable` and `cloud app disable`.
+- `cloud app status` shows the staged and applied revisions and compares the local `app.toml` with
+  the staged one; `apply` applies a staged revision.
+- App names starting with `system-` or `integrations-` are reserved.
+- Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
+  and are never prompted for. See
+  {{ doc_link(title="Cloud Integrations", path="configuration/app.md#cloud-integrations") }}.
 - Missing required env vars and secrets fail in the client. `cloud app new`, `deploy`, and `apply`
   take `--fill` (prompts) or `--fill-non-interactive` (reads same-named environment variables);
   `cloud app fill` takes `--non-interactive`.
@@ -287,5 +317,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - Consider internal public environment entries for the server's own API and Web UI URLs, and
   `url_prefix` rules for single-URL destinations.
 - Update cloud scripts for renamed lifecycle commands and explicit fill flags.
+- Decide `overlap` for each `[[cron]]` entry and remove `exec.lock_extension_leeway`.
+- Replace `GET /v1/execution-id` and `GET /v1/deployment-id` calls.
 - Review app/server policy diffs, authentication (including internal secrets for self-API tokens and
   restart-only token hash changes), stdout consumers, REST requests, and optional WIT regeneration.

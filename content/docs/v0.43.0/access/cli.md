@@ -73,12 +73,13 @@ removing the description creates a new deployment; explicit deployment IDs are h
 inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. Everything scoped to
 one app lives under `cloud app`:
 
-- `new`, `get`, `status`, `reactivate`, `deactivate`, `delete`: app lifecycle. `new` creates a
-  stopped app. Required env vars and secrets must be supplied at creation with `--fill` (prompts) or
+- `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a
+  stopped app. `status` shows the staged and applied configuration revisions and, when `./app.toml`
+  is readable, whether it matches the staged configuration. Required env vars and secrets must be supplied at creation with `--fill` (prompts) or
   `--fill-non-interactive` (reads same-named environment variables).
-- `stage` stages app policy and cloud settings without restarting the VM; `apply` sends the staged
-  configuration and the enqueued (or active) deployment while respecting the app's intended running
-  state.
+- `stage` stages app policy and cloud settings as a new configuration revision without restarting
+  the VM; `apply` applies a staged revision together with the enqueued (or active) deployment while
+  respecting the app's intended running state.
 - `deploy` publishes the local project: it creates or configures the app, submits the deployment,
   and activates it. It fails on missing required values unless `--fill` or `--fill-non-interactive`
   is passed. When the app name is taken, an interactive `deploy` offers an alternative and saves it
@@ -88,7 +89,8 @@ one app lives under `cloud app`:
   `fill --non-interactive` stages same-named environment variables instead, for scripts. `env` and
   `secrets` manage them individually; names starting with `OBELISK_` are accepted. Internal secrets
   and internal public environment entries are skipped.
-- `fill` and `apply` compare `-a` or `./app.toml` with the staged configuration and never stage it
+- `fill` and `apply` compare `-a` or `./app.toml` with the staged configuration (the control plane
+  performs the comparison) and never stage it
   silently: on a difference they ask whether to stage it, use the staged one, or cancel, and fail
   without a terminal unless `--staged` is passed. `apply` also accepts `--fill` and
   `--fill-non-interactive`.
@@ -98,7 +100,10 @@ one app lives under `cloud app`:
 
 Select an app with `cloud app --app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud app
 names are 4-20 lowercase ASCII letters, digits, and single interior hyphens (no `--`), and are
-unique within each cloud environment. Cloud policy commands discover `./app.toml`.
+unique within each cloud environment. Names starting with `system-` or `integrations-` are reserved.
+Env vars bound by
+{{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
+supplied by the cloud, so `new`, `deploy`, `fill`, and `apply` never ask for them. Cloud policy commands discover `./app.toml`.
 
 The control plane is selected with `--api-url` (`OBELISK_CLOUD_API_URL`, default
 `https://cloud.obeli.sk`) and authenticated with `--api-token` (`OBELISK_CLOUD_API_TOKEN`). App
@@ -113,7 +118,8 @@ creation response is lost, revoke the inaccessible token before creating a repla
 name.
 
 Cloud commands print concise human-readable results to stderr; `--json` prints machine-readable
-output and `--verbose` adds metadata and diagnostics. Run `obelisk cloud --help` and
+output and `--verbose` adds metadata, diagnostics, and each HTTP request with its response status,
+prefixed with the time since the previous step (deploy steps included). Run `obelisk cloud --help` and
 `obelisk cloud app --help` for all options.
 
 ## Global Options
@@ -130,6 +136,7 @@ accept these options after the subcommand, for example `obelisk execution list -
   `OBELISK_API_URL`)
 - `--api-token <TOKEN>` - API token presented as `Authorization: Bearer <token>`. Falls back to
   `$OBELISK_API_TOKEN`. See {{ doc_link(title="Authentication", path="access/authentication.md") }}
+- `--verbose` - Show HTTP requests and response statuses on stderr
 
 ## Obelisk Server
 

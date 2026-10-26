@@ -113,6 +113,35 @@ const resp = await fetch("https://api.example.com/data");
 return resp;
 ```
 
+### Streaming responses
+
+A handler can return a `Response` whose body is a `ReadableStream`. The headers are sent when the
+handler returns and each chunk is sent as soon as it is enqueued, which suits server-sent events and
+other incremental responses:
+
+```javascript
+export default async function handle(request) {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream({
+    async start(controller) {
+      for (let i = 0; i < 3; i++) {
+        controller.enqueue(encoder.encode(`data: ${i}\n\n`));
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      controller.close();
+    },
+  });
+  return new Response(body, { headers: { "content-type": "text/event-stream" } });
+}
+```
+
+Returning a `fetch` response, or `new Response(resp.body, ...)`, streams the upstream body to the
+client without buffering it. `[webhooks] request_timeout` limits only the time until the handler
+returns the response headers; the streamed body has no time limit. A client disconnect is noticed
+when the next chunk is written, which ends the stream and finishes the execution successfully. When
+proxying a long-lived stream, keep sending periodic chunks such as SSE comments so that a disconnect
+is noticed.
+
 ## Calling activities and workflows
 
 Import functions by their interface name (the FFQN without the function). The call blocks until the

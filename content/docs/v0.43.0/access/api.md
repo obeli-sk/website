@@ -193,6 +193,9 @@ backtrace source mappings.
 
 ### `GET /v1/execution-id`
 
+Deprecated: generate execution IDs locally instead, for example with
+`obelisk generate execution-id`.
+
 Generates a new, globally unique execution id.
 
 **Returns:**
@@ -317,7 +320,7 @@ with the same parameters, it returns `200 OK`.
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(obelisk generate execution-id)
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo/fibo.fibo", "params": [5] }'
 ```
@@ -421,6 +424,11 @@ uses `version_from`, `events_length`, and `include_backtrace_id` for events, plu
 `responses_cursor_from`, `responses_length`, and `responses_including_cursor` for responses. These
 names differ from the separate events and responses endpoints.
 
+With `follow=true` the endpoint streams `events_and_responses` events, see
+[Following pages](#following-pages). The first event is always sent, later ones only when new
+events or responses exist. The event ID is `{next_version}:{next_response_cursor}`.
+`events_length` and `responses_length` become totals for the whole stream.
+
 ---
 
 ### `GET /v1/executions/{execution-id}/events`
@@ -515,6 +523,28 @@ progress. When it finishes, the field contains its `Finished` event, including t
 
 ---
 
+### `POST /v1/executions/status/batch`
+
+Returns the status of up to 200 executions in one request, as an array of
+[status](#get-v1-executions-execution-id-status) objects extended with `max_version`. Duplicate IDs
+are ignored and unknown IDs are skipped. An empty list or more than 200 IDs is rejected with
+`400 Bad Request`.
+
+```sh
+curl -H "$OBELISK_API_AUTH" -H 'content-type: application/json' \
+  '127.1:5005/v1/executions/status/batch' -d \
+  '{"execution_ids":["E_01KDN9VJ2TJ396ZARNEMRBNBHP"]}'
+```
+
+With `follow=true` the response is a `text/event-stream` of `statuses` events. The first event lists
+all found executions, even when none were found. Later events list only executions whose status or
+`max_version` changed. A finished execution is sent once and then no longer followed, and the stream
+ends when no unfinished executions are left. Events have no ID, so a reconnecting client receives
+all statuses again. Use one batch stream instead of one status stream per execution to stay within
+browser connection limits.
+
+---
+
 ### `GET /v1/executions/{execution-id}/responses`
 
 Retrieves responses associated with an execution (used for long-running interactions).
@@ -528,6 +558,7 @@ Retrieves responses associated with an execution (used for long-running interact
 | `including_cursor` | Boolean | Include the response at `cursor`.        | `false` |
 | `join_set`         | String  | Filter to responses of this join-set ID. | all     |
 | `direction`        | String  | `older` or `newer`.                      | `newer` |
+| `follow`           | Boolean | Stream `responses` events.               | `false` |
 
 `join_set` takes a canonical join-set ID as shown in `join_set_id`, for example `o:1-fibo` or
 `n:session-events` (URL-encode the colon as `%3A` if needed). A bare join-set name is rejected with
@@ -536,7 +567,7 @@ Retrieves responses associated with an execution (used for long-running interact
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(obelisk generate execution-id)
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}"?follow=true -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:fibo-workflow/workflow.fiboa", "params": [5,5] }'
 
@@ -572,6 +603,34 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}/responses"
 }
 ```
 
+With `follow=true` each `responses` event carries one page in the JSON format above, and its event
+ID is the cursor of the last response sent. See [Following pages](#following-pages).
+
+#### Following pages
+
+The responses, logs, and events-and-responses endpoints accept `follow=true`. The response is then a
+`text/event-stream` that sends new rows as they are written:
+
+- Each event's data has the same JSON format as one page of the non-follow response, with at most
+  200 rows per event. The server polls for new rows once per second.
+- `follow` reads forward only; `direction=older` is rejected with `400 Bad Request`.
+- The event ID is the position after the event. A reconnecting client sends it as `Last-Event-ID`,
+  which replaces the cursor from the query and excludes the row at that position. An unparsable
+  `Last-Event-ID` is rejected with `400 Bad Request`.
+- `length` (or `events_length` and `responses_length`) limits the total number of rows for the whole
+  stream instead of one page. Without it the stream is unlimited.
+- The stream ends when the length is used up, shortly after the execution finishes and all remaining
+  rows were sent, when the client disconnects, or when the server shuts down.
+- A missing execution is reported as a regular HTTP error before the stream starts.
+- Comment lines are sent every 15 seconds as heartbeats.
+- The `Accept` header must allow `application/json` or `text/event-stream`, otherwise the server
+  responds with `406 Not Acceptable`.
+
+```sh
+curl -N -H "$OBELISK_API_AUTH" \
+  "127.1:5005/v1/executions/${EXECUTION_ID}/responses?follow=true" -H accept:text/event-stream
+```
+
 ---
 
 ### `PUT /v1/executions/{execution-id}/stub`
@@ -598,7 +657,7 @@ or
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(obelisk generate execution-id)
 # Submit a workflow that submits a stub activity
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -H accept:application/json -X PUT -d \
 '{ "ffqn":"testing:stub-workflow/workflow.submit-await", "params": ["test"] }'
@@ -640,7 +699,7 @@ exec.locking_strategy = "by_component_digest"
 
 ```sh
 obelisk server run -a app-testing-wasm.toml --deployment deployment-testing-wasm-oci.toml # components from Docker Hub
-EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(obelisk generate execution-id)
 # Submit a workflow
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep-workflow/workflow.sleep-host-activity", "params": [{"seconds":10}] }'
@@ -682,6 +741,11 @@ API.
 | `length`           | Integer  | Max entries to return                            | `20`    |
 | `including_cursor` | Boolean  | Include the entry at `cursor`                    | `false` |
 | `direction`        | String   | `older` or `newer`                               | `newer` |
+| `follow`           | Boolean  | Stream `logs` events                             | `false` |
+
+With `follow=true` each `logs` event carries one page and its event ID is the page's cursor. With
+`show_derived=true` the stream includes logs of child executions. See
+[Following pages](#following-pages).
 
 Use `after` with an RFC 3339 timestamp for time filtering. A timestamp in `cursor` is rejected.
 
@@ -962,6 +1026,8 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/functions/wit?ffqn=testing:fibo/fibo.
 ## Deployments
 
 ### `GET /v1/deployment-id`
+
+Deprecated: use `deployment_id` from [`GET /v1/info`](#get-v1-info).
 
 Retrieves the current deployment ID.
 
@@ -1298,7 +1364,7 @@ for operator cleanup of workflows stuck on long-lived stubs or stranded by a fai
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(obelisk generate execution-id)
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep/sleep.sleep", "params": [{"seconds":100}] }'
 
@@ -1326,7 +1392,7 @@ Cancels a request for
 #### Example request
 
 ```sh
-EXECUTION_ID=$(curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/execution-id)
+EXECUTION_ID=$(obelisk generate execution-id)
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/executions/${EXECUTION_ID}" -H content-type:application/json -X PUT -d \
 '{ "ffqn":"testing:sleep-workflow/workflow.sleep-host-activity", "params": [{"seconds":100}] }'
 # Create the expected delay id based on code or execution log

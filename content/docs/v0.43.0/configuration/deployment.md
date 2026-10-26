@@ -224,13 +224,14 @@ replace_in = ["headers"]
 - `url_prefix` must be an absolute `http://` or `https://` URL without credentials, query, fragment,
   or wildcards. Use `pattern` when you need wildcards.
 - `${VAR}` and `${VAR:-default}` are expanded before the prefix is regex-escaped, so the value is
-  matched literally. The URL is normalized and trailing slashes are removed.
+  matched literally, including a trailing slash. A bare origin such as `https://llm.example`
+  matches any path.
 - The request origin (scheme, host, and port) of the prefix becomes the host pattern.
 - `url_regex_suffix` is a regex appended to the literal prefix as a group. It must not start with
   `^`; end it with `$` to require an exact endpoint. Without a suffix, any URL continuing the prefix
   matches, for example `https://llm.example/api` matches `https://llm.example/api/v1/models`. The
-  prefix is a plain string prefix, so it also matches `https://llm.example/api2`; use
-  `url_regex_suffix = "/"` to require a path separator.
+  prefix is a plain string prefix, so it also matches `https://llm.example/api2`; end
+  the prefix with `/` to require a path separator.
 - As with `request_url_regex`, matching ignores query parameters.
 - An entry uses either `pattern` (with optional `request_url_regex`) or `url_prefix` (with optional
   `url_regex_suffix`); the fields cannot be combined.
@@ -447,8 +448,7 @@ params = [                             # Optional
 ]
 return_type = "result"
 retry_exp_backoff.milliseconds = 100
-lock_extension = true
-lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this leeway.
+lock_extension = true               # Extends the lock after half of exec.lock_expiry has elapsed.
 blocking_strategy = "await"          # "await" (default) or "interrupt"
 logs_store_min_level = "debug"
 ```
@@ -480,8 +480,7 @@ blocking_strategy = "await"           # One of ("await"|"interrupt"|{"kind"=...}
 backtrace.sources = {"backtracepath/src/lib.rs"="localpath/src/lib.rs"}
 
 ## Automatic lock extension is enabled by default.
-lock_extension = true
-lock_extension_leeway.seconds = 15  # Starts extending at expires_at minus this leeway.
+lock_extension = true               # Extends the lock after half of exec.lock_expiry has elapsed.
 
 logs_store_min_level = "debug"       # Minimum log level to persist in the database. Default: "debug"
 ```
@@ -576,6 +575,7 @@ name = "my-daily-job"
 ffqn = "myapp:tasks/jobs@1.0.0.daily-cleanup"
 params = '["arg1", 42]'                  # JSON array; defaults to []
 schedule = "@daily"                      # cron expression or named shorthand
+overlap = "skip"                         # "skip" (default) or "allow" overlapping runs
 ```
 
 The `schedule` field accepts standard five-field cron expressions (`"0 3 * * *"`), six-field

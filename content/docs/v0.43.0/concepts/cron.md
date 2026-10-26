@@ -26,6 +26,7 @@ schedule = "@daily"
 | `ffqn`     | string            | yes      | {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the function to call |
 | `params`   | JSON array string | no       | Parameters passed to the function on every tick (default: `[]`)               |
 | `schedule` | string            | yes      | Cron expression or named shorthand (see below)                                |
+| `overlap`  | string            | no       | `"skip"` (default) or `"allow"`, see [Overlapping runs](#overlapping-runs)    |
 
 ## Schedule syntax
 
@@ -62,12 +63,28 @@ missing ticks.
 The `@once` shorthand submits the target function once immediately and then the scheduler execution
 finishes.
 
+## Overlapping runs
+
+By default (`overlap = "skip"`), a tick does not submit the target while the execution submitted by
+the previous tick is unfinished. The scheduler skips that tick and waits for the next scheduled time,
+so a slow run is never joined by a second one. Set `overlap = "allow"` to submit on every tick
+regardless of earlier runs.
+
+```toml
+[[cron]]
+name     = "sync"
+ffqn     = "myapp:tasks/jobs@1.0.0.sync"
+schedule = "*/5 * * * *"
+overlap  = "allow"
+```
+
 ## Relationship to deployments
 
 During server startup or a hot-redeploy, Obelisk hashes each `[[cron]]` entry's configuration —
 `name`, `ffqn`, `params`, and `schedule` — with SHA-256 to produce a **content digest**. From that
 digest it derives a deterministic execution ID, so a given cron configuration always maps to exactly
-one seed execution.
+one seed execution. `overlap` is not part of the digest, so changing only `overlap` keeps the
+existing seed execution.
 
 Obelisk then **upserts only missing** seed executions: if a seed execution with that ID already
 exists in the database, it is reused as-is; otherwise a new one is created. This means an unchanged

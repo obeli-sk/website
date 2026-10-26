@@ -124,6 +124,26 @@ listener is disabled or uses port `0`. Process environment variables of the same
 without `app_env_prefix`, are ignored. Deployments use them like any other public entry, in
 `env_vars` or `${...}` interpolation. `cloud app fill` skips them.
 
+### Cloud Integrations
+
+`[cloud.integrations]` binds a value the cloud provides to an environment-backed `[public_env]`
+entry:
+
+```toml
+[cloud.integrations]
+llm = { type = "llm", env = "LLM_BASE_URL" }
+
+[public_env]
+LLM_BASE_URL = {}
+```
+
+During a cloud deployment the bound value overrides any uploaded or local value, and `cloud app
+new`, `deploy`, `fill`, and `apply` do not ask for it. Integration names and types are validated by
+the target cloud. Each `env` must name an environment-backed `[public_env]` entry (not an internal
+one and not a secret), and two integrations cannot supply the same variable. Local runs do not
+receive the value: a required entry must be set explicitly, otherwise startup and `server verify`
+fail with an error naming the integration.
+
 ## App Outbound HTTP Policy
 
 Component-originated HTTP must match an allowlist entry in both `app.toml` and the component's
