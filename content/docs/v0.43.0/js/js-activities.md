@@ -93,27 +93,13 @@ throws.
 | `crypto.getRandomValues(typedArray)` | Fills an integer typed array with cryptographically secure random values, up to 65536 bytes per call                                                                        |
 | `setTimeout` / `Promise`             | Async sleep via `await new Promise(r => setTimeout(r, ms))`                                                                                                                 |
 | `console.log/info/warn/error`        | Structured log entries stored in the execution log                                                                                                                          |
-| `TextEncoder` / `TextDecoder`        | UTF-8 encoding; `decode(chunk, { stream: true })` keeps partial multi-byte sequences between chunks                                                                        |
+| `TextEncoder` / `TextDecoder`        | UTF-8 encoding                                                                                                                                                              |
 | `URL` / `URLSearchParams`            | WHATWG URL parsing and query-string building                                                                                                                                |
 
 ### Fetch responses
 
-`fetch` resolves as soon as the response headers arrive. The body is read by `text()`, `json()`,
-`bytes()`, or `arrayBuffer()`, or incrementally from `response.body`, a `ReadableStream` of
-`Uint8Array` chunks:
-
-```javascript
-const resp = await fetch(url);
-const reader = resp.body.getReader();
-const decoder = new TextDecoder();
-let text = "";
-for (;;) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  text += decoder.decode(value, { stream: true });
-}
-text += decoder.decode();
-```
+`fetch` reads the whole response body before it resolves; activities have no `response.body` stream.
+Use `text()` or `json()` to get the body.
 
 `statusText` is the canonical reason phrase of the status code, for example `"Not Found"`, not the
 text sent by the server. An activity finishes once its function settles, even if timers or fetches

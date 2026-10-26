@@ -162,11 +162,10 @@ url_regex_suffix = "/v1/chat/completions$"
 ```
 
 Environment variables expand before the prefix is regex-escaped. A trailing slash is kept and
-matched literally, so `https://host/repos/` does not match `/repos-other`; a bare origin matches
-any path.
-The prefix must be an absolute HTTP(S) URL without credentials, query, fragment, or wildcards; keep
-`pattern` for wildcard hosts. The suffix is appended as a regex group, must not start with `^`, and
-should end with `$` to allow exactly one endpoint; without it, any continuation of the prefix
+matched literally, so `https://host/repos/` does not match `/repos-other`; a bare origin matches any
+path. The prefix must be an absolute HTTP(S) URL without credentials, query, fragment, or wildcards;
+keep `pattern` for wildcard hosts. The suffix is appended as a regex group, must not start with `^`,
+and should end with `$` to allow exactly one endpoint; without it, any continuation of the prefix
 matches. An entry cannot mix the two forms. See
 {{ doc_link(title="URL prefix rules", path="configuration/deployment.md#url-prefix-rules") }}.
 
@@ -208,8 +207,9 @@ In Boa and V8 activities and webhooks, `fetch` reports the canonical `Response.s
 status code, not the reason phrase sent by the server. A webhook `Response` accepts
 `options.statusText`, which must be a valid reason phrase.
 
-`fetch` resolves once the response headers arrive and exposes the body as a stream; JS webhooks can
-return a streaming `Response`. See
+In JS webhooks, `fetch` resolves once the response headers arrive and exposes the body as a stream,
+and a handler can return a streaming `Response`. JS activities still read the whole body before
+`fetch` resolves. See
 {{ doc_link(title="JS webhooks", path="js/js-webhooks.md#streaming-responses") }}.
 `[webhooks] request_timeout` now limits only the time until the response headers are returned, for
 every webhook kind. Handlers that stream for longer than the timeout are no longer cut off.
