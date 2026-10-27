@@ -211,7 +211,8 @@ Options:
 - `--deployment-id <ID>` - Verify an existing deployment from the database without activating it.
   Conflicts with `--deployment` and `--skip-db`
 - `--allow-unavailable-runtime-config` - Tolerate missing environment and secret values while still
-  checking declarations and permissions
+  checking declarations and permissions. Variables interpolated into `app.toml` outbound HTTP rules
+  must still be set
 - `--suppress-type-checking-errors` - Do not fail on component import/export type errors
 - `--skip-db` - Skip opening the database and validating its schema; requires `--deployment`
 - `--fix` - Apply all app repairs, including exec approvals and secret exposure grants; does not

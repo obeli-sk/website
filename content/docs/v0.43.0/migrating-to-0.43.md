@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 4
 +++
 
-This guide targets **Obelisk 0.43.0-rc.8**. It is based on the
-[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.8) of every
+This guide targets **Obelisk 0.43.0-rc.10**. It is based on the
+[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.10) of every
 0.43.0 release candidate. Audit every deployment, configuration file, script, and CI workflow
 against these changes. Apps older than 0.42 must first follow the
 {{ doc_link(title="0.42 migration guide", path="migrating-to-0.42.md", version="v0.42.0") }}.
@@ -51,7 +51,10 @@ against a deployment that runs under it.
 
 `--allow-unavailable-runtime-config` tolerates missing runtime values only. Required public
 environment and secret declarations, outbound HTTP permissions, exec approvals, and secret-exposure
-grants still have to exist. It does not bypass the app or platform policy.
+grants still have to exist. It does not bypass the app or platform policy. Variables interpolated
+with `${...}` into `app.toml` `[[outbound_http.allowed_host]]` rules are not tolerated: verification
+fails while they are unset, so CI must supply them, for example as placeholder URLs. A missing
+variable in a deployment `allowed_host` rule only skips that rule with a warning.
 
 `server run` and `server verify` discover `./app.toml` when `--app-config` is omitted. An explicit
 path takes precedence. Without either an explicit file or discovered file, built-in app defaults
