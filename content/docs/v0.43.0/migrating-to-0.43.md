@@ -278,6 +278,15 @@ to keep that behavior. See {{ doc_link(title="Cron", path="concepts/cron.md#over
 Lock extension now renews the lock once half of `exec.lock_expiry` has elapsed.
 `exec.lock_extension_leeway` is still accepted but ignored with a warning; remove it.
 
+## Native V8 is the default JS runtime
+
+JavaScript workflows, activities, and webhooks now run on native V8 isolates unless the server is
+started with `OBELISK_JS_RUNTIME=boa-wasm`. Their execution slots move from the `wasm` cells of
+`[limits]` to the `v8` cells, which grant fewer slots by default (16 activities, 100 workflows, 16
+webhook endpoints). Raise those cells if the app relies on the higher `wasm` defaults, or set
+`OBELISK_JS_RUNTIME=boa-wasm` to keep running on Boa. See
+{{ doc_link(title="JS runtime", path="js/js-runtime.md") }}.
+
 ## Server checkpoints
 
 Each successful activation now stores the app policy and deployment ID together as one checkpoint.
@@ -366,6 +375,7 @@ Update consumers that filter system events by code or level:
 - Update cloud scripts for renamed lifecycle commands and explicit fill flags.
 - Decide `overlap` for each `[[cron]]` entry and remove `exec.lock_extension_leeway`.
 - Review retention `max_age`/`max_count` defaults and system-event filters for renamed codes.
+- Size the `v8` cells of `[limits]` for JavaScript components, or set `OBELISK_JS_RUNTIME=boa-wasm`.
 - Replace `GET /v1/execution-id` and `GET /v1/deployment-id` calls.
 - Review app/server policy diffs, authentication (including internal secrets for self-API tokens and
   restart-only token hash changes), stdout consumers, REST requests, and optional WIT regeneration.

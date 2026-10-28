@@ -109,7 +109,7 @@ how many slots the cell grants, and `memory` is how much memory one slot may hol
 defaults are:
 
 ```toml
-[limits.activities.wasm]       # Includes JavaScript activities on the boa-wasm JS runtime.
+[limits.activities.wasm]       # Includes JavaScript activities with OBELISK_JS_RUNTIME=boa-wasm.
 count = 500
 memory.gib = 1
 [limits.activities.v8]
@@ -120,13 +120,13 @@ count = 32
 [limits.activities.vm_bochs]   # activity_vm (the VM slot cell for all backends)
 count = 8
 memory.gib = 1
-[limits.workflows.wasm]        # Includes JavaScript workflows on the boa-wasm JS runtime.
+[limits.workflows.wasm]        # Includes JavaScript workflows with OBELISK_JS_RUNTIME=boa-wasm.
 count = 500
 memory.mib = 512
 [limits.workflows.v8]
 count = 100
 memory.mib = 256
-[limits.webhooks.wasm]         # Includes JavaScript webhook endpoints on the boa-wasm JS runtime.
+[limits.webhooks.wasm]         # Includes JavaScript webhook endpoints with OBELISK_JS_RUNTIME=boa-wasm.
 count = 500
 memory.mib = 512
 [limits.webhooks.v8]

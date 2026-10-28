@@ -12,10 +12,10 @@ need no changes to switch between them.
 
 Set `OBELISK_JS_RUNTIME` in the environment of `obelisk server run`:
 
-| Value                | Runtime                                                         |
-| -------------------- | --------------------------------------------------------------- |
-| `boa-wasm` (default) | [Boa](https://boajs.dev/) compiled to WASM, running in Wasmtime |
-| `v8`                 | Native V8 isolates                                              |
+| Value          | Runtime                                                         |
+| -------------- | --------------------------------------------------------------- |
+| `v8` (default) | Native V8 isolates                                              |
+| `boa-wasm`     | [Boa](https://boajs.dev/) compiled to WASM, running in Wasmtime |
 
 Any other value fails startup.
 
@@ -67,4 +67,5 @@ slots are acquired.
 thread_stack_size.mib = 4   # Stack size for each V8 isolate thread.
 ```
 
-These settings apply only with `OBELISK_JS_RUNTIME=v8`. Each V8 isolate runs on its own OS thread.
+These settings apply only to the `v8` runtime (the default). Each V8 isolate runs on its own OS
+thread.
