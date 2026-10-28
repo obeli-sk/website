@@ -286,8 +286,12 @@ connections are reused per scheme, host and port.
 ```toml
 [outbound_http_pool]
 max_idle_per_host = 16       # Idle connections kept per scheme, host and port. 0 opens a new connection for every request.
-idle_timeout.seconds = 90    # How long an idle connection is kept before it is closed.
+idle_timeout.seconds = 4     # How long an idle connection is kept when the server sends no Keep-Alive hint.
 ```
+
+When a response carries a `Keep-Alive: timeout=N` header, the connection is kept for one second less
+than `N` (at most 10 minutes) instead, so a reused connection is not closed by the server while a
+request is being sent. Requests are not retried automatically if that still happens.
 
 ## Global Workflow Configuration
 
