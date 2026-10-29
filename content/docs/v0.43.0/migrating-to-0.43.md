@@ -193,9 +193,14 @@ retain their supported representations.
 Clients decoding `/v1/components` exports must accept the new `extension` value `"schedule_with_id"`
 for `-schedule-with-id` functions; it is distinct from `"schedule"`.
 
-System-event retention requests must explicitly include `dry_run`; omission is rejected without
-deleting events. The CLI no longer supplies compatibility defaults for replay measurements and
-public environment classifications when talking to servers older than 0.42.
+System-event retention requests must explicitly include `dry_run`: use `true` to preview and `false`
+to delete. Omission returns HTTP 422 without deleting events; the CLI already supplies it.
+
+Use the 0.43 CLI with servers version 0.42 or newer. Replay responses must include
+`replayed_event_count`, `replay_duration_ms`, and `replay_version`; structured
+missing-runtime-config responses must include `optional_public_env` and `required_public_env`. The
+CLI no longer supplies compatibility defaults for these fields. Replay failure details remain
+optional.
 
 `GET /v1/info` returns the app name, `app_env_prefix`, Obelisk version, deployment ID, node run ID,
 app config digest, and start time. `GET /v1/admin/node-run-id` is deprecated and will be removed
@@ -224,7 +229,8 @@ Clients polling responses, logs, or statuses can switch to the `follow=true` str
 {{ doc_link(title="REST API", path="access/api.md#following-pages") }}.
 
 Boa and V8 webhooks no longer receive automatic `__OBELISK_JS_SOURCE__` or
-`__OBELISK_JS_FILE_NAME__` environment variables. Remove any dependency on them.
+`__OBELISK_JS_FILE_NAME__` environment variables. Pass application metadata through deployment
+`env_vars` when needed. Module loading still uses the module graph in both runtimes.
 
 ## WIT compatibility and caller-supplied schedule IDs
 

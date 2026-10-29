@@ -48,6 +48,10 @@ Structured resources and actions use `application/json`; their former `text/plai
 were removed in 0.43. WIT, source files, IDs, scalar app-config digests, execution-log streams, and
 SSE retain their supported representations. Send an explicit `Accept` header when needed.
 
+JSON is the default when no `Accept` header is sent. Structured endpoints return HTTP 406 when the
+header allows only `text/plain`; replace formatted-text pipelines with JSON consumers such as `jq`.
+The CLI still formats human-readable output locally.
+
 ---
 
 ## Components
@@ -425,9 +429,9 @@ uses `version_from`, `events_length`, and `include_backtrace_id` for events, plu
 names differ from the separate events and responses endpoints.
 
 With `follow=true` the endpoint streams `events_and_responses` events, see
-[Following pages](#following-pages). The first event is always sent, later ones only when new
-events or responses exist. The event ID is `{next_version}:{next_response_cursor}`.
-`events_length` and `responses_length` become totals for the whole stream.
+[Following pages](#following-pages). The first event is always sent, later ones only when new events
+or responses exist. The event ID is `{next_version}:{next_response_cursor}`. `events_length` and
+`responses_length` become totals for the whole stream.
 
 ---
 
