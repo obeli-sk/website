@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 4
 +++
 
-This guide targets **Obelisk 0.43.0-rc.10**. It is based on the
-[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.10) of every
+This guide targets **Obelisk 0.43.0-rc.14**. It is based on the
+[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.14) of every
 0.43.0 release candidate. Audit every deployment, configuration file, script, and CI workflow
 against these changes. Apps older than 0.42 must first follow the
 {{ doc_link(title="0.42 migration guide", path="migrating-to-0.42.md", version="v0.42.0") }}.
