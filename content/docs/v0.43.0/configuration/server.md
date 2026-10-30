@@ -146,7 +146,9 @@ JavaScript components use the `wasm` or `v8` cells depending on the selected
 
 Obelisk removes tombstoned execution trees and unreferenced shared data in bounded background
 batches. Automatic maintenance is enabled by default. Completed execution trees, inactive
-deployments, and system events each default to a maximum age of 30 days:
+deployments, and system events each default to a maximum age of 31 days. Execution trees and
+deployments are also capped by count: by default the newest 1,000 finished top-level execution
+trees and the newest 100 inactive deployments are kept:
 
 ```toml
 [maintenance.gc]
@@ -157,16 +159,30 @@ batch_delay.milliseconds = 25
 
 [maintenance.gc.retention.executions]
 enabled = true
-max_age.hours = 720
+max_age.hours = 744
+max_count = 1000
 
 [maintenance.gc.retention.deployments]
 enabled = true
-max_age.hours = 720
+max_age.hours = 744
+max_count = 100
 
 [maintenance.gc.retention.system_events]
 enabled = true
-max_age.hours = 720
+max_age.hours = 744
 ```
+
+A record is deleted once it is older than `max_age` or falls outside the newest `max_count`; set
+`max_count = 0` to disable the count limit. Unfinished execution trees and active cron trackers are
+never deleted by retention. Active, enqueued, and last-good checkpoint deployments are kept, and
+deleting a deployment also deletes its execution trees. Inactive deployments that are still
+referenced count toward `max_count` but stay until they are no longer in use; the sweep records a
+`maintenance.gc.deployments_in_use` warning while that happens.
+
+Garbage collection steps that conflict with a running deployment submit or switch are deferred to
+the next sweep and recorded as an info-level `maintenance.gc.deferred_by_deployment` event.
+`maintenance.gc.completed` and `maintenance.gc.deferred_by_deployment` events carry the active
+deployment ID.
 
 System event retention never deletes events of the current node run, nor the CAS blobs they
 reference. Disable a specific retention policy when that class must be retained indefinitely. Disable

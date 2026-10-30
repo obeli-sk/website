@@ -711,8 +711,9 @@ obelisk admin events retain --max-age 30d
 
 Delete explicit execution trees or inactive deployments with `admin executions delete` and
 `admin deployments delete`. Non-terminal execution trees require `--force`; an execution root that
-belongs to the active deployment cannot be force-deleted. Deployment retention always keeps active
-and enqueued deployments. Add `--json` for machine-readable output.
+belongs to the active deployment cannot be force-deleted. Active cron trackers are never deleted
+and do not count toward `--count`. Deployment retention always keeps active and enqueued
+deployments. Add `--json` for machine-readable output.
 
 ## Obelisk Component
 

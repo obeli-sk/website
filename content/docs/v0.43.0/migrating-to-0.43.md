@@ -328,6 +328,27 @@ Scripts written against earlier 0.43 release candidates must be updated:
   `OBELISK_APP_NAME` when it is passed with `-a` or required by `stage` and `deploy`. `stage` and
   `deploy` discover `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
 
+## Retention and system events
+
+Automatic retention now defaults to 31 days instead of 30 and also keeps at most the newest 1,000
+finished top-level execution trees and 100 inactive deployments. Set `max_count = 0` under
+`[maintenance.gc.retention.executions]` or `[maintenance.gc.retention.deployments]` to keep the
+previous age-only behavior, or raise `max_age` and `max_count` if you need a longer history. See
+{{ doc_link(title="Automatic Maintenance and Retention", path="configuration/server.md#automatic-maintenance-and-retention") }}.
+
+Active cron trackers are excluded from execution retention. They are no longer reported as blocked,
+and an admin `--count` (`retain_count`) no longer spends kept slots on them.
+
+Update consumers that filter system events by code or level:
+
+- `maintenance.gc.blocked` is renamed to `maintenance.gc.deployments_in_use` (still a warning).
+- Garbage collection that is deferred while a deployment submit or switch runs is recorded as
+  info-level `maintenance.gc.deferred_by_deployment` instead of a `maintenance.gc.failed` warning.
+- A deployment submission that only lacks uploaded files, which the CLI sends first to learn which
+  files the server needs, is recorded as info-level `deployment.submit.files_missing` instead of a
+  `deployment.submit.failed` warning.
+- `maintenance.gc.completed` now carries the active deployment ID.
+
 ## Verification checklist
 
 - Check every `app_name` against the 4-25 character rule, and cloud app names against the 4-20
@@ -344,6 +365,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   `url_prefix` rules for single-URL destinations.
 - Update cloud scripts for renamed lifecycle commands and explicit fill flags.
 - Decide `overlap` for each `[[cron]]` entry and remove `exec.lock_extension_leeway`.
+- Review retention `max_age`/`max_count` defaults and system-event filters for renamed codes.
 - Replace `GET /v1/execution-id` and `GET /v1/deployment-id` calls.
 - Review app/server policy diffs, authentication (including internal secrets for self-API tokens and
   restart-only token hash changes), stdout consumers, REST requests, and optional WIT regeneration.
