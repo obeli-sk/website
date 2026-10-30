@@ -1340,8 +1340,9 @@ non-terminal tree unless its root belongs to the active deployment. Active and e
 are always retained.
 
 `POST /v1/admin/system-events/retain` accepts `max_age_seconds`, `batch_size`, and a required
-`dry_run`. Omitting `dry_run` is rejected without deleting events. With `"dry_run": true` it deletes
-nothing and returns the number of events the batch would delete:
+`dry_run`. Omitting `dry_run` is rejected without deleting events. Events of the current node run
+are never deleted. With `"dry_run": true` it deletes nothing and returns the number of events the
+batch would delete:
 
 ```sh
 curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/admin/system-events/retain -H content-type:application/json \

@@ -168,7 +168,8 @@ enabled = true
 max_age.hours = 720
 ```
 
-Disable a specific retention policy when that class must be retained indefinitely. Disable
+System event retention never deletes events of the current node run, nor the CAS blobs they
+reference. Disable a specific retention policy when that class must be retained indefinitely. Disable
 `maintenance.gc` only when maintenance is managed externally. Operator-triggered deletion and
 retention operations are also available through `obelisk admin` and `/v1/admin`.
 

@@ -195,6 +195,14 @@ for `-schedule-with-id` functions; it is distinct from `"schedule"`.
 
 System-event retention requests must explicitly include `dry_run`: use `true` to preview and `false`
 to delete. Omission returns HTTP 422 without deleting events; the CLI already supplies it.
+Retention never deletes events of the current node run.
+
+Each deployment start or switch records one `deployment.policy.applied` system event instead of
+per-component `component.http_policy.applied` and `component.secret_exposure.authorized` events.
+Its details hold every component's HTTP policy and secret exposure. `outbound_http.denied` links to
+it through `policy_event_id`, replacing `component_policy_event_id` and
+`server_configuration_event_id`. The `server.configuration.resolved` snapshot format is now
+`obelisk-server-configuration-v3` and includes the full `app_policy`.
 
 Use the 0.43 CLI with servers version 0.42 or newer. Replay responses must include
 `replayed_event_count`, `replay_duration_ms`, and `replay_version`; structured
