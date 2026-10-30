@@ -22,7 +22,8 @@ relate.
 app_name = "my-app"
 ```
 
-The app name is required, either here or through `OBELISK_APP_NAME`. It selects the default SQLite
+The app name is required, either here or through `OBELISK_APP_NAME`; setting both to different
+values is an error. It selects the default SQLite
 directory. It must be 4-25 characters long and consist of lowercase ASCII letters, digits, and
 interior hyphens (no leading or trailing hyphen). Cloud apps are stricter: their names are limited
 to 4-20 characters, must not contain double hyphens, and are unique within each cloud environment.

@@ -58,7 +58,12 @@ variable in a deployment `allowed_host` rule only skips that rule with a warning
 
 `server run` and `server verify` discover `./app.toml` when `--app-config` is omitted. An explicit
 path takes precedence. Without either an explicit file or discovered file, built-in app defaults
-apply and the app name must come from `OBELISK_APP_NAME`.
+apply and the app name must come from `OBELISK_APP_NAME`. Startup fails when `OBELISK_APP_NAME` and
+`app_name` are both set and differ; unset the stale variable.
+
+`--api-url` of the direct API commands (`deployment`, `execution`, `component`, `admin`) no longer
+has the `-a` shorthand, which now always means `--app-config`. Replace `-a <URL>` with
+`--api-url <URL>` or set `OBELISK_API_URL`.
 
 ## Repair policy explicitly
 
@@ -318,6 +323,10 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud app env set`, `secrets set`, and `fill` accept names starting with `OBELISK_`.
 - Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
   cloud environment. An interactive `cloud app deploy` offers an alternative for a taken name.
+- `cloud app new` no longer takes a positional name; use `cloud app --app <NAME> new`.
+- Cloud app commands refuse an app config naming a different app than `--app` or
+  `OBELISK_APP_NAME` when it is passed with `-a` or required by `stage` and `deploy`. `stage` and
+  `deploy` discover `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
 
 ## Verification checklist
 

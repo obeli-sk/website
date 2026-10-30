@@ -74,8 +74,8 @@ inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. 
 one app lives under `cloud app`:
 
 - `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a
-  stopped app. `status` shows the staged and applied configuration revisions and, when `./app.toml`
-  is readable, whether it matches the staged configuration. Required env vars and secrets must be supplied at creation with `--fill` (prompts) or
+  stopped app named by `--app`. `status` shows the staged and applied configuration revisions and,
+  when `-a` or `./app.toml` is readable, whether it matches the staged configuration. Required env vars and secrets must be supplied at creation with `--fill` (prompts) or
   `--fill-non-interactive` (reads same-named environment variables).
 - `stage` stages app policy and cloud settings as a new configuration revision without restarting
   the VM; `apply` applies a staged revision together with the enqueued (or active) deployment while
@@ -103,7 +103,12 @@ names are 4-20 lowercase ASCII letters, digits, and single interior hyphens (no 
 unique within each cloud environment. Names starting with `system-` or `integrations-` are reserved.
 Env vars bound by
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
-supplied by the cloud, so `new`, `deploy`, `fill`, and `apply` never ask for them. Cloud policy commands discover `./app.toml`.
+supplied by the cloud, so `new`, `deploy`, `fill`, and `apply` never ask for them.
+
+`new`, `status`, `stage`, `deploy`, `fill`, and `apply` read the app config from `-a, --app-config`
+or discover `./app.toml`. They never use another app's config: a file whose `app_name` differs from
+the app selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `-a` or required (by
+`stage` and `deploy`), and is ignored when discovered by the other commands.
 
 The control plane is selected with `--api-url` (`OBELISK_CLOUD_API_URL`, default
 `https://cloud.obeli.sk`) and authenticated with `--api-token` (`OBELISK_CLOUD_API_TOKEN`). App
@@ -132,7 +137,7 @@ Commands that call the API server, such as `deployment submit`, `execution list`
 accept these options after the subcommand, for example `obelisk execution list --api-token <TOKEN>`;
 `obelisk --api-token <TOKEN> execution list` is rejected.
 
-- `-a, --api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
+- `--api-url <URL>` - Address of the obelisk server (default: `http://127.0.0.1:5005`; env:
   `OBELISK_API_URL`)
 - `--api-token <TOKEN>` - API token presented as `Authorization: Bearer <token>`. Falls back to
   `$OBELISK_API_TOKEN`. See {{ doc_link(title="Authentication", path="access/authentication.md") }}
@@ -180,7 +185,8 @@ deployment from the database.
 Whenever a deployment is activated successfully, at startup or by a hot redeploy, the server
 persists the app policy and the deployment ID together as one checkpoint in the database.
 
-The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`. The name
+The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`; startup
+fails when both are set and differ. The name
 selects the default SQLite directory, `${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
 {{ doc_link(title="App Configuration", path="configuration/app.md#app-name") }}.
 
