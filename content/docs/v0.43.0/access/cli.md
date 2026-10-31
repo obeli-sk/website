@@ -73,10 +73,11 @@ removing the description creates a new deployment; explicit deployment IDs are h
 inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. Everything scoped to
 one app lives under `cloud app`:
 
-- `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a
-  stopped app named by `--app`. `status` shows the staged and applied configuration revisions and,
-  when `-a` or `./app.toml` is readable, whether it matches the staged configuration. Required env vars and secrets must be supplied at creation with `--fill` (prompts) or
-  `--fill-non-interactive` (reads same-named environment variables).
+- `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
+  named by `--app`. `status` shows the staged and applied configuration revisions and, when `-a` or
+  `./app.toml` is readable, whether it matches the staged configuration. Required env vars and
+  secrets must be supplied at creation with `--fill` (prompts) or `--fill-non-interactive` (reads
+  same-named environment variables).
 - `stage` stages app policy and cloud settings as a new configuration revision without restarting
   the VM; `apply` applies a staged revision together with the enqueued (or active) deployment while
   respecting the app's intended running state.
@@ -90,10 +91,9 @@ one app lives under `cloud app`:
   `secrets` manage them individually; names starting with `OBELISK_` are accepted. Internal secrets
   and internal public environment entries are skipped.
 - `fill` and `apply` compare `-a` or `./app.toml` with the staged configuration (the control plane
-  performs the comparison) and never stage it
-  silently: on a difference they ask whether to stage it, use the staged one, or cancel, and fail
-  without a terminal unless `--staged` is passed. `apply` also accepts `--fill` and
-  `--fill-non-interactive`.
+  performs the comparison) and never stage it silently: on a difference they ask whether to stage
+  it, use the staged one, or cancel, and fail without a terminal unless `--staged` is passed.
+  `apply` also accepts `--fill` and `--fill-non-interactive`.
 - `endpoint` shows the API, webhook, and Web UI URLs; `endpoint api`, `webhook`, or `webui` prints
   one of them.
 - `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
@@ -124,8 +124,8 @@ name.
 
 Cloud commands print concise human-readable results to stderr; `--json` prints machine-readable
 output and `--verbose` adds metadata, diagnostics, and each HTTP request with its response status,
-prefixed with the time since the previous step (deploy steps included). Run `obelisk cloud --help` and
-`obelisk cloud app --help` for all options.
+prefixed with the time since the previous step (deploy steps included). Run `obelisk cloud --help`
+and `obelisk cloud app --help` for all options.
 
 ## Global Options
 
@@ -186,8 +186,8 @@ Whenever a deployment is activated successfully, at startup or by a hot redeploy
 persists the app policy and the deployment ID together as one checkpoint in the database.
 
 The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`; startup
-fails when both are set and differ. The name
-selects the default SQLite directory, `${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
+fails when both are set and differ. The name selects the default SQLite directory,
+`${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
 {{ doc_link(title="App Configuration", path="configuration/app.md#app-name") }}.
 
 ### Verifying the Server Configuration
@@ -711,9 +711,9 @@ obelisk admin events retain --max-age 30d
 
 Delete explicit execution trees or inactive deployments with `admin executions delete` and
 `admin deployments delete`. Non-terminal execution trees require `--force`; an execution root that
-belongs to the active deployment cannot be force-deleted. Active cron trackers are never deleted
-and do not count toward `--count`. Deployment retention always keeps active and enqueued
-deployments. Add `--json` for machine-readable output.
+belongs to the active deployment cannot be force-deleted. Active cron trackers are never deleted and
+do not count toward `--count`. Deployment retention always keeps active and enqueued deployments.
+Add `--json` for machine-readable output.
 
 ## Obelisk Component
 

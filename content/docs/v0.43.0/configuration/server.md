@@ -147,8 +147,8 @@ JavaScript components use the `wasm` or `v8` cells depending on the selected
 Obelisk removes tombstoned execution trees and unreferenced shared data in bounded background
 batches. Automatic maintenance is enabled by default. Completed execution trees, inactive
 deployments, and system events each default to a maximum age of 31 days. Execution trees and
-deployments are also capped by count: by default the newest 1,000 finished top-level execution
-trees and the newest 100 inactive deployments are kept:
+deployments are also capped by count: by default the newest 1,000 finished top-level execution trees
+and the newest 100 inactive deployments are kept:
 
 ```toml
 [maintenance.gc]
@@ -186,9 +186,9 @@ the next sweep and recorded as an info-level `maintenance.gc.deferred_by_deploym
 deployment ID.
 
 System event retention never deletes events of the current node run, nor the CAS blobs they
-reference. Disable a specific retention policy when that class must be retained indefinitely. Disable
-`maintenance.gc` only when maintenance is managed externally. Operator-triggered deletion and
-retention operations are also available through `obelisk admin` and `/v1/admin`.
+reference. Disable a specific retention policy when that class must be retained indefinitely.
+Disable `maintenance.gc` only when maintenance is managed externally. Operator-triggered deletion
+and retention operations are also available through `obelisk admin` and `/v1/admin`.
 
 ## Sqlite
 

@@ -199,13 +199,13 @@ Clients decoding `/v1/components` exports must accept the new `extension` value 
 for `-schedule-with-id` functions; it is distinct from `"schedule"`.
 
 System-event retention requests must explicitly include `dry_run`: use `true` to preview and `false`
-to delete. Omission returns HTTP 422 without deleting events; the CLI already supplies it.
-Retention never deletes events of the current node run.
+to delete. Omission returns HTTP 422 without deleting events; the CLI already supplies it. Retention
+never deletes events of the current node run.
 
 Each deployment start or switch records one `deployment.policy.applied` system event instead of
-per-component `component.http_policy.applied` and `component.secret_exposure.authorized` events.
-Its details hold every component's HTTP policy and secret exposure. `outbound_http.denied` links to
-it through `policy_event_id`, replacing `component_policy_event_id` and
+per-component `component.http_policy.applied` and `component.secret_exposure.authorized` events. Its
+details hold every component's HTTP policy and secret exposure. `outbound_http.denied` links to it
+through `policy_event_id`, replacing `component_policy_event_id` and
 `server_configuration_event_id`. The `server.configuration.resolved` snapshot format is now
 `obelisk-server-configuration-v3` and includes the full `app_policy`.
 
@@ -348,9 +348,9 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
   cloud environment. An interactive `cloud app deploy` offers an alternative for a taken name.
 - `cloud app new` no longer takes a positional name; use `cloud app --app <NAME> new`.
-- Cloud app commands refuse an app config naming a different app than `--app` or
-  `OBELISK_APP_NAME` when it is passed with `-a` or required by `stage` and `deploy`. `stage` and
-  `deploy` discover `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
+- Cloud app commands refuse an app config naming a different app than `--app` or `OBELISK_APP_NAME`
+  when it is passed with `-a` or required by `stage` and `deploy`. `stage` and `deploy` discover
+  `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
 
 ## Retention and system events
 

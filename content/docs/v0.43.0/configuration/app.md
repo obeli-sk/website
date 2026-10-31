@@ -23,10 +23,10 @@ app_name = "my-app"
 ```
 
 The app name is required, either here or through `OBELISK_APP_NAME`; setting both to different
-values is an error. It selects the default SQLite
-directory. It must be 4-25 characters long and consist of lowercase ASCII letters, digits, and
-interior hyphens (no leading or trailing hyphen). Cloud apps are stricter: their names are limited
-to 4-20 characters, must not contain double hyphens, and are unique within each cloud environment.
+values is an error. It selects the default SQLite directory. It must be 4-25 characters long and
+consist of lowercase ASCII letters, digits, and interior hyphens (no leading or trailing hyphen).
+Cloud apps are stricter: their names are limited to 4-20 characters, must not contain double
+hyphens, and are unique within each cloud environment.
 
 ## Secret Registry
 
@@ -138,12 +138,12 @@ llm = { type = "llm", env = "LLM_BASE_URL" }
 LLM_BASE_URL = {}
 ```
 
-During a cloud deployment the bound value overrides any uploaded or local value, and `cloud app
-new`, `deploy`, `fill`, and `apply` do not ask for it. Integration names and types are validated by
-the target cloud. Each `env` must name an environment-backed `[public_env]` entry (not an internal
-one and not a secret), and two integrations cannot supply the same variable. Local runs do not
-receive the value: a required entry must be set explicitly, otherwise startup and `server verify`
-fail with an error naming the integration.
+During a cloud deployment the bound value overrides any uploaded or local value, and
+`cloud app new`, `deploy`, `fill`, and `apply` do not ask for it. Integration names and types are
+validated by the target cloud. Each `env` must name an environment-backed `[public_env]` entry (not
+an internal one and not a secret), and two integrations cannot supply the same variable. Local runs
+do not receive the value: a required entry must be set explicitly, otherwise startup and
+`server verify` fail with an error naming the integration.
 
 ## App Outbound HTTP Policy
 
