@@ -371,3 +371,16 @@ console.log(`Running as ${myId}`);
 Typed schedules accept `executionId` in the leading schedule object. Matching retries reuse the
 original top-level execution; different targets, parameters, or timing conflict. Relative timing
 compares the original offset from creation, and retries never reschedule an execution.
+
+```javascript
+import { sendEmailSchedule, sendEmailScheduleWithId } from "myapp:demo-obelisk-schedule/activity";
+
+const id = obelisk.executionIdGenerate();
+sendEmailSchedule({ executionId: id, seconds: 60 }, "user@example.com");
+// Equivalent: sendEmailScheduleWithId(id, { seconds: 60 }, "user@example.com");
+// Immediate: sendEmailSchedule({ executionId: id }, "user@example.com");
+```
+
+The ID must be a top-level execution ID; derived IDs belong to join sets. Omitting `executionId`
+generates a new ID as before. A conflicting retry, or an invalid or derived ID, throws an `Error`.
+Webhooks accept the same shape.

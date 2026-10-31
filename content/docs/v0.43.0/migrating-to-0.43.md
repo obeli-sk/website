@@ -228,12 +228,14 @@ In Boa and V8 activities and webhooks, `fetch` reports the canonical `Response.s
 status code, not the reason phrase sent by the server. A webhook `Response` accepts
 `options.statusText`, which must be a valid reason phrase.
 
-In JS webhooks, `fetch` resolves once the response headers arrive and exposes the body as a stream,
-and a handler can return a streaming `Response`. JS activity `fetch` does not stream the body yet;
-it still reads the whole body before resolving. See
-{{ doc_link(title="JS webhooks", path="js/js-webhooks.md#streaming-responses") }}.
-`[webhooks] request_timeout` now limits only the time until the response headers are returned, for
-every webhook kind. Handlers that stream for longer than the timeout are no longer cut off.
+In JS activities and webhooks, `fetch` resolves once the response headers arrive and exposes the
+body as a `ReadableStream`, and a webhook handler can return a streaming `Response`. See
+{{ doc_link(title="JS activities", path="js/js-activities.md#fetch-responses") }} and
+{{ doc_link(title="JS webhooks", path="js/js-webhooks.md#streaming-responses") }}. In V8 activities,
+`response.headers` is now a `Headers` object instead of a `Map`: `get` of a missing name returns
+`null` instead of `undefined`, and there is no `size`. `[webhooks] request_timeout` now limits only
+the time until the response headers are returned, for every webhook kind. Handlers that stream for
+longer than the timeout are no longer cut off.
 
 `GET /v1/execution-id` and `GET /v1/deployment-id` are deprecated. Generate execution IDs locally,
 for example with `obelisk generate execution-id`, and read `deployment_id` from `GET /v1/info`.
@@ -277,6 +279,19 @@ to keep that behavior. See {{ doc_link(title="Cron", path="concepts/cron.md#over
 
 Lock extension now renews the lock once half of `exec.lock_expiry` has elapsed.
 `exec.lock_extension_leeway` is still accepted but ignored with a warning; remove it.
+
+Cron scheduler executions no longer have IDs derived from the cron configuration. A recurring
+scheduler hands over to a new execution after about 1,000 events, and old schedulers are deleted by
+ordinary retention. Look up schedulers by their `obelisk:schedule/` FFQN prefix instead of a
+computed ID. Existing schedulers are adopted automatically. See
+{{ doc_link(title="Cron", path="concepts/cron.md#scheduler-history-and-retention") }}.
+
+## SQLite space reclamation
+
+The first 0.43 startup converts an existing SQLite database to incremental auto-vacuum with a full
+`VACUUM`. Expect a longer startup for a large database and keep free disk space up to twice the
+database size. Afterwards automatic maintenance shrinks the file as retention deletes data. See
+{{ doc_link(title="Server configuration", path="configuration/server.md#sqlite") }}.
 
 ## Native V8 is the default JS runtime
 

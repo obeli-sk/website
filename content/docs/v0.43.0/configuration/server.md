@@ -156,6 +156,7 @@ enabled = true
 interval.seconds = 30
 batch_size = 1000
 batch_delay.milliseconds = 25
+upload_grace_period.hours = 1 # Keep files uploaded via PUT /v1/files until a deployment references them
 
 [maintenance.gc.retention.executions]
 enabled = true
@@ -207,6 +208,16 @@ Customize PRAGMA statements. Defaults are in
 ```toml
 database.sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }
 ```
+
+SQLite databases use `auto_vacuum=INCREMENTAL`. After retention and garbage collection, each
+automatic maintenance sweep returns freed pages to the file system in bounded batches, pausing for
+`maintenance.gc.batch_delay` between them, so the database file shrinks after large deletions
+without a full `VACUUM`. A full `VACUUM` remains optional for fragmentation within partially filled
+pages. The file size reflects reclaimed pages after the next WAL checkpoint.
+
+A database created by 0.43.0-rc.11 or earlier is converted once at startup with a full `VACUUM`. The
+conversion can noticeably lengthen that startup on a large database and temporarily needs free disk
+space up to twice the database size.
 
 ## PostgreSQL
 

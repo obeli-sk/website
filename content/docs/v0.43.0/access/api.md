@@ -1217,6 +1217,34 @@ file bytes, or `404 Not Found` if the digest is absent.
 
 ---
 
+### `PUT /v1/files/{digest}`
+
+Uploads one deployment-owned file ahead of the deployment submit that references it. The body is the
+raw file (`application/octet-stream`); the server checks it against the `sha256:...` digest in the
+path and against `limits.max_deployment_file_bytes`. Uploading the same file again is harmless.
+
+A file that no deployment references yet is kept for `maintenance.gc.upload_grace_period` (1 hour by
+default), then reclaimed by garbage collection.
+
+**Responses:**
+
+- `204 No Content`: File stored.
+- `400 Bad Request`: Invalid digest, or the body does not match it.
+- `413 Payload Too Large`: The file exceeds the per-file limit.
+
+To submit a deployment file by file, send the JSON submit, upload each file listed in the `409`
+response's `missing_files`, then repeat the same JSON submit. If garbage collection reclaimed an
+upload before the second submit, it reports the file as missing again; upload it and retry. The CLI
+follows this flow, and `--verbose` logs each file's path, size, and digest before its upload.
+
+```sh
+digest="sha256:$(sha256sum scripts/run.sh | cut -d' ' -f1)"
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/files/$digest" -X PUT \
+  -H content-type:application/octet-stream --data-binary @scripts/run.sh
+```
+
+---
+
 ### `PUT /v1/deployments/{deployment-id}/switch`
 
 Activates a previously submitted deployment. Supports hot-redeploy (apply without a server restart)
@@ -1352,6 +1380,38 @@ curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/admin/system-events/retain -H content-
 ```json
 { "deleted": 12, "has_more": false }
 ```
+
+`POST /v1/admin/executions/retain` and `POST /v1/admin/deployments/retain` accept `retain_count` or
+`max_age_seconds`, `batch_size`, `force_non_terminal`, `dry_run`, and an optional `cursor`
+(deployments also accept `delete_executions`). Each request is one bounded transaction: it examines
+at most `batch_size` candidates and deletes at most `batch_size` execution trees. Blocked candidates
+(non-terminal trees, deployments still referenced by executions) are skipped and counted rather than
+stopping the scan:
+
+```json
+{
+  "deleted_execution_trees": 1000,
+  "deleted_deployments": 3,
+  "retained": 20,
+  "blocked_non_terminal": 2,
+  "blocked_by_execution_reference": 0,
+  "has_more": true,
+  "next_deployment_cursor": {
+    "timestamp": "2026-10-01T12:00:00Z",
+    "deployment_id": "Dep_01KN1NK9A6NMHP31TVJ875X599"
+  }
+}
+```
+
+`has_more` reports unexamined candidates or remaining execution-tree work, not blocked candidates
+alone. While it is true, send `next_deployment_cursor` (or `next_execution_cursor` for execution
+retention) back as `cursor`, with the same policy and options, to continue after the last fully
+handled candidate. When a batch fully handles no candidate, for example because one deployment has
+more execution trees than the batch, the response repeats the request's cursor (or omits it on a
+first request), so the next request resumes that candidate. Omitting `cursor` starts a new scan. A
+dry run reports one batch without deleting, so repeating it does not advance through a partially
+processed deployment. The `obelisk admin ... retain` commands run a single batch from the start;
+automatic maintenance follows the cursors itself.
 
 ## Cancellation requests
 

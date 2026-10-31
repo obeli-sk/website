@@ -100,8 +100,33 @@ throws.
 
 An activity's return value is a single value, but nothing prevents an activity from streaming
 internally, for example reading a large or long-lived HTTP response as it arrives. WASM activities
-can do this through `wasi:http`. In JS activities, `fetch` currently reads the whole response body
-before it resolves and there is no `response.body` stream; use `text()` or `json()` to get the body.
+can do this through `wasi:http`. In JS activities, `fetch` resolves once the response headers
+arrive, and `response.body` is a `ReadableStream` that yields chunks as they are received. `text()`,
+`json()`, and `arrayBuffer()` read the rest of the body:
+
+```javascript
+// myapp:demo/activity.count-events: func(url: string) -> result<u32, string>
+export default async function count_events(url) {
+  const resp = await fetch(url, { headers: { accept: "text/event-stream" } });
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  let events = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffered += decoder.decode(value, { stream: true });
+    const parts = buffered.split("\n\n");
+    buffered = parts.pop();
+    events += parts.length;
+  }
+  return events;
+}
+```
+
+`response.headers` is a `Headers` object, as in webhooks: `get` returns `null` for a missing name,
+`getSetCookie()` returns every `set-cookie` value, and iteration preserves arrival order without
+combining duplicate names.
 
 `statusText` is the canonical reason phrase of the status code, for example `"Not Found"`, not the
 text sent by the server. An activity finishes once its function settles, even if timers or fetches

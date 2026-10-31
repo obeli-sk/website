@@ -66,8 +66,8 @@ finishes.
 ## Overlapping runs
 
 By default (`overlap = "skip"`), a tick does not submit the target while the execution submitted by
-the previous tick is unfinished. The scheduler skips that tick and waits for the next scheduled time,
-so a slow run is never joined by a second one. Set `overlap = "allow"` to submit on every tick
+the previous tick is unfinished. The scheduler skips that tick and waits for the next scheduled
+time, so a slow run is never joined by a second one. Set `overlap = "allow"` to submit on every tick
 regardless of earlier runs.
 
 ```toml
@@ -81,24 +81,34 @@ overlap  = "allow"
 ## Relationship to deployments
 
 During server startup or a hot-redeploy, Obelisk hashes each `[[cron]]` entry's configuration —
-`name`, `ffqn`, `params`, and `schedule` — with SHA-256 to produce a **content digest**. From that
-digest it derives a deterministic execution ID, so a given cron configuration always maps to exactly
-one seed execution. `overlap` is not part of the digest, so changing only `overlap` keeps the
-existing seed execution.
+`name`, `ffqn`, `params`, and `schedule` — with SHA-256 to produce a **content digest**. The digest
+identifies the cron in a dedicated registration table that records its current scheduler execution
+and its most recent submission. `overlap` is not part of the digest, so changing only `overlap`
+keeps the existing registration.
 
-Obelisk then **upserts only missing** seed executions: if a seed execution with that ID already
-exists in the database, it is reused as-is; otherwise a new one is created. This means an unchanged
-cron entry survives restarts and redeployments without interruption. Most notably, the cron will not
-fire again immediately after a redeploy — the existing seed execution is reused with its full event
-history, so the next tick is computed from where it left off.
+Registration happens before cron executors start. A digest that is already registered is reused
+as-is, so an unchanged cron entry survives restarts and redeployments without interruption. Most
+notably, the cron will not fire again immediately after a redeploy: the next tick is computed from
+where the existing scheduler left off. A new digest gets a new registration and a new scheduler
+execution with an ordinary execution ID.
 
-Each active `[[cron]]` entry gets its own executor bound to the `ComponentId` that carries the
-content digest. The executor picks up — and continues running — whichever seed execution matches
-that digest.
+Cron entries that are **removed** from `deployment.toml` are left without an executor: their
+registration and unfinished scheduler stay dormant until a future deployment includes a matching
+cron configuration again, which resumes the schedule. A re-added `@once` that already submitted does
+not fire again, even after retention has deleted both the scheduler and the target execution.
 
-Cron entries that are **removed** from `deployment.toml` are simply left without an executor: their
-old seed executions remain in the database in a `Pending` state indefinitely, unless a future
-deployment reactivates them by including a matching cron configuration again.
+## Scheduler history and retention
+
+A recurring scheduler does not grow forever. Once its execution log approaches 1,000 events
+(including skipped ticks), the scheduler finishes and a new scheduler execution takes over at the
+next tick, keeping the overlap state. Finished schedulers, and the scheduler of a submitted `@once`,
+are removed by ordinary
+{{ doc_link(title="execution retention", path="configuration/server.md#automatic-maintenance-and-retention") }};
+the current scheduler of each registered cron is always protected.
+
+Schedulers created by 0.43.0-rc.11 and earlier used deterministic execution IDs derived from the
+digest. They are adopted on deployment activation with their pending time and history unchanged, and
+roll over to ordinary IDs like any other scheduler.
 
 ## Viewing cron executions
 
