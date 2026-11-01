@@ -35,7 +35,8 @@ entries. Split-config validates the resulting `server.toml`, so remove the keys 
 secret whose source variable differs from its logical name; see
 [Rename secret source variables](#rename-secret-source-variables).
 
-The generated `app.toml` has no `app_name`, so add one. Every generated `[public_env]` and
+The generated `app.toml` takes `app_name` from `server.toml`, or from `OBELISK_APP_NAME` when
+`server.toml` has none; splitting fails without either. Every generated `[public_env]` and
 `[secrets]` entry is required. Mark a variable as `{ optional = true }` if the deployment only reads
 it through a `${VAR:-default}` fallback. `[allowed_exec_activities]` is written to both files: the
 `server.toml` copy is the platform gate. If nothing else remains in `server.toml`, delete it.
@@ -474,7 +475,8 @@ equivalent REST request bodies.
 
 1. Remove the deprecated keys and limiters from `server.toml` and `deployment.toml`.
 2. Rename secret source variables to match their logical names.
-3. Run `obelisk generate split-config --server-config server.toml` and add `app_name` to `app.toml`.
+3. Add `app_name` to `server.toml` or set `OBELISK_APP_NAME`, then run
+   `obelisk generate split-config --server-config server.toml`.
 4. Pin `database.sqlite.directory` or move the SQLite directory to keep existing history.
 5. Set the platform `allowed_exec_activities` gate if the app uses exec activities.
 6. Declare every non-secret deployment variable in `[public_env]`, marking optional ones.

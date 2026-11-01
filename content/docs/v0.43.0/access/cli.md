@@ -185,8 +185,9 @@ deployment from the database.
 Whenever a deployment is activated successfully, at startup or by a hot redeploy, the server
 persists the app policy and the deployment ID together as one checkpoint in the database.
 
-The server requires an app name, from `app_name` in `app.toml` or from `OBELISK_APP_NAME`; startup
-fails when both are set and differ. The name selects the default SQLite directory,
+The server requires an app name. Every `app.toml` sets `app_name`, and startup fails when
+`OBELISK_APP_NAME` is also set and differs. Without an `app.toml`, the name comes from
+`OBELISK_APP_NAME`. The name selects the default SQLite directory,
 `${DATA_DIR}/apps/${APP_NAME}/sqlite`. See
 {{ doc_link(title="App Configuration", path="configuration/app.md#app-name") }}.
 
@@ -893,7 +894,8 @@ Options:
 - `--server-config <FILE>` - Existing `server.toml` to update _(required)_
 - `-a, --app-config <FILE>` - Output `app.toml` (default: a sibling of `server.toml`)
 
-The generated `app.toml` has no `app_name`, so add one. Every generated `[public_env]` and
+The generated `app.toml` takes `app_name` from `server.toml`, or from `OBELISK_APP_NAME` when
+`server.toml` has none; splitting fails without either. Every generated `[public_env]` and
 `[secrets]` entry is required. Mark a variable as `{ optional = true }` if the deployment only reads
 it through a `${VAR:-default}` fallback. `[allowed_exec_activities]` is written to both files: the
 `server.toml` copy is the platform gate. If nothing else remains in `server.toml`, delete it.

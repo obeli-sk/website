@@ -19,6 +19,10 @@ hyphens, and unique within the cloud environment. The app name selects the defau
 so a renamed app starts with a new database unless `server.toml` sets the database directory
 explicitly.
 
+Every `app.toml` must now set `app_name`; a file without it fails to parse. `OBELISK_APP_NAME` alone
+names the app only when the server runs without an app config file. Add `app_name` to any `app.toml`
+that relied on the variable.
+
 ## Separate component verification from policy verification
 
 `deployment verify` now checks components without loading app policy, server configuration, runtime
@@ -375,8 +379,8 @@ Update consumers that filter system events by code or level:
 
 ## Verification checklist
 
-- Check every `app_name` against the 4-25 character rule, and cloud app names against the 4-20
-  character rule.
+- Make sure every `app.toml` sets `app_name`, check it against the 4-25 character rule, and check
+  cloud app names against the 4-20 character rule.
 - Audit all authored deployments for generated metadata and all verification invocations for removed
   flags.
 - Run `server verify` for every deployment against each applicable app/server configuration.

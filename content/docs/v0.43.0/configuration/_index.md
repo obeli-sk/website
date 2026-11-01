@@ -82,8 +82,8 @@ unless you need to change addresses, database settings, limits, or other platfor
 - **Web UI** at `127.0.0.1:8080`
 - **External webhook server** at `127.0.0.1:9090`
 
-The server does require an app name, set as `app_name` in `app.toml` or through the
-`OBELISK_APP_NAME` environment variable. Without an `app.toml`, the default app policy grants no
+The server does require an app name. Every `app.toml` sets `app_name`; without an `app.toml`, the
+name comes from the `OBELISK_APP_NAME` environment variable. Without an `app.toml`, the default app policy grants no
 secrets, public environment variables, outbound HTTP, or exec activities.
 
 ## Generating Configuration Files
