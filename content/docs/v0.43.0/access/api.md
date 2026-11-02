@@ -1168,8 +1168,9 @@ already stored is not duplicated: its deployment is refreshed as with `PUT` and 
 ### `PUT /v1/deployments/{deployment-id}`
 
 Submits a deployment package under a caller-generated deployment ID and stores it in the database.
-Resubmitting the same ID and content replaces the description and bumps `updated_at`, which
-deployment retention orders by. Each content is stored once: reusing an ID for different content, or
+Resubmitting the same ID and content bumps `updated_at`, which deployment retention orders by, and
+sets the description if given: an omitted or `null` description keeps the current one, an empty
+string clears it. Each content is stored once: reusing an ID for different content, or
 submitting stored content under a new ID, returns a conflict. Look up the ID of stored content with
 `GET /v1/deployment-digests/{digest}`. The deployment is not yet activated; use
 `PUT /v1/deployments/{id}/switch` to activate it.
@@ -1180,11 +1181,11 @@ submitting stored content under a new ID, returns a conflict. Look up the ID of 
 
 **Request Body (JSON):**
 
-| Field                              | Type    | Description                                                                       |
-| :--------------------------------- | :------ | :-------------------------------------------------------------------------------- |
-| `deployment_toml`                  | String  | Verbatim deployment manifest                                                      |
-| `description`                      | String  | Optional human-readable description                                               |
-| `allow_unavailable_runtime_config` | Boolean | Store before runtime values or app and platform approvals are available (`false`) |
+| Field                              | Type    | Description                                                                        |
+| :--------------------------------- | :------ | :--------------------------------------------------------------------------------- |
+| `deployment_toml`                  | String  | Verbatim deployment manifest                                                       |
+| `description`                      | String  | Optional human-readable description; on resubmit omitted keeps it, `""` clears it  |
+| `allow_unavailable_runtime_config` | Boolean | Store before runtime values or app and platform approvals are available (`false`)  |
 
 Set `allow_unavailable_runtime_config` to `true` when a developer submits a deployment for later
 admin approval. Missing values, public environment declarations, secret registrations, outbound HTTP

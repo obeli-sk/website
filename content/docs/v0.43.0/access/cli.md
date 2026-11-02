@@ -64,8 +64,9 @@ Execution JSON follow modes emit flushed NDJSON, one compact JSON object per lin
 
 Deployment `submit`, `apply`, and `enqueue` print an ID to stdout and support `--json`, as do
 `deployment list`, `component list`, execution `pause`, `unpause`, `cancel`, and `upgrade`.
-Submission reuses the active deployment when parsed content and description match. Changing or
-removing the description creates a new deployment; explicit deployment IDs are honored.
+Submission resubmits stored content under its existing deployment ID unless `--deployment-id` is
+given. `--description` sets the description of new and resubmitted deployments; omitting it keeps
+the current one and `--description ""` clears it.
 
 ## Cloud commands
 
@@ -86,6 +87,7 @@ one app lives under `cloud app`:
   is passed. When the app name is taken, an interactive `deploy` offers an alternative and saves it
   to `app.toml` if the original name came from there; noninteractive and `--json` runs fail with a
   conflict error.
+  `--description` describes the deployment, as in `deployment enqueue`.
 - `fill` interactively stages declared env vars and secrets and requires a terminal;
   `fill --non-interactive` stages same-named environment variables instead, for scripts. `env` and
   `secrets` manage them individually; names starting with `OBELISK_` are accepted. Internal secrets
@@ -168,8 +170,8 @@ Options:
   it on startup. Conflicts with `--deployment`, `--empty`, and `--description`
 - `--empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the
   database
-- `--description <DESCRIPTION>` - Optional human-readable description for the deployment created by
-  `--deployment` or `--empty`
+- `--description <DESCRIPTION>` - Human-readable description for the deployment of `--deployment`
+  or `--empty`. For stored content, omitting it keeps the current one and an empty string clears it
 - `--suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail
   type checking against the current deployment
 - `--no-auth` - Accept unauthenticated requests on the API port. Development / recovery override;
@@ -276,8 +278,8 @@ manifests reject generated `content_digest` and `component_files` fields.
 ### Submitting a deployment
 
 Upload a deployment TOML and print its deployment ID. Without `--deployment-id`, content that is
-already stored is resubmitted under its existing deployment ID, which replaces its description and
-refreshes it for deployment retention.
+already stored is resubmitted under its existing deployment ID, which refreshes it for deployment
+retention and updates its description if `--description` is given.
 
 ```sh
 obelisk deployment submit [OPTIONS] [PATH]
@@ -292,7 +294,8 @@ Options:
 - `--empty` - Submit an empty deployment with no components (mutually exclusive with `PATH`)
 - `--allow-unavailable-runtime-config` - Store a verified deployment while runtime values or app and
   platform approvals are pending; activation still checks strictly
-- `--description <DESCRIPTION>` - Optional human-readable description
+- `--description <DESCRIPTION>` - Human-readable description. For stored content, omitting it keeps
+  the current one and an empty string clears it
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission
 
 ### Enqueueing a deployment
@@ -312,8 +315,8 @@ Options:
 - `--empty` - Enqueue an empty deployment with no components
 - `--allow-unavailable-runtime-config` - Submit and enqueue while runtime values or app and platform
   approvals are pending; activation on restart still checks strictly
-- `--description <DESCRIPTION>` - Optional human-readable description for a newly submitted
-  deployment
+- `--description <DESCRIPTION>` - Human-readable description. For stored content, omitting it keeps
+  the current one and an empty string clears it
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
   submitting a file or empty deployment
 
@@ -333,8 +336,8 @@ Arguments:
 Options:
 
 - `--empty` - Apply an empty deployment with no components
-- `--description <DESCRIPTION>` - Optional human-readable description for a newly submitted
-  deployment
+- `--description <DESCRIPTION>` - Human-readable description. For stored content, omitting it keeps
+  the current one and an empty string clears it
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
   submitting a file or empty deployment
 

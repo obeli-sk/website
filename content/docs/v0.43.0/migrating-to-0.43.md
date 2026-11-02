@@ -317,9 +317,10 @@ activates it, `verify` checks it without activation. See
 ## Deployment reuse and cloud commands
 
 Each deployment content is stored once: deployment digests are unique. `deployment submit`, `apply`,
-and `enqueue` resubmit stored content under its existing ID, replacing its description and
-refreshing it for retention. Submitting stored content under a different explicit ID returns
-`409 Conflict`; look up its ID with `GET /v1/deployment-digests/{digest}`. Scripts must tolerate a
+and `enqueue` resubmit stored content under its existing ID, refreshing it for retention. Omitting
+`--description` keeps the stored description and `--description ""` clears it. Submitting stored
+content under a different explicit ID returns `409 Conflict`; look up its ID with
+`GET /v1/deployment-digests/{digest}`. Scripts must tolerate a
 successful submission returning an existing ID. `POST /v1/deployments` is deprecated in favor of
 `PUT /v1/deployments/{deployment-id}`.
 
