@@ -324,15 +324,10 @@ content under a different explicit ID returns `409 Conflict`; look up its ID wit
 successful submission returning an existing ID. `POST /v1/deployments` is deprecated in favor of
 `PUT /v1/deployments/{deployment-id}`.
 
-The database migration fails if two deployments store the same content. Before upgrading, list them
-with the previous version's database:
-
-```sql
-SELECT digest, deployment_id FROM t_deployment
-WHERE digest IN (SELECT digest FROM t_deployment GROUP BY digest HAVING COUNT(*) > 1);
-```
-
-Then remove the extra inactive ones with `obelisk admin deployments delete`.
+Databases already storing the same content under several deployments migrate without changes to
+those deployments: one stays unique (the active or enqueued one, otherwise the most recently
+updated) and the others are marked as superseded by it. Resubmitting that content resolves to the
+unique deployment.
 
 New {{ doc_link(title="`cloud` commands", path="access/cli.md#cloud-commands") }} manage apps,
 tokens, policy, environment variables, and secrets. App-scoped commands, including `deployment`,
