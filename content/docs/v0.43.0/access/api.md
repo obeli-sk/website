@@ -1045,7 +1045,7 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployment-id" -H accept:application/
 
 ### `GET /v1/deployments`
 
-Lists deployment states.
+Lists deployment states, most recently updated first (by `updated_at`, then deployment ID).
 
 **Query Parameters:**
 
