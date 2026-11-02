@@ -16,9 +16,11 @@ Each Deployment record contains:
 - The verbatim **`deployment.toml`** submitted by the client.
 - Deployment-owned source files referenced by JS components, exec activities, and backtrace source
   maps, stored in a content-addressed file store.
-- A deployment digest, computed from the stored manifest.
+- A deployment digest, computed from the stored manifest. Digests are unique: each content is
+  stored as one deployment.
 - The **status**: `enqueued`, `active`, or `inactive`.
-- Timestamps (`created_at`, `last_active_at`).
+- Timestamps (`created_at`, `updated_at`, `last_active_at`). `updated_at` is bumped by a status
+  change or by resubmitting the same content, and deployment retention orders by it.
 
 Because the manifest is stored verbatim and deployment-owned sources are stored with it, the server
 can recreate a deployment directory and provide source context to replay, advance, logs, and

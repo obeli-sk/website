@@ -1130,19 +1130,49 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 
 ---
 
+### `GET /v1/deployment-digests/{digest}`
+
+Finds the deployment storing some content. Deployment digests are unique, so at most one deployment
+matches. Compute the digest of a deployment TOML with `obelisk deployment digest`.
+
+**Path Parameters:**
+
+- `digest`: Deployment content digest (`sha256:...`).
+
+**Responses:**
+
+- `200 OK`: `{ "deployment_id": "Dep_..." }`
+- `404 Not Found`: No deployment stores this content.
+
+#### Example request
+
+```sh
+DIGEST=$(obelisk deployment digest deployment.toml)
+curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployment-digests/$DIGEST" -H accept:application/json
+```
+
+---
+
 ### `POST /v1/deployments`
 
+**Deprecated**: use `PUT /v1/deployments/{deployment-id}` with a caller-generated ID; retrying a
+`POST` creates duplicate deployments.
+
 Submits a JSON or multipart deployment package under a server-generated ID and returns
-`201 Created`, a `Location` header, and `{ "deployment_id": "Dep_..." }` in JSON. Use the `PUT` form
-to make retries idempotent with a caller-generated ID.
+`201 Created`, a `Location` header, and `{ "deployment_id": "Dep_..." }` in JSON. Content that is
+already stored is not duplicated: its deployment is refreshed as with `PUT` and returned with
+`200 OK`.
 
 ---
 
 ### `PUT /v1/deployments/{deployment-id}`
 
 Submits a deployment package under a caller-generated deployment ID and stores it in the database.
-Retrying the same ID and content is idempotent; reusing an ID for different content returns a
-conflict. The deployment is not yet activated; use `PUT /v1/deployments/{id}/switch` to activate it.
+Resubmitting the same ID and content replaces the description and bumps `updated_at`, which
+deployment retention orders by. Each content is stored once: reusing an ID for different content, or
+submitting stored content under a new ID, returns a conflict. Look up the ID of stored content with
+`GET /v1/deployment-digests/{digest}`. The deployment is not yet activated; use
+`PUT /v1/deployments/{id}/switch` to activate it.
 
 **Path Parameters:**
 
@@ -1177,8 +1207,9 @@ the server's content store need not be attached again.
 
 - `204 No Content`: Deployment stored (also returned when retrying the same ID and content).
 - `400 Bad Request`: Invalid configuration, including a missing `content_digest`.
-- `409 Conflict`: Incomplete or invalid package. The JSON body lists missing digest fields, missing
-  files, unexpected files, digest mismatches, and oversized files. No deployment is stored.
+- `409 Conflict`: The ID stores different content, the content is stored under another ID, or the
+  package is incomplete or invalid. For a package error, the JSON body lists missing digest fields,
+  missing files, unexpected files, digest mismatches, and oversized files. No deployment is stored.
 
 #### Example request
 

@@ -316,9 +316,22 @@ activates it, `verify` checks it without activation. See
 
 ## Deployment reuse and cloud commands
 
-`deployment submit`, `apply`, and `enqueue` reuse the active deployment when its parsed content and
-description match. Changing or removing the description creates a new deployment; explicit
-deployment IDs are honored. Scripts must tolerate a successful submission returning an existing ID.
+Each deployment content is stored once: deployment digests are unique. `deployment submit`, `apply`,
+and `enqueue` resubmit stored content under its existing ID, replacing its description and
+refreshing it for retention. Submitting stored content under a different explicit ID returns
+`409 Conflict`; look up its ID with `GET /v1/deployment-digests/{digest}`. Scripts must tolerate a
+successful submission returning an existing ID. `POST /v1/deployments` is deprecated in favor of
+`PUT /v1/deployments/{deployment-id}`.
+
+The database migration fails if two deployments store the same content. Before upgrading, list them
+with the previous version's database:
+
+```sql
+SELECT digest, deployment_id FROM t_deployment
+WHERE digest IN (SELECT digest FROM t_deployment GROUP BY digest HAVING COUNT(*) > 1);
+```
+
+Then remove the extra inactive ones with `obelisk admin deployments delete`.
 
 New {{ doc_link(title="`cloud` commands", path="access/cli.md#cloud-commands") }} manage apps,
 tokens, policy, environment variables, and secrets. App-scoped commands, including `deployment`,

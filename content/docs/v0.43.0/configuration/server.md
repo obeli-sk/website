@@ -174,11 +174,12 @@ max_age.hours = 744
 ```
 
 A record is deleted once it is older than `max_age` or falls outside the newest `max_count`; set
-`max_count = 0` to disable the count limit. Unfinished execution trees and active cron trackers are
-never deleted by retention. Active, enqueued, and last-good checkpoint deployments are kept, and
-deleting a deployment also deletes its execution trees. Inactive deployments that are still
-referenced count toward `max_count` but stay until they are no longer in use; the sweep records a
-`maintenance.gc.deployments_in_use` warning while that happens.
+`max_count = 0` to disable the count limit. Deployment age and order use `updated_at`, which a
+submit with matching content or a status change bumps. Unfinished execution trees and active cron
+trackers are never deleted by retention. Active, enqueued, and last-good checkpoint deployments are
+kept, and deleting a deployment also deletes its execution trees. Inactive deployments that are
+still referenced count toward `max_count` but stay until they are no longer in use; the sweep
+records a `maintenance.gc.deployments_in_use` warning while that happens.
 
 Garbage collection steps that conflict with a running deployment submit or switch are deferred to
 the next sweep and recorded as an info-level `maintenance.gc.deferred_by_deployment` event.

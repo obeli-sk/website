@@ -275,7 +275,9 @@ manifests reject generated `content_digest` and `component_files` fields.
 
 ### Submitting a deployment
 
-Upload a deployment TOML as a new deployment; print the new deployment ID.
+Upload a deployment TOML and print its deployment ID. Without `--deployment-id`, content that is
+already stored is resubmitted under its existing deployment ID, which replaces its description and
+refreshes it for deployment retention.
 
 ```sh
 obelisk deployment submit [OPTIONS] [PATH]
