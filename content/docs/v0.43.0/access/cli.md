@@ -113,7 +113,7 @@ the app selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `
 `stage` and `deploy`), and is ignored when discovered by the other commands.
 
 The control plane is selected with `--api-url` (`OBELISK_CLOUD_API_URL`, default
-`https://cloud.obeli.sk`) and authenticated with `--api-token` (`OBELISK_CLOUD_API_TOKEN`). App
+`https://cloud.obeli.sk/api`) and authenticated with `--api-token` (`OBELISK_CLOUD_API_TOKEN`). App
 endpoints are derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`, default
 `obelisk.works`): webhooks at `<app>.<domain>`, the API at `api--<app>.<domain>`, and the Web UI at
 `webui--<app>.<domain>`, all over HTTPS.
