@@ -76,9 +76,14 @@ one app lives under `cloud app`:
 
 - `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
   named by `--app`. `status` shows the staged and applied configuration revisions and, when `-a` or
-  `./app.toml` is readable, whether it matches the staged configuration. Required env vars and
+  `./app.toml` is readable, whether it matches the staged configuration. It also shows the health
+  check of a started VM and a scheduled wake-up that keeps failing. Required env vars and
   secrets must be supplied at creation with `--fill` (prompts) or `--fill-non-interactive` (reads
   same-named environment variables).
+- `events` lists the app's recent lifecycle and VM events, newest first: completed and failed
+  commands, app failures and restores, critical and recovered health checks, restarts of an
+  unhealthy VM, and failed wake-ups. `-n, --limit` sets how many to show (1-50, default 5).
+  Routine idle suspends and wake-ups are not recorded.
 - `stage` stages app policy and cloud settings as a new configuration revision without restarting
   the VM; `apply` applies a staged revision together with the enqueued (or active) deployment while
   respecting the app's intended running state.

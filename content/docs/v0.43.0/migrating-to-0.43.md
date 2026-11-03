@@ -340,7 +340,8 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud app start` and `cloud app stop`, later named `reactivate` and `deactivate`, are now
   `cloud app enable` and `cloud app disable`.
 - `cloud app status` shows the staged and applied revisions and compares the local `app.toml` with
-  the staged one; `apply` applies a staged revision.
+  the staged one; `apply` applies a staged revision. It also shows VM health and failing wake-ups.
+- `cloud app events` lists recent lifecycle and VM events.
 - App names starting with `system-` or `integrations-` are reserved.
 - Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
   and are never prompted for. See
