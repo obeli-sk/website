@@ -127,6 +127,17 @@ API token to the API host or the internal host; the Web UI host accepts only the
 Webhooks on the internal host receive the caller's username in the `obelisknet-user-slug` header.
 Only trust it there: other servers are not behind the same check.
 
+All apps share one domain with other tenants, so a cookie without the `__Host-` prefix could have
+been set by another app. Webhooks therefore receive only `__Host-` cookies, and the API and Web UI
+receive none. A response cookie must use that prefix with `Secure`, `Path=/` and no `Domain`. Any
+other cookie is dropped and named in the `obelisknet-cookie-rejected` response header, which `curl -i`
+and browser developer tools show.
+
+Other apps also count as the same site, so `SameSite` does not protect against forged requests from
+them. A public webhook receives no cookies on a request from another app, except when following a
+top-level link. Browsers that do not send `Sec-Fetch-Site` are not covered, so check `Origin` on
+unsafe methods as well.
+
 `cloud token new --name <NAME> --token-file <FILE>` saves the server-issued token to a new private
 file; it does not overwrite an existing file. `--scope <APP>` restricts the token to apps and
 `--expires-at` sets an RFC 3339 expiry. Token names are unique per account until revoked. If the
