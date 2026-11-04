@@ -124,6 +124,8 @@ endpoints are derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`,
 `webui--<app>.<domain>`, and internal webhooks at `internal--<app>.<domain>`, all over HTTPS. Opening
 the Web UI or internal host in a browser signs in through the cloud dashboard. Other clients send an
 API token to the API host or the internal host; the Web UI host accepts only the browser session.
+Webhooks on the internal host receive the caller's username in the `obelisknet-user-slug` header.
+Only trust it there: other servers are not behind the same check.
 
 `cloud token new --name <NAME> --token-file <FILE>` saves the server-issued token to a new private
 file; it does not overwrite an existing file. `--scope <APP>` restricts the token to apps and
