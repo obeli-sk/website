@@ -18,6 +18,12 @@ Obelisk is a deterministic durable execution engine. Write new apps in JavaScrip
 ## Migration
 Read the version-specific migration guide at /docs/v0.43.0/migrating-to-0.43/ before upgrading from 0.42.
 
+## Obelisk Cloud
+Most apps are deployed to Obelisk Cloud; read /docs/v0.43.0/cloud/ first.
+- Deploy with `obelisk cloud app deploy -a app.toml -d deployment.toml`, using a token from https://cloud.obeli.sk in `OBELISK_CLOUD_API_TOKEN`. The app is served at `https://myapp.obelisk.works`.
+- Bind private pages and tools to the `internal` server (`https://internal--myapp.obelisk.works`). The platform handles sign-in and names the caller in the `obelisknet-user-slug` header, so do not build a login. Public webhooks use `external`, which `app.toml` must list in `public_http_servers`.
+- Only `__Host-` cookies reach webhooks. Set them with `Secure`, `Path=/` and no `Domain`; anything else is dropped and named in the `obelisknet-cookie-rejected` response header. `SameSite` does not stop forged requests from other apps on the domain, so check `Origin` on unsafe methods.
+
 ## Default authoring path
 - Start every new app with `obelisk generate new NAME` (or `obelisk generate new` inside an empty directory). It writes a runnable `app.toml`, `deployment.toml`, JavaScript webhook, workflow, and HTTP activity, and a `README.md`. Adapt the generated files instead of writing the configuration from scratch.
 - To add a single configuration file to an existing project, generate its commented reference instead: `obelisk generate app-config app.toml`, `obelisk generate deployment deployment.toml`, or `obelisk generate server-config server.toml` (optional; only needed to change platform defaults such as ports or limits). Every setting in these references is commented out; at minimum uncomment and set `app_name` in `app.toml`.

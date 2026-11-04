@@ -364,11 +364,11 @@ those deployments: one stays unique (the active or enqueued one, otherwise the m
 updated) and the others are marked as superseded by it. Resubmitting that content resolves to the
 unique deployment.
 
-New {{ doc_link(title="`cloud` commands", path="access/cli.md#cloud-commands") }} manage apps,
-tokens, policy, environment variables, and secrets. App-scoped commands, including `deployment`,
-`execution`, `component`, and `admin`, live under `cloud app`, and `--app` is an option of
-`cloud app`. Select an app with `--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`.
-`cloud app deploy` publishes a local project in one step.
+New {{ doc_link(title="`cloud` commands", path="cloud.md#commands") }} manage apps, tokens, policy,
+environment variables, and secrets. App-scoped commands, including `deployment`, `execution`,
+`component`, and `admin`, live under `cloud app`, and `--app` is an option of `cloud app`. Select an
+app with `--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. `cloud app deploy` publishes a
+local project in one step.
 
 Scripts written against earlier 0.43 release candidates must be updated:
 
