@@ -26,8 +26,9 @@ git clone https://github.com/obeli-sk/demo-tutorial.git
 cd demo-tutorial
 ```
 
-The repository contains four JavaScript files, an `app.toml` naming the app, and a
-`deployment.toml`. There is nothing else to install or compile.
+The repository contains four JavaScript files, an `app.toml` naming the app and opening the
+`external` webhook server with `public_http_servers = ["external"]`, and a `deployment.toml`. There
+is nothing else to install or compile.
 
 Starting from an empty project instead? Generate a runnable starter app:
 
@@ -186,6 +187,7 @@ return_type = "result<u32, string>"
 
 [[webhook_endpoint_js]]
 name = "webhook"
+http_server = "external"
 location = "webhook/tutorial.js"
 routes = ["/*"]
 ```

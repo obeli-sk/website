@@ -251,6 +251,7 @@ the outgoing header after the request matches the host and method allowlist:
 ```toml
 [[webhook_endpoint_js]]
 name = "show"
+http_server = "external"
 location = "webhook/show.js"
 routes = [{ methods = ["GET"], route = "/" }]
 env_vars = ["OBELISK_API_URL"]

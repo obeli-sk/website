@@ -98,13 +98,15 @@ Each activity allows only the methods and endpoints it calls: `url_prefix` fixes
 URL, and `url_regex_suffix` restricts the path that follows it, one entry per method. See
 {{ doc_link(title="URL prefix rules", path="configuration/deployment.md#url-prefix-rules") }}.
 
-Create `app.toml` beside the deployment, name the app, register `FLY_API_TOKEN`, and add a matching
-`[[outbound_http.allowed_host]]` entry. The activities receive only an opaque token placeholder;
-Obelisk substitutes the token in the Authorization header for allowed Fly API requests.
+Create `app.toml` beside the deployment, name the app, open the `external` webhook server, register
+`FLY_API_TOKEN`, and add a matching `[[outbound_http.allowed_host]]` entry. The activities receive
+only an opaque token placeholder; Obelisk substitutes the token in the Authorization header for
+allowed Fly API requests.
 
 ```toml
 # app.toml
 app_name = "demo-tutorial-fly-agent"
+public_http_servers = ["external"]
 
 [secrets]
 FLY_API_TOKEN = {}
@@ -302,6 +304,7 @@ In `deployment.toml`:
 ```toml
 [[webhook_endpoint_js]]
 name = "webhook"
+http_server = "external"
 location = "webhook/fly-agent.js"
 routes = [{ methods = ["GET"], route = "/run/:org-slug/:app-name/:prompt" }]
 ```

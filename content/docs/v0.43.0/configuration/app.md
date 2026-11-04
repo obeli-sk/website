@@ -23,10 +23,23 @@ app_name = "my-app"
 ```
 
 Every `app.toml` must set `app_name`. `OBELISK_APP_NAME`, when also set, must match it. Without an
-`app.toml`, the server takes the name from `OBELISK_APP_NAME`. The name selects the default SQLite directory. It must be 4-25 characters long and
-consist of lowercase ASCII letters, digits, and interior hyphens (no leading or trailing hyphen).
-Cloud apps are stricter: their names are limited to 4-20 characters, must not contain double
-hyphens, and are unique within each cloud environment.
+`app.toml`, the server takes the name from `OBELISK_APP_NAME`. The name selects the default SQLite
+directory. It must be 4-25 characters long and consist of lowercase ASCII letters, digits, and
+interior hyphens (no leading or trailing hyphen). Cloud apps are stricter: their names are limited
+to 4-20 characters, must not contain double hyphens, and are unique within each cloud environment.
+
+## Public HTTP Servers
+
+```toml
+public_http_servers = ["external"]
+```
+
+An {{ doc_link(title="HTTP server", path="configuration/server.md#http-servers") }} without `oidc`
+or `api_auth` accepts requests without credentials, so it starts only when `app.toml` lists it here.
+Without the list, the built-in `external` and `internal` servers stay closed and webhooks bound to
+them fail verification. Servers that require credentials start without being listed, and the Web UI
+is not an HTTP server. Listing a server that requires credentials, or a disabled or unknown one,
+records a `server.public_http_server.ignored` warning event.
 
 ## Secret Registry
 
@@ -108,22 +121,25 @@ prefixed variable names, while `${NAME}` references in the deployment keep the u
 
 ### Internal Public Environment
 
-An app that needs its own server's API or Web UI URL can let the server supply it instead of
-requiring an operator-supplied variable:
+An app that needs the URL of its own server's API, Web UI or an HTTP server can let the server
+supply it instead of requiring an operator-supplied variable:
 
 ```toml
 [public_env]
 OBELISK_API_URL = { type = "internal", source = "api-url" }
 OBELISK_WEBUI_URL = { type = "internal", source = "webui-url" }
+INTERNAL_BASE_URL = { type = "internal", source = "http-server-url", http_server = "internal" }
 ```
 
-`api-url` resolves to `http://` plus the API listener address, with a wildcard bind such as
-`0.0.0.0` replaced by loopback. `webui-url` uses the server's
+`api-url` uses `api.public_url` when set, otherwise `http://` plus the API listener address, with a
+wildcard bind such as `0.0.0.0` replaced by loopback. `webui-url` uses the server's
 {{ doc_link(title="`webui.public_url`", path="configuration/server.md#web-ui") }} when set,
-otherwise the local Web UI listener. Internal entries are always required: startup fails when the
-listener is disabled or uses port `0`. Process environment variables of the same name, with or
-without `app_env_prefix`, are ignored. Deployments use them like any other public entry, in
-`env_vars` or `${...}` interpolation. `cloud app fill` skips them.
+otherwise the local Web UI listener. `http-server-url` reads any enabled
+{{ doc_link(title="HTTP server", path="configuration/server.md#http-servers") }} other than the Web
+UI from its `public_url`, otherwise from its local listener. Internal entries are always required:
+startup fails when the listener is disabled or uses port `0`. Process environment variables of the
+same name, with or without `app_env_prefix`, are ignored. Deployments use them like any other public
+entry, in `env_vars` or `${...}` interpolation. `cloud app fill` skips them.
 
 ### Cloud Integrations
 

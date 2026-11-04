@@ -26,6 +26,7 @@ import * as dynamic from "obelisk:webhook-dynamic@1.0.0";
 ```toml
 [[webhook_endpoint_js]]
 name     = "my_webhook"
+http_server = "external"
 location = "webhook/my_webhook.js"
 routes   = [
     { methods = ["GET"],  route = "/items" },
@@ -192,6 +193,7 @@ entries inside the handler:
 ```toml
 [[webhook_endpoint_js]]
 name    = "my_webhook"
+http_server = "external"
 location = "webhook/my_webhook.js"
 routes  = ["/users/:user-id/items/:item-id"]
 ```

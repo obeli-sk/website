@@ -75,16 +75,21 @@ obelisk-version = "0.43"
 
 ## Built-in Defaults
 
-All three listeners start automatically with built-in defaults. **No `server.toml` is required**
-unless you need to change addresses, database settings, limits, or other platform options:
+The listeners have built-in defaults. **No `server.toml` is required** unless you need to change
+addresses, database settings, limits, or other platform options:
 
 - **API server** at `127.0.0.1:5005`
 - **Web UI** at `127.0.0.1:8080`
-- **External webhook server** at `127.0.0.1:9090`
+- **`external` webhook server** at `127.0.0.1:9090`
+- **`internal` webhook server** at `127.0.0.1:9091`
+
+The webhook servers accept requests without credentials by default, so they start only when
+`app.toml` lists them in
+{{ doc_link(title="`public_http_servers`", path="configuration/app.md#public-http-servers") }}.
 
 The server does require an app name. Every `app.toml` sets `app_name`; without an `app.toml`, the
-name comes from the `OBELISK_APP_NAME` environment variable. Without an `app.toml`, the default app policy grants no
-secrets, public environment variables, outbound HTTP, or exec activities.
+name comes from the `OBELISK_APP_NAME` environment variable. Without an `app.toml`, the default app
+policy grants no secrets, public environment variables, outbound HTTP, or exec activities.
 
 ## Generating Configuration Files
 

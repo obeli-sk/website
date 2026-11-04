@@ -14,15 +14,18 @@ registered secrets, native execution approval, and outbound HTTP policy.
 
 ## What is protected
 
-Authentication guards the **API port** only (`127.0.0.1:5005` by default). A single host-level check
-runs before any routing of the REST web API, which the CLI and the Web UI use. The gRPC and gRPC-web
-API was removed in 0.43.
+Authentication guards the **API port** (`127.0.0.1:5005` by default). A single host-level check runs
+before any routing of the REST web API, which the CLI and the Web UI use. The gRPC and gRPC-web API
+was removed in 0.43.
 
 A request without an accepted token is rejected with HTTP `401 Unauthorized`.
 
-The **external webhook HTTP server** (`127.0.0.1:9090` by default) is **not** authenticated: webhook
-endpoints stay open so they can serve public HTTP traffic. Do not expose it on a public interface
-without your own protection in front of it.
+**Webhook HTTP servers** authenticate only when `server.toml` gives them `oidc` entries or
+`api_auth = true`; see
+{{ doc_link(title="Credentials and public servers", path="configuration/server.md#credentials-and-public-servers") }}.
+A server without credentials serves public HTTP traffic, so it starts only when `app.toml` lists it
+in `public_http_servers`. Do not expose such a server on a public interface without your own
+protection in front of it.
 
 > **Recovery / development:** start the server with `--no-auth` to accept unauthenticated requests
 > on the API port. Use it only for local development or to recover access.
@@ -151,8 +154,9 @@ when the tab closes; if the token stops being accepted you are prompted again.
 
 ## Summary
 
-| Surface                      | Port (default)   | Authenticated             |
-| ---------------------------- | ---------------- | ------------------------- |
-| REST web API                 | `127.0.0.1:5005` | Yes                       |
-| Web UI                       | `127.0.0.1:8080` | Yes (prompts for a token) |
-| External webhook HTTP server | `127.0.0.1:9090` | No                        |
+| Surface                   | Port (default)   | Authenticated             |
+| ------------------------- | ---------------- | ------------------------- |
+| REST web API              | `127.0.0.1:5005` | Yes                       |
+| Web UI                    | `127.0.0.1:8080` | Yes (prompts for a token) |
+| `external` webhook server | `127.0.0.1:9090` | When configured           |
+| `internal` webhook server | `127.0.0.1:9091` | When configured           |

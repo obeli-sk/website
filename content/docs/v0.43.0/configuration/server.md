@@ -16,6 +16,7 @@ See {{ doc_link(title="Configuration", path="configuration/_index.md") }} for ho
 
 ```toml
 api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
+api.public_url = "https://api.example.com" # Optional URL behind a proxy, used by the api-url source
 ```
 
 ### API Authentication
@@ -50,8 +51,8 @@ webui.public_url = "https://webui.example.com" # Optional browser URL behind a p
 It must be an HTTP(S) URL without credentials, query, or fragment. Without it, those entries use the
 local Web UI listener address.
 
-> **Warning**: The external webhook HTTP server has no authentication. Listening on all interfaces
-> (`[::]:<port>`) is not recommended.
+The Web UI needs no credentials of its own and always starts: every action it takes goes through the
+API's authentication.
 
 ## App Environment Prefix
 
@@ -334,26 +335,59 @@ response_refresh_interval = 32         # Reload responses from the database afte
 
 ## HTTP Servers
 
-The built-in `"external"` HTTP server is always available and does not need to be declared. It
-listens on `127.0.0.1:9090` by default; move it with `external.listening_addr`, because declaring an
-`[[http_server]]` named `external` is rejected as a duplicate name. The server binds its port even
-when no webhook endpoint uses it; set `external.enabled = false` to disable it. Define additional
-named servers in `server.toml` when you need non-default ports:
+Webhook endpoints are served by HTTP servers declared in the `http_server` table, keyed by name. Two
+are built in and enabled by default, so they need no declaration:
+
+| Name       | Default address  | Intended for                                                  |
+| ---------- | ---------------- | ------------------------------------------------------------- |
+| `external` | `127.0.0.1:9090` | Webhooks reachable by third parties.                          |
+| `internal` | `127.0.0.1:9091` | Webhooks meant to sit behind authentication, such as a proxy. |
+
+Obelisk treats both like any other server; the name only states intent. Every webhook endpoint in
+`deployment.toml` names its server with `http_server`. The name `webui` is reserved: the Web UI is
+configured in [`[webui]`](#web-ui).
 
 ```toml
-external.listening_addr = "127.0.0.1:9090" # Address and port for the built-in "external" server
-external.enabled = true                    # Set to false to disable the built-in "external" server
+http_server.external.listening_addr = "127.0.0.1:9090"
+http_server.internal.enabled = false              # Disable a built-in server.
 
-[[http_server]]
-name = "server_name"                  # Server identifier
-listening_addr = "0.0.0.0:9000"       # Listen address and port
+# Additional servers need a listening address.
+[http_server.partner]
+listening_addr = "0.0.0.0:9000"
+public_url = "https://partner.example.com"        # Optional browser URL behind a proxy.
 ```
 
-Webhook listeners serve HTTP/1.1 and cleartext HTTP/2 (prior knowledge, without TLS) on the same
-port.
+Settings can be overridden by environment variables such as
+`OBELISK__HTTP_SERVER__EXTERNAL__ENABLED=false`. Webhook listeners serve HTTP/1.1 and cleartext
+HTTP/2 (prior knowledge, without TLS) on the same port.
 
-Named servers defined here can be referenced from `webhook_endpoint_js` and `webhook_endpoint_wasm`
-entries in `deployment.toml` via `http_server = "server_name"`.
+### Credentials and Public Servers
+
+A server can require a bearer token on every request, checked before routing. Missing or invalid
+tokens return `401`; a verified JWT matching no entry returns `403`.
+
+```toml
+# Accept every token the API accepts: the startup token, --api-token,
+# api.token_hashes and api.oidc. Requires an enabled API.
+http_server.internal.api_auth = true
+
+# Accept OIDC ID tokens matching any entry; matching works like [[api.oidc]].
+[[http_server.internal.oidc]]
+issuer = "https://oidc.fly.io/my-org"
+audience = "https://internal.example.com"
+claims = { app_name = "my-proxy" }
+```
+
+A verified `Authorization` header is removed before the request reaches the webhook. After an OIDC
+token, the `obelisk-oidc-claims` header carries its claims as JSON; a client-supplied header of that
+name is always removed. With `server run --no-auth`, `api_auth` servers accept all requests.
+
+A server without `oidc` or `api_auth` accepts requests without credentials, so it starts only when
+the app admin lists it in
+{{ doc_link(title="`public_http_servers`", path="configuration/app.md#public-http-servers") }}. This
+keeps both built-in servers closed unless `app.toml` opens them. A deployment whose webhook names a
+server that does not start fails verification. Listening on all interfaces (`[::]:<port>`) is not
+advised for servers without credentials.
 
 ## Observability
 

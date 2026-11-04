@@ -181,6 +181,42 @@ and should end with `$` to allow exactly one endpoint; without it, any continuat
 matches. An entry cannot mix the two forms. See
 {{ doc_link(title="URL prefix rules", path="configuration/deployment.md#url-prefix-rules") }}.
 
+## Name webhook HTTP servers explicitly
+
+Webhook listeners moved into one `http_server` table keyed by name. The old keys fail to load:
+
+```toml
+# Before
+external.listening_addr = "127.0.0.1:9090"
+[[http_server]]
+name = "partner"
+listening_addr = "0.0.0.0:9000"
+
+# After
+http_server.external.listening_addr = "127.0.0.1:9090"
+[http_server.partner]
+listening_addr = "0.0.0.0:9000"
+```
+
+Every webhook endpoint must now set `http_server`; it no longer defaults to `external`. Add
+`http_server = "external"` to entries that relied on the default. A second built-in server,
+`internal` on `127.0.0.1:9091`, is meant for webhooks behind authentication. The Web UI stays in
+`[webui]`.
+
+A server without credentials starts only when `app.toml` lists it, so both built-in servers are
+closed until the app admin opens them. Apps serving public webhooks add:
+
+```toml
+public_http_servers = ["external"]
+```
+
+Webhook endpoint `oidc` blocks are removed and fail verification. Require tokens for the whole
+listener instead, with `[[http_server.<name>.oidc]]` or `api_auth = true`, and bind the webhook to
+it; see
+{{ doc_link(title="Credentials and public servers", path="configuration/server.md#credentials-and-public-servers") }}.
+Components that need a server's URL can read it with
+`{ type = "internal", source = "http-server-url", http_server = "<name>" }`.
+
 ## Audit stdout consumers
 
 Human-readable listings, progress, and confirmations now go to **stderr**. Stdout carries IDs, JSON,
@@ -320,9 +356,8 @@ Each deployment content is stored once: deployment digests are unique. `deployme
 and `enqueue` resubmit stored content under its existing ID, refreshing it for retention. Omitting
 `--description` keeps the stored description and `--description ""` clears it. Submitting stored
 content under a different explicit ID returns `409 Conflict`; look up its ID with
-`GET /v1/deployment-digests/{digest}`. Scripts must tolerate a
-successful submission returning an existing ID. `POST /v1/deployments` is deprecated in favor of
-`PUT /v1/deployments/{deployment-id}`.
+`GET /v1/deployment-digests/{digest}`. Scripts must tolerate a successful submission returning an
+existing ID. `POST /v1/deployments` is deprecated in favor of `PUT /v1/deployments/{deployment-id}`.
 
 Databases already storing the same content under several deployments migrate without changes to
 those deployments: one stays unique (the active or enqueued one, otherwise the most recently
@@ -401,6 +436,8 @@ Update consumers that filter system events by code or level:
 - Replace gRPC clients with REST and `/v1/app-config` reads with `/v1/app-policy` and `/v1/info`.
 - Consider internal public environment entries for the server's own API and Web UI URLs, and
   `url_prefix` rules for single-URL destinations.
+- Move webhook listeners to `http_server.<name>`, set `http_server` on every webhook, list
+  credential-less servers in `public_http_servers`, and replace webhook `oidc` with server `oidc`.
 - Update cloud scripts for renamed lifecycle commands and explicit fill flags.
 - Decide `overlap` for each `[[cron]]` entry and remove `exec.lock_extension_leeway`.
 - Review retention `max_age`/`max_count` defaults and system-event filters for renamed codes.

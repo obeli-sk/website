@@ -132,6 +132,7 @@ header; never put the plaintext token in the component's `env_vars`:
 ```toml
 [[webhook_endpoint_js]]
 name = "handle"
+http_server = "external"
 location = "webhook/handle.js"
 routes = [{ methods = ["POST"], route = "/" }]
 env_vars = ["OBELISK_API_URL"]

@@ -224,14 +224,14 @@ replace_in = ["headers"]
 - `url_prefix` must be an absolute `http://` or `https://` URL without credentials, query, fragment,
   or wildcards. Use `pattern` when you need wildcards.
 - `${VAR}` and `${VAR:-default}` are expanded before the prefix is regex-escaped, so the value is
-  matched literally, including a trailing slash. A bare origin such as `https://llm.example`
-  matches any path.
+  matched literally, including a trailing slash. A bare origin such as `https://llm.example` matches
+  any path.
 - The request origin (scheme, host, and port) of the prefix becomes the host pattern.
 - `url_regex_suffix` is a regex appended to the literal prefix as a group. It must not start with
   `^`; end it with `$` to require an exact endpoint. Without a suffix, any URL continuing the prefix
   matches, for example `https://llm.example/api` matches `https://llm.example/api/v1/models`. The
-  prefix is a plain string prefix, so it also matches `https://llm.example/api2`; end
-  the prefix with `/` to require a path separator.
+  prefix is a plain string prefix, so it also matches `https://llm.example/api2`; end the prefix
+  with `/` to require a path separator.
 - As with `request_url_regex`, matching ignores query parameters.
 - An entry uses either `pattern` (with optional `request_url_regex`) or `url_prefix` (with optional
   `url_regex_suffix`); the fields cannot be combined.
@@ -492,8 +492,12 @@ listen on. Routes are divided into two categories: with HTTP methods (high prior
 HTTP methods (low priority). When a request matches multiple routes of the same priority, the first
 webhook will receive it.
 
-The built-in `"external"` HTTP server (at `127.0.0.1:9090` by default) is always available and used
-when `http_server` is omitted. Additional named servers are defined in `server.toml`.
+Every webhook endpoint names its server with `http_server`. The built-in `"external"`
+(`127.0.0.1:9090`) and `"internal"` (`127.0.0.1:9091`) servers need no declaration; additional
+servers are defined in
+{{ doc_link(title="server.toml", path="configuration/server.md#http-servers") }}. A server without
+credentials starts only when `app.toml` lists it in
+{{ doc_link(title="`public_http_servers`", path="configuration/app.md#public-http-servers") }}.
 
 ### JavaScript Webhook Endpoints
 
@@ -501,7 +505,7 @@ when `http_server` is omitted. Additional named servers are defined in `server.t
 [[webhook_endpoint_js]]
 name = "name"
 location = "path/to/webhook.js"
-http_server = "external"             # Optional: defaults to built-in "external" server
+http_server = "external"             # Required: name of an HTTP server
 routes = [{ methods = ["GET"], route = "/some"}, "/other"]
 forward_stdout = "stderr"
 forward_stderr = "stderr"
@@ -526,7 +530,7 @@ Webhook endpoints compiled to WebAssembly components use the `webhook_endpoint_w
 name = "..."
 location = "oci://..."
 # Common component settings apply
-http_server = "server_name"          # Optional: reference to a named HTTP server in server.toml. Defaults to built-in "external" server.
+http_server = "external"             # Required: name of an HTTP server
 routes = [                           # Route configurations
     { methods = ["GET"], route = "/path" },
     "/other/*",

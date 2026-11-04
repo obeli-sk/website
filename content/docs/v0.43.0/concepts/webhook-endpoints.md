@@ -52,16 +52,23 @@ The demo covers:
 
 ### Associating Webhook Endpoints with HTTP Servers
 
-Webhook endpoints don't listen for HTTP requests directly. Instead, they are served by an HTTP
-server. The built-in `"external"` server listens on `127.0.0.1:9090` and is used when `http_server`
-is omitted. The platform admin can define additional named servers in
+Webhook endpoints don't listen for HTTP requests directly. Instead, each one names the HTTP server
+that serves it with `http_server`. The built-in `"external"` server listens on `127.0.0.1:9090` and
+`"internal"` on `127.0.0.1:9091`. The platform admin can define additional servers, and require
+credentials on any of them, in
 {{ doc_link(title="server.toml", path="configuration/server.md#http-servers") }}:
 
 ```toml
 # server.toml
-[[http_server]]
-name = "my_server"
+[http_server.my_server]
 listening_addr = "0.0.0.0:9000"
+```
+
+A server without credentials starts only when the app admin opens it:
+
+```toml
+# app.toml
+public_http_servers = ["my_server"]
 ```
 
 ```toml

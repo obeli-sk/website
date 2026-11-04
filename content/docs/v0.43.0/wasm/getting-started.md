@@ -175,6 +175,7 @@ location = "target/wasm32-unknown-unknown/workflow/workflow_tutorial.wasm"
 
 [[webhook_endpoint_wasm]]
 name = "webhook_tutorial"
+http_server = "external"
 location = "target/wasm32-wasip2/webhook/webhook_tutorial.wasm"
 routes = ["/*"]
 ```
@@ -190,6 +191,14 @@ Build all three components:
 (cd activity/activity-sleepy && cargo build --release --target wasm32-wasip2)
 (cd workflow/workflow-tutorial && cargo build --profile workflow --target wasm32-unknown-unknown)
 (cd webhook/webhook-tutorial && cargo build --profile webhook --target wasm32-wasip2)
+```
+
+`app.toml` names the app and opens the `external` webhook server, which accepts requests without
+credentials:
+
+```toml
+app_name = "demo-tutorial-rust"
+public_http_servers = ["external"]
 ```
 
 Start the server:
