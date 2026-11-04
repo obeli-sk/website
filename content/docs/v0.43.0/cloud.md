@@ -10,10 +10,10 @@ Obelisk Cloud hosts each app on its own VM. You manage apps at
 
 ## Deploying an app
 
-Sign in at [cloud.obeli.sk](https://cloud.obeli.sk), create an API token, and export it as
-`OBELISK_CLOUD_API_TOKEN`. Then deploy from the project directory:
+Log in, then deploy from the project directory:
 
 ```sh
+obelisk cloud auth login
 obelisk generate new myapp
 cd myapp
 obelisk cloud app deploy -a app.toml -d deployment.toml --fill
@@ -42,9 +42,41 @@ Opening the Web UI or internal host in a browser signs in through
 [cloud.obeli.sk](https://cloud.obeli.sk). Other clients send an API token to the API host or the
 internal host; the Web UI host accepts only the browser session.
 
-The CLI uses `--api-url` (`OBELISK_CLOUD_API_URL`, default `https://cloud.obeli.sk/api`) and
-`--api-token` (`OBELISK_CLOUD_API_TOKEN`). It derives app endpoints from `--apps-domain`
-(`OBELISK_CLOUD_APPS_DOMAIN`, default `obelisk.works`).
+## Logging in
+
+`obelisk cloud auth login` opens a browser, asks you to approve the login, and saves an account-wide
+token valid for 90 days. When the browser cannot run on the same machine, as over SSH, or with
+`--no-browser`, it prints a link and asks for the code that page displays. Only paste such a code
+into a terminal you started yourself, and approve a login only if you just ran the command.
+
+CI and agents have no terminal to log in from. Create a token at
+[cloud.obeli.sk](https://cloud.obeli.sk), restricted to the apps it needs, and set
+`OBELISK_CLOUD_API_TOKEN`.
+
+- `obelisk cloud auth status` shows the logged-in endpoints and whether their tokens still work.
+- `obelisk cloud auth switch <API_URL_OR_APPS_DOMAIN>` changes the default. The first login becomes
+  the default.
+- `obelisk cloud auth logout` revokes the token and forgets the login.
+
+Logins are saved unencrypted in `cloud-credentials.toml` in the Obelisk configuration directory,
+`~/.config/obelisk` on Linux. The file is created readable only by you, and the CLI refuses to use
+it if others can read it.
+
+The CLI needs three values:
+
+<div class="table">
+
+| Flag            | Environment variable        | Default without a login      |
+| --------------- | --------------------------- | ---------------------------- |
+| `--api-url`     | `OBELISK_CLOUD_API_URL`     | `https://cloud.obeli.sk/api` |
+| `--apps-domain` | `OBELISK_CLOUD_APPS_DOMAIN` | `obelisk.works`              |
+| `--api-token`   | `OBELISK_CLOUD_API_TOKEN`   | None                         |
+
+</div>
+
+A token set this way ignores the saved logins. Otherwise `--api-url` or `--apps-domain` selects the
+saved login to use, for example to run one command against another environment, and with neither
+the CLI uses the default login.
 
 ## Public and private webhooks
 
@@ -87,7 +119,8 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
 
 ## Commands
 
-`obelisk cloud` manages apps hosted by an Obelisk cloud control plane. `cloud token` creates, lists,
+`obelisk cloud` manages apps hosted by an Obelisk cloud control plane. `cloud auth` manages
+[logins](#logging-in). `cloud token` creates, lists,
 inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. Everything scoped to
 one app lives under `cloud app`:
 
