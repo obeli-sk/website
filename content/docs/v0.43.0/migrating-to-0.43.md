@@ -389,7 +389,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   `apply` sends the staged configuration and the enqueued (or active) deployment explicitly.
 - `--api-url` (`OBELISK_CLOUD_API_URL`) defaults to `https://cloud.obeli.sk/api`. App endpoints are
   derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`, default `obelisk.works`):
-  `<app>.<domain>`, `api--<app>.<domain>`, and `webui--<app>.<domain>`.
+  `<app>.<domain>`, `api--<app>.<domain>`, `webui--<app>.<domain>`, and `internal--<app>.<domain>`.
 - `cloud token new` requires `--token-file` and saves the server-issued token to that new private
   file. Token names are unique per account until revoked; after a lost creation response, revoke the
   inaccessible token before creating a replacement.

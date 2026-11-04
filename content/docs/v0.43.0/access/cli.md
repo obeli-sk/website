@@ -120,8 +120,10 @@ the app selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `
 The control plane is selected with `--api-url` (`OBELISK_CLOUD_API_URL`, default
 `https://cloud.obeli.sk/api`) and authenticated with `--api-token` (`OBELISK_CLOUD_API_TOKEN`). App
 endpoints are derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`, default
-`obelisk.works`): webhooks at `<app>.<domain>`, the API at `api--<app>.<domain>`, and the Web UI at
-`webui--<app>.<domain>`, all over HTTPS.
+`obelisk.works`): webhooks at `<app>.<domain>`, the API at `api--<app>.<domain>`, the Web UI at
+`webui--<app>.<domain>`, and internal webhooks at `internal--<app>.<domain>`, all over HTTPS. Opening
+the Web UI or internal host in a browser signs in through the cloud dashboard. Other clients send an
+API token to the API host or the internal host; the Web UI host accepts only the browser session.
 
 `cloud token new --name <NAME> --token-file <FILE>` saves the server-issued token to a new private
 file; it does not overwrite an existing file. `--scope <APP>` restricts the token to apps and
