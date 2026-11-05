@@ -387,8 +387,9 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `fill` and `apply` compare `./app.toml` (or `-a`) with the staged configuration and prompt, or
   fail without a terminal, when they differ. Pass `--staged` to use the staged configuration.
   `apply` sends the staged configuration and the enqueued (or active) deployment explicitly.
-- `--api-url` (`OBELISK_CLOUD_API_URL`) defaults to `https://cloud.obeli.sk/api`. App endpoints are
-  derived locally from `--apps-domain` (`OBELISK_CLOUD_APPS_DOMAIN`, default `obelisk.works`):
+- `--api-url` and `--apps-domain` are gone. A custom deployment sets `OBELISK_CLOUD_API_URL`,
+  `OBELISK_CLOUD_APPS_DOMAIN` and `OBELISK_CLOUD_API_TOKEN` together; a token alone targets
+  `https://cloud.obeli.sk/api`. App endpoints are derived locally from the apps domain:
   `<app>.<domain>`, `api--<app>.<domain>`, `webui--<app>.<domain>`, and `internal--<app>.<domain>`.
 - `cloud token new` requires `--token-file` and saves the server-issued token to that new private
   file. Token names are unique per account until revoked; after a lost creation response, revoke the

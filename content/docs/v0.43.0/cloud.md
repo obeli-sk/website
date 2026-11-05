@@ -53,30 +53,35 @@ CI and agents have no terminal to log in from. Create a token at
 [cloud.obeli.sk](https://cloud.obeli.sk), restricted to the apps it needs, and set
 `OBELISK_CLOUD_API_TOKEN`.
 
-- `obelisk cloud auth status` shows the logged-in endpoints and whether their tokens still work.
-- `obelisk cloud auth switch <API_URL_OR_APPS_DOMAIN>` changes the default. The first login becomes
-  the default.
-- `obelisk cloud auth logout` revokes the token and forgets the login.
+- `obelisk cloud auth status` shows the saved accounts and whether their tokens still work. An
+  account is written as your username at the API host, for example `alice@cloud.obeli.sk`.
+- `obelisk cloud auth switch <ACCOUNT>` changes the default account. The first login becomes the
+  default.
+- `obelisk cloud auth logout [ACCOUNT]` revokes the token and forgets the login.
+
+To add another account, sign out on the login page and sign in as that user. GitHub may sign you
+back in as the same user, so switch accounts on GitHub first.
 
 Logins are saved unencrypted in `cloud-credentials.toml` in the Obelisk configuration directory,
 `~/.config/obelisk` on Linux. The file is created readable only by you, and the CLI refuses to use
 it if others can read it.
 
-The CLI needs three values:
+The CLI picks what it talks to from the first row that matches:
 
 <div class="table">
 
-| Flag            | Environment variable        | Default without a login      |
-| --------------- | --------------------------- | ---------------------------- |
-| `--api-url`     | `OBELISK_CLOUD_API_URL`     | `https://cloud.obeli.sk/api` |
-| `--apps-domain` | `OBELISK_CLOUD_APPS_DOMAIN` | `obelisk.works`              |
-| `--api-token`   | `OBELISK_CLOUD_API_TOKEN`   | None                         |
+| Set                                                                | Used                                |
+| ------------------------------------------------------------------ | ----------------------------------- |
+| `--api-token` or `OBELISK_CLOUD_API_TOKEN` alone                   | `https://cloud.obeli.sk/api`        |
+| The token, `OBELISK_CLOUD_API_URL` and `OBELISK_CLOUD_APPS_DOMAIN` | A custom deployment                 |
+| `--account` or `OBELISK_CLOUD_ACCOUNT`                             | That saved account, for one command |
+| Nothing                                                            | The default account                 |
 
 </div>
 
-A token set this way ignores the saved logins. Otherwise `--api-url` or `--apps-domain` selects the
-saved login to use, for example to run one command against another environment, and with neither
-the CLI uses the default login.
+Setting only some of the token, URL and domain is an error, as is combining any of them with
+`--account`. A custom deployment can also use saved logins: run
+`obelisk cloud auth login https://cloud.example.com/api`, without those variables set.
 
 ## Public and private webhooks
 
