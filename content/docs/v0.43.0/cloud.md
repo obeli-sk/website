@@ -44,10 +44,10 @@ internal host; the Web UI host accepts only the browser session.
 
 ## Logging in
 
-`obelisk cloud auth login` opens a browser, asks you to approve the login, and saves an account-wide
-token valid for 90 days. When the browser cannot run on the same machine, as over SSH, or with
-`--no-browser`, it prints a link and asks for the code that page displays. Only paste such a code
-into a terminal you started yourself, and approve a login only if you just ran the command.
+`obelisk cloud auth login` prints a link and opens it in a browser, unless it cannot, as over SSH, or
+you pass `--no-browser`. After you approve the login, the page displays a code. Paste it into the
+terminal to save an account-wide token valid for 90 days. Only paste such a code into a terminal you
+started yourself, and approve a login only if you just ran the command.
 
 CI and agents have no terminal to log in from. Create a token at
 [cloud.obeli.sk](https://cloud.obeli.sk), restricted to the apps it needs, and set
