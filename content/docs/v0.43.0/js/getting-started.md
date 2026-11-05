@@ -198,7 +198,7 @@ options.
 ## 4. Run
 
 ```bash
-obelisk server run --app-config app.toml --deployment deployment.toml
+obelisk server run --dev --app-config app.toml --deployment deployment.toml
 ```
 
 Three endpoints start automatically:
@@ -231,16 +231,15 @@ parallel workflow completed: 123456789
 
 ## 5. Inspect Executions
 
-The API port (`5005`) requires a bearer token. On startup Obelisk prints an ephemeral token to the
-console; export it so the `curl` examples below can authenticate (the webhook port `9090` above
-needs no token):
+The API port (`5005`) requires a bearer token. With `--dev`, Obelisk prints an ephemeral token to
+the console on startup; export it so the `curl` examples below can authenticate (the webhook port
+`9090` above needs no token):
 
 ```bash
 export OBELISK_API_TOKEN=<token printed on server startup>
 ```
 
-For a throwaway tutorial you can instead start the server with `--no-auth` and drop the
-`Authorization` header. See {{ doc_link(title="Authentication", path="access/authentication.md") }}.
+See {{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 List top-level executions — one per webhook call:
 
@@ -299,7 +298,7 @@ kill $(pgrep obelisk)
 The curl request fails — but the workflow state is safely persisted. Restart the server:
 
 ```bash
-obelisk server run --app-config app.toml
+obelisk server run --dev --app-config app.toml
 ```
 
 No `--deployment` flag needed: Obelisk persists the full deployment configuration — including the

@@ -44,8 +44,8 @@ internal host; the Web UI host accepts only the browser session.
 
 ## Logging in
 
-`obelisk cloud auth login` prints a link and opens it in a browser, unless it cannot, as over SSH, or
-you pass `--no-browser`. After you approve the login, the page displays a code. Paste it into the
+`obelisk cloud auth login` prints a link and opens it in a browser, unless it cannot, as over SSH,
+or you pass `--no-browser`. After you approve the login, the page displays a code. Paste it into the
 terminal to save an account-wide token valid for 90 days. Only paste such a code into a terminal you
 started yourself, and approve a login only if you just ran the command.
 
@@ -125,16 +125,17 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
 ## Commands
 
 `obelisk cloud` manages apps hosted by an Obelisk cloud control plane. `cloud auth` manages
-[logins](#logging-in). `cloud token` creates, lists,
-inspects, and revokes cloud bearer tokens; `cloud apps` lists the apps you own. Everything scoped to
-one app lives under `cloud app`:
+[logins](#logging-in). `cloud token` creates, lists, inspects, and revokes cloud bearer tokens;
+`cloud apps` lists the apps you own. Everything scoped to one app lives under `cloud app`:
 
 - `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
   named by `--app`. `status` shows the staged and applied configuration revisions and, when `-a` or
   `./app.toml` is readable, whether it matches the staged configuration. It also shows the health
-  check of a started VM and a scheduled wake-up that keeps failing. Required env vars and secrets
-  must be supplied at creation with `--fill` (prompts) or `--fill-non-interactive` (reads same-named
+  check of a started VM and a scheduled wake-up that keeps failing. An app suspended while idle
+  shows as `running (suspended)` with `API: resumes on request`. Required env vars and secrets must
+  be supplied at creation with `--fill` (prompts) or `--fill-non-interactive` (reads same-named
   environment variables).
+- `pull` writes the running `app.toml`, the active deployment, and its source files to disk.
 - `events` lists the app's recent lifecycle and VM events, newest first: completed and failed
   commands, app failures and restores, critical and recovered health checks, restarts of an
   unhealthy VM, and failed wake-ups. `-n, --limit` sets how many to show (1-50, default 5). Routine

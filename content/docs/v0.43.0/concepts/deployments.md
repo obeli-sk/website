@@ -16,8 +16,8 @@ Each Deployment record contains:
 - The verbatim **`deployment.toml`** submitted by the client.
 - Deployment-owned source files referenced by JS components, exec activities, and backtrace source
   maps, stored in a content-addressed file store.
-- A deployment digest, computed from the stored manifest. Digests are unique: each content is
-  stored as one deployment.
+- A deployment digest, computed from the stored manifest. Digests are unique: each content is stored
+  as one deployment.
 - The **status**: `enqueued`, `active`, or `inactive`.
 - Timestamps (`created_at`, `updated_at`, `last_active_at`). `updated_at` is bumped by a status
   change or by resubmitting the same content, and deployment retention orders by it.
@@ -127,7 +127,7 @@ if the new workflow code is not replay-compatible, unless `skip_determinism_chec
 | `obelisk deployment list`               | List recent deployments and their status       |
 | `obelisk deployment active`             | Print the active deployment ID                 |
 | `obelisk deployment show <ID> [FILE]`   | Show stored TOML or a stored file              |
-| `obelisk deployment pull <ID>`          | Recreate deployment TOML and source files      |
+| `obelisk deployment pull [ID]`          | Recreate deployment TOML and source files      |
 | `obelisk deployment verify`             | Verify a local deployment without a server     |
 | `obelisk server checkpoint`             | Print the last activated policy and deployment |
 

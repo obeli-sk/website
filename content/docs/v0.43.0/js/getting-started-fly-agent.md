@@ -317,7 +317,7 @@ for all options.
 
 ```bash
 cd demo-tutorial/fly-agent
-obelisk server run --app-config app.toml --deployment deployment.toml
+obelisk server run --dev --app-config app.toml --deployment deployment.toml
 ```
 
 Trigger the saga with a globally unique app name and your actual Fly organization slug:
@@ -336,8 +336,8 @@ Prompt: what-is-42
 Result: 42 is the answer
 ```
 
-List executions to see the full hierarchy. The API port (`5005`) requires a bearer token printed to
-the console on startup; export it first (or start the server with `--no-auth`). See
+List executions to see the full hierarchy. The API port (`5005`) requires a bearer token, which
+`--dev` printed to the console on startup; export it first. See
 {{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 ```bash

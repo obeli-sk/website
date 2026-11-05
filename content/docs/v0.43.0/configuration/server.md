@@ -17,6 +17,7 @@ See {{ doc_link(title="Configuration", path="configuration/_index.md") }} for ho
 ```toml
 api.listening_addr = "127.0.0.1:5005"   # Address and port for API server
 api.public_url = "https://api.example.com" # Optional URL behind a proxy, used by the api-url source
+api.max_stream_duration.minutes = 10    # Follow/SSE responses end cleanly after this duration
 ```
 
 ### API Authentication
@@ -36,7 +37,7 @@ A plaintext token can also be injected through `--api-token` or the environment 
 `OBELISK_API_TOKEN`; do not write the plaintext into a committed `server.toml`. There is no
 plaintext `api.token` key in `server.toml`. See
 {{ doc_link(title="Authentication", path="access/authentication.md") }} for the full model,
-generating tokens, and the `--no-auth` recovery flag.
+generating tokens, and `server run --dev` for local development.
 
 ## Web UI
 
@@ -303,10 +304,12 @@ The `[v8]` table and the choice between the `boa-wasm` and `v8` runtimes are des
 ```toml
 [webhooks]
 request_timeout.seconds = 30   # Deadline for a webhook handler to return its HTTP response.
+max_stream_duration.minutes = 10   # Streaming responses end cleanly after this duration.
 ```
 
 The deadline applies to all webhook handlers, and only covers the time until the response headers
-are returned. It does not limit a streaming response body after that.
+are returned. It does not limit a streaming response body after that; `max_stream_duration` does,
+including for silent streams.
 
 ## Outbound HTTP Connection Pool
 
@@ -380,14 +383,51 @@ claims = { app_name = "my-proxy" }
 
 A verified `Authorization` header is removed before the request reaches the webhook. After an OIDC
 token, the `obelisk-oidc-claims` header carries its claims as JSON; a client-supplied header of that
-name is always removed. With `server run --no-auth`, `api_auth` servers accept all requests.
+name is always removed.
 
 A server without `oidc` or `api_auth` accepts requests without credentials, so it starts only when
 the app admin lists it in
 {{ doc_link(title="`public_http_servers`", path="configuration/app.md#public-http-servers") }}. This
-keeps both built-in servers closed unless `app.toml` opens them. A deployment whose webhook names a
+keeps `external` closed unless `app.toml` opens it. The reserved `internal` server cannot be listed:
+without credentials it starts only with `server run --dev`. A deployment whose webhook names a
 server that does not start fails verification. Listening on all interfaces (`[::]:<port>`) is not
 advised for servers without credentials.
+
+## Idle Reporting
+
+A platform that suspends idle servers can receive idle reports. SQLite only; without a URL the
+detector is disabled:
+
+```toml
+idle_report.url = "http://127.0.0.1:9194/v1/idle"
+idle_report.check_interval.seconds = 30        # How often idleness is evaluated and reports repeat.
+idle_report.quiet_period.http.seconds = 60     # Busy this long after the last request finished.
+idle_report.quiet_period.executions.seconds = 0 # Busy this long after executions became inactive.
+idle_report.horizon.minutes = 1                # Executions due within this window keep the server busy.
+idle_report.resume_threshold.seconds = 5       # Wall time jump that means the server was resumed.
+idle_report.request_timeout.seconds = 10       # Timeout of one report request.
+```
+
+The server is idle when no HTTP request is in flight, no execution is locked, cancelling, or due
+within `horizon`, and both quiet periods have elapsed. Open streams count as requests until they
+end. Pending stub executions do not count as active. `horizon` must be longer than `check_interval`.
+
+While idle, the server POSTs
+`{"period_id": "IdlePeriod_<ULID>", "next_run_at": <RFC 3339 UTC timestamp or null>}` every check
+interval, ignoring the response status. All reports of one idle period share its ID, and any
+activity or resume starts a new period, so a receiver can discard late reports of a period it
+already suspended. `next_run_at` lets the receiver schedule a wake-up. The `server.idle.reported`
+and `server.idle.resumed` system events record each period.
+
+## Health Listener
+
+```toml
+health.listening_addr = "[::]:5006"
+```
+
+Disabled unless set. `GET /health` reads the database and answers `200`, or `503` when the read
+fails. It requires no token and does not count as activity for [idle reporting](#idle-reporting). Do
+not expose it publicly.
 
 ## Observability
 

@@ -7,7 +7,7 @@ weight = 2
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.8") }}.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.16") }}.
 
 ## WebAPI
 
@@ -34,11 +34,10 @@ export OBELISK_API_AUTH="Authorization: Bearer $OBELISK_API_TOKEN"
 curl -H "$OBELISK_API_AUTH" http://127.0.0.1:5005/v1/components
 ```
 
-An ephemeral startup token is printed to the console on every server start; persistent tokens are
-configured as SHA-256 hashes. See
+An ephemeral startup token is generated on every server start and printed with `server run --dev`;
+persistent tokens are configured as SHA-256 hashes. See
 {{ doc_link(title="Authentication", path="access/authentication.md") }} for how to generate and
-configure tokens. The `--no-auth` server flag accepts unauthenticated requests on the API port, for
-development or recovery.
+configure tokens.
 
 All `curl` examples below use `$OBELISK_API_AUTH` defined above.
 
@@ -180,6 +179,15 @@ world root {
 
 ---
 
+### `GET /v1/components/{digest}/sources`
+
+Lists the source files registered for a component as a JSON array of `{ "file", "digest" }` objects,
+including the scripts of exec and VM activities. `file` is the key accepted by
+[`GET /v1/components/{digest}/source`](#get-v1-components-digest-source); suffix keys keep their
+`.../` prefix.
+
+---
+
 ### `GET /v1/components/{digest}/source`
 
 Retrieves a source file of a component, such as a JavaScript module or a file referenced by
@@ -215,22 +223,26 @@ Lists executions with support for filtering and pagination.
 
 **Query Parameters:**
 
-| Parameter             | Type    | Description                                                         | Default        |
-| :-------------------- | :------ | :------------------------------------------------------------------ | :------------- |
-| `ffqn_prefix`         | String  | Filter by Function Fully Qualified Name or its prefix.              | `None`         |
-| `package`             | String  | Exact package scope, for example `ns:pkg`.                          | `None`         |
-| `interface`           | String  | Exact interface scope, for example `ns:pkg/ifc`.                    | `None`         |
-| `function`            | String  | Exact Function Fully Qualified Name, for example `ns:pkg/ifc.fn`.   | `None`         |
-| `state`               | String  | Match any of the given states. Repeat the parameter for several.    | `None`         |
-| `show_derived`        | Boolean | If `true`, includes child executions.                               | `false`        |
-| `hide_finished`       | Boolean | Show only unfinished executions.                                    | `false`        |
-| `execution_id_prefix` | String  | Filter by Execution ID or its prefix.                               | `None`         |
-| `component_digest`    | String  | Filter by component digest (see `digest` in `GET /v1/components`).  | `None`         |
-| `deployment_id`       | String  | Filter by deployment ID.                                            | `None`         |
-| `cursor`              | String  | Pagination cursor. Can be an ISO 8601 Timestamp or an Execution ID. | `None`         |
-| `length`              | Integer | Number of items to return.                                          | System Default |
-| `direction`           | String  | `older` or `newer`.                                                 | `older`        |
-| `including_cursor`    | Boolean | Include the cursor item in the result.                              | `false`        |
+| Parameter             | Type    | Description                                                        | Default        |
+| :-------------------- | :------ | :----------------------------------------------------------------- | :------------- |
+| `ffqn_prefix`         | String  | Filter by Function Fully Qualified Name or its prefix.             | `None`         |
+| `package`             | String  | Exact package scope, for example `ns:pkg`.                         | `None`         |
+| `interface`           | String  | Exact interface scope, for example `ns:pkg/ifc`.                   | `None`         |
+| `function`            | String  | Exact Function Fully Qualified Name, for example `ns:pkg/ifc.fn`.  | `None`         |
+| `state`               | String  | Match any of the given states. Repeat the parameter for several.   | `None`         |
+| `show_derived`        | Boolean | If `true`, includes child executions.                              | `false`        |
+| `hide_finished`       | Boolean | Show only unfinished executions.                                   | `false`        |
+| `execution_id_prefix` | String  | Filter by Execution ID or its prefix.                              | `None`         |
+| `component_digest`    | String  | Filter by component digest (see `digest` in `GET /v1/components`). | `None`         |
+| `deployment_id`       | String  | Filter by deployment ID.                                           | `None`         |
+| `order`               | String  | Sort order: `created_at` or `execution_id`.                        | `created_at`   |
+| `cursor`              | String  | Opaque `cursor` of a listed execution, from the same `order`.      | `None`         |
+| `length`              | Integer | Number of items to return.                                         | System Default |
+| `direction`           | String  | `older` or `newer`.                                                | `older`        |
+| `including_cursor`    | Boolean | Include the cursor item in the result.                             | `false`        |
+
+Each listed execution carries its `cursor`. Executions sharing a timestamp are not dropped or
+repeated at page boundaries. Bare timestamp and execution ID cursors are still accepted.
 
 `state` accepts `locked`, `pending`, `scheduled`, `blocked`, `paused`, `cancelling`, `finished`,
 `finished_ok`, `finished_error`, and `finished_execution_failure`, e.g.
@@ -1170,8 +1182,8 @@ already stored is not duplicated: its deployment is refreshed as with `PUT` and 
 Submits a deployment package under a caller-generated deployment ID and stores it in the database.
 Resubmitting the same ID and content bumps `updated_at`, which deployment retention orders by, and
 sets the description if given: an omitted or `null` description keeps the current one, an empty
-string clears it. Each content is stored once: reusing an ID for different content, or
-submitting stored content under a new ID, returns a conflict. Look up the ID of stored content with
+string clears it. Each content is stored once: reusing an ID for different content, or submitting
+stored content under a new ID, returns a conflict. Look up the ID of stored content with
 `GET /v1/deployment-digests/{digest}`. The deployment is not yet activated; use
 `PUT /v1/deployments/{id}/switch` to activate it.
 
@@ -1181,11 +1193,11 @@ submitting stored content under a new ID, returns a conflict. Look up the ID of 
 
 **Request Body (JSON):**
 
-| Field                              | Type    | Description                                                                        |
-| :--------------------------------- | :------ | :--------------------------------------------------------------------------------- |
-| `deployment_toml`                  | String  | Verbatim deployment manifest                                                       |
-| `description`                      | String  | Optional human-readable description; on resubmit omitted keeps it, `""` clears it  |
-| `allow_unavailable_runtime_config` | Boolean | Store before runtime values or app and platform approvals are available (`false`)  |
+| Field                              | Type    | Description                                                                       |
+| :--------------------------------- | :------ | :-------------------------------------------------------------------------------- |
+| `deployment_toml`                  | String  | Verbatim deployment manifest                                                      |
+| `description`                      | String  | Optional human-readable description; on resubmit omitted keeps it, `""` clears it |
+| `allow_unavailable_runtime_config` | Boolean | Store before runtime values or app and platform approvals are available (`false`) |
 
 Set `allow_unavailable_runtime_config` to `true` when a developer submits a deployment for later
 admin approval. Missing values, public environment declarations, secret registrations, outbound HTTP
@@ -1327,7 +1339,8 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 ### `GET /v1/info`
 
 Returns the app name, the server's `app_env_prefix`, Obelisk version, current deployment ID, node
-run ID, app config digest, and server start time as JSON:
+run ID, app config digest, server start time, and, in the optional `gc` object, the
+`[maintenance.gc]` settings with durations in milliseconds, as JSON:
 
 ```json
 {
@@ -1337,7 +1350,19 @@ run ID, app config digest, and server start time as JSON:
   "deployment_id": "Dep_...",
   "node_run_id": "NodeRun_...",
   "app_config_digest": "app-config:v1:sha256:...",
-  "started_at": "2026-10-18T11:00:00.000Z"
+  "started_at": "2026-10-18T11:00:00.000Z",
+  "gc": {
+    "enabled": true,
+    "interval_ms": 30000,
+    "batch_size": 1000,
+    "batch_delay_ms": 25,
+    "upload_grace_period_ms": 3600000,
+    "retention": {
+      "executions": { "enabled": true, "max_age_ms": 2678400000, "max_count": 1000 },
+      "deployments": { "enabled": true, "max_age_ms": 2678400000, "max_count": 100 },
+      "system_events": { "enabled": true, "max_age_ms": 2678400000 }
+    }
+  }
 }
 ```
 
@@ -1367,6 +1392,12 @@ An `outbound_http` entry written with `url_prefix` keeps `url_prefix` and, when 
 `url_regex_suffix` in place of `pattern`, both exactly as written in `app.toml` (variables are not
 expanded).
 
+### `GET /v1/app-toml`
+
+Returns the `app.toml` the server started with, verbatim, as `application/toml`. A request whose
+`Accept` header does not allow `application/toml` is rejected. `obelisk app pull` uses this
+endpoint.
+
 ### Deprecated: `GET /v1/app-config` and `GET /v1/app-config-digest`
 
 Both endpoints are deprecated and will be removed after 0.43. `GET /v1/app-config` wraps the policy
@@ -1385,7 +1416,7 @@ types.
 | Endpoint                                       | Purpose                                                               |
 | ---------------------------------------------- | --------------------------------------------------------------------- |
 | `GET /v1/admin/node-run-id`                    | Deprecated, removed after 0.43: use `node_run_id` from `GET /v1/info` |
-| `GET /v1/admin/system-events`                  | List persisted events, filtered by run, level, code, or creation time |
+| `GET /v1/admin/system-events`                  | List persisted events, filtered by run, level, code prefix, or time   |
 | `GET /v1/admin/system-events/{event-id}`       | Retrieve one system event                                             |
 | `POST /v1/admin/system-events/retain`          | Remove system events older than the requested age                     |
 | `GET /v1/admin/storage`                        | Show persistent storage usage and record counts                       |

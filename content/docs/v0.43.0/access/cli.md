@@ -13,6 +13,7 @@ weight = 1
 | [`obelisk server run`](#running-the-server)                                                 | Start the server, optionally activating a deployment file         |
 | [`obelisk server verify`](#verifying-the-server-configuration)                              | Check configuration and deployment without serving traffic        |
 | [`obelisk server checkpoint`](#reading-the-app-checkpoint)                                  | Print the last activated app policy and deployment ID             |
+| [`obelisk app pull`](#pulling-the-running-app)                                              | Write the running `app.toml`, active deployment, and sources      |
 | [`obelisk deployment verify`](#verifying-a-local-deployment)                                | Compile and check deployment components, without app policy       |
 | [`obelisk deployment submit`](#submitting-a-deployment)                                     | Upload a deployment and print its ID                              |
 | [`obelisk deployment enqueue`](#enqueueing-a-deployment)                                    | Activate a deployment on the next server restart                  |
@@ -38,6 +39,7 @@ weight = 1
 | [`obelisk execution upgrade`](#upgrading-an-execution)                                      | Move a workflow to the component version in the active deployment |
 | [`obelisk admin`](#obelisk-admin)                                                           | Operator maintenance, retention, and system events                |
 | [`obelisk component list`](#listing-available-components-and-functions)                     | List the components and functions of the active deployment        |
+| [`obelisk component source`](#listing-and-printing-component-sources)                       | List a component's source files, or print one of them             |
 | [`obelisk component push`](#pushing-a-component-to-an-oci-registry)                         | Publish a component to an OCI registry                            |
 | [`obelisk component add`](#adding-a-component-to-the-deployment-configuration)              | Add a component from an OCI reference to `deployment.toml`        |
 | [`obelisk generate wit-extensions`](#generating-extension-functions)                        | Generate extension WIT files for a component                      |
@@ -49,6 +51,7 @@ weight = 1
 | [`obelisk generate split-config`](#splitting-a-0-41-server-configuration)                   | Move app policy out of a 0.41 `server.toml` into `app.toml`       |
 | [`obelisk generate deployment`](#generating-deployment-configuration)                       | Write a commented `deployment.toml` reference                     |
 | [`obelisk generate secret-config-digest`](#generating-secret-exposure-digests)              | Compute reviewed digests for exec activities and exposed secrets  |
+| [`obelisk generate app-name`](#generating-an-app-name)                                      | Print a random app name and set it in the app config              |
 | [`obelisk generate deployment-id`](#generating-a-deployment-id)                             | Print a new deployment ID                                         |
 | [`obelisk generate execution-id`](#generating-an-execution-id)                              | Print a new execution ID                                          |
 | [`obelisk generate token`](#generating-an-api-token)                                        | Print a random API token                                          |
@@ -60,7 +63,9 @@ weight = 1
 
 Human-readable listings, progress, and confirmations go to stderr. Stdout carries IDs, JSON,
 generated configuration, source content, and execution logs. Use `--json` for structured results.
-Execution JSON follow modes emit flushed NDJSON, one compact JSON object per line.
+Execution JSON follow modes emit flushed NDJSON, one compact JSON object per line. Without `--json`,
+execution results are pretty-printed as JSON on stdout with completion messages on stderr, and the
+logs of `execution submit --follow-logs` go to stderr.
 
 Deployment `submit`, `apply`, and `enqueue` print an ID to stdout and support `--json`, as do
 `deployment list`, `component list`, execution `pause`, `unpause`, `cancel`, and `upgrade`.
@@ -118,12 +123,11 @@ Options:
   `--empty`. For stored content, omitting it keeps the current one and an empty string clears it
 - `--suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail
   type checking against the current deployment
-- `--no-auth` - Accept unauthenticated requests on the API port. Development / recovery override;
-  conflicts with `--api-token`. See
-  {{ doc_link(title="Authentication", path="access/authentication.md") }}.
+- `--dev` - Print the startup API token and allow the `internal` HTTP server without configured
+  credentials. See {{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 - `--api-token <TOKEN>` - API token required to access the API server. Falls back to
-  `$OBELISK_API_TOKEN`. Conflicts with `--no-auth`
+  `$OBELISK_API_TOKEN`
 
 If neither `--deployment` nor `--deployment-id` is provided, Obelisk uses the Enqueued or Active
 deployment from the database.
@@ -194,6 +198,24 @@ Print the last successfully activated checkpoint as JSON without starting the se
 no deployment has been activated yet. The command opens the database configured in `server.toml` and
 applies pending schema migrations. It does not read the app name, so a SQLite database must be
 selected with a `database.sqlite.directory` that does not depend on `${APP_NAME}`.
+
+## Obelisk App
+
+### Pulling the running app
+
+Write the `app.toml` the server started with, its active deployment, and the deployment's source
+files to disk:
+
+```sh
+obelisk app pull [OPTIONS]
+```
+
+Options:
+
+- `-o, --output <DIR>` - Directory to write into (default: current directory)
+- `-f, --force` - Overwrite existing files in the output directory
+- `--include-generated-metadata` - Keep generated content digests and JavaScript module metadata in
+  `deployment.toml`
 
 ## Obelisk Deployment
 
@@ -326,12 +348,12 @@ Retrieve a deployment to disk as a re-submittable `deployment.toml` plus its dep
 files. By default the exported TOML omits generated content digests and JavaScript module metadata.
 
 ```sh
-obelisk deployment pull [OPTIONS] <ID>
+obelisk deployment pull [OPTIONS] [ID]
 ```
 
 Arguments:
 
-- `<ID>` - Deployment ID
+- `[ID]` - Deployment ID (default: the active deployment)
 
 Options:
 
@@ -471,6 +493,8 @@ Options:
 
 - `--from <VERSION>` - Start from this event version (inclusive)
 - `--limit <LIMIT>` - Number of events to return (default: `20`)
+- `--backtraces[=<source|frames>]` - Show persisted backtraces, with source snippets by default or
+  `frames` only
 - `-j, --json` - Output as JSON instead of human-readable text
 
 #### Example
@@ -646,6 +670,7 @@ the authenticated API:
 ```sh
 obelisk admin node-run-id
 obelisk admin events list --level warning
+obelisk admin events list --code maintenance.gc # Codes starting with this prefix
 obelisk admin events get <event-id>
 obelisk admin storage show
 ```
@@ -677,6 +702,23 @@ Options:
 
 - `-i, --imports` - Show component imports
 - `-e, --extensions` - Show auto-generated export extensions
+
+### Listing and printing component sources
+
+List the source files registered for a component, or print one of them:
+
+```sh
+obelisk component source [OPTIONS] <DIGEST> [FILE]
+```
+
+Arguments:
+
+- `<DIGEST>` - Component digest, as shown by `component list`
+- `[FILE]` - Source file to print. Suffix keys like `.../src/lib.rs` match any path ending with them
+
+Options:
+
+- `--json` - Output as JSON instead of human-readable text
 
 ### Pushing a component to an OCI registry
 
@@ -787,11 +829,12 @@ Create a JavaScript starter app:
 obelisk generate new [NAME]
 ```
 
-With `NAME`, Obelisk creates a new directory of that name. `NAME` must be a valid app DNS label.
-Without `NAME`, it writes into the current directory and derives a lowercase app slug from that
-directory's name. The starter contains `app.toml`, `deployment.toml`, a webhook, a workflow, and an
-HTTP activity. Existing files and directories are preserved. See the generated `README.md` to run
-it.
+With `NAME`, Obelisk creates a new directory of that name. Without `NAME`, it writes into the
+current directory. The directory name becomes the app name; if it is not a valid app name, Obelisk
+reports why and generates a random one, keeping the directory name. The default starter probes one
+site on a cron schedule and shows its uptime and latency history. It contains `app.toml`,
+`deployment.toml`, a dashboard webhook, a workflow, and an HTTP activity. Existing files and
+directories are preserved. See the generated `README.md` to run it.
 
 ### Generating server configuration
 
@@ -886,6 +929,19 @@ Options:
 
 - `-d, --deployment <FILE>` - Path to the deployment TOML file _(required)_
 - `-j, --json` - Output structured JSON
+
+### Generating an app name
+
+Print a random app name and set `app_name` in the app config:
+
+```sh
+obelisk generate app-name [OPTIONS]
+```
+
+Options:
+
+- `-a, --app-config <FILE>` - App config to update (default: `./app.toml` if present)
+- `--print-only` - Only print the name, leaving any app config untouched
 
 ### Generating a deployment ID
 

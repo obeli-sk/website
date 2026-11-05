@@ -60,8 +60,9 @@ entry. The scheduler runs as a long-lived internal workflow:
 Because the scheduler is itself a durable execution, it survives server restarts and crashes without
 missing ticks.
 
-The `@once` shorthand submits the target function once immediately and then the scheduler execution
-finishes.
+A newly registered recurring cron waits for its first occurrence, so deploying it does not submit
+the target function. The `@once` shorthand submits the target function once immediately and then the
+scheduler execution finishes.
 
 ## Overlapping runs
 

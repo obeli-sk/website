@@ -204,7 +204,7 @@ public_http_servers = ["external"]
 Start the server:
 
 ```bash
-obelisk server run --app-config app.toml --deployment deployment.toml
+obelisk server run --dev --app-config app.toml --deployment deployment.toml
 ```
 
 Three endpoints start automatically:
@@ -249,8 +249,8 @@ Parallel workflow — all steps run concurrently:
 
 ![Trace view of the parallel workflow showing concurrent activity executions](/tutorial-trace-parallel.png)
 
-Via the API. The API port (`5005`) requires a bearer token, printed to the console on startup;
-export it first (or start the server with `--no-auth` for a throwaway tutorial). See
+Via the API. The API port (`5005`) requires a bearer token, which `--dev` printed to the console on
+startup; export it first. See
 {{ doc_link(title="Authentication", path="access/authentication.md") }}.
 
 ```bash
@@ -288,7 +288,7 @@ kill $(pgrep obelisk)
 The curl request fails — but the workflow state is safely persisted. Restart the server:
 
 ```bash
-obelisk server run --app-config app.toml
+obelisk server run --dev --app-config app.toml
 ```
 
 No `--deployment` flag needed on restart: Obelisk persists the full deployment configuration in the

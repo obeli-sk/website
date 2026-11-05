@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 4
 +++
 
-This guide targets **Obelisk 0.43.0-rc.14**. It is based on the
-[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.14) of every
+This guide targets **Obelisk 0.43.0-rc.16**. It is based on the
+[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.16) of every
 0.43.0 release candidate. Audit every deployment, configuration file, script, and CI workflow
 against these changes. Apps older than 0.42 must first follow the
 {{ doc_link(title="0.42 migration guide", path="migrating-to-0.42.md", version="v0.42.0") }}.
@@ -106,9 +106,11 @@ gRPC is unaffected.
 
 ## Update authentication
 
-Replace `server run --allow-unauthenticated-api` with `server run --no-auth`. The old flag has been
-removed. Replace `OBELISK__API__TOKEN` with `OBELISK_API_TOKEN`; the legacy fallback has also been
-removed. `--api-token` and server `api.token_hashes` remain supported.
+`server run --allow-unauthenticated-api` is removed and the API always requires a token. For local
+development use `server run --dev`, which prints the startup token, and send that token from
+clients; scripts should instead set `OBELISK_API_TOKEN` on both the server and the client. Replace
+`OBELISK__API__TOKEN` with `OBELISK_API_TOKEN`; the legacy fallback has also been removed.
+`--api-token` and server `api.token_hashes` remain supported.
 
 Apps whose components call their own server's API no longer need an operator-supplied token for it.
 Declare the secret as {{ doc_link(title="internal", path="configuration/app.md#internal-secrets") }}
@@ -119,9 +121,9 @@ and drop the instructions and scripts that generated and exported the token for 
 OBELISK_API_TOKEN = { type = "internal" }
 ```
 
-The value is the server's startup token, rotates on every restart, and requires an authenticated
-API: `server run --no-auth` refuses to start with an internal secret. Keep an env-backed secret when
-the token targets a different server.
+The value is the server's startup token, rotates on every restart, and requires an enabled API. The
+startup token is no longer printed outside `--dev`, so do not scrape it from server output. Keep an
+env-backed secret when the token targets a different server.
 
 The API can also accept OIDC ID tokens, such as Fly.io machine tokens, from issuers trusted in
 `api.oidc`; see {{ doc_link(title="Authentication", path="access/authentication.md") }}.
@@ -203,16 +205,16 @@ Every webhook endpoint must now set `http_server`; it no longer defaults to `ext
 `internal` on `127.0.0.1:9091`, is meant for webhooks behind authentication. The Web UI stays in
 `[webui]`.
 
-A server without credentials starts only when `app.toml` lists it, so both built-in servers are
-closed until the app admin opens them. Apps serving public webhooks add:
+A server without credentials starts only when `app.toml` lists it, so `external` is closed until the
+app admin opens it. Apps serving public webhooks add:
 
 ```toml
 public_http_servers = ["external"]
 ```
 
-Webhook endpoint `oidc` blocks are removed and fail verification. Require tokens for the whole
-listener instead, with `[[http_server.<name>.oidc]]` or `api_auth = true`, and bind the webhook to
-it; see
+The reserved `internal` server cannot be listed: it needs credentials, or `server run --dev`
+locally. Require tokens for a whole listener with `[[http_server.<name>.oidc]]` or
+`api_auth = true`; see
 {{ doc_link(title="Credentials and public servers", path="configuration/server.md#credentials-and-public-servers") }}.
 Components that need a server's URL can read it with
 `{ type = "internal", source = "http-server-url", http_server = "<name>" }`.
@@ -228,6 +230,10 @@ available for those commands, deployment `list`, component `list`, execution `pa
 `cancel`, and `upgrade`, and `cloud app endpoint`. Execution JSON follow modes emit flushed NDJSON:
 one compact JSON object per line, including submission responses, log records, and final results. Do
 not parse a followed execution as one JSON document.
+
+Without `--json`, execution results are pretty-printed as JSON on stdout with completion messages on
+stderr, and the logs of `execution submit --follow-logs` move to stderr. `obelisk execution get` is
+removed: use `execution status` for the current state or `execution result` for the final result.
 
 ## Audit REST consumers and JS webhooks
 
@@ -312,6 +318,9 @@ reuse the original execution; a different target, parameters, or timing conflict
 compares the original offset from creation. Retrying never reschedules an execution.
 
 ## Cron overlap and lock extension
+
+A newly registered recurring cron now waits for its first occurrence instead of submitting the
+target function on deploy. `@once` still submits immediately.
 
 Cron entries accept `overlap`. The default, `"skip"`, skips a tick while the execution submitted by
 the previous tick is unfinished. Earlier releases submitted on every tick; set `overlap = "allow"`
@@ -423,6 +432,9 @@ Update consumers that filter system events by code or level:
   `deployment.submit.failed` warning.
 - `maintenance.gc.completed` now carries the active deployment ID.
 
+Allocator options for jemalloc are read from `MALLOC_CONF` instead of `_RJEM_MALLOC_CONF`, except on
+Apple targets, as jemalloc now also serves C and C++ allocations.
+
 ## Verification checklist
 
 - Make sure every `app.toml` sets `app_name`, check it against the 4-25 character rule, and check
@@ -438,7 +450,7 @@ Update consumers that filter system events by code or level:
 - Consider internal public environment entries for the server's own API and Web UI URLs, and
   `url_prefix` rules for single-URL destinations.
 - Move webhook listeners to `http_server.<name>`, set `http_server` on every webhook, list
-  credential-less servers in `public_http_servers`, and replace webhook `oidc` with server `oidc`.
+  credential-less servers in `public_http_servers`, and use `server run --dev` locally.
 - Update cloud scripts for renamed lifecycle commands and explicit fill flags.
 - Decide `overlap` for each `[[cron]]` entry and remove `exec.lock_extension_leeway`.
 - Review retention `max_age`/`max_count` defaults and system-event filters for renamed codes.

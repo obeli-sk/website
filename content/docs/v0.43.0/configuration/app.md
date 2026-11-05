@@ -36,9 +36,10 @@ public_http_servers = ["external"]
 
 An {{ doc_link(title="HTTP server", path="configuration/server.md#http-servers") }} without `oidc`
 or `api_auth` accepts requests without credentials, so it starts only when `app.toml` lists it here.
-Without the list, the built-in `external` and `internal` servers stay closed and webhooks bound to
-them fail verification. Servers that require credentials start without being listed, and the Web UI
-is not an HTTP server. Listing a server that requires credentials, or a disabled or unknown one,
+Without the list, `external` stays closed and webhooks bound to it fail verification. The reserved
+names `internal` and `webui` cannot be listed: give `internal` credentials, or use
+`server run --dev` locally. Servers that require credentials start without being listed, and the Web
+UI is not an HTTP server. Listing a server that requires credentials, or a disabled or unknown one,
 records a `server.public_http_server.ignored` warning event.
 
 ## Secret Registry
@@ -92,12 +93,12 @@ grants full API access, and changes on every server restart, so do not persist i
 variable is read and none needs to be set. Exposing and forwarding an internal secret works like any
 other secret: `exposed_secrets` with an `exposed_to` grant, or an outbound HTTP `secrets` entry.
 
-Internal secrets cannot be `optional`. They require an enabled API listener with authentication:
-`server run` fails at startup when the API is disabled or the server runs with `--no-auth`.
-`server verify` accepts them without a value. `cloud app fill` skips them. An internal secret may
-share its name with a server setting such as `OBELISK_API_TOKEN`: the server still reads that
-variable as an additional accepted API token, while components receive the startup token. Secrets
-without a `type`, or with `type = "env"`, are read from the process environment as described above.
+Internal secrets cannot be `optional`. They require an enabled API listener: `server run` fails at
+startup when the API is disabled. `server verify` accepts them without a value. `cloud app fill`
+skips them. An internal secret may share its name with a server setting such as `OBELISK_API_TOKEN`:
+the server still reads that variable as an additional accepted API token, while components receive
+the startup token. Secrets without a `type`, or with `type = "env"`, are read from the process
+environment as described above.
 
 ## Public Deployment Environment
 

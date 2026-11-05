@@ -27,16 +27,17 @@ A server without credentials serves public HTTP traffic, so it starts only when 
 in `public_http_servers`. Do not expose such a server on a public interface without your own
 protection in front of it.
 
-> **Recovery / development:** start the server with `--no-auth` to accept unauthenticated requests
-> on the API port. Use it only for local development or to recover access.
+> **Local development:** `server run --dev` prints the startup token and lets the `internal` HTTP
+> server start without configured credentials. The API still requires a token. Credentials
+> configured in `server.toml` stay enforced.
 
 ## Tokens
 
 ### Ephemeral startup token
 
-Every time the server starts it generates a fresh random token and prints it to standard error. This
-token is valid until the server shuts down and needs no configuration, so it is the quickest way to
-get going. It is generated even when persistent or environment tokens are configured:
+Every time the server starts it generates a fresh random token, valid until the server shuts down.
+It is generated even when persistent or environment tokens are configured. Only `server run --dev`
+prints it, to standard error, which is the quickest way to get going locally:
 
 ```
 API startup token: 6f1c...<token>
