@@ -59,8 +59,8 @@ CI and agents have no terminal to log in from. Create a token at
   default.
 - `obelisk cloud auth logout [ACCOUNT]` revokes the token and forgets the login.
 
-To add another account, sign out on the login page and sign in as that user. GitHub may sign you
-back in as the same user, so switch accounts on GitHub first.
+To add another account, switch accounts on GitHub, sign out of [cloud.obeli.sk](https://cloud.obeli.sk),
+then run `obelisk cloud auth login` again. Otherwise GitHub signs you back in as the same user.
 
 Logins are saved unencrypted in `cloud-credentials.toml` in the Obelisk configuration directory,
 `~/.config/obelisk` on Linux. The file is created readable only by you, and the CLI refuses to use
