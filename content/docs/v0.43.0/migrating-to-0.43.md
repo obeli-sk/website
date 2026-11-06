@@ -200,10 +200,14 @@ http_server.external.listening_addr = "127.0.0.1:9090"
 listening_addr = "0.0.0.0:9000"
 ```
 
-Every webhook endpoint must now set `http_server`; it no longer defaults to `external`. Add
-`http_server = "external"` to entries that relied on the default. A second built-in server,
-`internal` on `127.0.0.1:9091`, is meant for webhooks behind authentication. The Web UI stays in
-`[webui]`.
+Every webhook endpoint must now set `http_server`; it no longer defaults to `external`. Choose
+`http_server = "external"` for public pages and actual incoming webhooks. Choose
+`http_server = "internal"` for private pages and tools, including agent interfaces that spend LLM
+tokens or change apps. Do not make these interfaces public just to preserve the old listener. The
+built-in `internal` server listens on `127.0.0.1:9091`; Obelisk Cloud serves it behind platform
+authentication at `https://internal--<app>.<domain>`. For local development, `server run --dev` (for
+example in `just serve`) starts it without credentials; keep the listener on localhost. The Web UI
+stays in `[webui]`.
 
 A server without credentials starts only when `app.toml` lists it, so `external` is closed until the
 app admin opens it. Apps serving public webhooks add:
