@@ -19,8 +19,7 @@ executed at least once for resiliency.
 
 - **Isolation**: JavaScript activities run in a fresh instance of the
   {{ doc_link(title="JS runtime", path="js/js-runtime.md") }} for each execution. WASM activities
-  run in Wasmtime. Exec activities run as host processes; VM activities run through the selected
-  experimental VM backend.
+  run in Wasmtime. Exec activities run as host processes.
 
 - **Retry safety**: Activities must be safe to retry after errors, timeouts, and crashes, but also
   after ambiguous outcomes. In particular, an activity may be executed again even if it already
@@ -82,17 +81,15 @@ until `max_retries` is exhausted. Because an activity can always fail, its `retu
 
 ## Activity Types
 
-Obelisk supports four kinds of activities:
+Obelisk supports three kinds of activities:
 
 - **JavaScript Activities** (`activity_js`): JavaScript functions executed by the
   {{ doc_link(title="JS runtime", path="js/js-runtime.md") }}
 - **Rust Activities** (`activity_wasm`): Rust components compiled to WebAssembly and run in
   Wasmtime, see {{ doc_link(title="Rust Activities", path="wasm/activities.md") }}
 - **Exec Activities** (`activity_exec`): approved host processes used by JavaScript or Rust apps
-- **VM Activities** (`activity_vm`): Nix-packaged Linux programs run through an opt-in Bochs, QEMU,
-  or Firecracker backend
 
-All four types share the same retry, durability, and observability guarantees, and workflows call
+All three types share the same retry, durability, and observability guarantees, and workflows call
 them the same way. The choice depends on your toolchain and use case.
 
 ### Exec Activities

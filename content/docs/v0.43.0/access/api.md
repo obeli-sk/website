@@ -7,7 +7,7 @@ weight = 2
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.16") }}.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.17") }}.
 
 ## WebAPI
 
@@ -182,7 +182,7 @@ world root {
 ### `GET /v1/components/{digest}/sources`
 
 Lists the source files registered for a component as a JSON array of `{ "file", "digest" }` objects,
-including the scripts of exec and VM activities. `file` is the key accepted by
+including the scripts of exec activities. `file` is the key accepted by
 [`GET /v1/components/{digest}/source`](#get-v1-components-digest-source); suffix keys keep their
 `.../` prefix.
 

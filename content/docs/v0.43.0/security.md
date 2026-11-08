@@ -13,10 +13,7 @@ and the exec gate in `server.toml`.
 
 This is a defense-in-depth boundary, not a claim that arbitrary hostile native code is safe. WASM
 components run inside the Wasmtime sandbox. Native exec activities deliberately cross that sandbox
-and therefore require explicit, digest-bound approval from both admins. Experimental VM activities
-run Linux programs through an explicitly selected Bochs, QEMU, or Firecracker backend and still
-require app policy for secrets and network access. The native backends require host executables;
-QEMU with KVM and Firecracker also require access to `/dev/kvm`.
+and therefore require explicit, digest-bound approval from both admins.
 
 The operating principle is least privilege: choose the least powerful component type that can do the
 job, grant only the public configuration and network destinations it needs, and prefer secret
@@ -46,10 +43,9 @@ arbitrary I/O. Move non-deterministic work into a narrowly scoped WASM or JavaSc
 only the required outbound hosts and methods. Use a webhook only when the application must accept
 HTTP traffic, and treat every request as untrusted input.
 
-Use an experimental VM activity only when the workload needs a Linux userspace or Nix-packaged
-program. Use a native exec activity only when sandboxed component types cannot perform the task:
-exec code runs as a host process outside the WASM sandbox. VM and exec capabilities should be small,
-reviewed, and separated from workflows that do not need them.
+Use a native exec activity only when sandboxed component types cannot perform the task: exec code
+runs as a host process outside the WASM sandbox. Exec capabilities should be small, reviewed, and
+separated from workflows that do not need them.
 
 ## Environment variables and secrets
 
@@ -74,12 +70,12 @@ Obelisk injects them as environment variables when executing the activity or han
 This supports operations such as validating an inbound webhook HMAC, where component code must read
 the key.
 
-Exec activities receive exposed secrets through stdin, and VM activities receive them as guest
-environment variables. Code with plaintext access can attempt to copy the credential through any
-capability it also holds. Every plaintext exposure therefore requires a `SecretExposureDigest` grant
-under `[secrets.<name>.exposed_to]` in `app.toml`, bound to the component digest and its complete
-requested secret set. Exec activities additionally require the same reviewed digest under the app's
-`[allowed_exec_activities]`, and the platform's exec gate in `server.toml`.
+Exec activities receive exposed secrets through stdin. Code with plaintext access can attempt to
+copy the credential through any capability it also holds. Every plaintext exposure therefore
+requires a `SecretExposureDigest` grant under `[secrets.<name>.exposed_to]` in `app.toml`, bound to
+the component digest and its complete requested secret set. Exec activities additionally require the
+same reviewed digest under the app's `[allowed_exec_activities]`, and the platform's exec gate in
+`server.toml`.
 
 Do not put credentials in `public_env` or ordinary component `env_vars`. Do not use
 `exposed_secrets` merely to construct an outbound authorization header: outbound placeholder

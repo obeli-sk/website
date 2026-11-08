@@ -4,8 +4,8 @@ template = "docs.html"
 weight = 4
 +++
 
-This guide targets **Obelisk 0.43.0-rc.16**. It is based on the
-[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.16) of every
+This guide targets **Obelisk 0.43.0-rc.17**. It is based on the
+[published release notes](https://github.com/obeli-sk/obelisk/releases/tag/v0.43.0-rc.17) of every
 0.43.0 release candidate. Audit every deployment, configuration file, script, and CI workflow
 against these changes. Apps older than 0.42 must first follow the
 {{ doc_link(title="0.42 migration guide", path="migrating-to-0.42.md", version="v0.42.0") }}.
@@ -42,10 +42,6 @@ obelisk server verify --skip-db --server-config server.toml --app-config app.tom
 # CI without injected secret values:
 obelisk server verify --skip-db --allow-unavailable-runtime-config --app-config app.toml --deployment deployment.toml
 ```
-
-Deployments with
-{{ doc_link(title="experimental VM activities", path="configuration/deployment.md#experimental-vm-activities") }}
-still need `OBELISK_UNSTABLE_ACTIVITY_VM` set for either command.
 
 `server verify` also performs every component check of `deployment verify`, so CI that already runs
 `server verify` for a deployment does not need both. `server verify --skip-db` needs `--deployment`;
@@ -96,6 +92,19 @@ including fields on JavaScript, WASM, exec scripts, and referenced files. They a
 metadata and are now rejected as authored input. Update generators and CI digest-repair scripts
 accordingly. The CLI adds metadata during submission and removes it from exports. Pin a genuine
 cross-repository OCI dependency with its OCI `@sha256:...` reference instead.
+
+## Remove experimental VM activities
+
+RC17 removes `[[activity_vm]]` and all experimental VM backends. Remove VM components from every
+deployment and `[limits.activities.vm_bochs]` from server configuration before upgrading. Setting
+`OBELISK_UNSTABLE_ACTIVITY_VM` no longer enables them. Apps that depend on VM activities must
+replace that workload before upgrading.
+
+## Install system certificates for HTTPS
+
+Outbound HTTPS from activities and webhooks now trusts the host's system certificates instead of
+bundled Mozilla roots. Install a CA bundle on every host and in custom container images, including
+any private CAs the app requires. A host without a CA bundle cannot make these HTTPS requests.
 
 ## Move gRPC clients to REST
 
@@ -383,6 +392,13 @@ environment variables, and secrets. App-scoped commands, including `deployment`,
 app with `--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. `cloud app deploy` publishes a
 local project in one step.
 
+RC17 changes `cloud-credentials.toml` from `[[account]]` arrays to named `[account."name"]` tables.
+Manually convert each table using its saved account name, or remove the credentials file and log in
+again. Account selection is case-sensitive. `cloud auth login --account <ALIAS>` names a saved
+login, and `--default` selects it as the default. Refreshing a login preserves its saved name;
+backends are distinguished by the full API URL. Login uses `OBELISK_CLOUD_API_URL` when no explicit
+URL is supplied, falling back to `https://cloud.obeli.sk/api` when the variable is unset or empty.
+
 Scripts written against earlier 0.43 release candidates must be updated:
 
 - `cloud app start` and `cloud app stop`, later named `reactivate` and `deactivate`, are now
@@ -445,6 +461,9 @@ Apple targets, as jemalloc now also serves C and C++ allocations.
   cloud app names against the 4-20 character rule.
 - Audit all authored deployments for generated metadata and all verification invocations for removed
   flags.
+- Remove VM components and VM execution limits, and ensure hosts and container images have system CA
+  certificates for outbound HTTPS.
+- Convert saved cloud credentials to named account tables or log in again.
 - Run `server verify` for every deployment against each applicable app/server configuration.
 - Run the repository's CI commands with the target release, regenerate required artifacts, and check
   for tracked drift.

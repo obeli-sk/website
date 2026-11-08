@@ -68,9 +68,8 @@ code the plaintext value and requires an `exposed_to` grant generated with
 authorized outbound request and does not require a plaintext-exposure grant.
 
 `exposed_secrets` is supported by WASM and JavaScript activities and webhook endpoints, native exec
-activities, and experimental VM activities. WASM, JavaScript, and VM components receive each value
-under its logical name as an environment variable. Exec activities receive the values in the
-`secrets` object on stdin.
+activities. WASM and JavaScript components receive each value under its logical name as an
+environment variable. Exec activities receive the values in the `secrets` object on stdin.
 
 If the server prefixes app environment sources with `app_env_prefix` (see
 {{ doc_link(title="Server Configuration", path="configuration/server.md#app-environment-prefix") }}),
@@ -122,25 +121,27 @@ prefixed variable names, while `${NAME}` references in the deployment keep the u
 
 ### Internal Public Environment
 
-An app that needs the URL of its own server's API, Web UI or an HTTP server can let the server
-supply it instead of requiring an operator-supplied variable:
+An app that needs its configured name or the URL of its own server's API, Web UI or an HTTP server
+can let the server supply it instead of requiring an operator-supplied variable:
 
 ```toml
 [public_env]
+APP_NAME = { type = "internal", source = "app-name" }
 OBELISK_API_URL = { type = "internal", source = "api-url" }
 OBELISK_WEBUI_URL = { type = "internal", source = "webui-url" }
 INTERNAL_BASE_URL = { type = "internal", source = "http-server-url", http_server = "internal" }
 ```
 
-`api-url` uses `api.public_url` when set, otherwise `http://` plus the API listener address, with a
-wildcard bind such as `0.0.0.0` replaced by loopback. `webui-url` uses the server's
+`app-name` supplies the configured app name. `api-url` uses `api.public_url` when set, otherwise
+`http://` plus the API listener address, with a wildcard bind such as `0.0.0.0` replaced by
+loopback. `webui-url` uses the server's
 {{ doc_link(title="`webui.public_url`", path="configuration/server.md#web-ui") }} when set,
 otherwise the local Web UI listener. `http-server-url` reads any enabled
 {{ doc_link(title="HTTP server", path="configuration/server.md#http-servers") }} other than the Web
 UI from its `public_url`, otherwise from its local listener. Internal entries are always required:
-startup fails when the listener is disabled or uses port `0`. Process environment variables of the
-same name, with or without `app_env_prefix`, are ignored. Deployments use them like any other public
-entry, in `env_vars` or `${...}` interpolation. `cloud app fill` skips them.
+for URL sources, startup fails when the listener is disabled or uses port `0`. Process environment
+variables of the same name, with or without `app_env_prefix`, are ignored. Deployments use them like
+any other public entry, in `env_vars` or `${...}` interpolation. `cloud app fill` skips them.
 
 ### Cloud Integrations
 

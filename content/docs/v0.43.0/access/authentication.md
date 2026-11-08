@@ -91,6 +91,10 @@ least one claim is required, so that not every token from the issuer is accepted
 fetched through OIDC discovery and refreshed while the server runs, so issuer key rotation needs no
 restart. Static tokens are unaffected.
 
+The `issuer`, `audience`, and claim values in `api.oidc` and `http_server.<name>.oidc` accept
+`${VAR}` and `${VAR:-default}` from the server's environment. Missing variables stop startup, and
+the resolved values must satisfy the same validation rules.
+
 ### Plaintext token from the environment
 
 A single plaintext token can be injected into the **server** through `--api-token` or the

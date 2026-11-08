@@ -158,7 +158,7 @@ Activities returning a variant containing a case named `permanent` will skip ret
 Activities that make outbound HTTP calls require explicit `[[allowed_host]]` entries in the
 deployment and matching `[[outbound_http.allowed_host]]` entries in `app.toml`. Without both, the
 request is blocked. The same `allowed_host` syntax applies to `[[activity_js]]`,
-`[[activity_wasm]]`, `[[activity_vm]]`, `[[webhook_endpoint_js]]`, and `[[webhook_endpoint_wasm]]`.
+`[[activity_wasm]]`, `[[webhook_endpoint_js]]`, and `[[webhook_endpoint_wasm]]`.
 
 ```toml
 [[activity_js]]
@@ -248,60 +248,6 @@ appears in those locations, so the component itself decides placement (for examp
 `Authorization: Bearer <placeholder>` header that it sets). Header names, URL paths, and query
 parameter names are never searched. Body replacement requires valid UTF-8 and a textual content
 type: `text/*`, JSON, or `application/x-www-form-urlencoded`.
-
-### Experimental VM Activities
-
-`activity_vm` runs a Nix-packaged Linux executable inside an experimental Linux VM. Set
-`OBELISK_UNSTABLE_ACTIVITY_VM` on both the deployment CLI and server to select a backend:
-
-| Value         | Backend                                                                              | Host requirements                                                          |
-| :------------ | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| `bochs-wasm`  | [Bochs](https://github.com/obeli-sk/activity-vm-bochs) x86 emulator compiled to WASM | Wasmtime; fixed 512 MiB guest and one vCPU                                 |
-| `qemu-tcg`    | Native QEMU with software emulation                                                  | Matching `qemu-system-x86_64` on `PATH`                                    |
-| `qemu-kvm`    | Native QEMU with KVM acceleration                                                    | Matching `qemu-system-x86_64` on `PATH` and `/dev/kvm`                     |
-| `firecracker` | Firecracker microVM, cold booted for each execution                                  | `firecracker` and `mkfs.erofs` on `PATH`; readable and writable `/dev/kvm` |
-
-The value is required even for existing VM deployments. Without it, deployment verification rejects
-`[[activity_vm]]` and existing VM deployments cannot activate. Each backend pulls a pinned runtime
-bundle from OCI. The guest ABI, cache layout, configuration, and runtime behavior may change or be
-removed in a later release.
-
-```toml
-[[activity_vm]]
-name = "vm-curl"
-ffqn = "example:vm/curl.run"
-content = '''#!/usr/bin/env bash
-curl -fsS https://api.example.com/v1/items
-'''
-params = []
-return_type = "result<string, string>"
-store_paths = [
-  "/nix/store/...-bash-interactive-5.3p15",
-  "/nix/store/...-curl-8.22.0-bin",
-]
-memory.mib = 512 # Required guest RAM; use memory.gib = 4 with a native backend.
-cpus = 1         # Optional; defaults to 1.
-exec.lock_expiry.seconds = 120
-
-[[activity_vm.allowed_host]]
-pattern = "https://api.example.com"
-methods = ["GET"]
-```
-
-Native QEMU supports guest RAM from 256 MiB up to the pinned bundle's limit (currently 16.25 GiB)
-and vCPUs up to the bundle's limit. Bochs requires exactly 512 MiB and one vCPU. Firecracker checks
-memory and vCPU counts against its pinned bundle. The `memory` setting is required for every
-backend; `cpus` defaults to one.
-
-The pinned VM runtime and verified Nix closures are cached and exposed read-only to the guest.
-`cache.nixos.org` is enabled by default; add `[[activity_vm.nix_cache]]` entries with trusted public
-keys for other caches. Each declared store path's `bin` directory is added to the guest `PATH`.
-
-Guest HTTP(S) uses the same intersection of deployment and app policy as WASM and JS components.
-Inside the guest, `obelisk-host` addresses the Obelisk host; configure its allowlist as the
-corresponding `http://localhost:PORT` destination. Prefer outbound secret placeholders. Secrets in
-`activity_vm.exposed_secrets` become guest environment variables readable by every guest process and
-require a matching `[secrets.<name>.exposed_to]` digest grant.
 
 ### Exec Activities
 

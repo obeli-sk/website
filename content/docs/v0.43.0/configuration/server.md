@@ -119,9 +119,6 @@ count = 16
 memory.mib = 256
 [limits.activities.process]    # activity_exec: an operating system process, so no `memory`.
 count = 32
-[limits.activities.vm_bochs]   # activity_vm (the VM slot cell for all backends)
-count = 8
-memory.gib = 1
 [limits.workflows.wasm]        # Includes JavaScript workflows with OBELISK_JS_RUNTIME=boa-wasm.
 count = 500
 memory.mib = 512
@@ -224,6 +221,10 @@ space up to twice the database size.
 
 ## PostgreSQL
 
+TLS is disabled by default. Set `database.postgres.ssl_mode = "verify_full"` to encrypt connections
+and verify the certificate chain and host name against system certificates. Set
+`database.postgres.ssl_root_cert` to a PEM file to use a custom set of trusted CAs instead.
+
 Configure connection to Postgres. All of the following keys support environment variable
 interpolation.
 
@@ -312,6 +313,10 @@ are returned. It does not limit a streaming response body after that; `max_strea
 including for silent streams.
 
 ## Outbound HTTP Connection Pool
+
+Outbound HTTPS from activities and webhook endpoints trusts the host's system certificates,
+including installed private CAs. Install a CA bundle on hosts and in custom container images;
+Obelisk no longer supplies bundled Mozilla roots.
 
 Activities and webhook endpoints share one pool of outbound HTTP connections. Idle HTTP/1
 connections are reused per scheme, host and port.

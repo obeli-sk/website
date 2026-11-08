@@ -54,17 +54,25 @@ CI and agents have no terminal to log in from. Create a token at
 `OBELISK_CLOUD_API_TOKEN`.
 
 - `obelisk cloud auth status` shows the saved accounts and whether their tokens still work. An
-  account is written as your username at the API host, for example `alice@cloud.obeli.sk`.
+  account defaults to your username at the API host, for example `alice@cloud.obeli.sk`.
+  `auth login --account <ALIAS>` assigns a custom name; `--default` makes that login the default.
+  Refreshing a login preserves its saved name. Account selection is case-sensitive, and backends are
+  distinguished by the full API URL.
 - `obelisk cloud auth switch <ACCOUNT>` changes the default account. The first login becomes the
   default.
 - `obelisk cloud auth logout [ACCOUNT]` revokes the token and forgets the login.
 
-To add another account, switch accounts on GitHub, sign out of [cloud.obeli.sk](https://cloud.obeli.sk),
-then run `obelisk cloud auth login` again. Otherwise GitHub signs you back in as the same user.
+To add another account, switch accounts on GitHub, sign out of
+[cloud.obeli.sk](https://cloud.obeli.sk), then run `obelisk cloud auth login` again. Otherwise
+GitHub signs you back in as the same user.
 
 Logins are saved unencrypted in `cloud-credentials.toml` in the Obelisk configuration directory,
 `~/.config/obelisk` on Linux. The file is created readable only by you, and the CLI refuses to use
 it if others can read it.
+
+RC17 stores logins in named `[account."name"]` tables. To upgrade a credentials file from earlier
+release candidates, manually convert each `[[account]]` table using its saved account name, or
+remove the file and log in again.
 
 The CLI picks what it talks to from the first row that matches:
 
@@ -81,7 +89,9 @@ The CLI picks what it talks to from the first row that matches:
 
 Setting only some of the token, URL and domain is an error, as is combining any of them with
 `--account`. A custom deployment can also use saved logins: run
-`obelisk cloud auth login https://cloud.example.com/api`, without those variables set.
+`obelisk cloud auth login https://cloud.example.com/api`, without those variables set. Login also
+accepts `OBELISK_CLOUD_API_URL` as its default URL; an unset or empty value uses
+`https://cloud.obeli.sk/api`, and an explicit URL takes precedence.
 
 ## Public and private webhooks
 
