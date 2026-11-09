@@ -240,7 +240,7 @@ must use `--json` or deliberately capture stderr. This applies to cloud commands
 
 Deployment `submit`, `apply`, and `enqueue` print the deployment ID to stdout. `--json` is now
 available for those commands, deployment `list`, component `list`, execution `pause`, `unpause`,
-`cancel`, and `upgrade`, and `cloud app endpoint`. Execution JSON follow modes emit flushed NDJSON:
+`cancel`, and `upgrade`. Execution JSON follow modes emit flushed NDJSON:
 one compact JSON object per line, including submission responses, log records, and final results. Do
 not parse a followed execution as one JSON document.
 
@@ -418,8 +418,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   `apply` sends the staged configuration and the enqueued (or active) deployment explicitly.
 - `--api-url` and `--apps-domain` are gone. A custom deployment sets `OBELISK_CLOUD_API_URL`,
   `OBELISK_CLOUD_APPS_DOMAIN` and `OBELISK_CLOUD_API_TOKEN` together; a token alone targets
-  `https://cloud.obeli.sk/api`. App endpoints are derived locally from the apps domain:
-  `<app>.<domain>`, `api--<app>.<domain>`, `webui--<app>.<domain>`, and `internal--<app>.<domain>`.
+  `https://cloud.obeli.sk/api`.
 - `cloud token new` requires `--token-file` and saves the server-issued token to that new private
   file. Token names are unique per account until revoked; after a lost creation response, revoke the
   inaccessible token before creating a replacement.
@@ -429,6 +428,9 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud app new` no longer takes a positional name; use `cloud app new --app <NAME>`.
 - `cloud apps list` is now `cloud app list`. `--app` follows the `cloud app` subcommand, as in
   `cloud app status --app <NAME>`; `cloud app --app <NAME> status` is rejected.
+- `cloud app get` and `cloud app endpoint` are removed. `cloud app status` shows the app and the
+  endpoints it serves: the API, Web UI and `internal` webhooks, plus `external` webhooks when
+  `app.toml` lists them in `public_http_servers`. With `--json`, they are under `.app.endpoints`.
 - Cloud app commands refuse an app config naming a different app than `--app` or `OBELISK_APP_NAME`
   when it is passed with `-a` or required by `stage` and `deploy`. `stage` and `deploy` discover
   `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.

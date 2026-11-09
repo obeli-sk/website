@@ -17,7 +17,7 @@ obelisk cloud auth login
 obelisk generate new myapp
 cd myapp
 obelisk cloud app deploy -a app.toml -d deployment.toml --fill
-obelisk cloud app endpoint
+obelisk cloud app status
 ```
 
 `--fill` prompts for required env vars and secrets. Use `--fill-non-interactive` in scripts to read
@@ -37,6 +37,10 @@ An idle app may be suspended. It resumes on the next request.
 | `https://api--myapp.obelisk.works`      | API                 | API token                    |
 
 </div>
+
+The bare hostname answers 404 unless the applied `app.toml` lists `external` in
+`public_http_servers` (see [below](#public-and-private-webhooks)). `cloud app status` and `deploy`
+print the endpoints the app serves.
 
 Opening the Web UI or internal host in a browser signs in through
 [cloud.obeli.sk](https://cloud.obeli.sk). Other clients send an API token to the API host or the
@@ -138,8 +142,9 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
 [logins](#logging-in). `cloud token` creates, lists, inspects, and revokes cloud bearer tokens;
 `cloud app list` lists the apps you own. The other `cloud app` subcommands are scoped to one app:
 
-- `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
-  named by `--app`. `status` shows the staged and applied configuration revisions and, when `-a` or
+- `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
+  named by `--app`. `status` shows the app's endpoints, the staged and applied configuration
+  revisions and, when `-a` or
   `./app.toml` is readable, whether it matches the staged configuration. It also shows the health
   check of a started VM and a scheduled wake-up that keeps failing. An app suspended while idle
   shows as `running (suspended)` with `API: resumes on request`. Required env vars and secrets must
@@ -166,8 +171,6 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
   performs the comparison) and never stage it silently: on a difference they ask whether to stage
   it, use the staged one, or cancel, and fail without a terminal unless `--staged` is passed.
   `apply` also accepts `--fill` and `--fill-non-interactive`.
-- `endpoint` shows the API, webhook, Web UI, and internal webhook URLs; `endpoint api`, `webhook`,
-  `webui`, or `internal` prints one of them.
 - `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
 
 Select an app with `--app` after the subcommand (`cloud app status --app NAME`), `OBELISK_APP_NAME`,
