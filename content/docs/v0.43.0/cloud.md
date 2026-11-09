@@ -136,7 +136,7 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
 
 `obelisk cloud` manages apps hosted by an Obelisk cloud control plane. `cloud auth` manages
 [logins](#logging-in). `cloud token` creates, lists, inspects, and revokes cloud bearer tokens;
-`cloud apps` lists the apps you own. Everything scoped to one app lives under `cloud app`:
+`cloud app list` lists the apps you own. The other `cloud app` subcommands are scoped to one app:
 
 - `new`, `get`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
   named by `--app`. `status` shows the staged and applied configuration revisions and, when `-a` or
@@ -170,9 +170,9 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
   `webui`, or `internal` prints one of them.
 - `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
 
-Select an app with `cloud app --app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. Cloud app
-names are 4-20 lowercase ASCII letters, digits, and single interior hyphens (no `--`), and are
-unique within each cloud environment. Names starting with `system-` or `integrations-` are reserved.
+Select an app with `--app` after the subcommand (`cloud app status --app NAME`), `OBELISK_APP_NAME`,
+or `app_name` in `./app.toml`. Cloud app names are 4-20 lowercase ASCII letters, digits, and single
+interior hyphens (no `--`), and are unique within each cloud environment. Names starting with `system-` or `integrations-` are reserved.
 Env vars bound by
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
 supplied by the cloud, so `new`, `deploy`, `fill`, and `apply` never ask for them.

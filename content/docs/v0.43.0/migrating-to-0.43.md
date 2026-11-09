@@ -426,7 +426,9 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud app env set`, `secrets set`, and `fill` accept names starting with `OBELISK_`.
 - Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
   cloud environment. An interactive `cloud app deploy` offers an alternative for a taken name.
-- `cloud app new` no longer takes a positional name; use `cloud app --app <NAME> new`.
+- `cloud app new` no longer takes a positional name; use `cloud app new --app <NAME>`.
+- `cloud apps list` is now `cloud app list`. `--app` follows the `cloud app` subcommand, as in
+  `cloud app status --app <NAME>`; `cloud app --app <NAME> status` is rejected.
 - Cloud app commands refuse an app config naming a different app than `--app` or `OBELISK_APP_NAME`
   when it is passed with `-a` or required by `stage` and `deploy`. `stage` and `deploy` discover
   `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
