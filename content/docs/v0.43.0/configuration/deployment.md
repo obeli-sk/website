@@ -197,7 +197,10 @@ The `pattern` field supports `${VAR}` and `${VAR:-default}` environment variable
 `request_url_regex` is an optional extra restriction on top of the required host `pattern` and
 `methods` allowlist entry. It is checked only after the host and method match, and omitting it
 allows all paths accepted by those required restrictions. The regex is matched against `METHOD URL`
-with query parameters removed, for example `GET https://api.example.com/v1/items`. The regex also
+with the query string removed: a request to `https://api.example.com/v1/items?page=2` is matched as
+`GET https://api.example.com/v1/items`. The matched text never contains `?`, so a regex expecting
+one never matches, and query parameters cannot be restricted. The regex can match anywhere in the
+text; anchor it with `^` and `$` to match the whole request. The regex also
 supports `${VAR}` and `${VAR:-default}` interpolation; interpolated values are treated as regex
 syntax, so escape them when they should match literally.
 
@@ -232,7 +235,8 @@ replace_in = ["headers"]
   matches, for example `https://llm.example/api` matches `https://llm.example/api/v1/models`. The
   prefix is a plain string prefix, so it also matches `https://llm.example/api2`; end the prefix
   with `/` to require a path separator.
-- As with `request_url_regex`, matching ignores query parameters.
+- As with `request_url_regex`, the query string is removed before matching, so a suffix ending in
+  `\?` never matches; end it with `$` instead.
 - An entry uses either `pattern` (with optional `request_url_regex`) or `url_prefix` (with optional
   `url_regex_suffix`); the fields cannot be combined.
 
