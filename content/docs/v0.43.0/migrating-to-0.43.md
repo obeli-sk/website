@@ -232,6 +232,16 @@ locally. Require tokens for a whole listener with `[[http_server.<name>.oidc]]` 
 Components that need a server's URL can read it with
 `{ type = "internal", source = "http-server-url", http_server = "<name>" }`.
 
+Verify a local development deployment with `server verify --dev`, matching `server run --dev`:
+
+```sh
+obelisk server verify --dev --skip-db --server-config server.toml --app-config app.toml --deployment deployment.toml
+```
+
+Replace `OBELISK__HTTP_SERVER__INTERNAL__API_AUTH=true` prefixes on verification commands with
+`--dev`. This checks the development listener configuration without requiring credentials on the
+internal server. Production verification should use the production authentication configuration.
+
 ## Audit stdout consumers
 
 Human-readable listings, progress, and confirmations now go to **stderr**. Stdout carries IDs, JSON,
@@ -240,9 +250,9 @@ must use `--json` or deliberately capture stderr. This applies to cloud commands
 
 Deployment `submit`, `apply`, and `enqueue` print the deployment ID to stdout. `--json` is now
 available for those commands, deployment `list`, component `list`, execution `pause`, `unpause`,
-`cancel`, and `upgrade`. Execution JSON follow modes emit flushed NDJSON:
-one compact JSON object per line, including submission responses, log records, and final results. Do
-not parse a followed execution as one JSON document.
+`cancel`, and `upgrade`. Execution JSON follow modes emit flushed NDJSON: one compact JSON object
+per line, including submission responses, log records, and final results. Do not parse a followed
+execution as one JSON document.
 
 Without `--json`, execution results are pretty-printed as JSON on stdout with completion messages on
 stderr, and the logs of `execution submit --follow-logs` move to stderr. `obelisk execution get` is

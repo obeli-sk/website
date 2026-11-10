@@ -398,6 +398,9 @@ without credentials it starts only with `server run --dev`. A deployment whose w
 server that does not start fails verification. Listening on all interfaces (`[::]:<port>`) is not
 advised for servers without credentials.
 
+Use `server verify --dev` to verify the same local development configuration as `server run --dev`.
+This replaces setting `OBELISK__HTTP_SERVER__INTERNAL__API_AUTH=true` just for verification.
+
 ## Idle Reporting
 
 A platform that suspends idle servers can receive idle reports. SQLite only; without a URL the
