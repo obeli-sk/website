@@ -1298,6 +1298,14 @@ or enqueue (activate on next restart).
 
 - `deployment-id`: The deployment ID to switch to.
 
+**Headers:**
+
+- `If-Match` (required): `"<node_run_id>:<switch_count>"`, both read from
+  [`GET /v1/info`](#get-v1-info). The switch count grows with every applied or enqueued switch,
+  including enqueueing the active deployment (it replaces any queued one), but not with activating
+  the active deployment. Read the value once and reuse it when retrying, so that a retry cannot
+  override a switch made in the meantime.
+
 **Request Body (JSON):**
 
 | Field                              | Type    | Description                                                                                                                   |
@@ -1315,18 +1323,29 @@ values and approvals before restarting. Hot apply always requires strict verific
   (enqueued for next restart).
 - `404 Not Found`: Deployment not found.
 - `400 Bad Request`: Switch or validation failed.
+- `412 Precondition Failed`: `If-Match` names an earlier server run or switch count. A retry also
+  gets this when an earlier attempt succeeded, so check `deployment_id` in `GET /v1/info` before
+  treating it as a failure.
+- `428 Precondition Required`: `If-Match` is missing or malformed.
 
 #### Example request
 
 ```sh
+if_match() {
+  curl -s -H "$OBELISK_API_AUTH" 127.1:5005/v1/info |
+    jq -r '"\"\(.node_run_id):\(.switch_count)\""'
+}
+
 # Enqueue a deployment (activates on next restart)
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
-  -H content-type:application/json -X PUT -d '{"apply": false}'
+  -H "If-Match: $(if_match)" -H content-type:application/json -X PUT -d '{"apply": false}'
 
 # Apply immediately without restart
 curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ875X599/switch" \
-  -H content-type:application/json -X PUT -d '{"apply": true}'
+  -H "If-Match: $(if_match)" -H content-type:application/json -X PUT -d '{"apply": true}'
 ```
+
+Each switch reads a fresh value. A retry of the same switch reuses the value of its first attempt.
 
 ```json
 { "ok": "switched" }
@@ -1339,7 +1358,9 @@ curl -H "$OBELISK_API_AUTH" "127.1:5005/v1/deployments/Dep_01KN1NK9A6NMHP31TVJ87
 ### `GET /v1/info`
 
 Returns the app name, the server's `app_env_prefix`, Obelisk version, current deployment ID, node
-run ID, app config digest, server start time, and, in the optional `gc` object, the
+run ID, the number of deployment switches since the server started (`switch_count`, used by
+[deployment switch](#put-v1-deployments-deployment-id-switch)), app config digest, server start
+time, and, in the optional `gc` object, the
 `[maintenance.gc]` settings with durations in milliseconds, as JSON:
 
 ```json
@@ -1349,6 +1370,7 @@ run ID, app config digest, server start time, and, in the optional `gc` object, 
   "obelisk_version": "0.43.0",
   "deployment_id": "Dep_...",
   "node_run_id": "NodeRun_...",
+  "switch_count": 0,
   "app_config_digest": "app-config:v1:sha256:...",
   "started_at": "2026-10-18T11:00:00.000Z",
   "gc": {

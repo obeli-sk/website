@@ -391,6 +391,12 @@ content under a different explicit ID returns `409 Conflict`; look up its ID wit
 `GET /v1/deployment-digests/{digest}`. Scripts must tolerate a successful submission returning an
 existing ID. `POST /v1/deployments` is deprecated in favor of `PUT /v1/deployments/{deployment-id}`.
 
+`PUT /v1/deployments/{deployment-id}/switch` requires `If-Match: "<node_run_id>:<switch_count>"`,
+both read from `GET /v1/info`. Read it once per switch and reuse it on retries: a stale value gets
+`412`, including a retry whose earlier attempt succeeded, and a missing header gets `428`. The
+`deployment apply` and `deployment enqueue` commands send it. See
+{{ doc_link(title="the switch endpoint", path="access/api.md#put-v1-deployments-deployment-id-switch") }}.
+
 Databases already storing the same content under several deployments migrate without changes to
 those deployments: one stays unique (the active or enqueued one, otherwise the most recently
 updated) and the others are marked as superseded by it. Resubmitting that content resolves to the
@@ -493,5 +499,6 @@ Apple targets, as jemalloc now also serves C and C++ allocations.
 - Review retention `max_age`/`max_count` defaults and system-event filters for renamed codes.
 - Size the `v8` cells of `[limits]` for JavaScript components, or set `OBELISK_JS_RUNTIME=boa-wasm`.
 - Replace `GET /v1/execution-id` and `GET /v1/deployment-id` calls.
+- Send `If-Match` from `GET /v1/info` with every deployment switch request.
 - Review app/server policy diffs, authentication (including internal secrets for self-API tokens and
   restart-only token hash changes), stdout consumers, REST requests, and optional WIT regeneration.

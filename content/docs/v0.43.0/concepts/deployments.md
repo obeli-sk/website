@@ -86,10 +86,16 @@ or via the Web API, after exporting `OBELISK_API_TOKEN` as described in
 {{ doc_link(title="Authentication", path="access/authentication.md") }}:
 
 ```sh
+IF_MATCH=$(curl -s "127.1:5005/v1/info" -H "Authorization: Bearer $OBELISK_API_TOKEN" |
+  jq -r '"\"\(.node_run_id):\(.switch_count)\""')
 curl "127.1:5005/v1/deployments/Dep_.../switch" \
-  -H "Authorization: Bearer $OBELISK_API_TOKEN" \
+  -H "Authorization: Bearer $OBELISK_API_TOKEN" -H "If-Match: $IF_MATCH" \
   -H content-type:application/json -X PUT -d '{"apply": true}'
 ```
+
+The required `If-Match` header pins the switch to the server run and switch count read from
+`GET /v1/info`, so a retried request cannot override a later switch. See
+{{ doc_link(title="the switch endpoint", path="access/api.md#put-v1-deployments-deployment-id-switch") }}.
 
 Use the `apply` field. The former `hot_redeploy` alias was removed in 0.42.
 
