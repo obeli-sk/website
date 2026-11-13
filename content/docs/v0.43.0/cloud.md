@@ -21,7 +21,9 @@ obelisk cloud app status
 ```
 
 `--fill` prompts for required env vars and secrets. Use `--fill-non-interactive` in scripts to read
-same-named environment variables instead.
+same-named environment variables instead, or pass values individually: `--env NAME=VALUE`, `--env
+NAME` (reads the same-named environment variable), and `--secret NAME` (always reads the same-named
+environment variable, so secrets never appear on the command line).
 
 An idle app may be suspended. It resumes on the next request.
 
@@ -143,34 +145,38 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
 `cloud app list` lists the apps you own. The other `cloud app` subcommands are scoped to one app:
 
 - `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
-  named by `--app`. `status` shows the app's endpoints, the staged and applied configuration
-  revisions and, when `-a` or
-  `./app.toml` is readable, whether it matches the staged configuration. It also shows the health
+  named by `--app`. `status` shows the app's endpoints, the applied configuration revision, your
+  [drafts](#drafts) with their changes and missing values and, when `-a` or `./app.toml` is
+  readable, whether it matches the default draft. It also shows the health
   check of a started VM and a scheduled wake-up that keeps failing. An app suspended while idle
   shows as `running (suspended)` with `API: resumes on request`. Required env vars and secrets must
-  be supplied at creation with `--fill` (prompts) or `--fill-non-interactive` (reads same-named
-  environment variables).
+  be supplied at creation with `--env` and `--secret`, `--fill` (prompts), or
+  `--fill-non-interactive` (reads same-named environment variables).
 - `pull` writes the running `app.toml`, the active deployment, and its source files to disk.
 - `events` lists the app's recent lifecycle and VM events, newest first: completed and failed
   commands, app failures and restores, critical and recovered health checks, restarts of an
   unhealthy VM, and failed wake-ups. `-n, --limit` sets how many to show (1-50, default 5). Routine
   idle suspends and wake-ups are not recorded.
-- `stage` stages app policy and cloud settings as a new configuration revision without restarting
-  the VM; `apply` applies a staged revision together with the enqueued (or active) deployment while
-  respecting the app's intended running state.
-- `deploy` publishes the local project: it creates or configures the app, submits the deployment,
-  and activates it. It fails on missing required values unless `--fill` or `--fill-non-interactive`
-  is passed. When the app name is taken, an interactive `deploy` offers an alternative and saves it
+- `stage` puts `app.toml` into a [draft](#drafts) without restarting the VM; `unstage` discards
+  the draft. `apply` prints what changes and applies the draft together with the enqueued (or
+  active) deployment while respecting the app's intended running state. Without changes in the
+  draft it re-applies the applied revision. `apply --env`, `--secret`, `--fill`, and
+  `--fill-non-interactive` stage values into the draft first.
+- `deploy` publishes the local project: it creates the app, or stages `app.toml` and values into a
+  new `deploy-<ID>` draft, submits the deployment, and applies the draft. It fails on missing
+  required values unless they are passed with `--env` and `--secret`, `--fill`, or
+  `--fill-non-interactive`. A failed `deploy` keeps its draft and prints how to retry with
+  `--draft deploy-<ID>`. When the app name is taken, an interactive `deploy` offers an alternative and saves it
   to `app.toml` if the original name came from there; noninteractive and `--json` runs fail with a
   conflict error. `--description` describes the deployment, as in `deployment enqueue`.
-- `fill` interactively stages declared env vars and secrets and requires a terminal;
-  `fill --non-interactive` stages same-named environment variables instead, for scripts. `env` and
-  `secrets` manage them individually; names starting with `OBELISK_` are accepted. Internal secrets
-  and internal public environment entries are skipped.
-- `fill` and `apply` compare `-a` or `./app.toml` with the staged configuration (the control plane
-  performs the comparison) and never stage it silently: on a difference they ask whether to stage
-  it, use the staged one, or cancel, and fail without a terminal unless `--staged` is passed.
-  `apply` also accepts `--fill` and `--fill-non-interactive`.
+- `fill` interactively stages declared env vars and secrets into a draft and requires a terminal;
+  `fill --non-interactive` stages same-named environment variables instead, for scripts. `env set`,
+  `env unset`, `secrets set`, and `secrets unset` stage them individually; names starting with
+  `OBELISK_` are accepted. Internal secrets and internal public environment entries are skipped.
+  `env list` and `secrets list` show the applied values.
+- `fill` and `apply` compare `-a` or `./app.toml` with the draft's `app.toml` and never stage it
+  silently: on a difference they ask whether to stage it, use the draft's, or cancel, and fail
+  without a terminal unless `--staged` is passed.
 - `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
 
 Select an app with `--app` after the subcommand (`cloud app status --app NAME`), `OBELISK_APP_NAME`,
@@ -179,6 +185,16 @@ interior hyphens (no `--`), and are unique within each cloud environment. Names 
 Env vars bound by
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
 supplied by the cloud, so `new`, `deploy`, `fill`, and `apply` never ask for them.
+
+### Drafts
+
+Changes to `app.toml`, env vars, and secrets are staged into a draft and take effect when the draft
+is applied. `stage`, `unstage`, `apply`, `fill`, `env set`/`unset`, and `secrets set`/`unset` take
+`--draft <KEY>` (default `default`; the dashboard edits the same `default` draft). Each draft starts
+from the applied revision and belongs to you. Applying a draft discards the app's other drafts,
+including those of other users; `deploy` warns about your drafts it will discard. Apply fails while
+declared required values are missing; values the draft sets but `app.toml` does not declare are
+reported.
 
 `new`, `status`, `stage`, `deploy`, `fill`, and `apply` read the app config from `-a, --app-config`
 or discover `./app.toml`. They never use another app's config: a file whose `app_name` differs from
