@@ -163,7 +163,7 @@ OBELISK_WEBUI_URL = { type = "internal", source = "webui-url" }
 The server resolves them from its own listeners and ignores process variables of the same name. Set
 `webui.public_url` in `server.toml` when the Web UI is reached through a proxy, so browser links use
 the public address. Drop the corresponding variables from run scripts, `.env` files, and cloud
-environments; `cloud app fill` skips internal entries.
+environments; `cloud app deploy --fill` skips internal entries.
 
 Outbound HTTP rules in `app.toml` and deployments accept `url_prefix` with an optional
 `url_regex_suffix` instead of `pattern` and `request_url_regex`. Apps that needed separate
@@ -422,20 +422,20 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - Configuration changes are staged into named
   {{ doc_link(title="drafts", path="cloud.md#drafts") }} (`--draft`, default `default`).
   `cloud app status` shows the applied revision, your drafts, VM health, and failing wake-ups, and
-  compares the local `app.toml` with the default draft; `apply` applies a draft, or re-applies the
-  applied revision when it has no changes. `unstage` discards a draft.
+  compares the local `app.toml` with the default draft; `apply` applies a staged draft and
+  `apply --reapply` re-applies the applied revision. `unstage` discards a draft. `deploy` stages
+  into its own temporary draft.
 - `cloud app events` lists recent lifecycle and VM events.
 - App names starting with `system-` or `integrations-` are reserved.
 - Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
   and are never prompted for. See
   {{ doc_link(title="Cloud Integrations", path="configuration/app.md#cloud-integrations") }}.
-- Missing required env vars and secrets fail in the client. `cloud app new`, `deploy`, and `apply`
-  take `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
+- Missing required env vars and secrets fail in the client. `cloud app new` and `deploy` take `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
   (reads the same-named environment variable), `--fill` (prompts), and `--fill-non-interactive`
-  (reads same-named environment variables); `cloud app fill` takes `--non-interactive`.
-- `fill` and `apply` compare `./app.toml` (or `-a`) with the draft's `app.toml` and prompt, or
-  fail without a terminal, when they differ. Pass `--staged` to use the draft's `app.toml`.
-  `apply` sends the draft revision and the enqueued (or active) deployment explicitly.
+  (reads same-named environment variables). There is no `cloud app fill`; stage values into a
+  draft with `env set` and `secrets set`.
+- `apply` never stages `app.toml` or values: it applies only what is staged, with the active
+  deployment.
 - `cloud app env set`/`unset` and `secrets set`/`unset` stage into a draft instead of changing the
   app immediately and no longer take `--command-id`.
 - `--api-url` and `--apps-domain` are gone. A custom deployment sets `OBELISK_CLOUD_API_URL`,
