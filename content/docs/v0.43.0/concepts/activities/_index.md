@@ -75,7 +75,8 @@ Outbound HTTP is denied unless the deployment requests the host and `app.toml` a
 {{ doc_link(title="Security Model", path="security.md") }}.
 
 Returning a value finishes the execution with `ok`. Throwing produces `err`, which Obelisk retries
-until `max_retries` is exhausted. Because an activity can always fail, its `return_type` must be a
+until `max_retries` is exhausted. A run interrupted by a deployment switch or server shutdown also
+consumes a retry. Because an activity can always fail, its `return_type` must be a
 `result`. See {{ doc_link(title="JS Activities", path="js/js-activities.md") }} for the full API and
 {{ doc_link(title="WIT Basics", path="concepts/wit-reference.md") }} for the available types.
 

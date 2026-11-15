@@ -209,6 +209,28 @@ Customize PRAGMA statements. Defaults are in
 database.sqlite.pragma = { "cache_size" = "10000", "synchronous" = "FULL" }
 ```
 
+By default every commit fsyncs the WAL (`fsync = "commit"`). With `fsync = "group"`, commits run
+with `synchronous = NORMAL` and a single fsync of the WAL covers all commits made before it. It runs
+before a commit is revealed outside of the server: before an API call or webhook responds, an
+activity runs, or an external read returns. Writes nobody waits for are synced after one second of
+inactivity. `group` cannot be combined with a `synchronous` pragma.
+
+```toml
+database.sqlite.fsync = "group"
+```
+
+`database.sqlite.litestream.socket` replicates synchronously: every fsync is followed by a sync
+through the Litestream control socket (`socket.path` in the Litestream configuration), so a
+commit is revealed only after Litestream uploads it. Litestream must be replicating the database
+before the server starts; the server waits for it on startup. The server does not check that the
+database matches the replica: after a host crash the replica can be ahead of the local database,
+so the launcher must restore the replica before starting Litestream whenever the database is
+behind it or does not match Litestream's local position.
+
+```toml
+database.sqlite.litestream.socket = "/var/run/litestream.sock"
+```
+
 SQLite databases use `auto_vacuum=INCREMENTAL`. After retention and garbage collection, each
 automatic maintenance sweep returns freed pages to the file system in bounded batches, pausing for
 `maintenance.gc.batch_delay` between them, so the database file shrinks after large deletions

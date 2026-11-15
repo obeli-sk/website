@@ -7,7 +7,7 @@ weight = 2
 ## OpenAPI Schema
 
 The Web API has an auto-generated OpenAPI schema available at
-{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.17") }}.
+{{ github(title="assets/schemas/openapi.json", path="assets/schemas/openapi.json", version="v0.43.0-rc.18") }}.
 
 ## WebAPI
 
