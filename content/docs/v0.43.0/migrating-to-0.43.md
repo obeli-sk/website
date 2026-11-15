@@ -392,8 +392,9 @@ content under a different explicit ID returns `409 Conflict`; look up its ID wit
 existing ID. `POST /v1/deployments` is deprecated in favor of `PUT /v1/deployments/{deployment-id}`.
 
 `PUT /v1/deployments/{deployment-id}/switch` requires `If-Match: "<node_run_id>:<switch_count>"`,
-both read from `GET /v1/info`. Read it once per switch and reuse it on retries: a stale value gets
-`412`, including a retry whose earlier attempt succeeded, and a missing header gets `428`. The
+both read from `GET /v1/info`. Read it once per switch and reuse it on retries: a request that
+would change state with a stale value gets `412` with the current state in its body, a retry whose
+earlier attempt succeeded gets `200`, and a missing header gets `428`. The
 `deployment apply` and `deployment enqueue` commands send it. See
 {{ doc_link(title="the switch endpoint", path="access/api.md#put-v1-deployments-deployment-id-switch") }}.
 

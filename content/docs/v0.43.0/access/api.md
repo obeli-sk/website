@@ -1302,9 +1302,10 @@ or enqueue (activate on next restart).
 
 - `If-Match` (required): `"<node_run_id>:<switch_count>"`, both read from
   [`GET /v1/info`](#get-v1-info). The switch count grows with every applied or enqueued switch,
-  including enqueueing the active deployment (it replaces any queued one), but not with activating
-  the active deployment. Read the value once and reuse it when retrying, so that a retry cannot
-  override a switch made in the meantime.
+  including enqueueing the active deployment in place of a queued one. Read the value once and
+  reuse it when retrying, so that a retry cannot override a switch made in the meantime. A request
+  for what is already in effect succeeds whatever the header says: activating the active
+  deployment, enqueueing the queued one, or enqueueing the active one when nothing is queued.
 
 **Request Body (JSON):**
 
@@ -1319,13 +1320,15 @@ values and approvals before restarting. Hot apply always requires strict verific
 
 **Responses:**
 
-- `200 OK`: Returns `{ "ok": "switched" }` (hot-redeployed) or `{ "ok": "restart_required" }`
-  (enqueued for next restart).
+- `200 OK`: Returns `{ "ok": "switched" }` (hot-redeployed or already active) or
+  `{ "ok": "restart_required" }` (enqueued for next restart). A retry after a lost response gets
+  the same result.
 - `404 Not Found`: Deployment not found.
 - `400 Bad Request`: Switch or validation failed.
-- `412 Precondition Failed`: `If-Match` names an earlier server run or switch count. A retry also
-  gets this when an earlier attempt succeeded, so check `deployment_id` in `GET /v1/info` before
-  treating it as a failure.
+- `412 Precondition Failed`: `If-Match` names an earlier server run or switch count and the request
+  would change the active or enqueued deployment. The body reports the current state:
+  `{ "err": "...", "if_match": "\"<node_run_id>:<switch_count>\"", "deployment_id": "Dep_...", "enqueued_deployment_id": "Dep_..." }`,
+  where `enqueued_deployment_id` is omitted when nothing is queued.
 - `428 Precondition Required`: `If-Match` is missing or malformed.
 
 #### Example request
