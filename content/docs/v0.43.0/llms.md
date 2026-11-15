@@ -21,6 +21,7 @@ Read the version-specific migration guide at /docs/v0.43.0/migrating-to-0.43/ be
 ## Obelisk Cloud
 Most apps are deployed to Obelisk Cloud; read /docs/v0.43.0/cloud/ first.
 - Deploy with `obelisk cloud app deploy -a app.toml -d deployment.toml`, after `obelisk cloud auth login` on a person's machine, or with a token from https://cloud.obeli.sk in `OBELISK_CLOUD_API_TOKEN` where there is no terminal. The app is served at `https://myapp.obelisk.works`.
+- Never ask for secret values. When `app.toml` requires env vars or secrets you were not given, run `obelisk cloud app stage -a app.toml -d deployment.toml` instead: it creates a missing app and stages the configuration and deployment without applying. Then tell the person which values to set (`obelisk cloud app secrets set`, `env set`, or the dashboard) and to run `obelisk cloud app apply`.
 - Bind private pages and tools to the `internal` server (`https://internal--myapp.obelisk.works`). The platform handles sign-in and names the caller in the `obelisknet-user-slug` header, so do not build a login. Public webhooks use `external`, which `app.toml` must list in `public_http_servers`.
 - Only `__Host-` cookies reach webhooks. Set them with `Secure`, `Path=/` and no `Domain`; anything else is dropped and named in the `obelisknet-cookie-rejected` response header. `SameSite` does not stop forged requests from other apps on the domain, so check `Origin` on unsafe methods.
 
