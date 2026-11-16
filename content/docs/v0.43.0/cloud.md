@@ -154,7 +154,7 @@ type = "browser"
 env = "BROWSER_URL"
 allowed_hosts = ["https://app.example.com", "https://*.examplecdn.com"]
 max_sessions = 1          # Concurrent sessions, default 1.
-session_memory_mb = 256   # Memory limit per session, default 256, at least 128.
+session_memory_mb = 128   # Memory limit per session, default 128, at least 128.
 max_ttl = "30m"           # Upper bound and default for a session's TTL, 1m to 24h.
 user_agent = "..."        # Optional, see below.
 
@@ -178,9 +178,9 @@ The component's deployment entry needs the same allowed host and `env_vars = ["B
   `outbound_http`. Pages pull subresources from CDNs, fonts, and analytics hosts, so step results
   list the hosts that were refused. Loopback, private, and link-local addresses are refused even
   when a host matches.
-- `max_sessions * session_memory_mb` must fit in `memory_mb` minus 256, so a 512 MB VM hosts one 256
-  MB session or two 128 MB ones. A session uses about 20 MB idle, 30 to 70 MB on most pages, and up
-  to about 120 MB on heavy ones such as GitHub.
+- `max_sessions * session_memory_mb` must fit in `memory_mb` minus 256, so a 512 MB VM hosts two 128
+  MB sessions or one 256 MB one. A session uses about 20 MB idle, 30 to 70 MB on most pages, and up
+  to about 120 MB on heavy ones such as GitHub; 128 MB still loads those.
 - Without `user_agent`, the browser sends a Chrome-like value without the `Mozilla` prefix, which
   sites that reject unknown browsers accept. A custom value must be printable ASCII and must not
   contain `Mozilla`. The `Sec-CH-UA` header and `navigator.userAgentData` always identify
