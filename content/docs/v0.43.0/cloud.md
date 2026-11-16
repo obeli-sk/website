@@ -158,19 +158,22 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
   unhealthy VM, and failed wake-ups. `-n, --limit` sets how many to show (1-50, default 5). Routine
   idle suspends and wake-ups are not recorded.
 - `stage` puts `app.toml` and any `--env`/`--secret` or filled values into a [draft](#drafts)
-  without restarting the VM; it never applies. With `-d, --deployment <FILE>` it also submits the
-  deployment and records its ID in the draft; `--empty-deployment` stages an empty deployment
-  instead, and `--description` describes either. Without them the draft's deployment is left
-  unchanged. Staging an app that does not exist creates it with only `app_name` and an empty
-  deployment, then stages the real configuration, so required values can be filled in later, from
-  the CLI or the dashboard, before applying. `unstage` discards the draft. `apply` prints what
-  changes and applies the staged draft together with its staged deployment, or the active one,
-  while respecting the app's intended running state; it fails when nothing is staged.
+  without restarting the VM; it never applies. With `-d, --deployment <FILE>` it first submits the
+  deployment, then stages its ID in the draft along with the configuration, so a failed submission
+  stages nothing; `--empty-deployment` stages an empty deployment instead, and `--description`
+  describes either. Without them the draft's deployment is left unchanged. Staging an app that does
+  not exist creates it with only `app_name` and an empty deployment, then stages the real
+  configuration, so required values can be filled in later, from the CLI or the dashboard, before
+  applying. `unstage` discards the draft. `apply` prints what
+  changes and applies the staged draft; the control plane activates the draft's staged deployment,
+  or keeps the active one, while respecting the app's intended running state. It fails when nothing
+  is staged.
   `apply --reapply` re-applies the applied revision instead, reconciling the VM with the app's
   intended state without restarting an unchanged VM.
-- `deploy` publishes the local project: it creates the app (and says so), or stages `app.toml` and values into a
-  new `deploy-<ID>` draft, submits the deployment (`-d`, default `deployment.toml`, or an empty one
-  with `--empty-deployment`), and applies the draft. It fails on missing
+- `deploy` publishes the local project: it creates a missing app with only `app_name` (and says so),
+  stages `app.toml` and values into a new `deploy-<ID>` draft, submits the deployment (`-d`, default
+  `deployment.toml`, or an empty one with `--empty-deployment`), stages it in the same draft, and
+  applies the draft. It fails on missing
   required values unless they are passed with `--env` and `--secret`, `--fill`, or
   `--fill-non-interactive`. The draft never touches `default` and is discarded when `deploy`
   fails before applying it. When the app name is taken, an interactive `deploy` offers an alternative and saves it
