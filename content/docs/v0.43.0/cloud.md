@@ -169,7 +169,8 @@ an app access to LLM and GitHub services the cloud provides, without storing cre
   `apply --reapply` re-applies the applied revision instead, reconciling the VM with the app's
   intended state without restarting an unchanged VM.
 - `deploy` publishes the local project: it creates the app (and says so), or stages `app.toml` and values into a
-  new `deploy-<ID>` draft, submits the deployment, and applies the draft. It fails on missing
+  new `deploy-<ID>` draft, submits the deployment (`-d`, default `deployment.toml`, or an empty one
+  with `--empty-deployment`), and applies the draft. It fails on missing
   required values unless they are passed with `--env` and `--secret`, `--fill`, or
   `--fill-non-interactive`. The draft never touches `default` and is discarded when `deploy`
   fails before applying it. When the app name is taken, an interactive `deploy` offers an alternative and saves it

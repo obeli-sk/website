@@ -116,11 +116,11 @@ Options:
   inserted and activated on startup, overriding any existing Enqueued or Active deployment in the
   database
 - `--deployment-id <ID>` - Select an existing deployment from the database, verify it, and activate
-  it on startup. Conflicts with `--deployment`, `--empty`, and `--description`
-- `--empty` - Start with an empty deployment, ignoring any Enqueued or Active deployment in the
+  it on startup. Conflicts with `--deployment`, `--empty-deployment`, and `--description`
+- `--empty-deployment` (alias `--empty`) - Start with an empty deployment, ignoring any Enqueued or Active deployment in the
   database
 - `--description <DESCRIPTION>` - Human-readable description for the deployment of `--deployment` or
-  `--empty`. For stored content, omitting it keeps the current one and an empty string clears it
+  `--empty-deployment`. For stored content, omitting it keeps the current one and an empty string clears it
 - `--suppress-type-checking-errors` - Do not fail startup when a component's imports/exports fail
   type checking against the current deployment
 - `--dev` - Print the startup API token and allow the `internal` HTTP server without configured
@@ -257,7 +257,7 @@ Arguments:
 
 Options:
 
-- `--empty` - Submit an empty deployment with no components (mutually exclusive with `PATH`)
+- `--empty-deployment` (alias `--empty`) - Submit an empty deployment with no components (mutually exclusive with `PATH`)
 - `--allow-unavailable-runtime-config` - Store a verified deployment while runtime values or app and
   platform approvals are pending; activation still checks strictly
 - `--description <DESCRIPTION>` - Human-readable description. For stored content, omitting it keeps
@@ -278,7 +278,7 @@ Arguments:
 
 Options:
 
-- `--empty` - Enqueue an empty deployment with no components
+- `--empty-deployment` (alias `--empty`) - Enqueue an empty deployment with no components
 - `--allow-unavailable-runtime-config` - Submit and enqueue while runtime values or app and platform
   approvals are pending; activation on restart still checks strictly
 - `--description <DESCRIPTION>` - Human-readable description. For stored content, omitting it keeps
@@ -301,7 +301,7 @@ Arguments:
 
 Options:
 
-- `--empty` - Apply an empty deployment with no components
+- `--empty-deployment` (alias `--empty`) - Apply an empty deployment with no components
 - `--description <DESCRIPTION>` - Human-readable description. For stored content, omitting it keeps
   the current one and an empty string clears it
 - `--deployment-id <ID>` - Optional client-supplied deployment ID for idempotent submission when
