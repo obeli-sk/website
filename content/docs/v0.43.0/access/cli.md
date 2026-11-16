@@ -12,7 +12,6 @@ weight = 1
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | [`obelisk server run`](#running-the-server)                                                 | Start the server, optionally activating a deployment file         |
 | [`obelisk server verify`](#verifying-the-server-configuration)                              | Check configuration and deployment without serving traffic        |
-| [`obelisk server checkpoint`](#reading-the-app-checkpoint)                                  | Print the last activated app policy and deployment ID             |
 | [`obelisk app pull`](#pulling-the-running-app)                                              | Write the running `app.toml`, active deployment, and sources      |
 | [`obelisk deployment verify`](#verifying-a-local-deployment)                                | Compile and check deployment components, without app policy       |
 | [`obelisk deployment submit`](#submitting-a-deployment)                                     | Upload a deployment and print its ID                              |
@@ -132,9 +131,6 @@ Options:
 If neither `--deployment` nor `--deployment-id` is provided, Obelisk uses the Enqueued or Active
 deployment from the database.
 
-Whenever a deployment is activated successfully, at startup or by a hot redeploy, the server
-persists the app policy and the deployment ID together as one checkpoint in the database.
-
 The server requires an app name. Every `app.toml` sets `app_name`, and startup fails when
 `OBELISK_APP_NAME` is also set and differs. Without an `app.toml`, the name comes from
 `OBELISK_APP_NAME`. The name selects the default SQLite directory,
@@ -186,18 +182,6 @@ Repairs require a deployment file and target configuration paths; discovered `./
 Existing grants are preserved and verification reruns after repair. Review all generated policy
 changes. Missing runtime values can be tolerated, but missing declarations or permissions still
 fail.
-
-### Reading the App Checkpoint
-
-```sh
-obelisk server checkpoint [--server-config <FILE>]
-```
-
-Print the last successfully activated checkpoint as JSON without starting the server: the
-`deployment_id`, the app policy as `app_toml`, and the `app_env_prefix` it ran with, or `null` when
-no deployment has been activated yet. The command opens the database configured in `server.toml` and
-applies pending schema migrations. It does not read the app name, so a SQLite database must be
-selected with a `database.sqlite.directory` that does not depend on `${APP_NAME}`.
 
 ## Obelisk App
 

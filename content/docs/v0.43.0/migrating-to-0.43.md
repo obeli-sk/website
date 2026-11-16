@@ -374,13 +374,11 @@ webhook endpoints). Raise those cells if the app relies on the higher `wasm` def
 `OBELISK_JS_RUNTIME=boa-wasm` to keep running on Boa. See
 {{ doc_link(title="JS runtime", path="js/js-runtime.md") }}.
 
-## Server checkpoints
+## Selecting a stored deployment
 
-Each successful activation now stores the app policy and deployment ID together as one checkpoint.
-`obelisk server checkpoint` prints it as JSON without starting the server. `server run` and
-`server verify` accept `--deployment-id` to select a stored deployment instead of a file; `run`
-activates it, `verify` checks it without activation. See
-{{ doc_link(title="CLI", path="access/cli.md#reading-the-app-checkpoint") }}.
+`server run` and `server verify` accept `--deployment-id` to select a stored deployment instead of a
+file; `run` activates it, `verify` checks it without activation. See
+{{ doc_link(title="CLI", path="access/cli.md#running-the-server") }}.
 
 ## Deployment reuse and cloud commands
 

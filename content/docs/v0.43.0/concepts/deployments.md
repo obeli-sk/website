@@ -51,12 +51,9 @@ On startup, `server run` activates the file passed with `--deployment`, the stor
 selected with `--deployment-id`, or else the enqueued deployment, falling back to the active one.
 `server verify --deployment-id` checks a stored deployment without activating it.
 
-## App checkpoint
-
-Each successful activation, at startup or through a hot redeploy, stores the running app policy and
-the deployment ID together as one atomic checkpoint. `obelisk server checkpoint` prints the last
-checkpoint as JSON without starting the server, so tooling can recover the exact policy and
-deployment that last ran.
+The database tracks deployments, not which `app.toml` last ran with them. A supervisor that rolls
+back a failed configuration keeps its own last-good `app.toml` and deployment ID and restarts with
+`--deployment-id`.
 
 ## Hot redeploy
 
@@ -135,7 +132,6 @@ if the new workflow code is not replay-compatible, unless `skip_determinism_chec
 | `obelisk deployment show <ID> [FILE]`   | Show stored TOML or a stored file              |
 | `obelisk deployment pull [ID]`          | Recreate deployment TOML and source files      |
 | `obelisk deployment verify`             | Verify a local deployment without a server     |
-| `obelisk server checkpoint`             | Print the last activated policy and deployment |
 
 **Web API:** see {{ doc_link(title="API access", path="access/api.md") }}.
 

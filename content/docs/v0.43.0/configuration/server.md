@@ -175,10 +175,10 @@ max_age.hours = 744
 A record is deleted once it is older than `max_age` or falls outside the newest `max_count`; set
 `max_count = 0` to disable the count limit. Deployment age and order use `updated_at`, which a
 submit with matching content or a status change bumps. Unfinished execution trees and active cron
-trackers are never deleted by retention. Active, enqueued, and last-good checkpoint deployments are
-kept, and deleting a deployment also deletes its execution trees. Inactive deployments that are
-still referenced count toward `max_count` but stay until they are no longer in use; the sweep
-records a `maintenance.gc.deployments_in_use` warning while that happens.
+trackers are never deleted by retention. Active and enqueued deployments and the most recently
+deactivated one are kept, and deleting a deployment also deletes its execution trees. Inactive
+deployments that are still referenced count toward `max_count` but stay until they are no longer in
+use; the sweep records a `maintenance.gc.deployments_in_use` warning while that happens.
 
 Garbage collection steps that conflict with a running deployment submit or switch are deferred to
 the next sweep and recorded as an info-level `maintenance.gc.deferred_by_deployment` event.
@@ -229,6 +229,14 @@ behind it or does not match Litestream's local position.
 
 ```toml
 database.sqlite.litestream.socket = "/var/run/litestream.sock"
+```
+
+With `sync = "deployments"`, only deployment submits wait for the upload, so a restored replica
+holds every submitted deployment while other commits reach it on Litestream's own schedule. The
+default `sync = "all"` waits on every commit.
+
+```toml
+database.sqlite.litestream = { socket = "/var/run/litestream.sock", sync = "deployments" }
 ```
 
 SQLite databases use `auto_vacuum=INCREMENTAL`. After retention and garbage collection, each
