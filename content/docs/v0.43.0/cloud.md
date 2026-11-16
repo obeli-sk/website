@@ -136,7 +136,127 @@ unsafe methods as well.
 ## Integrations
 
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} gives
-an app access to LLM and GitHub services the cloud provides, without storing credentials in the app.
+an app access to LLM, GitHub, and headless browser services the cloud provides, without storing
+credentials in the app.
+
+### Browser
+
+The `browser` integration runs a headless browser ([Lightpanda](https://lightpanda.io)) on the app's
+VM. Components drive it over plain HTTP at the bound URL, `http://127.0.0.1:9195`, with batches of
+Playwright-style steps; no WebSocket or Playwright client is needed.
+
+```toml
+[cloud]
+memory_mb = 512
+
+[cloud.integrations.browser]
+type = "browser"
+env = "BROWSER_URL"
+allowed_hosts = ["https://app.example.com", "https://*.examplecdn.com"]
+max_sessions = 1          # Concurrent sessions, default 1.
+session_memory_mb = 256   # Memory limit per session, default 256, at least 128.
+max_ttl = "30m"           # Upper bound and default for a session's TTL, 1m to 24h.
+user_agent = "..."        # Optional, see below.
+
+[public_env]
+BROWSER_URL = {}
+
+[secrets]
+APP_PASSWORD = {}
+
+[[outbound_http.allowed_host]]
+url_prefix = "${BROWSER_URL}"
+methods = ["GET", "POST", "DELETE"]
+secrets = ["APP_PASSWORD"]   # Only to fill credentials, see below.
+replace_in = ["body"]
+```
+
+The component's deployment entry needs the same allowed host and `env_vars = ["BROWSER_URL"]`.
+
+- `allowed_hosts` uses the same patterns as `outbound_http` (scheme and port optional, leading `*.`
+  wildcard) and must not be empty. The browser loads only these hosts, independently of
+  `outbound_http`. Pages pull subresources from CDNs, fonts, and analytics hosts, so step results
+  list the hosts that were refused. Loopback, private, and link-local addresses are refused even
+  when a host matches.
+- `max_sessions * session_memory_mb` must fit in `memory_mb` minus 256, so a 512 MB VM hosts one 256
+  MB session or two 128 MB ones. A session uses about 20 MB idle, 30 to 70 MB on most pages, and up
+  to about 120 MB on heavy ones such as GitHub.
+- Without `user_agent`, the browser sends a Chrome-like value without the `Mozilla` prefix, which
+  sites that reject unknown browsers accept. A custom value must be printable ASCII and must not
+  contain `Mozilla`. The `Sec-CH-UA` header and `navigator.userAgentData` always identify
+  Lightpanda.
+- Changing the integration restarts the VM, ending open sessions.
+
+Each session is a separate browser process with its own memory limit, running in a sandbox as an
+unprivileged user with no network access except through its own proxy.
+
+| Route                                             | Purpose                                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `POST /v1/sessions` `{"ttl_s"?, "user_agent"?}`   | Starts a session; returns `{"id", "expires_at"}`, or 429 when `max_sessions` are open |
+| `POST /v1/sessions/{id}/steps` `{"steps": [...]}` | Runs up to 100 steps in order, stopping at the first error                            |
+| `GET /v1/sessions/{id}`                           | Expiry, current URL and title                                                         |
+| `DELETE /v1/sessions/{id}`                        | Ends the session and frees its slot                                                   |
+
+Session IDs are unguessable, and any component of the app can use any of its sessions, so a workflow
+can open a session in one activity and drive it from the next. A session lives outside the execution
+log: it ends at its TTL, on `DELETE`, or when the VM restarts. An ended session answers 410 with
+`end_reason`: `ttl`, `deleted`, `oom`, `memory_pressure`, `crashed`, or `reconfigured`. A workflow
+should treat 404 and 410 as a signal to start a new session.
+
+```json
+{
+  "steps": [
+    { "op": "goto", "url": "https://app.example.com/login" },
+    { "op": "fill", "locator": { "label": "Email" }, "value": "me@example.com" },
+    {
+      "op": "fill",
+      "locator": { "label": "Password" },
+      "value": "<APP_PASSWORD placeholder>",
+      "sensitive": true
+    },
+    { "op": "click", "locator": { "role": "button", "name": "Sign in" } },
+    { "op": "wait_for", "url": "**/dashboard" },
+    { "op": "text", "locator": { "css": "table.invoices" } }
+  ]
+}
+```
+
+| Op                  | Fields                                                                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `goto`              | `url`                                                                                                                        |
+| `click`             | `locator`                                                                                                                    |
+| `fill`              | `locator`, `value`, `sensitive`                                                                                              |
+| `press`             | `key`, optional `locator` (else the focused element)                                                                         |
+| `select`            | `locator`, `values` (option values or labels)                                                                                |
+| `check`             | `locator`, `checked` (default `true`)                                                                                        |
+| `wait_for`          | `locator` with `state` (`attached`, `detached`, `visible` (default), `hidden`), or `url` glob (`**` spans `/`, `*` does not) |
+| `text`, `attribute` | `locator`; `attribute` also takes `name`                                                                                     |
+| `count`             | `locator`                                                                                                                    |
+| `content`           | `format`: `html` (default) or `markdown`                                                                                     |
+| `evaluate`          | `expression`, a JavaScript expression evaluated in the page                                                                  |
+
+Every op except `count`, `content`, and `evaluate` accepts `timeout_ms`. A locator has one of `css`,
+`role` (with optional `name`), `text`, `label`, `placeholder`, or `test_id`, plus optional `exact`
+(whole, case-sensitive match) and `nth` (negative counts from the end). Locators and auto-waiting
+follow Playwright's semantics: actions wait for the element to be visible, stable, and enabled.
+
+The response has one result per step that ran (`op`, then `value` or `error`, and `truncated` when a
+value was cut at 256 KiB), plus the page's final `url` and `title` and `denied_hosts`. Send an
+`Idempotency-Key` header with each batch: a retried activity whose response was lost then gets the
+stored result instead of running the steps again.
+
+To fill a credential, list its secret in the allowed host's `secrets` with `replace_in = ["body"]`.
+The component then reads an opaque placeholder from the secret's environment variable and puts it in
+the step's `value`; Obelisk replaces it with the real value in the request to `BROWSER_URL` (see
+{{ doc_link(title="Secrets", path="configuration/app.md#secret-registry") }}), so component code and
+the execution log never see it. Mark the step `sensitive`: the browser then redacts the value from
+every later result in the session, `url` and `title` included, as typed and in its percent-encoded,
+HTML-escaped, and JSON-escaped forms. Other encodings, and values the page derives from it, are not
+redacted, so read back only what the workflow needs.
+
+Lightpanda has no layout or rendering: there are no screenshots or PDFs, and file downloads and
+uploads are not supported. Classic server-rendered sites work well, while some single-page
+applications and sites behind bot protection do not.
 
 ## Commands
 

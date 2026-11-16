@@ -156,12 +156,23 @@ llm = { type = "llm", env = "LLM_BASE_URL" }
 LLM_BASE_URL = {}
 ```
 
+An integration with settings of its own uses a table; see the
+{{ doc_link(title="browser integration", path="cloud.md#browser") }}:
+
+```toml
+[cloud.integrations.browser]
+type = "browser"
+env = "BROWSER_URL"
+allowed_hosts = ["https://app.example.com"]
+```
+
 During a cloud deployment the bound value overrides any uploaded or local value, and
-`cloud app new`, `deploy`, `fill`, and `apply` do not ask for it. Integration names and types are
-validated by the target cloud. Each `env` must name an environment-backed `[public_env]` entry (not
-an internal one and not a secret), and two integrations cannot supply the same variable. Local runs
-do not receive the value: a required entry must be set explicitly, otherwise startup and
-`server verify` fail with an error naming the integration.
+`cloud app new`, `deploy`, `fill`, and `apply` do not ask for it. Obelisk reads only `env`:
+integration names, `type`, and any other keys are validated by the target cloud. Each `env` must
+name an environment-backed `[public_env]` entry (not an internal one and not a secret), and two
+integrations cannot supply the same variable. Local runs do not receive the value: a required entry
+must be set explicitly, otherwise startup and `server verify` fail with an error naming the
+integration.
 
 ## App Outbound HTTP Policy
 
