@@ -3,3 +3,4 @@ public/style.css
 .envrc
 .direnv/
 public/
+.wrangler/

@@ -25,7 +25,10 @@ jobs:
           nix develop --command echo
 
       - name: zola build
-        run: nix develop --command zola build
+        run: nix develop --command bash scripts/build.sh
+
+      - name: Markdown negotiation
+        run: nix develop --command node --test scripts/test-markdown.mjs
 
       - name: wrangler deploy
         run: nix develop --command wrangler pages deploy ./public/ --project-name=website

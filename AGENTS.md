@@ -224,5 +224,14 @@ See `scripts/screenshot-webui.js` for details.
 
 ## Deployment
 
-The site is deployed via Cloudflare Workers (wrangler is in the Nix devShell).
-The `public/` directory contains build output from `zola build`.
+The site is deployed via Cloudflare Pages (wrangler is in the Nix devShell).
+Build deployable output with `nix develop -c bash scripts/build.sh`. It runs Zola,
+then converts rendered page content to sibling `index.md` files using htmlq and
+Pandoc. This preserves resolved shortcodes, versioned links, and template content.
+`static/_worker.js` negotiates HTML or Markdown from the request's `Accept` header
+and sets `Vary: Accept`. Markdown must be explicitly accepted with a positive
+quality at least as high as HTML. Ordinary `zola serve` only serves static files;
+use `nix develop -c wrangler pages dev public --compatibility-date 2026-05-25`
+to exercise content negotiation with the pinned runtime.
+Run `nix develop -c node --test scripts/test-markdown.mjs` after building.
+The `public/` directory contains build output and is ignored by Git.

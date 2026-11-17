@@ -37,7 +37,10 @@ jobs:
       - name: zola build
         run: |
           PREVIEW_URL="https://pr-${{ github.event.number }}.website-1w7.pages.dev"
-          nix develop --command zola build --base-url "$PREVIEW_URL"
+          nix develop --command bash scripts/build.sh --base-url "$PREVIEW_URL"
+
+      - name: Markdown negotiation
+        run: nix develop --command node --test scripts/test-markdown.mjs
 
       - name: Deploy preview
         id: deploy

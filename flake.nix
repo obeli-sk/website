@@ -26,6 +26,9 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             zola
+            htmlq
+            pandoc
+            nodejs
             nixpkgs-fmt
             ripgrep
             wrangler
