@@ -298,9 +298,10 @@ applications and sites behind bot protection do not.
   `--fill-non-interactive`. The draft never touches `default` and is discarded when `deploy`
   fails before applying it. When the app name is taken, an interactive `deploy` offers an alternative and saves it
   to `app.toml` if the original name came from there; noninteractive and `--json` runs fail with a
-  conflict error. `--description` describes the deployment, as in `deployment enqueue`. A
-  cloud app's deployments are activated only by `apply` or `deploy`: the public API refuses
-  `deployment switch` requests.
+  conflict error. `--description` describes the deployment, as in `deployment enqueue`.
+- `deployment enqueue` stages the deployment in the `default` draft; `deployment apply` stages it
+  and applies the draft, along with anything else staged there. A cloud app's deployment switch
+  requests, including the Web UI's, take this route, and ignore `--allow-unavailable-runtime-config`.
 - `env set`, `env unset`, `secrets set`, and `secrets unset` stage env vars and secrets into a
   draft; names starting with
   `OBELISK_` are accepted. Internal secrets and internal public environment entries are skipped.
