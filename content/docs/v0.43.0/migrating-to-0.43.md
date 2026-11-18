@@ -358,6 +358,19 @@ ordinary retention. Look up schedulers by their `obelisk:schedule/` FFQN prefix 
 computed ID. Existing schedulers are adopted automatically. See
 {{ doc_link(title="Cron", path="concepts/cron.md#scheduler-history-and-retention") }}.
 
+## Size keys with units
+
+Byte sizes now take the unit as the key, like the execution-slot `memory` limits:
+`bytes`, `kib`, `mib` or `gib`. The 0.42 byte counts are still accepted with a deprecation warning,
+but setting both forms of one limit is an error.
+
+| 0.42 | 0.43 |
+|------|------|
+| `limits.max_persisted_value_size_bytes = 1048576` | `limits.max_persisted_value_size.mib = 1` |
+| `limits.max_deployment_file_bytes = 20971520` | `limits.max_deployment_file_size.mib = 20` |
+| `limits.max_transport_message_size_bytes = 536870912` | `limits.max_transport_message_size.mib = 512` |
+| `[[activity_exec]] max_output_bytes = 4096` | `[[activity_exec]] max_output_size.kib = 4` |
+
 ## SQLite space reclamation
 
 The first 0.43 startup converts an existing SQLite database to incremental auto-vacuum with a full
@@ -501,6 +514,7 @@ Apple targets, as jemalloc now also serves C and C++ allocations.
   credential-less servers in `public_http_servers`, and use `server run --dev` locally.
 - Update cloud scripts for renamed lifecycle commands and explicit fill flags.
 - Decide `overlap` for each `[[cron]]` entry and remove `exec.lock_extension_leeway`.
+- Replace the deprecated `*_bytes` size keys in `server.toml` and `max_output_bytes` in deployments.
 - Review retention `max_age`/`max_count` defaults and system-event filters for renamed codes.
 - Size the `v8` cells of `[limits]` for JavaScript components, or set `OBELISK_JS_RUNTIME=boa-wasm`.
 - Replace `GET /v1/execution-id` and `GET /v1/deployment-id` calls.

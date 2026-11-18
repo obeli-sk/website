@@ -285,7 +285,7 @@ retry_exp_backoff.milliseconds = 100
 forward_stdout = "db"                        # One of "none"|"stdout"|"stderr"|"db". Default: "db"
 forward_stderr = "db"
 logs_store_min_level = "debug"
-max_output_bytes = 4096                      # Max bytes from stdout for the response. Default: 4096
+max_output_size.kib = 4                      # Max stdout size for the response. Default: 4 KiB
 params_via_stdin = false                     # Pass params via stdin instead of argv
 ```
 

@@ -93,15 +93,17 @@ deployment revisions must be authorized.
 
 ```toml
 [limits]
-max_persisted_value_size_bytes = 1048576 # 1 MiB default
-max_deployment_file_bytes = 20971520 # 20 MiB default
-max_transport_message_size_bytes = 536870912 # 512 MiB default
+max_persisted_value_size.mib = 1 # default
+max_deployment_file_size.mib = 20 # default
+max_transport_message_size.mib = 512 # default
 ```
 
-`max_deployment_file_bytes` limits an individual file submitted as part of a deployment.
-`max_persisted_value_size_bytes` is snapshotted by each new execution tree and bounds persisted
-parameters and results. `max_transport_message_size_bytes` independently bounds a single API request
-body.
+Sizes take the unit as the key: `bytes`, `kib`, `mib` or `gib`.
+`max_deployment_file_size` limits an individual file submitted as part of a deployment.
+`max_persisted_value_size` is snapshotted by each new execution tree and bounds persisted
+parameters and results. `max_transport_message_size` independently bounds a single API request
+body. The 0.42 byte-count keys `max_persisted_value_size_bytes`, `max_deployment_file_bytes` and
+`max_transport_message_size_bytes` are still accepted with a deprecation warning.
 
 ### Execution Slots
 

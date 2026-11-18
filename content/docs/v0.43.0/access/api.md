@@ -1265,7 +1265,7 @@ file bytes, or `404 Not Found` if the digest is absent.
 
 Uploads one deployment-owned file ahead of the deployment submit that references it. The body is the
 raw file (`application/octet-stream`); the server checks it against the `sha256:...` digest in the
-path and against `limits.max_deployment_file_bytes`. Uploading the same file again is harmless.
+path and against `limits.max_deployment_file_size`. Uploading the same file again is harmless.
 
 A file that no deployment references yet is kept for `maintenance.gc.upload_grace_period` (1 hour by
 default), then reclaimed by garbage collection.
