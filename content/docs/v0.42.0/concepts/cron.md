@@ -16,7 +16,7 @@ Add one or more `[[cron]]` sections to your `deployment.toml`:
 [[cron]]
 name     = "daily-cleanup"
 ffqn     = "myapp:tasks/jobs@1.0.0.daily-cleanup"
-params   = '["archive", 30]'   # JSON array; defaults to []
+params   = '["archive", 30]'   # JSON array of argument values; defaults to []
 schedule = "@daily"
 ```
 
@@ -24,7 +24,7 @@ schedule = "@daily"
 | ---------- | ----------------- | -------- | ----------------------------------------------------------------------------- |
 | `name`     | string            | yes      | Unique name within the deployment                                             |
 | `ffqn`     | string            | yes      | {{ doc_link(title="FFQN", path="concepts/ffqn.md") }} of the function to call |
-| `params`   | JSON array string | no       | Parameters passed to the function on every tick (default: `[]`)               |
+| `params`   | JSON array string | no       | Argument values passed to the function on every tick (default: `[]`)          |
 | `schedule` | string            | yes      | Cron expression or named shorthand (see below)                                |
 
 ## Schedule syntax

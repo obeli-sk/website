@@ -63,7 +63,9 @@ they never declare `params` or `return_type` in the TOML. Components whose sourc
 WIT world — JavaScript activities and workflows, exec activities, and stub and external activities —
 declare the signature of their `ffqn` in one of two ways:
 
-- **Inline**, with `params` and `return_type` written directly in the component table:
+- **Inline**, with `params` and `return_type` written directly in the component table. Here
+  `params` declares each parameter's name and WIT type; it is unrelated to the `[[cron]]` `params`
+  field, which holds the argument values to pass:
 
   ```toml
   [[activity_stub]]
@@ -535,7 +537,7 @@ in `deployment.toml`:
 [[cron]]
 name = "my-daily-job"
 ffqn = "myapp:tasks/jobs@1.0.0.daily-cleanup"
-params = '["arg1", 42]'                  # JSON array; defaults to []
+params = '["arg1", 42]'                  # JSON array of argument values; defaults to []
 schedule = "@daily"                      # cron expression or named shorthand
 ```
 
