@@ -163,7 +163,7 @@ OBELISK_WEBUI_URL = { type = "internal", source = "webui-url" }
 The server resolves them from its own listeners and ignores process variables of the same name. Set
 `webui.public_url` in `server.toml` when the Web UI is reached through a proxy, so browser links use
 the public address. Drop the corresponding variables from run scripts, `.env` files, and cloud
-environments; `cloud app deploy --fill` skips internal entries.
+environments; `cloud app push --fill` skips internal entries.
 
 Outbound HTTP rules in `app.toml` and deployments accept `url_prefix` with an optional
 `url_regex_suffix` instead of `pattern` and `request_url_regex`. Apps that needed separate
@@ -417,7 +417,7 @@ unique deployment.
 New {{ doc_link(title="`cloud` commands", path="cloud.md#commands") }} manage apps, tokens, policy,
 environment variables, and secrets. App-scoped commands, including `deployment`, `execution`,
 `component`, and `admin`, live under `cloud app`, and `--app` is an option of `cloud app`. Select an
-app with `--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. `cloud app deploy` publishes a
+app with `--app`, `OBELISK_APP_NAME`, or `app_name` in `./app.toml`. `cloud app push` publishes a
 local project in one step.
 
 RC17 changes `cloud-credentials.toml` from `[[account]]` arrays to named `[account."name"]` tables.
@@ -429,20 +429,21 @@ URL is supplied, falling back to `https://cloud.obeli.sk/api` when the variable 
 
 Scripts written against earlier 0.43 release candidates must be updated:
 
+- `cloud app deploy` is now `cloud app push`, pairing with `cloud app pull`.
 - `cloud app start` and `cloud app stop`, later named `reactivate` and `deactivate`, are now
   `cloud app enable` and `cloud app disable`.
 - Configuration changes are staged into named
   {{ doc_link(title="drafts", path="cloud.md#drafts") }} (`--draft`, default `default`).
   `cloud app status` shows the applied revision, your drafts, VM health, and failing wake-ups, and
   compares the local `app.toml` with the default draft; `apply` applies a staged draft and
-  `apply --reapply` re-applies the applied revision. `unstage` discards a draft. `deploy` stages
+  `apply --reapply` re-applies the applied revision. `unstage` discards a draft. `push` stages
   into its own temporary draft.
 - `cloud app events` lists recent lifecycle and VM events.
 - App names starting with `system-` or `integrations-` are reserved.
 - Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
   and are never prompted for. See
   {{ doc_link(title="Cloud Integrations", path="configuration/app.md#cloud-integrations") }}.
-- Missing required env vars and secrets fail in the client. `cloud app new` and `deploy` take `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
+- Missing required env vars and secrets fail in the client. `cloud app new` and `push` take `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
   (reads the same-named environment variable), `--fill` (prompts), and `--fill-non-interactive`
   (reads same-named environment variables). There is no `cloud app fill`; stage values into a
   draft with `env set` and `secrets set`.
@@ -458,7 +459,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   inaccessible token before creating a replacement.
 - `cloud app env set`, `secrets set`, and `fill` accept names starting with `OBELISK_`.
 - Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
-  cloud environment. An interactive `cloud app deploy` offers an alternative for a taken name.
+  cloud environment. An interactive `cloud app push` offers an alternative for a taken name.
 - `cloud app new` no longer takes a positional name; use `cloud app new --app <NAME>`.
 - `cloud apps list` is now `cloud app list`. `--app` follows the `cloud app` subcommand, as in
   `cloud app status --app <NAME>`; `cloud app --app <NAME> status` is rejected.
@@ -466,7 +467,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   endpoints it serves: the API, Web UI and `internal` webhooks, plus `external` webhooks when
   `app.toml` lists them in `public_http_servers`. With `--json`, they are under `.app.endpoints`.
 - Cloud app commands refuse an app config naming a different app than `--app` or `OBELISK_APP_NAME`
-  when it is passed with `-a` or required by `stage` and `deploy`. `stage` and `deploy` discover
+  when it is passed with `-a` or required by `stage` and `push`. `stage` and `push` discover
   `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
 
 ## Retention and system events

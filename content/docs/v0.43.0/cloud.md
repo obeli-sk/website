@@ -10,13 +10,13 @@ Obelisk Cloud hosts each app on its own VM. You manage apps at
 
 ## Deploying an app
 
-Log in, then deploy from the project directory:
+Log in, then push the project from its directory:
 
 ```sh
 obelisk cloud auth login
 obelisk generate new myapp
 cd myapp
-obelisk cloud app deploy -a app.toml -d deployment.toml --fill
+obelisk cloud app push -a app.toml -d deployment.toml --fill
 obelisk cloud app status
 ```
 
@@ -41,7 +41,7 @@ An idle app may be suspended. It resumes on the next request.
 </div>
 
 The bare hostname answers 404 unless the applied `app.toml` lists `external` in
-`public_http_servers` (see [below](#public-and-private-webhooks)). `cloud app status` and `deploy`
+`public_http_servers` (see [below](#public-and-private-webhooks)). `cloud app status` and `push`
 print the endpoints the app serves.
 
 Opening the Web UI or internal host in a browser signs in through
@@ -290,13 +290,13 @@ applications and sites behind bot protection do not.
   is staged.
   `apply --reapply` re-applies the applied revision instead, reconciling the VM with the app's
   intended state without restarting an unchanged VM.
-- `deploy` publishes the local project: it creates a missing app with only `app_name` (and says so),
-  stages `app.toml` and values into a new `deploy-<ID>` draft, submits the deployment (`-d`, default
+- `push` publishes the local project: it creates a missing app with only `app_name` (and says so),
+  stages `app.toml` and values into a new `push-<ID>` draft, submits the deployment (`-d`, default
   `deployment.toml`, or an empty one with `--empty-deployment`), stages it in the same draft, and
   applies the draft. It fails on missing
   required values unless they are passed with `--env` and `--secret`, `--fill`, or
-  `--fill-non-interactive`. The draft never touches `default` and is discarded when `deploy`
-  fails before applying it. When the app name is taken, an interactive `deploy` offers an alternative and saves it
+  `--fill-non-interactive`. The draft never touches `default` and is discarded when `push`
+  fails before applying it. When the app name is taken, an interactive `push` offers an alternative and saves it
   to `app.toml` if the original name came from there; noninteractive and `--json` runs fail with a
   conflict error. `--description` describes the deployment, as in `deployment enqueue`.
 - `deployment enqueue` stages the deployment in the `default` draft; `deployment apply` stages it
@@ -313,7 +313,7 @@ or `app_name` in `./app.toml`. Cloud app names are 4-20 lowercase ASCII letters,
 interior hyphens (no `--`), and are unique within each cloud environment. Names starting with `system-` or `integrations-` are reserved.
 Env vars bound by
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
-supplied by the cloud, so `new` and `deploy` never ask for them.
+supplied by the cloud, so `new` and `push` never ask for them.
 
 ### Drafts
 
@@ -321,15 +321,15 @@ Changes to `app.toml`, env vars, and secrets are staged into a draft and take ef
 is applied. `stage`, `unstage`, `apply`, `env set`/`unset`, and `secrets set`/`unset` take
 `--draft <KEY>` (default `default`; the dashboard edits the same `default` draft). Each draft starts
 from the applied revision and belongs to you. Applying a draft discards the app's other drafts,
-including those of other users; `deploy` stages into its own temporary draft and warns about your
+including those of other users; `push` stages into its own temporary draft and warns about your
 drafts it will discard. Apply fails while
 declared required values are missing; values the draft sets but `app.toml` does not declare are
 reported.
 
-`new`, `status`, `stage`, and `deploy` read the app config from `-a, --app-config`
+`new`, `status`, `stage`, and `push` read the app config from `-a, --app-config`
 or discover `./app.toml`. They never use another app's config: a file whose `app_name` differs from
 the app selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `-a` or required (by
-`stage` and `deploy`), and is ignored when discovered by the other commands.
+`stage` and `push`), and is ignored when discovered by the other commands.
 
 `cloud token new --name <NAME> --token-file <FILE>` saves the server-issued token to a new private
 file; it does not overwrite an existing file. `--scope <APP>` restricts the token to apps and
@@ -339,5 +339,5 @@ name.
 
 Cloud commands print concise human-readable results to stderr; `--json` prints machine-readable
 output and `--verbose` adds metadata, diagnostics, and each HTTP request with its response status,
-prefixed with the time since the previous step (deploy steps included). Run `obelisk cloud --help`
+prefixed with the time since the previous step (push steps included). Run `obelisk cloud --help`
 and `obelisk cloud app --help` for all options.

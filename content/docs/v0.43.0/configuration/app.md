@@ -93,7 +93,7 @@ variable is read and none needs to be set. Exposing and forwarding an internal s
 other secret: `exposed_secrets` with an `exposed_to` grant, or an outbound HTTP `secrets` entry.
 
 Internal secrets cannot be `optional`. They require an enabled API listener: `server run` fails at
-startup when the API is disabled. `server verify` accepts them without a value. `cloud app deploy --fill`
+startup when the API is disabled. `server verify` accepts them without a value. `cloud app push --fill`
 skips them. An internal secret may share its name with a server setting such as `OBELISK_API_TOKEN`:
 the server still reads that variable as an additional accepted API token, while components receive
 the startup token. Secrets without a `type`, or with `type = "env"`, are read from the process
@@ -141,7 +141,7 @@ otherwise the local Web UI listener. `http-server-url` reads any enabled
 UI from its `public_url`, otherwise from its local listener. Internal entries are always required:
 for URL sources, startup fails when the listener is disabled or uses port `0`. Process environment
 variables of the same name, with or without `app_env_prefix`, are ignored. Deployments use them like
-any other public entry, in `env_vars` or `${...}` interpolation. `cloud app deploy --fill` skips them.
+any other public entry, in `env_vars` or `${...}` interpolation. `cloud app push --fill` skips them.
 
 ### Cloud Integrations
 
@@ -167,7 +167,7 @@ allowed_hosts = ["https://app.example.com"]
 ```
 
 During a cloud deployment the bound value overrides any uploaded or local value, and
-`cloud app new`, `deploy`, `fill`, and `apply` do not ask for it. Obelisk reads only `env`:
+`cloud app new`, `push`, `fill`, and `apply` do not ask for it. Obelisk reads only `env`:
 integration names, `type`, and any other keys are validated by the target cloud. Each `env` must
 name an environment-backed `[public_env]` entry (not an internal one and not a secret), and two
 integrations cannot supply the same variable. Local runs do not receive the value: a required entry
