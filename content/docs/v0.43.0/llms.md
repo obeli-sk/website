@@ -41,6 +41,7 @@ Most apps are deployed to Obelisk Cloud; read /docs/v0.43.0/cloud/ first.
 - Every `app.toml` must set `app_name`; `obelisk generate new` creates it. Set `OBELISK_APP_NAME` only when running without an app policy file; if set alongside `app.toml`, it must match `app_name`.
 - Outbound HTTP needs a component `allowed_host` entry in `deployment.toml` and a matching `[[outbound_http.allowed_host]]` entry in `app.toml`. Deployment environment variables must be declared in the app's `[public_env]`; credentials go in the app's `[secrets]`.
 - Use `obelisk deployment verify --deployment deployment.toml` to check components. Use `obelisk server verify --skip-db --app-config app.toml --deployment deployment.toml --fix` to scaffold missing app configuration, then run `obelisk server run --app-config app.toml --deployment deployment.toml`.
+- On Obelisk Cloud, drive a headless browser through the `browser` integration (Cloud Browser page): send one step batch per activity, list what pages may load in `[[cloud.integrations.browser.allowed_host]]`, and check `ext.browser` system events and the session log for denied requests. To test the app's own webhook UIs, use a `debug` session instead of credentials.
 - Read the Example Applications page before building an app. Start an agent from `demo-agent`; study `demo-playwright` for durable browser work and `demo-tutorial` for basic workflow patterns. Copy the relevant source and permissions into the new app.
 """
 +++

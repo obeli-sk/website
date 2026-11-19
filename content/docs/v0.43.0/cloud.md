@@ -21,9 +21,9 @@ obelisk cloud app status
 ```
 
 `--fill` prompts for required env vars and secrets. Use `--fill-non-interactive` in scripts to read
-same-named environment variables instead, or pass values individually: `--env NAME=VALUE`, `--env
-NAME` (reads the same-named environment variable), and `--secret NAME` (always reads the same-named
-environment variable, so secrets never appear on the command line).
+same-named environment variables instead, or pass values individually: `--env NAME=VALUE`,
+`--env NAME` (reads the same-named environment variable), and `--secret NAME` (always reads the
+same-named environment variable, so secrets never appear on the command line).
 
 An idle app may be suspended. It resumes on the next request.
 
@@ -141,122 +141,10 @@ credentials in the app.
 
 ### Browser
 
-The `browser` integration runs a headless browser ([Lightpanda](https://lightpanda.io)) on the app's
-VM. Components drive it over plain HTTP at the bound URL, `http://127.0.0.1:9195`, with batches of
-Playwright-style steps; no WebSocket or Playwright client is needed.
-
-```toml
-[cloud]
-memory.mib = 512
-
-[cloud.integrations.browser]
-type = "browser"
-env = "BROWSER_URL"
-allowed_hosts = ["https://app.example.com", "https://*.examplecdn.com"]
-max_sessions = 1          # Concurrent sessions, default 1.
-session_memory.mib = 128  # Memory limit per session, default 128 MiB, at least 128 MiB.
-max_ttl.minutes = 30      # Upper bound and default for a session's TTL, 1 minute to 24 hours.
-user_agent = "..."        # Optional, see below.
-
-[public_env]
-BROWSER_URL = {}
-
-[secrets]
-APP_PASSWORD = {}
-
-[[outbound_http.allowed_host]]
-url_prefix = "${BROWSER_URL}"
-methods = ["GET", "POST", "DELETE"]
-secrets = ["APP_PASSWORD"]   # Only to fill credentials, see below.
-replace_in = ["body"]
-```
-
-The component's deployment entry needs the same allowed host and `env_vars = ["BROWSER_URL"]`.
-
-- `allowed_hosts` uses the same patterns as `outbound_http` (scheme and port optional, leading `*.`
-  wildcard) and must not be empty. The browser loads only these hosts, independently of
-  `outbound_http`. Pages pull subresources from CDNs, fonts, and analytics hosts, so step results
-  list the hosts that were refused. Loopback, private, and link-local addresses are refused even
-  when a host matches.
-- `max_sessions * session_memory` must fit in `memory` minus 256 MiB, so a 512 MiB VM hosts two 128
-  MiB sessions or one 256 MB one. A session uses about 20 MB idle, 30 to 70 MB on most pages, and up
-  to about 120 MB on heavy ones such as GitHub; 128 MB still loads those.
-- Without `user_agent`, the browser sends a Chrome-like value without the `Mozilla` prefix, which
-  sites that reject unknown browsers accept. A custom value must be printable ASCII and must not
-  contain `Mozilla`. The `Sec-CH-UA` header and `navigator.userAgentData` always identify
-  Lightpanda.
-- Changing the integration restarts the VM, ending open sessions.
-
-Each session is a separate browser process with its own memory limit, running in a sandbox as an
-unprivileged user with no network access except through its own proxy.
-
-| Route                                             | Purpose                                                                               |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `POST /v1/sessions` `{"ttl_s"?, "user_agent"?}`   | Starts a session; returns `{"id", "expires_at"}`, or 429 when `max_sessions` are open |
-| `POST /v1/sessions/{id}/steps` `{"steps": [...]}` | Runs up to 100 steps in order, stopping at the first error                            |
-| `GET /v1/sessions/{id}`                           | Expiry, current URL and title                                                         |
-| `DELETE /v1/sessions/{id}`                        | Ends the session and frees its slot                                                   |
-
-Session IDs are unguessable, and any component of the app can use any of its sessions, so a workflow
-can open a session in one activity and drive it from the next. A session lives outside the execution
-log: it ends at its TTL, on `DELETE`, or when the VM restarts. An ended session answers 410 with
-`end_reason`: `ttl`, `deleted`, `oom`, `memory_pressure`, `crashed`, or `reconfigured`. A workflow
-should treat 404 and 410 as a signal to start a new session.
-
-```json
-{
-  "steps": [
-    { "op": "goto", "url": "https://app.example.com/login" },
-    { "op": "fill", "locator": { "label": "Email" }, "value": "me@example.com" },
-    {
-      "op": "fill",
-      "locator": { "label": "Password" },
-      "value": "<APP_PASSWORD placeholder>",
-      "sensitive": true
-    },
-    { "op": "click", "locator": { "role": "button", "name": "Sign in" } },
-    { "op": "wait_for", "url": "**/dashboard" },
-    { "op": "text", "locator": { "css": "table.invoices" } }
-  ]
-}
-```
-
-| Op                  | Fields                                                                                                                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `goto`              | `url`                                                                                                                        |
-| `click`             | `locator`                                                                                                                    |
-| `fill`              | `locator`, `value`, `sensitive`                                                                                              |
-| `press`             | `key`, optional `locator` (else the focused element)                                                                         |
-| `select`            | `locator`, `values` (option values or labels)                                                                                |
-| `check`             | `locator`, `checked` (default `true`)                                                                                        |
-| `wait_for`          | `locator` with `state` (`attached`, `detached`, `visible` (default), `hidden`), or `url` glob (`**` spans `/`, `*` does not) |
-| `text`, `attribute` | `locator`; `attribute` also takes `name`                                                                                     |
-| `count`             | `locator`                                                                                                                    |
-| `content`           | `format`: `html` (default) or `markdown`                                                                                     |
-| `evaluate`          | `expression`, a JavaScript expression evaluated in the page                                                                  |
-
-Every op except `count`, `content`, and `evaluate` accepts `timeout_ms`. A locator has one of `css`,
-`role` (with optional `name`), `text`, `label`, `placeholder`, or `test_id`, plus optional `exact`
-(whole, case-sensitive match) and `nth` (negative counts from the end). Locators and auto-waiting
-follow Playwright's semantics: actions wait for the element to be visible, stable, and enabled.
-
-The response has one result per step that ran (`op`, then `value` or `error`, and `truncated` when a
-value was cut at 256 KiB), plus the page's final `url` and `title` and `denied_hosts`. Send an
-`Idempotency-Key` header with each batch: a retried activity whose response was lost then gets the
-stored result instead of running the steps again.
-
-To fill a credential, list its secret in the allowed host's `secrets` with `replace_in = ["body"]`.
-The component then reads an opaque placeholder from the secret's environment variable and puts it in
-the step's `value`; Obelisk replaces it with the real value in the request to `BROWSER_URL` (see
-{{ doc_link(title="Secrets", path="configuration/app.md#secret-registry") }}), so component code and
-the execution log never see it. Mark the step `sensitive`: the browser then redacts the value from
-every later result in the session, `url` and `title` included, as typed and in its percent-encoded,
-HTML-escaped, and JSON-escaped forms. Other encodings, and values the page derives from it, are not
-redacted, so read back only what the workflow needs.
-
-Lightpanda has no layout or rendering: there are no screenshots or PDFs, and file downloads and
-uploads are not supported. Classic server-rendered sites work well, while some single-page
-applications and sites behind bot protection do not.
+The `browser` integration runs a headless browser on the app's VM, which activities and webhooks
+drive with Playwright-style steps. See
+{{ doc_link(title="Cloud Browser", path="cloud-browser.md") }} for setup, the session API,
+credentials, and troubleshooting denied requests.
 
 ## Commands
 
@@ -264,14 +152,14 @@ applications and sites behind bot protection do not.
 [logins](#logging-in). `cloud token` creates, lists, inspects, and revokes cloud bearer tokens;
 `cloud app list` lists the apps you own. The other `cloud app` subcommands are scoped to one app:
 
-- `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app
-  named by `--app`. `status` shows the app's endpoints, the applied configuration revision, your
+- `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app named
+  by `--app`. `status` shows the app's endpoints, the applied configuration revision, your
   [drafts](#drafts) with their changes and missing values and, when `-a` or `./app.toml` is
-  readable, whether it matches the default draft. It also shows the health
-  check of a started VM and a scheduled wake-up that keeps failing. An app suspended while idle
-  shows as `running (suspended)` with `API: resumes on request`. Required env vars and secrets must
-  be supplied at creation with `--env` and `--secret`, `--fill` (prompts), or
-  `--fill-non-interactive` (reads same-named environment variables).
+  readable, whether it matches the default draft. It also shows the health check of a started VM and
+  a scheduled wake-up that keeps failing. An app suspended while idle shows as `running (suspended)`
+  with `API: resumes on request`. Required env vars and secrets must be supplied at creation with
+  `--env` and `--secret`, `--fill` (prompts), or `--fill-non-interactive` (reads same-named
+  environment variables).
 - `pull` writes the running `app.toml`, the active deployment, and its source files to disk.
 - `events` lists the app's recent lifecycle and VM events, newest first: completed and failed
   commands, app failures and restores, critical and recovered health checks, restarts of an
@@ -284,34 +172,33 @@ applications and sites behind bot protection do not.
   describes either. Without them the draft's deployment is left unchanged. Staging an app that does
   not exist creates it with only `app_name` and an empty deployment, then stages the real
   configuration, so required values can be filled in later, from the CLI or the dashboard, before
-  applying. `unstage` discards the draft. `apply` prints what
-  changes and applies the staged draft; the control plane activates the draft's staged deployment,
-  or keeps the active one, while respecting the app's intended running state. It fails when nothing
-  is staged.
-  `apply --reapply` re-applies the applied revision instead, reconciling the VM with the app's
-  intended state without restarting an unchanged VM.
+  applying. `unstage` discards the draft. `apply` prints what changes and applies the staged draft;
+  the control plane activates the draft's staged deployment, or keeps the active one, while
+  respecting the app's intended running state. It fails when nothing is staged. `apply --reapply`
+  re-applies the applied revision instead, reconciling the VM with the app's intended state without
+  restarting an unchanged VM.
 - `push` publishes the local project: it creates a missing app with only `app_name` (and says so),
   stages `app.toml` and values into a new `push-<ID>` draft, submits the deployment (`-d`, default
   `deployment.toml`, or an empty one with `--empty-deployment`), stages it in the same draft, and
-  applies the draft. It fails on missing
-  required values unless they are passed with `--env` and `--secret`, `--fill`, or
-  `--fill-non-interactive`. The draft never touches `default` and is discarded when `push`
-  fails before applying it. When the app name is taken, an interactive `push` offers an alternative and saves it
-  to `app.toml` if the original name came from there; noninteractive and `--json` runs fail with a
-  conflict error. `--description` describes the deployment, as in `deployment enqueue`.
+  applies the draft. It fails on missing required values unless they are passed with `--env` and
+  `--secret`, `--fill`, or `--fill-non-interactive`. The draft never touches `default` and is
+  discarded when `push` fails before applying it. When the app name is taken, an interactive `push`
+  offers an alternative and saves it to `app.toml` if the original name came from there;
+  noninteractive and `--json` runs fail with a conflict error. `--description` describes the
+  deployment, as in `deployment enqueue`.
 - `deployment enqueue` stages the deployment in the `default` draft; `deployment apply` stages it
   and applies the draft, along with anything else staged there. A cloud app's deployment switch
-  requests, including the Web UI's, take this route, and ignore `--allow-unavailable-runtime-config`.
+  requests, including the Web UI's, take this route, and ignore
+  `--allow-unavailable-runtime-config`.
 - `env set`, `env unset`, `secrets set`, and `secrets unset` stage env vars and secrets into a
-  draft; names starting with
-  `OBELISK_` are accepted. Internal secrets and internal public environment entries are skipped.
-  `env list` and `secrets list` show the applied values.
+  draft; names starting with `OBELISK_` are accepted. Internal secrets and internal public
+  environment entries are skipped. `env list` and `secrets list` show the applied values.
 - `deployment`, `execution`, `component`, and `admin` connect directly to the selected app's API.
 
 Select an app with `--app` after the subcommand (`cloud app status --app NAME`), `OBELISK_APP_NAME`,
 or `app_name` in `./app.toml`. Cloud app names are 4-20 lowercase ASCII letters, digits, and single
-interior hyphens (no `--`), and are unique within each cloud environment. Names starting with `system-` or `integrations-` are reserved.
-Env vars bound by
+interior hyphens (no `--`), and are unique within each cloud environment. Names starting with
+`system-` or `integrations-` are reserved. Env vars bound by
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
 supplied by the cloud, so `new` and `push` never ask for them.
 
@@ -322,14 +209,13 @@ is applied. `stage`, `unstage`, `apply`, `env set`/`unset`, and `secrets set`/`u
 `--draft <KEY>` (default `default`; the dashboard edits the same `default` draft). Each draft starts
 from the applied revision and belongs to you. Applying a draft discards the app's other drafts,
 including those of other users; `push` stages into its own temporary draft and warns about your
-drafts it will discard. Apply fails while
-declared required values are missing; values the draft sets but `app.toml` does not declare are
-reported.
+drafts it will discard. Apply fails while declared required values are missing; values the draft
+sets but `app.toml` does not declare are reported.
 
-`new`, `status`, `stage`, and `push` read the app config from `-a, --app-config`
-or discover `./app.toml`. They never use another app's config: a file whose `app_name` differs from
-the app selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `-a` or required (by
-`stage` and `push`), and is ignored when discovered by the other commands.
+`new`, `status`, `stage`, and `push` read the app config from `-a, --app-config` or discover
+`./app.toml`. They never use another app's config: a file whose `app_name` differs from the app
+selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `-a` or required (by `stage`
+and `push`), and is ignored when discovered by the other commands.
 
 `cloud token new --name <NAME> --token-file <FILE>` saves the server-issued token to a new private
 file; it does not overwrite an existing file. `--scope <APP>` restricts the token to apps and
@@ -339,5 +225,5 @@ name.
 
 Cloud commands print concise human-readable results to stderr; `--json` prints machine-readable
 output and `--verbose` adds metadata, diagnostics, and each HTTP request with its response status,
-prefixed with the time since the previous step (push steps included). Run `obelisk cloud --help`
-and `obelisk cloud app --help` for all options.
+prefixed with the time since the previous step (push steps included). Run `obelisk cloud --help` and
+`obelisk cloud app --help` for all options.

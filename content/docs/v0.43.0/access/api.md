@@ -1302,10 +1302,10 @@ or enqueue (activate on next restart).
 
 - `If-Match` (required): `"<node_run_id>:<switch_count>"`, both read from
   [`GET /v1/info`](#get-v1-info). The switch count grows with every applied or enqueued switch,
-  including enqueueing the active deployment in place of a queued one. Read the value once and
-  reuse it when retrying, so that a retry cannot override a switch made in the meantime. A request
-  for what is already in effect succeeds whatever the header says: activating the active
-  deployment, enqueueing the queued one, or enqueueing the active one when nothing is queued.
+  including enqueueing the active deployment in place of a queued one. Read the value once and reuse
+  it when retrying, so that a retry cannot override a switch made in the meantime. A request for
+  what is already in effect succeeds whatever the header says: activating the active deployment,
+  enqueueing the queued one, or enqueueing the active one when nothing is queued.
 
 **Request Body (JSON):**
 
@@ -1321,8 +1321,8 @@ values and approvals before restarting. Hot apply always requires strict verific
 **Responses:**
 
 - `200 OK`: Returns `{ "ok": "switched" }` (hot-redeployed or already active) or
-  `{ "ok": "restart_required" }` (enqueued for next restart). A retry after a lost response gets
-  the same result.
+  `{ "ok": "restart_required" }` (enqueued for next restart). A retry after a lost response gets the
+  same result.
 - `404 Not Found`: Deployment not found.
 - `400 Bad Request`: Switch or validation failed.
 - `412 Precondition Failed`: `If-Match` names an earlier server run or switch count and the request
@@ -1363,8 +1363,8 @@ Each switch reads a fresh value. A retry of the same switch reuses the value of 
 Returns the app name, the server's `app_env_prefix`, Obelisk version, current deployment ID, node
 run ID, the number of deployment switches since the server started (`switch_count`, used by
 [deployment switch](#put-v1-deployments-deployment-id-switch)), app config digest, server start
-time, and, in the optional `gc` object, the
-`[maintenance.gc]` settings with durations in milliseconds, as JSON:
+time, and, in the optional `gc` object, the `[maintenance.gc]` settings with durations in
+milliseconds, as JSON:
 
 ```json
 {
@@ -1443,6 +1443,7 @@ types.
 | `GET /v1/admin/node-run-id`                    | Deprecated, removed after 0.43: use `node_run_id` from `GET /v1/info` |
 | `GET /v1/admin/system-events`                  | List persisted events, filtered by run, level, code prefix, or time   |
 | `GET /v1/admin/system-events/{event-id}`       | Retrieve one system event                                             |
+| `POST /v1/admin/system-events`                 | Record an event from outside Obelisk under the reserved `ext.` prefix |
 | `POST /v1/admin/system-events/retain`          | Remove system events older than the requested age                     |
 | `GET /v1/admin/storage`                        | Show persistent storage usage and record counts                       |
 | `DELETE /v1/admin/executions/{execution-id}`   | Delete a top-level execution tree                                     |
@@ -1467,6 +1468,20 @@ curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/admin/system-events/retain -H content-
 
 ```json
 { "deleted": 12, "has_more": false }
+```
+
+`POST /v1/admin/system-events` lets services running next to Obelisk, such as the
+{{ doc_link(title="Cloud Browser", path="cloud-browser.md#system-events") }}, record warnings where
+operators already look. It accepts `code`, `level` (`debug`, `info`, `warning`, or `error`), an
+optional `dedupe_key`, and optional `details` (any JSON value up to 4000 bytes). The code must start
+with `ext.` followed by dot-separated segments of lowercase letters, digits, and underscores, at
+most 128 characters in all, so external events never collide with Obelisk's own. The event is
+attached to the current deployment. Obelisk keeps one event per code, deployment, and `dedupe_key`
+(at most 512 characters), and answers 204 for a duplicate as well:
+
+```sh
+curl -H "$OBELISK_API_AUTH" 127.1:5005/v1/admin/system-events -H content-type:application/json \
+  -d '{ "code": "ext.backup.failed", "level": "warning", "dedupe_key": "nightly", "details": { "reason": "disk full" } }'
 ```
 
 `POST /v1/admin/executions/retain` and `POST /v1/admin/deployments/retain` accept `retain_count` or

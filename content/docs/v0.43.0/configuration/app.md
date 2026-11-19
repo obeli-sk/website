@@ -93,11 +93,11 @@ variable is read and none needs to be set. Exposing and forwarding an internal s
 other secret: `exposed_secrets` with an `exposed_to` grant, or an outbound HTTP `secrets` entry.
 
 Internal secrets cannot be `optional`. They require an enabled API listener: `server run` fails at
-startup when the API is disabled. `server verify` accepts them without a value. `cloud app push --fill`
-skips them. An internal secret may share its name with a server setting such as `OBELISK_API_TOKEN`:
-the server still reads that variable as an additional accepted API token, while components receive
-the startup token. Secrets without a `type`, or with `type = "env"`, are read from the process
-environment as described above.
+startup when the API is disabled. `server verify` accepts them without a value.
+`cloud app push --fill` skips them. An internal secret may share its name with a server setting such
+as `OBELISK_API_TOKEN`: the server still reads that variable as an additional accepted API token,
+while components receive the startup token. Secrets without a `type`, or with `type = "env"`, are
+read from the process environment as described above.
 
 ## Public Deployment Environment
 
@@ -157,13 +157,16 @@ LLM_BASE_URL = {}
 ```
 
 An integration with settings of its own uses a table; see the
-{{ doc_link(title="browser integration", path="cloud.md#browser") }}:
+{{ doc_link(title="browser integration", path="cloud-browser.md") }}:
 
 ```toml
 [cloud.integrations.browser]
 type = "browser"
 env = "BROWSER_URL"
-allowed_hosts = ["https://app.example.com"]
+
+[[cloud.integrations.browser.allowed_host]]
+pattern = "https://app.example.com"
+methods = ["GET", "POST"]
 ```
 
 During a cloud deployment the bound value overrides any uploaded or local value, and
