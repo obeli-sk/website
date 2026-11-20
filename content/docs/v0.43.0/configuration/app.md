@@ -143,6 +143,18 @@ for URL sources, startup fails when the listener is disabled or uses port `0`. P
 variables of the same name, with or without `app_env_prefix`, are ignored. Deployments use them like
 any other public entry, in `env_vars` or `${...}` interpolation. `cloud app push --fill` skips them.
 
+### Cloud VM
+
+The optional `[cloud]` table sizes the hosted VM; omitting `memory` uses the cloud default. Memory
+is a whole number of MiB or GiB:
+
+```toml
+[cloud]
+memory.mib = 512
+```
+
+Obelisk does not use it locally.
+
 ### Cloud Integrations
 
 `[cloud.integrations]` binds a value the cloud provides to an environment-backed `[public_env]`
@@ -170,12 +182,11 @@ methods = ["GET", "POST"]
 ```
 
 During a cloud deployment the bound value overrides any uploaded or local value, and
-`cloud app new`, `push`, `fill`, and `apply` do not ask for it. Obelisk reads only `env`:
-integration names, `type`, and any other keys are validated by the target cloud. Each `env` must
-name an environment-backed `[public_env]` entry (not an internal one and not a secret), and two
-integrations cannot supply the same variable. Local runs do not receive the value: a required entry
-must be set explicitly, otherwise startup and `server verify` fail with an error naming the
-integration.
+`cloud app new`, `push`, and `apply` do not ask for it. Obelisk reads only `env`: integration names,
+`type`, and any other keys are validated by the target cloud. Each `env` must name an
+environment-backed `[public_env]` entry (not an internal one and not a secret), and two integrations
+cannot supply the same variable. Local runs do not receive the value: a required entry must be set
+explicitly, otherwise startup and `server verify` fail with an error naming the integration.
 
 ## App Outbound HTTP Policy
 

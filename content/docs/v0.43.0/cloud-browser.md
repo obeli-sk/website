@@ -54,9 +54,10 @@ secrets = ["APP_PASSWORD"]   # Only to fill credentials, see below.
 replace_in = ["body"]
 ```
 
-The cloud binds `BROWSER_URL` to the browser service, `http://127.0.0.1:9195`. Components that drive
-the browser need the same `allowed_host` entry in `deployment.toml` and
-`env_vars = ["BROWSER_URL"]`:
+Obelisk reads only `env` from the integration; the cloud validates the other settings when the app
+is staged, so `server verify` does not catch typos in them. The cloud binds `BROWSER_URL` to the
+browser service, `http://127.0.0.1:9195`. Components that drive the browser need the same
+`allowed_host` entry in `deployment.toml` and `env_vars = ["BROWSER_URL"]`:
 
 ```toml
 [[activity_js]]

@@ -285,9 +285,9 @@ CLI no longer supplies compatibility defaults for these fields. Replay failure d
 optional.
 
 `GET /v1/info` returns the app name, `app_env_prefix`, Obelisk version, deployment ID, node run ID,
-`switch_count`, app config digest, start time, and the started HTTP servers (`http_servers`).
-`GET /v1/admin/node-run-id` is deprecated and will be removed after 0.43; read `node_run_id` from
-`/v1/info` instead.
+`switch_count`, app config digest, start time, the started HTTP servers (`http_servers`), and the
+execution retention settings (`gc`). `GET /v1/admin/node-run-id` is deprecated and will be removed
+after 0.43; read `node_run_id` from `/v1/info` instead.
 
 `GET /v1/app-config` and `GET /v1/app-config-digest` are deprecated and will be removed after 0.43.
 Read the policy from `GET /v1/app-policy` (JSON, or TOML with `Accept: application/toml`), which
@@ -431,6 +431,17 @@ URL is supplied, falling back to `https://cloud.obeli.sk/api` when the variable 
 Scripts written against earlier 0.43 release candidates must be updated:
 
 - `cloud app deploy` is now `cloud app push`, pairing with `cloud app pull`.
+- `cloud app deployment enqueue`, `apply`, and `verify` are removed. Stage a deployment with
+  `cloud app stage --deployment <ID>` and run `cloud app apply`; verify locally with
+  `deployment verify` or `server verify`.
+- `--empty` is now `--empty-deployment`. `cloud app push` and `cloud app stage` reject `--empty`;
+  `deployment submit`, `enqueue`, `apply`, and `server run` still accept it as an alias.
+- `server checkpoint` is removed.
+- `[cloud] memory_mb = 512` in `app.toml` is now `memory.mib = 512` (or `memory.gib`); the old key
+  is rejected, not deprecated. In the
+  {{ doc_link(title="browser integration", path="cloud-browser.md") }}, `session_memory_mb` is now
+  `session_memory.mib` and `max_ttl = "30m"` is now `max_ttl.minutes = 30`; the cloud validates
+  these when the app is staged.
 - `cloud app start` and `cloud app stop`, later named `reactivate` and `deactivate`, are now
   `cloud app enable` and `cloud app disable`.
 - Configuration changes are staged into named {{ doc_link(title="drafts", path="cloud.md#drafts") }}
@@ -458,7 +469,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud token new` requires `--token-file` and saves the server-issued token to that new private
   file. Token names are unique per account until revoked; after a lost creation response, revoke the
   inaccessible token before creating a replacement.
-- `cloud app env set`, `secrets set`, and `fill` accept names starting with `OBELISK_`.
+- `cloud app env set` and `secrets set` accept names starting with `OBELISK_`.
 - Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
   cloud environment. An interactive `cloud app push` offers an alternative for a taken name.
 - `cloud app new` no longer takes a positional name; use `cloud app new --app <NAME>`.
@@ -469,7 +480,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   `app.toml` lists them in `public_http_servers`. With `--json`, they are under `.app.endpoints`.
 - Cloud app commands refuse an app config naming a different app than `--app` or `OBELISK_APP_NAME`
   when it is passed with `-a` or required by `stage` and `push`. `stage` and `push` discover
-  `./app.toml` like `fill` and `apply`, and `status` accepts `-a`.
+  `./app.toml` like `apply`, and `status` accepts `-a`.
 
 ## Retention and system events
 
