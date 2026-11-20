@@ -185,11 +185,11 @@ credentials, and troubleshooting denied requests.
   discarded when `push` fails before applying it. When the app name is taken, an interactive `push`
   offers an alternative and saves it to `app.toml` if the original name came from there;
   noninteractive and `--json` runs fail with a conflict error. `--description` describes the
-  deployment, as in `deployment enqueue`.
-- `deployment enqueue` stages the deployment in the `default` draft; `deployment apply` stages it
-  and applies the draft, along with anything else staged there. A cloud app's deployment switch
-  requests, including the Web UI's, take this route, and ignore
-  `--allow-unavailable-runtime-config`.
+  deployment, as in `deployment submit`.
+- `cloud app deployment` has no `enqueue` or `apply`. To activate an existing deployment, stage
+  it with `cloud app stage --deployment <ID>` and run `cloud app apply`, or use the dashboard.
+  The app's API rejects deployment switch requests, including the Web UI's, with the same
+  guidance.
 - `env set`, `env unset`, `secrets set`, and `secrets unset` stage env vars and secrets into a
   draft; names starting with `OBELISK_` are accepted. Internal secrets and internal public
   environment entries are skipped. `env list` and `secrets list` show the applied values.
