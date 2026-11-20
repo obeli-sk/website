@@ -1363,8 +1363,14 @@ Each switch reads a fresh value. A retry of the same switch reuses the value of 
 Returns the app name, the server's `app_env_prefix`, Obelisk version, current deployment ID, node
 run ID, the number of deployment switches since the server started (`switch_count`, used by
 [deployment switch](#put-v1-deployments-deployment-id-switch)), app config digest, server start
-time, and, in the optional `gc` object, the `[maintenance.gc]` settings with durations in
-milliseconds, as JSON:
+time, the HTTP servers it listens on, and, in the optional `gc` object, the `[maintenance.gc]`
+settings with durations in milliseconds, as JSON.
+
+`http_servers` lists the started webhook servers and the Web UI (`webui`), without the API listener.
+A server that does not start, such as `external` without credentials or a `public_http_servers`
+entry, is not listed. Each entry has its `name`, `has_routes` (whether the active deployment
+attaches any webhook route to it), and `public_url` when `server.toml` sets one (`webui.public_url`
+for the Web UI):
 
 ```json
 {
@@ -1376,6 +1382,10 @@ milliseconds, as JSON:
   "switch_count": 0,
   "app_config_digest": "app-config:v1:sha256:...",
   "started_at": "2026-10-18T11:00:00.000Z",
+  "http_servers": [
+    { "name": "webui", "has_routes": true },
+    { "name": "internal", "has_routes": true, "public_url": "https://internal.example.com" }
+  ],
   "gc": {
     "enabled": true,
     "interval_ms": 30000,

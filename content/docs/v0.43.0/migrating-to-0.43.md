@@ -285,8 +285,9 @@ CLI no longer supplies compatibility defaults for these fields. Replay failure d
 optional.
 
 `GET /v1/info` returns the app name, `app_env_prefix`, Obelisk version, deployment ID, node run ID,
-app config digest, and start time. `GET /v1/admin/node-run-id` is deprecated and will be removed
-after 0.43; read `node_run_id` from `/v1/info` instead.
+`switch_count`, app config digest, start time, and the started HTTP servers (`http_servers`).
+`GET /v1/admin/node-run-id` is deprecated and will be removed after 0.43; read `node_run_id` from
+`/v1/info` instead.
 
 `GET /v1/app-config` and `GET /v1/app-config-digest` are deprecated and will be removed after 0.43.
 Read the policy from `GET /v1/app-policy` (JSON, or TOML with `Accept: application/toml`), which
@@ -360,16 +361,16 @@ computed ID. Existing schedulers are adopted automatically. See
 
 ## Size keys with units
 
-Byte sizes now take the unit as the key, like the execution-slot `memory` limits:
-`bytes`, `kib`, `mib` or `gib`. The 0.42 byte counts are still accepted with a deprecation warning,
-but setting both forms of one limit is an error.
+Byte sizes now take the unit as the key, like the execution-slot `memory` limits: `bytes`, `kib`,
+`mib` or `gib`. The 0.42 byte counts are still accepted with a deprecation warning, but setting both
+forms of one limit is an error.
 
-| 0.42 | 0.43 |
-|------|------|
-| `limits.max_persisted_value_size_bytes = 1048576` | `limits.max_persisted_value_size.mib = 1` |
-| `limits.max_deployment_file_bytes = 20971520` | `limits.max_deployment_file_size.mib = 20` |
+| 0.42                                                  | 0.43                                          |
+| ----------------------------------------------------- | --------------------------------------------- |
+| `limits.max_persisted_value_size_bytes = 1048576`     | `limits.max_persisted_value_size.mib = 1`     |
+| `limits.max_deployment_file_bytes = 20971520`         | `limits.max_deployment_file_size.mib = 20`    |
 | `limits.max_transport_message_size_bytes = 536870912` | `limits.max_transport_message_size.mib = 512` |
-| `[[activity_exec]] max_output_bytes = 4096` | `[[activity_exec]] max_output_size.kib = 4` |
+| `[[activity_exec]] max_output_bytes = 4096`           | `[[activity_exec]] max_output_size.kib = 4`   |
 
 ## SQLite space reclamation
 
@@ -403,10 +404,10 @@ content under a different explicit ID returns `409 Conflict`; look up its ID wit
 existing ID. `POST /v1/deployments` is deprecated in favor of `PUT /v1/deployments/{deployment-id}`.
 
 `PUT /v1/deployments/{deployment-id}/switch` requires `If-Match: "<node_run_id>:<switch_count>"`,
-both read from `GET /v1/info`. Read it once per switch and reuse it on retries: a request that
-would change state with a stale value gets `412` with the current state in its body, a retry whose
-earlier attempt succeeded gets `200`, and a missing header gets `428`. The
-`deployment apply` and `deployment enqueue` commands send it. See
+both read from `GET /v1/info`. Read it once per switch and reuse it on retries: a request that would
+change state with a stale value gets `412` with the current state in its body, a retry whose earlier
+attempt succeeded gets `200`, and a missing header gets `428`. The `deployment apply` and
+`deployment enqueue` commands send it. See
 {{ doc_link(title="the switch endpoint", path="access/api.md#put-v1-deployments-deployment-id-switch") }}.
 
 Databases already storing the same content under several deployments migrate without changes to
@@ -432,21 +433,21 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud app deploy` is now `cloud app push`, pairing with `cloud app pull`.
 - `cloud app start` and `cloud app stop`, later named `reactivate` and `deactivate`, are now
   `cloud app enable` and `cloud app disable`.
-- Configuration changes are staged into named
-  {{ doc_link(title="drafts", path="cloud.md#drafts") }} (`--draft`, default `default`).
-  `cloud app status` shows the applied revision, your drafts, VM health, and failing wake-ups, and
-  compares the local `app.toml` with the default draft; `apply` applies a staged draft and
-  `apply --reapply` re-applies the applied revision. `unstage` discards a draft. `push` stages
-  into its own temporary draft.
+- Configuration changes are staged into named {{ doc_link(title="drafts", path="cloud.md#drafts") }}
+  (`--draft`, default `default`). `cloud app status` shows the applied revision, your drafts, VM
+  health, and failing wake-ups, and compares the local `app.toml` with the default draft; `apply`
+  applies a staged draft and `apply --reapply` re-applies the applied revision. `unstage` discards a
+  draft. `push` stages into its own temporary draft.
 - `cloud app events` lists recent lifecycle and VM events.
 - App names starting with `system-` or `integrations-` are reserved.
 - Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
   and are never prompted for. See
   {{ doc_link(title="Cloud Integrations", path="configuration/app.md#cloud-integrations") }}.
-- Missing required env vars and secrets fail in the client. `cloud app new` and `push` take `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
+- Missing required env vars and secrets fail in the client. `cloud app new` and `push` take
+  `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
   (reads the same-named environment variable), `--fill` (prompts), and `--fill-non-interactive`
-  (reads same-named environment variables). There is no `cloud app fill`; stage values into a
-  draft with `env set` and `secrets set`.
+  (reads same-named environment variables). There is no `cloud app fill`; stage values into a draft
+  with `env set` and `secrets set`.
 - `apply` never stages `app.toml` or values: it applies only what is staged, with the active
   deployment.
 - `cloud app env set`/`unset` and `secrets set`/`unset` stage into a draft instead of changing the
