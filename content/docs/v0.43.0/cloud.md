@@ -188,8 +188,8 @@ credentials, and troubleshooting denied requests.
   deployment, as in `deployment submit`.
 - `cloud app deployment` has no `enqueue` or `apply`. To activate an existing deployment, stage
   it with `cloud app stage --deployment <ID>` and run `cloud app apply`, or use the dashboard.
-  The app's API rejects deployment switch requests, including the Web UI's, with the same
-  guidance.
+  The Web UI hides its switch buttons, and the app's API rejects deployment switch requests with
+  the same guidance.
 - `env set`, `env unset`, `secrets set`, and `secrets unset` stage env vars and secrets into a
   draft; names starting with `OBELISK_` are accepted. Internal secrets and internal public
   environment entries are skipped. `env list` and `secrets list` show the applied values.
