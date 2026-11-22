@@ -165,6 +165,12 @@ credentials, and troubleshooting denied requests.
   commands, app failures and restores, critical and recovered health checks, restarts of an
   unhealthy VM, and failed wake-ups. `-n, --limit` sets how many to show (1-50, default 5). Routine
   idle suspends and wake-ups are not recorded.
+- `logs` shows the logs of the app's VMs, oldest first, including the platform's own lines about
+  starting the VM and health checks. It prints the newest lines, or with `--since` the first lines
+  after an RFC 3339 time or a duration ago (`30m`, `2h`); `-n, --limit` sets how many (1-500,
+  default 100). When more may follow, it prints the `--since` value to continue from. Logs are
+  kept for about a week. A failed start is also recorded as a `server.startup.failed` system event,
+  shown by `cloud app admin events list --code server.startup` and in the Web UI.
 - `stage` puts `app.toml` and any `--env`/`--secret` or filled values into a [draft](#drafts)
   without restarting the VM; it never applies. With `-d, --deployment <FILE>` it first submits the
   deployment, then stages its ID in the draft along with the configuration, so a failed submission

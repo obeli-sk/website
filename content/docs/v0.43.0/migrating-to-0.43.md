@@ -449,7 +449,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
   health, and failing wake-ups, and compares the local `app.toml` with the default draft; `apply`
   applies a staged draft and `apply --reapply` re-applies the applied revision. `unstage` discards a
   draft. `push` stages into its own temporary draft.
-- `cloud app events` lists recent lifecycle and VM events.
+- `cloud app events` lists recent lifecycle and VM events; `cloud app logs` shows the VM's logs.
 - App names starting with `system-` or `integrations-` are reserved.
 - Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
   and are never prompted for. See
