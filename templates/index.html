@@ -135,7 +135,7 @@ methods = ["GET"]</code></pre>
                     </div>
                 </div>
                 <p class="qs-note">Building with a coding agent? Point it at
-                    <a href="{{ get_url(path='@/docs/latest/llms.md') }}">llms.txt</a>, which links every docs page
+                    <a href="{{ get_url(path='@/docs/latest/llms.md') | trim_end_matches(pat='/') }}">llms.txt</a>, which links every docs page
                     and lists the recommended authoring path.</p>
             </div>
             <div class="qs-step">

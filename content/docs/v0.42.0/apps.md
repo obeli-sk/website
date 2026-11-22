@@ -6,7 +6,7 @@ weight = 8
 
 Obelisk apps are deployments of JavaScript or Rust workflows, activities, and webhooks. Start with
 `obelisk generate new my-app`, then use these repositories for working patterns. An agent can read
-this page through [llms.txt](@/docs/v0.42.0/llms.md) and copy only the pieces an app needs.
+this page through {{ doc_link(title="llms.txt", path="llms.md") }} and copy only the pieces an app needs.
 
 | App                                                                            | What to learn from it                                                                                                                       |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |

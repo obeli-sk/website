@@ -36,7 +36,7 @@ test("negotiates Markdown for rendered pages, aliases, and llms.txt", async () =
     "/docs/latest/",
     "/docs/latest/js/js-workflows/",
     "/docs/v0.42.0/js/js-workflows/",
-    "/docs/latest/llms.txt/",
+    "/docs/latest/llms.txt",
     "/install",
     "/install/index.html",
   ]) {
@@ -140,4 +140,26 @@ test("keeps Markdown conditional responses and rejects HTML asset fallbacks", as
     },
   });
   assert.equal(fallback.headers.get("Content-Type"), "text/html");
+});
+
+test("serves llms.txt without a trailing slash", async () => {
+  const response = await fetchPage("/docs/latest/llms.txt");
+  assert.equal(response.status, 200);
+  assert.equal(
+    response.headers.get("Content-Type"),
+    "text/plain; charset=utf-8",
+  );
+  assert.match(await response.text(), /^# Obelisk/m);
+  for (const path of [
+    "/docs/latest/llms.txt/",
+    "/docs/latest/llms.txt/index.html",
+  ]) {
+    const redirect = await fetchPage(`${path}?x=1`);
+    assert.equal(redirect.status, 301, path);
+    assert.equal(
+      redirect.headers.get("Location"),
+      "https://obeli.sk/docs/latest/llms.txt?x=1",
+      path,
+    );
+  }
 });

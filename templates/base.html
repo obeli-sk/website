@@ -124,7 +124,7 @@
                     <h2>Learn</h2>
                     <a href="{{ get_url(path='@/docs/latest/_index.md') }}">Documentation</a>
                     <a href="{{ get_url(path='@/docs/latest/js/getting-started.md') }}">Get started</a>
-                    <a href="{{ get_url(path='@/docs/latest/llms.md') }}">llms.txt</a>
+                    <a href="{{ get_url(path='@/docs/latest/llms.md') | trim_end_matches(pat='/') }}">llms.txt</a>
                 </div>
                 <div>
                     <h2>Community</h2>

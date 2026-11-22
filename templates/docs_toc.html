@@ -48,7 +48,7 @@ Documentation - {{ title }}
                 {% for item in section.extra.start %}
                 {% set p = get_page(path=prefix ~ item.path) %}
                 {% set_global start_paths = start_paths | concat(with=p.relative_path) %}
-                <a class="doc-start-card" href="{{ p.permalink }}">
+                <a class="doc-start-card" href="{{ p.permalink | replace(from="/llms.txt/", to="/llms.txt") }}">
                     <span class="doc-start-title">{{ item.title }} →</span>
                     <span class="doc-start-desc">{{ item.desc }}</span>
                 </a>
@@ -56,7 +56,7 @@ Documentation - {{ title }}
             </div>
             <p class="doc-more">
                 {% for page in section.pages %}{% if page.relative_path not in start_paths %}
-                <a href="{{ page.permalink }}">{{ page.title }}</a>
+                <a href="{{ page.permalink | replace(from="/llms.txt/", to="/llms.txt") }}">{{ page.title }}</a>
                 {% endif %}{% endfor %}
             </p>
             {{ macros::section_cards(section=section, tiles=false) }}

@@ -23,8 +23,25 @@ function quality(accept, type) {
   return best.quality;
 }
 
+// Zola can only emit `llms.txt/index.html`; serve it at `llms.txt` instead.
+const LLMS_TXT = /^(\/docs\/[^/]+\/llms\.txt)(\/(?:index\.html)?)?$/;
+
 export default {
   async fetch(request, env) {
+    const llms = new URL(request.url).pathname.match(LLMS_TXT);
+    if (llms?.[2]) {
+      const url = new URL(request.url);
+      url.pathname = llms[1];
+      return new Response(null, {
+        status: 301,
+        headers: { Location: url.toString(), Vary: "Accept" },
+      });
+    }
+    if (llms) {
+      const url = new URL(request.url);
+      url.pathname = `${llms[1]}/`;
+      request = new Request(url, request);
+    }
     const accept = request.headers.get("Accept") || "";
     const wantsMarkdown =
       /(?:^|,)\s*text\/markdown\s*(?:;|,|$)/i.test(accept) &&
@@ -51,6 +68,9 @@ export default {
     }
     response ??= await env.ASSETS.fetch(request);
     response = new Response(response.body, response);
+    if (llms && !wantsMarkdown && response.ok) {
+      response.headers.set("Content-Type", "text/plain; charset=utf-8");
+    }
     response.headers.append("Vary", "Accept");
     return response;
   },
