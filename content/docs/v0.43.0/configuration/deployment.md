@@ -30,6 +30,19 @@ Note: The `location` field uses a single string. `oci://` references an OCI imag
 without a prefix are treated as local file paths. Both WASM and JS components can be stored in OCI
 registries — see `obelisk component push` to publish them.
 
+`location` also accepts `${VAR}` and `${VAR:-default}` placeholders, so one deployment file can
+use a local build in development and a pushed OCI reference elsewhere:
+
+```toml
+location = "${WORKFLOW_WASM:-target/wasm32-unknown-unknown/release/workflow.wasm}"
+```
+
+The CLI expands placeholders from its own environment when it reads the deployment file, for
+example in `obelisk deployment submit`, `obelisk server verify` or `obelisk component push`.
+The submitted manifest carries the resolved location, so the server never sees the placeholder.
+A variable that is unset and has no default is an error. `${VAR:-default}` also uses the default
+when the variable is empty.
+
 ## Common Executor Settings
 
 ```toml
