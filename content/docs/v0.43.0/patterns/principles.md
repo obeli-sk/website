@@ -73,8 +73,11 @@ export default function reviewCancellable(requestId) {
 }
 ```
 
-Changing the timeout in a new deployment affects only waits submitted after the upgrade: a replayed
-delay keeps the expiry recorded in the execution log.
+The requested delay is part of the execution log and is compared on replay, so changing the timeout
+is a nondeterministic change: executions that already submitted the old delay fail to replay against
+the new code and stay on their previous component version (see
+{{ doc_link(title="Hot redeploy", path="concepts/deployments.md#hot-redeploy") }}). Pick the timeout
+up front, or pass it as a workflow parameter so new executions can use a different value.
 
 ## Own cleanup in a parent
 
