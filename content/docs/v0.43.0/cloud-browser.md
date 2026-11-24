@@ -130,13 +130,23 @@ always identify Lightpanda.
 
 The browser service answers at `BROWSER_URL`:
 
-| Route                                                      | Purpose                                                             |
-| ---------------------------------------------------------- | ------------------------------------------------------------------- |
-| `POST /v1/sessions` `{"ttl_s"?, "user_agent"?, "target"?}` | Starts a session; returns 201 with `{"id", "expires_at"}`           |
-| `POST /v1/sessions/{id}/steps` `{"steps": [...]}`          | Runs up to 100 steps in order, stopping at the first error          |
-| `GET /v1/sessions/{id}`                                    | Expiry, current URL and title, or `"busy": true` while a batch runs |
-| `GET /v1/sessions/{id}/log?after={seq}`                    | What the session did, see [Session log](#session-log)               |
-| `DELETE /v1/sessions/{id}`                                 | Ends the session and frees its slot                                 |
+| Route                                                      | Purpose                                                                    |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `GET /v1/sessions`                                         | Open sessions, oldest first, with the execution that started each one      |
+| `POST /v1/sessions` `{"ttl_s"?, "user_agent"?, "target"?}` | Starts a session; returns 201 with `{"id", "expires_at"}`                  |
+| `POST /v1/sessions/{id}/steps` `{"steps": [...]}`          | Runs up to 100 steps in order, stopping at the first error                 |
+| `GET /v1/sessions/{id}`                                    | Expiry, current URL and title, or `"busy": true` while a batch runs        |
+| `GET /v1/sessions/{id}/log?after={seq}`                    | What the session did, see [Session log](#session-log)                      |
+| `DELETE /v1/sessions/{id}`                                 | Ends the session and frees its slot                                        |
+
+Obelisk adds the calling execution's ID to every request to `BROWSER_URL` in the
+`Obelisk-Int-Execution-Id` header, and the service answers 400 without it. Only WASM and JavaScript
+activities and webhook endpoints can therefore use the browser; native `activity_exec` processes
+cannot. Components cannot set the header themselves.
+
+`GET /v1/sessions` answers `{"sessions": [{"id", "execution_id", "target", "created_at",
+"expires_at"}]}`, where `execution_id` is the execution that started the session. Use it to find and
+end sessions that a failed execution left open instead of waiting for their TTL.
 
 `ttl_s` defaults to `max_ttl` and cannot exceed it. `target: "debug"` opens a
 [debug session](#debug-sessions). Starting a session answers 429 when `max_sessions` are open.

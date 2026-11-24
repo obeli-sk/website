@@ -139,6 +139,10 @@ unsafe methods as well.
 an app access to LLM, GitHub, and headless browser services the cloud provides, without storing
 credentials in the app.
 
+Obelisk identifies the calling execution to these services with the `Obelisk-Int-Execution-Id`
+header, and they refuse requests without it. WASM and JavaScript activities and webhook endpoints
+get it automatically; native `activity_exec` processes do not, so they cannot call integrations.
+
 ### Browser
 
 The `browser` integration runs a headless browser on the app's VM, which activities and webhooks

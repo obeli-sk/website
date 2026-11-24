@@ -363,6 +363,25 @@ When a response carries a `Keep-Alive: timeout=N` header, the connection is kept
 than `N` (at most 10 minutes) instead, so a reused connection is not closed by the server while a
 request is being sent. Requests are not retried automatically if that still happens.
 
+## Platform Integrations
+
+Hosting platforms that serve integrations to activities and webhook endpoints over HTTP list their
+origins here. Requests to them carry the calling execution's ID:
+
+```toml
+[integrations]
+origins = ["http://127.0.0.1:9195"]   # Scheme, host and port; no path.
+```
+
+An origin matches a request URL by exact scheme, host (case-insensitive) and port, where a missing
+port is the scheme default. Matching requests get the caller's execution ID in the
+`Obelisk-Int-Execution-Id` header, so the service can attribute work to an execution.
+
+Components may not set any `Obelisk-Int-*` header themselves, for any destination: such a request is
+denied with an `outbound_http.denied` system event whose `rejected_by` is `reserved_header`. A
+service reached under another host name for the same address therefore sees no header instead of a
+forged one. Native `activity_exec` processes never get the header.
+
 ## Global Workflow Configuration
 
 ```toml
