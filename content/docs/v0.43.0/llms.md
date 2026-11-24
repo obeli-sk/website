@@ -6,7 +6,7 @@ slug = "llms.txt"
 
 [extra]
 common_design_patterns = [
-  { title = "Design principles: short activities, decisions in workflows, bounded waits", path = "patterns/principles/" },
+  { title = "Design principles: short activities, decisions in workflows, bounded waits, compatible upgrades", path = "patterns/principles/" },
   { title = "Cleanup supervisor / saga", path = "patterns/cleanup-supervisor/" },
   { title = "Parallel fan-out and durable polling", path = "js/js-patterns/" },
   { title = "Human-in-the-loop signals with stub activities", path = "concepts/activities/stub/" },

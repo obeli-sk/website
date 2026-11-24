@@ -73,11 +73,27 @@ export default function reviewCancellable(requestId) {
 }
 ```
 
-The requested delay is part of the execution log and is compared on replay, so changing the timeout
-is a nondeterministic change: executions that already submitted the old delay fail to replay against
-the new code and stay on their previous component version (see
-{{ doc_link(title="Hot redeploy", path="concepts/deployments.md#hot-redeploy") }}). Pick the timeout
-up front, or pass it as a workflow parameter so new executions can use a different value.
+## Upgrade workflows compatibly
+
+After a deployment changes a workflow, in-flight executions are replayed against the new code (see
+{{ doc_link(title="Hot redeploy", path="concepts/deployments.md#hot-redeploy") }}). Replay compares
+every request the code makes with the
+{{ doc_link(title="history events", path="concepts/execution-log.md#history-events") }} already
+recorded, in order: join sets created, child executions submitted (target FFQN and parameters),
+delays requested (including their duration), and joins awaited.
+
+- **Compatible:** the new code makes the same requests in the same order up to the last recorded
+  event. Changing what happens after that point, refactoring pure code between calls, and changing
+  activity implementations are all safe, because activities are not replayed and their recorded
+  results are reused.
+- **Incompatible:** removing, reordering, or adding a request before the last recorded event, or
+  changing a request's target, parameters, or delay. Replay reports nondeterminism, the execution
+  stays assigned to its previous component version, and the new component does not advance it.
+
+To ship an incompatible change, give the new behavior a new FFQN: a new function name or a new
+package version (`myapp:flow/review@2.0.0.run`). New executions are submitted to the new FFQN, while
+the old component stays in the deployment under the old FFQN until its executions finish. Pair this
+with bounded waits so that "until they finish" has an upper limit.
 
 ## Own cleanup in a parent
 
