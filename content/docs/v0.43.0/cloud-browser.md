@@ -27,7 +27,7 @@ type = "browser"
 env = "BROWSER_URL"
 max_sessions = 1          # Concurrent sessions, default 1.
 session_memory.mib = 128  # Memory limit per session, default 128 MiB, at least 128 MiB.
-max_ttl.minutes = 30      # Upper bound and default for a session's TTL, 1 minute to 24 hours.
+max_ttl.minutes = 30      # Upper bound for a session's TTL, 1 minute to 24 hours.
 # user_agent = "..."      # Optional, see below.
 
 # What the browser may load.
@@ -148,7 +148,7 @@ cannot. Components cannot set the header themselves.
 "expires_at"}]}`, where `execution_id` is the execution that started the session. Use it to find and
 end sessions that a failed execution left open instead of waiting for their TTL.
 
-`ttl_s` defaults to `max_ttl` and cannot exceed it. `target: "debug"` opens a
+`ttl_s` defaults to 5 minutes, or `max_ttl` when that is shorter, and cannot exceed `max_ttl`. `target: "debug"` opens a
 [debug session](#debug-sessions). Starting a session answers 429 when `max_sessions` are open.
 
 Session IDs are unguessable, and any component of the app can use any of its sessions, so a workflow
