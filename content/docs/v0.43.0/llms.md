@@ -6,6 +6,7 @@ slug = "llms.txt"
 
 [extra]
 common_design_patterns = [
+  { title = "Design principles: short activities, decisions in workflows, bounded waits", path = "patterns/principles/" },
   { title = "Cleanup supervisor / saga", path = "patterns/cleanup-supervisor/" },
   { title = "Parallel fan-out and durable polling", path = "js/js-patterns/" },
   { title = "Human-in-the-loop signals with stub activities", path = "concepts/activities/stub/" },
@@ -30,7 +31,8 @@ Most apps are deployed to Obelisk Cloud; read /docs/v0.43.0/cloud/ first.
 - To add a single configuration file to an existing project, generate its commented reference instead: `obelisk generate app-config app.toml`, `obelisk generate deployment deployment.toml`, or `obelisk generate server-config server.toml` (optional; only needed to change platform defaults such as ports or limits). Every setting in these references is commented out; at minimum uncomment and set `app_name` in `app.toml`.
 - JavaScript components are plain `.js` files with WIT-defined signatures.
 - Activities are short-lived idempotent units of side-effecting work and can be retried automatically. Activities should spawn containers or VMs for CPU-intensive or long running workloads.
-- Workflows are deterministic and replayable. They orchestrate child executions - workflows and activities, and durable timers.
+- Workflows are deterministic and replayable. They orchestrate child executions - workflows and activities, and durable timers. Keep decisions in workflows: an activity makes one request and returns its outcome.
+- Every execution must eventually finish: retention never deletes unfinished executions. Race each wait for human or external input against a durable delay (the example agents use 7 days) and end the workflow when it fires. See the Design principles page.
 - Webhook endpoints are HTTP handlers that can spawn executions.
 - Deployments are versioned. Workflows can be paused between runs, replayed, advanced step by step, or automatically replayed and upgraded when code changes between deployments.
 - Cancellation is part of structured concurrency. Activities and delays are cancellable; workflows are cancellable only when their exported function name ends in `-cancellable`. A cancelled workflow is not advanced again, so an ancestor must own cleanup.

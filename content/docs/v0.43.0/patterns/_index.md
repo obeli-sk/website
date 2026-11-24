@@ -8,6 +8,9 @@ weight = 15
 Reusable workflow structures for resource ownership, concurrency, durable waiting, and operator
 interaction.
 
+- {{ doc_link(title="Design principles", path="patterns/principles.md") }}: short single-request
+  activities, decisions in workflows, and bounded waits so every execution finishes and can be
+  retained.
 - {{ doc_link(title="Cleanup supervisor (saga)", path="patterns/cleanup-supervisor.md") }} — keep
   resource creation and cleanup in a small parent workflow while complex work runs in a child.
 - {{ doc_link(title="Generation reconciler for long-running workflows", path="patterns/generation-reconciler.md") }}:
