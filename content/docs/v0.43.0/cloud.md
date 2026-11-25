@@ -153,7 +153,13 @@ credentials, and troubleshooting denied requests.
 ## Commands
 
 `obelisk cloud` manages apps hosted by an Obelisk cloud control plane. `cloud auth` manages
-[logins](#logging-in). `cloud token` creates, lists, inspects, and revokes cloud bearer tokens;
+[logins](#logging-in). `cloud token` creates, lists, inspects, and revokes cloud bearer tokens.
+`cloud status` shows the account's plan, this month's usage against each plan allowance, whether
+the account is on hold, and the state of each app. When an allowance is used up, the account is
+held: its apps stop and cannot be started until the month ends or the plan changes, though their
+databases can still be pulled with `cloud app db pull`. `cloud events` lists the account's recent
+events, newest first: allowance warnings, used-up allowances, and holds applied or lifted; `-n,
+--limit` sets how many to show (1-50, default 5). Both need an account-wide token.
 `cloud app list` lists the apps you own. The other `cloud app` subcommands are scoped to one app:
 
 - `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app named
