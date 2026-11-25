@@ -186,16 +186,17 @@ events, newest first: allowance warnings, used-up allowances, and holds applied 
   stages nothing; `--empty-deployment` stages an empty deployment instead, and `--description`
   describes either. Without them the draft's deployment is left unchanged. Staging an app that does
   not exist creates it with only `app_name` and an empty deployment, then stages the real
-  configuration, so required values can be filled in later, from the CLI or the dashboard, before
-  applying. `unstage` discards the draft. `apply` prints what changes and applies the staged draft;
+  configuration and the deployment (`-d`, default `deployment.toml`, or `--empty-deployment`), so
+  required values can be filled in later, from the CLI or the dashboard, and applying the draft
+  brings up the whole app. Without a deployment it fails before creating the app. `unstage` discards the draft. `apply` prints what changes and applies the staged draft;
   the control plane activates the draft's staged deployment, or keeps the active one, while
   respecting the app's intended running state. It fails when nothing is staged. `apply --reapply`
   re-applies the applied revision instead, reconciling the VM with the app's intended state without
   restarting an unchanged VM.
-- `push` publishes the local project: it creates a missing app with only `app_name` (and says so),
-  stages `app.toml` and values into a new `push-<ID>` draft, submits the deployment (`-d`, default
-  `deployment.toml`, or an empty one with `--empty-deployment`), stages it in the same draft, and
-  applies the draft. It fails on missing required values unless they are passed with `--env` and
+- `push` publishes the local project: it creates a missing app (and says so) with `app.toml` and the
+  values in one request, or stages them into a new `push-<ID>` draft of an existing app. It then
+  submits the deployment (`-d`, default `deployment.toml`, or an empty one with
+  `--empty-deployment`), stages it in the same draft, and applies the draft, so a new app boots once. It fails on missing required values unless they are passed with `--env` and
   `--secret`, `--fill`, or `--fill-non-interactive`; to fill them later, `stage` instead and
   `apply` once they are set. The draft never touches `default` and is
   discarded when `push` fails before applying it. When the app name is taken, an interactive `push`
