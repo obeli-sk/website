@@ -454,7 +454,7 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - Public environment variables bound in `[cloud.integrations]` receive their value from the cloud
   and are never prompted for. See
   {{ doc_link(title="Cloud Integrations", path="configuration/app.md#cloud-integrations") }}.
-- Missing required env vars and secrets fail in the client. `cloud app new` and `push` take
+- Missing required env vars and secrets fail in the client. `cloud app push` takes
   `--env NAME[=VALUE]` (a bare name reads the same-named environment variable), `--secret NAME`
   (reads the same-named environment variable), `--fill` (prompts), and `--fill-non-interactive`
   (reads same-named environment variables). There is no `cloud app fill`; stage values into a draft
@@ -472,7 +472,9 @@ Scripts written against earlier 0.43 release candidates must be updated:
 - `cloud app env set` and `secrets set` accept names starting with `OBELISK_`.
 - Cloud app names are limited to 4-20 characters without double hyphens and are unique within each
   cloud environment. An interactive `cloud app push` offers an alternative for a taken name.
-- `cloud app new` no longer takes a positional name; use `cloud app new --app <NAME>`.
+- `cloud app new` only creates a bare app with `app_name` (from `--app` or `./app.toml`) and fails
+  when the name exists. It no longer takes a positional name, `-a`, or values; configure the app with
+  `cloud app stage` or `push`, which also create a missing app.
 - `cloud apps list` is now `cloud app list`. `--app` follows the `cloud app` subcommand, as in
   `cloud app status --app <NAME>`; `cloud app --app <NAME> status` is rejected.
 - `cloud app get` and `cloud app endpoint` are removed. `cloud app status` shows the app and the

@@ -182,7 +182,7 @@ methods = ["GET", "POST"]
 ```
 
 During a cloud deployment the bound value overrides any uploaded or local value, and
-`cloud app new`, `push`, and `apply` do not ask for it. Obelisk reads only `env`: integration names,
+`cloud app push` and `apply` do not ask for it. Obelisk reads only `env`: integration names,
 `type`, and any other keys are validated by the target cloud. Each `env` must name an
 environment-backed `[public_env]` entry (not an internal one and not a secret), and two integrations
 cannot supply the same variable. Local runs do not receive the value: a required entry must be set

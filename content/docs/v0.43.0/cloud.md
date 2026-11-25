@@ -162,14 +162,13 @@ events, newest first: allowance warnings, used-up allowances, and holds applied 
 --limit` sets how many to show (1-50, default 5). Both need an account-wide token.
 `cloud app list` lists the apps you own. The other `cloud app` subcommands are scoped to one app:
 
-- `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a stopped app named
-  by `--app`. `status` shows the app's endpoints, the applied configuration revision, your
+- `new`, `status`, `enable`, `disable`, `delete`: app lifecycle. `new` creates a bare app with only
+  `app_name` (from `--app` or `./app.toml`) and fails when the name exists, so it never reuses an
+  existing app, e.g. in CI; configure the new app with `stage` or `push`. `status` shows the app's endpoints, the applied configuration revision, your
   [drafts](#drafts) with their changes and missing values and, when `-a` or `./app.toml` is
   readable, whether it matches the default draft. It also shows the health check of a started VM and
   a scheduled wake-up that keeps failing. An app suspended while idle shows as `running (suspended)`
-  with `API: resumes on request`. Required env vars and secrets must be supplied at creation with
-  `--env` and `--secret`, `--fill` (prompts), or `--fill-non-interactive` (reads same-named
-  environment variables).
+  with `API: resumes on request`.
 - `pull` writes the running `app.toml`, the active deployment, and its source files to disk.
 - `events` lists the app's recent lifecycle and VM events, newest first: completed and failed
   commands, app failures and restores, critical and recovered health checks, restarts of an
@@ -197,7 +196,8 @@ events, newest first: allowance warnings, used-up allowances, and holds applied 
   stages `app.toml` and values into a new `push-<ID>` draft, submits the deployment (`-d`, default
   `deployment.toml`, or an empty one with `--empty-deployment`), stages it in the same draft, and
   applies the draft. It fails on missing required values unless they are passed with `--env` and
-  `--secret`, `--fill`, or `--fill-non-interactive`. The draft never touches `default` and is
+  `--secret`, `--fill`, or `--fill-non-interactive`; to fill them later, `stage` instead and
+  `apply` once they are set. The draft never touches `default` and is
   discarded when `push` fails before applying it. When the app name is taken, an interactive `push`
   offers an alternative and saves it to `app.toml` if the original name came from there;
   noninteractive and `--json` runs fail with a conflict error. `--description` describes the
@@ -216,7 +216,7 @@ or `app_name` in `./app.toml`. Cloud app names are 4-20 lowercase ASCII letters,
 interior hyphens (no `--`), and are unique within each cloud environment. Names starting with
 `system-` or `integrations-` are reserved. Env vars bound by
 {{ doc_link(title="`[cloud.integrations]`", path="configuration/app.md#cloud-integrations") }} are
-supplied by the cloud, so `new` and `push` never ask for them.
+supplied by the cloud, so `push` and `apply` never ask for them.
 
 ### Drafts
 
@@ -228,7 +228,7 @@ including those of other users; `push` stages into its own temporary draft and w
 drafts it will discard. Apply fails while declared required values are missing; values the draft
 sets but `app.toml` does not declare are reported.
 
-`new`, `status`, `stage`, and `push` read the app config from `-a, --app-config` or discover
+`status`, `stage`, and `push` read the app config from `-a, --app-config` or discover
 `./app.toml`. They never use another app's config: a file whose `app_name` differs from the app
 selected by `--app` or `OBELISK_APP_NAME` is an error when passed with `-a` or required (by `stage`
 and `push`), and is ignored when discovered by the other commands.
