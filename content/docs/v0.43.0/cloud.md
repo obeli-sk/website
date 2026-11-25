@@ -181,14 +181,15 @@ events, newest first: allowance warnings, used-up allowances, and holds applied 
   kept for about a week. A failed start is also recorded as a `server.startup.failed` system event,
   shown by `cloud app admin events list --code server.startup` and in the Web UI.
 - `stage` puts `app.toml` and any `--env`/`--secret` or filled values into a [draft](#drafts)
-  without restarting the VM; it never applies. With `-d, --deployment <FILE>` it first submits the
-  deployment, then stages its ID in the draft along with the configuration, so a failed submission
-  stages nothing; `--empty-deployment` stages an empty deployment instead, and `--description`
-  describes either. Without them the draft's deployment is left unchanged. Staging an app that does
-  not exist creates it with only `app_name` and an empty deployment, then stages the real
-  configuration and the deployment (`-d`, default `deployment.toml`, or `--empty-deployment`), so
-  required values can be filled in later, from the CLI or the dashboard, and applying the draft
-  brings up the whole app. Without a deployment it fails before creating the app. `unstage` discards the draft. `apply` prints what changes and applies the staged draft;
+  without restarting the VM; it never applies. Like `push`, it first submits the deployment
+  (`-d, --deployment <FILE>`, default `deployment.toml`), then stages its ID in the draft along with
+  the configuration, so a failed submission stages nothing; `-d` also takes an existing `Dep_` ID,
+  `--empty-deployment` stages an empty deployment instead, and `--description` describes the
+  submitted one. Without `deployment.toml` the draft's deployment is left unchanged. Staging an app
+  that does not exist creates it with only `app_name` and an empty deployment, then stages the real
+  configuration and deployment, so required values can be filled in later, from the CLI or the
+  dashboard, and applying the draft brings up the whole app; it fails before creating the app when
+  there is no deployment to stage. `unstage` discards the draft. `apply` prints what changes and applies the staged draft;
   the control plane activates the draft's staged deployment, or keeps the active one, while
   respecting the app's intended running state. It fails when nothing is staged. `apply --reapply`
   re-applies the applied revision instead, reconciling the VM with the app's intended state without
